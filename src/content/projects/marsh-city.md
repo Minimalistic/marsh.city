@@ -14,15 +14,30 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
 ## How it works
 
 ```mermaid
-flowchart LR
-  A[Jason has an idea] --> B[Tells Claude]
-  B --> C[Claude edits Markdown]
-  C --> D[git push]
-  D --> E[GitHub Actions builds]
-  E --> F[Live on marsh.city]
+flowchart TD
+  subgraph conversation [" ✦ Conversation "]
+    direction LR
+    idea["💡 Idea"]
+    claude["🤖 Claude Code"]
+    idea --> claude
+  end
+
+  subgraph pipeline [" ⚙ Pipeline "]
+    direction LR
+    md["📄 Markdown"]
+    git["📦 git push"]
+    actions["🔧 GitHub Actions"]
+    md --> git --> actions
+  end
+
+  subgraph deploy [" 🌿 Live "]
+    site["marsh.city"]
+  end
+
+  conversation --> pipeline --> deploy
 ```
 
-The whole point: adding content should feel like having a conversation, not operating a CMS.
+Adding content is a conversation, not a CMS. I describe what I want, Claude writes the Markdown, and a push to `main` deploys in under a minute.
 
 ## Stack
 
