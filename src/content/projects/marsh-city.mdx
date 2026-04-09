@@ -13,50 +13,33 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
 
 ## How it works
 
-<div class="flow-diagram" role="img" aria-label="Content workflow: Idea to Claude Code to Draft to Review and Revise to git push to GitHub Actions to live on marsh.city">
-  <div class="flow-step flow-step-1">
+<div class="flow-diagram" id="flow-diagram" role="img" aria-label="Content workflow: Idea to Claude Code to Draft to Review and Revise to git push to Deploy to live on marsh.city">
+  <svg class="flow-lines" id="flow-lines"></svg>
+  <div class="flow-step" data-step="0">
     <div class="flow-icon">💡</div>
     <div class="flow-label">Idea</div>
   </div>
-  <div class="flow-arrow flow-arrow-1">
-    <svg viewBox="0 0 40 12" fill="none"><path d="M0 6h32M28 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="flow-step flow-step-2">
+  <div class="flow-step" data-step="1">
     <div class="flow-icon">🤖</div>
     <div class="flow-label">Claude Code</div>
   </div>
-  <div class="flow-arrow flow-arrow-2">
-    <svg viewBox="0 0 40 12" fill="none"><path d="M0 6h32M28 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="flow-step flow-step-3">
+  <div class="flow-step" data-step="2">
     <div class="flow-icon">📝</div>
     <div class="flow-label">Draft</div>
   </div>
-  <div class="flow-arrow flow-arrow-3">
-    <svg viewBox="0 0 40 12" fill="none"><path d="M0 6h32M28 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="flow-step flow-step-4">
+  <div class="flow-step" data-step="3">
     <div class="flow-icon">🔄</div>
     <div class="flow-label">Review & Revise</div>
   </div>
-  <div class="flow-arrow flow-arrow-4">
-    <svg viewBox="0 0 40 12" fill="none"><path d="M0 6h32M28 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="flow-step flow-step-5">
+  <div class="flow-step" data-step="4">
     <div class="flow-icon">📦</div>
     <div class="flow-label">git push</div>
   </div>
-  <div class="flow-arrow flow-arrow-5">
-    <svg viewBox="0 0 40 12" fill="none"><path d="M0 6h32M28 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="flow-step flow-step-6">
+  <div class="flow-step" data-step="5">
     <div class="flow-icon">⚡</div>
     <div class="flow-label">Deploy</div>
   </div>
-  <div class="flow-arrow flow-arrow-6">
-    <svg viewBox="0 0 40 12" fill="none"><path d="M0 6h32M28 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="flow-step flow-step-7 flow-step-live">
+  <div class="flow-step flow-step-live" data-step="6">
     <div class="flow-icon">🌿</div>
     <div class="flow-label">marsh.city</div>
   </div>
@@ -64,15 +47,37 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
 
 <style>{`
   .flow-diagram {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 0;
-    padding: 2rem 1rem;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem 2.5rem;
+    padding: 2.5rem 1.5rem;
     margin: 1.5rem 0 2rem;
     background: var(--bg-elev);
     border: 1px solid var(--border);
     border-radius: var(--radius);
+  }
+
+  .flow-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .flow-lines line {
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    stroke-dasharray: 6 4;
+    opacity: 0;
+  }
+
+  .flow-lines polygon {
+    fill: var(--accent);
+    opacity: 0;
   }
 
   .flow-step {
@@ -80,43 +85,41 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem;
     min-width: 72px;
     opacity: 0;
-    transform: translateY(8px);
-    animation: flow-fade-in 0.4s ease forwards;
+    transform: translateY(10px);
+    z-index: 1;
   }
 
-  .flow-step-1 { animation-delay: 0.1s; }
-  .flow-step-2 { animation-delay: 0.3s; }
-  .flow-step-3 { animation-delay: 0.5s; }
-  .flow-step-4 { animation-delay: 0.7s; }
-  .flow-step-5 { animation-delay: 0.9s; }
-  .flow-step-6 { animation-delay: 1.1s; }
-  .flow-step-7 { animation-delay: 1.3s; }
+  .flow-step.visible {
+    animation: flow-fade-in 0.45s ease forwards;
+  }
 
   .flow-icon {
     font-size: 1.75rem;
-    width: 3.25rem;
-    height: 3.25rem;
+    width: 3.5rem;
+    height: 3.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--bg-elev2);
     border: 1px solid var(--border);
     box-shadow: 0 2px 8px -2px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
   .flow-step:hover .flow-icon {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px -4px rgba(0,0,0,0.12);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   }
 
   .flow-step-live .flow-icon {
     background: color-mix(in srgb, var(--leaf) 15%, var(--bg-elev2));
     border-color: color-mix(in srgb, var(--leaf) 30%, transparent);
+    box-shadow: 0 2px 12px -2px color-mix(in srgb, var(--leaf) 20%, transparent);
   }
 
   .flow-label {
@@ -127,26 +130,6 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
     white-space: nowrap;
   }
 
-  .flow-arrow {
-    flex-shrink: 0;
-    width: 28px;
-    color: var(--accent);
-    opacity: 0;
-    animation: flow-arrow-in 0.3s ease forwards;
-  }
-  .flow-arrow svg {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  .flow-arrow-1 { animation-delay: 0.2s; }
-  .flow-arrow-2 { animation-delay: 0.4s; }
-  .flow-arrow-3 { animation-delay: 0.6s; }
-  .flow-arrow-4 { animation-delay: 0.8s; }
-  .flow-arrow-5 { animation-delay: 1.0s; }
-  .flow-arrow-6 { animation-delay: 1.2s; }
-
   @keyframes flow-fade-in {
     to {
       opacity: 1;
@@ -154,32 +137,86 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
     }
   }
 
-  @keyframes flow-arrow-in {
-    to {
-      opacity: 0.5;
+  @keyframes flow-line-in {
+    to { opacity: 0.45; }
+  }
+
+  @keyframes flow-dot-pulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 0.8; }
+  }
+
+  .flow-lines .pulse {
+    animation: flow-dot-pulse 2s ease-in-out infinite;
+  }
+`}</style>
+
+<script is:inline>{`
+(function() {
+  const diagram = document.getElementById('flow-diagram');
+  const svg = document.getElementById('flow-lines');
+  if (!diagram || !svg) return;
+
+  const steps = Array.from(diagram.querySelectorAll('.flow-step'));
+
+  function drawLines() {
+    svg.innerHTML = '';
+    const rect = diagram.getBoundingClientRect();
+
+    for (let i = 0; i < steps.length - 1; i++) {
+      const a = steps[i].querySelector('.flow-icon');
+      const b = steps[i + 1].querySelector('.flow-icon');
+      const aRect = a.getBoundingClientRect();
+      const bRect = b.getBoundingClientRect();
+
+      const x1 = aRect.left + aRect.width / 2 - rect.left;
+      const y1 = aRect.top + aRect.height / 2 - rect.top;
+      const x2 = bRect.left + bRect.width / 2 - rect.left;
+      const y2 = bRect.top + bRect.height / 2 - rect.top;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.style.animation = 'flow-line-in 0.3s ease forwards';
+      line.style.animationDelay = (0.15 + i * 0.2) + 's';
+      svg.appendChild(line);
+
+      // arrowhead
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const len = 7;
+      const ax = x2 - Math.cos(angle) * (bRect.width / 2 + 4);
+      const ay = y2 - Math.sin(angle) * (bRect.height / 2 + 4);
+      const p1x = ax - len * Math.cos(angle - 0.4);
+      const p1y = ay - len * Math.sin(angle - 0.4);
+      const p2x = ax - len * Math.cos(angle + 0.4);
+      const p2y = ay - len * Math.sin(angle + 0.4);
+
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      arrow.setAttribute('points', ax+','+ay+' '+p1x+','+p1y+' '+p2x+','+p2y);
+      arrow.classList.add('pulse');
+      arrow.style.animationDelay = (0.3 + i * 0.2) + 's';
+      svg.appendChild(arrow);
     }
   }
 
-  @media (max-width: 600px) {
-    .flow-diagram {
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.25rem;
-      padding: 1.25rem 0.75rem;
-    }
-    .flow-arrow {
-      width: 20px;
-    }
-    .flow-step {
-      min-width: 56px;
-    }
-    .flow-icon {
-      width: 2.75rem;
-      height: 2.75rem;
-      font-size: 1.4rem;
-    }
-  }
-`}</style>
+  // stagger step visibility
+  steps.forEach((step, i) => {
+    setTimeout(() => step.classList.add('visible'), 100 + i * 180);
+  });
+
+  // draw lines after steps are visible
+  setTimeout(drawLines, 100);
+
+  // redraw on resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(drawLines, 100);
+  });
+})();
+`}</script>
 
 Adding content is a conversation, not a CMS. I describe what I want, Claude writes the Markdown, we go back and forth until it's right, and a push to `main` deploys in under a minute.
 
