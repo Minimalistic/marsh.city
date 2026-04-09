@@ -12,7 +12,7 @@ MealDeck is a recipe intelligence platform that goes beyond storing recipes. It 
 
 ## What it does
 
-MealDeck ingests recipes and breaks them down into structured data: ingredients, quantities, steps, timing. From there, it can adapt recipes to dietary requirements — FODMAP restrictions, allergies, ingredient availability — by finding appropriate substitutions and rewriting the affected steps so the recipe still makes sense.
+MealDeck ingests recipes and breaks them down into structured data: ingredients, quantities, steps, timing. From there, it can adapt recipes to dietary requirements — allergies, medical diets, ingredient availability — by finding appropriate substitutions and rewriting the affected steps so the recipe still makes sense.
 
 The substitution engine doesn't guess. It uses a deterministic lookup for dietary classifications where accuracy matters, with AI-assisted rewriting only where flexibility helps — like adjusting cooking instructions when you swap one protein for another.
 
