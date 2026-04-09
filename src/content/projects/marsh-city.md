@@ -29,4 +29,4 @@ The whole point: adding content should feel like having a conversation, not oper
 - **Astro** — static site generator with content collections
 - **GitHub Pages** — free hosting on a custom domain
 - **Mermaid** — diagrams as code, rendered client-side
-- **Squarespace DNS** — pointing `marsh.city` at GitHub, leaving Apple Mail untouched
+- **GoDaddy DNS** — pointing `marsh.city` at GitHub Pages, Apple Mail via iCloud untouched

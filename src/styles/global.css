@@ -1,4 +1,4 @@
-/* monstera design tokens — cozy forest, polished portfolio */
+/* marsh.city design system — monstera forest meets precision engineering */
 :root {
   --cream: #f5f1e8;
   --cream-soft: #ede7d6;
@@ -8,11 +8,15 @@
   --leaf: #7ba05b;
   --leaf-bright: #9bc26a;
   --bark: #5c4a35;
-  --shadow: 0 4px 24px -8px rgba(27, 42, 31, 0.18);
-  --radius: 14px;
+  --shadow: 0 2px 16px -4px rgba(27, 42, 31, 0.12);
+  --shadow-lg: 0 8px 32px -8px rgba(27, 42, 31, 0.16);
+  --radius: 10px;
+  --radius-sm: 6px;
 
   --bg: var(--cream);
   --bg-elev: #fdfaf1;
+  --bg-elev2: #f8f4ea;
+  --border: rgba(27, 42, 31, 0.08);
   --fg: var(--ink);
   --fg-soft: var(--ink-soft);
   --accent: var(--moss);
@@ -27,15 +31,20 @@
   :root {
     --bg: #0f1a14;
     --bg-elev: #16241c;
+    --bg-elev2: #1c2e23;
+    --border: rgba(232, 228, 213, 0.08);
     --fg: #e8e4d5;
-    --fg-soft: #b8b5a4;
+    --fg-soft: #a8a594;
     --accent: var(--leaf-bright);
     --accent-bright: var(--leaf-bright);
-    --shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.6);
+    --shadow: 0 2px 16px -4px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
   }
 }
 
-* { box-sizing: border-box; }
+/* --- reset & base --- */
+
+*, *::before, *::after { box-sizing: border-box; }
 
 html, body {
   margin: 0;
@@ -44,131 +53,300 @@ html, body {
   color: var(--fg);
   font-family: var(--font-sans);
   font-size: 17px;
-  line-height: 1.65;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* --- typography --- */
 
 h1, h2, h3, h4 {
   font-family: var(--font-serif);
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   line-height: 1.2;
   color: var(--fg);
+  margin-top: 0;
 }
 
-h1 { font-size: clamp(2rem, 5vw, 3rem); }
-h2 { font-size: 1.75rem; margin-top: 2.5rem; }
-h3 { font-size: 1.3rem; }
+h1 {
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  margin-bottom: 0.75rem;
+}
+h2 {
+  font-size: 1.5rem;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+}
+
+p { margin: 0 0 1.25rem; }
 
 a {
   color: var(--accent);
   text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  transition: border-color 0.15s ease;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
 }
-a:hover { border-bottom-color: var(--accent); }
+a:hover {
+  border-bottom-color: var(--accent);
+}
 
 code {
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 0.88em;
   background: var(--bg-elev);
   padding: 0.15em 0.4em;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 
 pre {
   background: var(--bg-elev) !important;
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--radius);
   overflow-x: auto;
-  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  line-height: 1.5;
 }
-pre code { background: transparent; padding: 0; }
+pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 3rem 0;
+}
+
+/* --- layout --- */
 
 .layout {
-  max-width: 720px;
+  max-width: 680px;
   margin: 0 auto;
   padding: 2rem 1.5rem 6rem;
 }
+
+/* --- navigation --- */
 
 nav.site-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
-  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3.5rem;
 }
+
 nav.site-nav .brand {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
   font-weight: 500;
+  letter-spacing: -0.02em;
   border: none;
   color: var(--fg);
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
+nav.site-nav .brand:hover {
+  color: var(--accent);
+}
+
 nav.site-nav .links {
   display: flex;
-  gap: 1.25rem;
-  font-size: 0.95rem;
+  gap: 1.5rem;
+  font-size: 0.9rem;
 }
 nav.site-nav .links a {
   color: var(--fg-soft);
   border: none;
+  position: relative;
 }
-nav.site-nav .links a:hover { color: var(--accent); }
+nav.site-nav .links a:hover {
+  color: var(--fg);
+}
+
+/* --- footer --- */
 
 footer.site-foot {
-  margin-top: 5rem;
-  padding-top: 2rem;
-  border-top: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+  margin-top: 6rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
   color: var(--fg-soft);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   justify-content: space-between;
 }
+footer.site-foot a {
+  color: var(--fg-soft);
+}
+footer.site-foot a:hover {
+  color: var(--accent);
+}
+
+/* --- cards --- */
 
 .card {
   background: var(--bg-elev);
   padding: 1.25rem 1.5rem;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  margin-bottom: 0.75rem;
   display: block;
-  border: none;
   color: var(--fg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.card:hover { transform: translateY(-1px); transition: transform 0.15s; }
-.card h3 { margin: 0 0 0.25rem; }
-.card .meta { color: var(--fg-soft); font-size: 0.85rem; }
+.card:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: var(--shadow);
+}
+.card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+.card .meta {
+  color: var(--fg-soft);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* --- status badges --- */
 
 .status {
   display: inline-block;
-  font-size: 0.75rem;
-  padding: 0.15em 0.6em;
+  font-size: 0.7rem;
+  padding: 0.15em 0.55em;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--leaf) 20%, transparent);
+  background: color-mix(in srgb, var(--leaf) 15%, transparent);
   color: var(--accent);
   font-family: var(--font-mono);
   text-transform: lowercase;
+  vertical-align: middle;
+  margin-left: 0.4rem;
 }
 
-.tagline { color: var(--fg-soft); font-size: 1.1rem; }
+/* --- hero / intro --- */
+
+.hero {
+  margin-bottom: 4rem;
+}
+.hero h1 {
+  margin-bottom: 0.5rem;
+}
+.hero .subtitle {
+  color: var(--fg-soft);
+  font-size: 1.15rem;
+  line-height: 1.6;
+  max-width: 540px;
+}
+
+/* --- section headers --- */
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 3.5rem;
+  margin-bottom: 1.25rem;
+}
+.section-header h2 {
+  margin: 0;
+}
+.section-header a {
+  font-size: 0.85rem;
+  color: var(--fg-soft);
+  border: none;
+}
+.section-header a:hover {
+  color: var(--accent);
+}
+
+/* --- tag list --- */
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+.tag {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--fg-soft);
+  background: var(--bg-elev2);
+  padding: 0.15em 0.5em;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+/* --- content prose --- */
+
+.prose { max-width: 65ch; }
+.prose h2 { margin-top: 2.5rem; }
+.prose ul, .prose ol { padding-left: 1.25rem; }
+.prose li { margin-bottom: 0.35rem; }
+.prose img {
+  max-width: 100%;
+  border-radius: var(--radius);
+}
+
+/* --- article header --- */
+
+.article-header {
+  margin-bottom: 2.5rem;
+}
+.article-header .date {
+  font-size: 0.85rem;
+  color: var(--fg-soft);
+  font-family: var(--font-mono);
+}
+
+/* --- tagline (used on secondary pages) --- */
+
+.tagline {
+  color: var(--fg-soft);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* --- mermaid diagrams --- */
 
 .mermaid {
   background: var(--bg-elev);
-  padding: 1rem;
+  padding: 1.5rem;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
   text-align: center;
+  margin: 1.5rem 0;
 }
 
-.leaf {
-  display: inline-block;
-  width: 1.2em;
-  height: 1.2em;
-  vertical-align: -0.2em;
-  color: var(--accent);
+/* --- responsive --- */
+
+@media (max-width: 600px) {
+  .layout { padding: 1.25rem 1rem 4rem; }
+
+  nav.site-nav {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  nav.site-nav .links {
+    gap: 1rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  footer.site-foot {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }

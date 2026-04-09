@@ -1,18 +1,35 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Now" description="What Jason is up to right now">
+<Base title="Now" description="What Jason is working on right now.">
   <h1>Now</h1>
-  <p class="tagline">A snapshot of what's currently on my mind. (Inspired by <a href="https://nownownow.com/about">nownownow</a>.)</p>
+  <p class="tagline">What I'm focused on right now. Inspired by <a href="https://nownownow.com/about">nownownow.com</a>.</p>
 
-  <h2>Building</h2>
-  <p>This very website. Spinning up <code>marsh.city</code> as a home for projects, writing, and experiments.</p>
+  <div class="prose">
+    <h2>Building</h2>
+    <p>
+      <strong>marsh.city</strong> — this site. Getting it to the point where it's a
+      living portfolio, not a static resume. Astro, GitHub Pages, content as conversation.
+    </p>
+    <p>
+      <strong>MealDeck</strong> — a recipe intelligence and meal planning app. The current
+      focus is the substitution engine and FODMAP-aware recipe adaptation.
+    </p>
 
-  <h2>Reading</h2>
-  <p>—</p>
+    <h2>Working</h2>
+    <p>
+      Director of Technology at a disability services nonprofit in Duluth, MN.
+      Assistive technology evaluation, infrastructure, and keeping everything running.
+    </p>
 
-  <h2>Listening</h2>
-  <p>See <a href="/listening/">listening</a>.</p>
+    <h2>Exploring</h2>
+    <p>
+      AI engineering roles. Looking for teams building real products with LLMs —
+      not demos, not wrappers.
+    </p>
+  </div>
 
-  <p style="color: var(--fg-soft); font-size: 0.85rem; margin-top: 3rem;">Last updated: April 2026</p>
+  <p style="color: var(--fg-soft); font-size: 0.85rem; font-family: var(--font-mono); margin-top: 3rem;">
+    Updated April 2026
+  </p>
 </Base>

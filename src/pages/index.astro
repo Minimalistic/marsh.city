@@ -6,29 +6,41 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
   .slice(0, 3);
 const projects = (await getCollection('projects'))
   .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf())
-  .slice(0, 3);
+  .slice(0, 4);
 ---
-<Base>
-  <h1>Hi, I'm Jason 🌿</h1>
-  <p class="tagline">
-    I build things, write occasionally, and tend a small forest of side projects.
-    This is where they live.
-  </p>
+<Base description="Jason Marsh — developer, technologist, builder of AI-integrated tools.">
+  <div class="hero">
+    <h1>Jason Marsh</h1>
+    <p class="subtitle">
+      Developer and technologist in Duluth, MN. I build AI-integrated tools,
+      direct technology at a disability services nonprofit, and ship
+      production software as a solo builder. This is where the work lives.
+    </p>
+  </div>
 
-  <h2>Recent projects</h2>
+  <div class="section-header">
+    <h2>Projects</h2>
+    <a href="/projects/">View all</a>
+  </div>
   {projects.map((p) => (
     <a class="card" href={`/projects/${p.id}/`}>
-      <h3>{p.data.title} <span class="status">{p.data.status}</span></h3>
+      <h3>{p.data.title}<span class="status">{p.data.status}</span></h3>
       <p class="meta">{p.data.description}</p>
     </a>
   ))}
 
-  <h2>Latest writing</h2>
-  {posts.length === 0 && <p class="meta" style="color: var(--fg-soft);">Nothing yet — coming soon.</p>}
-  {posts.map((p) => (
-    <a class="card" href={`/posts/${p.id}/`}>
-      <h3>{p.data.title}</h3>
-      <p class="meta">{p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
-    </a>
-  ))}
+  {posts.length > 0 && (
+    <>
+      <div class="section-header">
+        <h2>Writing</h2>
+        <a href="/posts/">View all</a>
+      </div>
+      {posts.map((p) => (
+        <a class="card" href={`/posts/${p.id}/`}>
+          <h3>{p.data.title}</h3>
+          <p class="meta">{p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+        </a>
+      ))}
+    </>
+  )}
 </Base>

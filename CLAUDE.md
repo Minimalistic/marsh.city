@@ -7,7 +7,7 @@ This is Jason Marsh's personal site. The whole premise: **adding content is a co
 - Astro (static site generator) with content collections
 - Markdown + MDX for all content
 - Client-side Mermaid for diagrams (loaded on demand from CDN)
-- GitHub Pages hosting on `marsh.city` (custom domain via Squarespace DNS)
+- GitHub Pages hosting on `marsh.city` (custom domain via GoDaddy DNS)
 - GitHub Actions deploys on push to `main`
 
 ## Repo layout
@@ -64,7 +64,7 @@ Cream/forest palette in `src/styles/global.css`. Light + dark mode via `prefers-
 
 ## DNS — DO NOT TOUCH WITHOUT WARNING
 
-DNS is on Squarespace Domains. Apple Mail uses MX/TXT records on this domain. Web traffic uses A/CNAME records pointing at GitHub Pages. **Never suggest DNS changes without explicitly flagging that MX/TXT records must be left alone.**
+DNS is on GoDaddy. Apple Mail uses MX/TXT records on this domain (iCloud Mail). Web traffic uses A/CNAME records pointing at GitHub Pages. **Never suggest DNS changes without explicitly flagging that MX/TXT records must be left alone.**
 
 ## Workflow Jason expects
 
