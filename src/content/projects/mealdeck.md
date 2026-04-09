@@ -20,7 +20,7 @@ MealDeck is a meal planning app built around how people actually cook — not ju
 
 ## How it's built
 
-Node.js and Express on the backend, SQLite for all data persistence, vanilla JavaScript on the frontend. The Anthropic API powers recipe adaptation and natural language recipe import. No frameworks, no build step — the same stack behind most of my projects, chosen for speed and simplicity when building solo.
+Node.js and Express on the backend, SQLite for all data persistence, vanilla JavaScript on the frontend. The Anthropic API powers recipe adaptation and natural language recipe import. No frameworks, no build step — the same stack behind many of my projects, chosen for speed and simplicity when building solo.
 
 ## Who it's for
 
