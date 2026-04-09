@@ -15,6 +15,7 @@ const { Content } = await render(project);
     <span class="status">{project.data.status}</span>
     {project.data.repo && <> · <a href={project.data.repo}>repo</a></>}
     {project.data.url && <> · <a href={project.data.url}>live</a></>}
+    {project.data.updated && <> · <span class="meta">Updated {project.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span></>}
   </p>
   <p class="tagline">{project.data.description}</p>
   <Content />

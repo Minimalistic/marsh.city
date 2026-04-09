@@ -9,8 +9,9 @@ const projects = (await getCollection('projects'))
   <p class="tagline">Things I've built, am building, or am still daydreaming about.</p>
   {projects.map((p) => (
     <a class="card" href={`/projects/${p.id}/`}>
-      <h3>{p.data.title} <span class="status">{p.data.status}</span></h3>
+      <h3>{p.data.title}<span class="status">{p.data.status}</span></h3>
       <p class="meta">{p.data.description}</p>
+      {p.data.updated && <p class="meta">Updated {p.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</p>}
     </a>
   ))}
 </Base>
