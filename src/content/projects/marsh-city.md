@@ -15,11 +15,12 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
 
 ```mermaid
 flowchart LR
-  idea(Idea) --> claude(Claude Code) --> md(Markdown) --> push(git push) --> actions(GitHub Actions) --> live(marsh.city)
+  idea(Idea) --> claude(Claude Code) --> draft(Draft) --> review("Review & Revise") --> push(git push) --> actions(GitHub Actions) --> live(marsh.city)
 
   style idea fill:#2d5016,color:#fff,stroke:none
   style claude fill:#2d5016,color:#fff,stroke:none
-  style md fill:#5c4a35,color:#fff,stroke:none
+  style draft fill:#5c4a35,color:#fff,stroke:none
+  style review fill:#5c4a35,color:#fff,stroke:none
   style push fill:#5c4a35,color:#fff,stroke:none
   style actions fill:#5c4a35,color:#fff,stroke:none
   style live fill:#7ba05b,color:#fff,stroke:none
