@@ -14,27 +14,15 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
 ## How it works
 
 ```mermaid
-flowchart TD
-  subgraph conversation [" ✦ Conversation "]
-    direction LR
-    idea["💡 Idea"]
-    claude["🤖 Claude Code"]
-    idea --> claude
-  end
+flowchart LR
+  idea(Idea) --> claude(Claude Code) --> md(Markdown) --> push(git push) --> actions(GitHub Actions) --> live(marsh.city)
 
-  subgraph pipeline [" ⚙ Pipeline "]
-    direction LR
-    md["📄 Markdown"]
-    git["📦 git push"]
-    actions["🔧 GitHub Actions"]
-    md --> git --> actions
-  end
-
-  subgraph deploy [" 🌿 Live "]
-    site["marsh.city"]
-  end
-
-  conversation --> pipeline --> deploy
+  style idea fill:#2d5016,color:#fff,stroke:none
+  style claude fill:#2d5016,color:#fff,stroke:none
+  style md fill:#5c4a35,color:#fff,stroke:none
+  style push fill:#5c4a35,color:#fff,stroke:none
+  style actions fill:#5c4a35,color:#fff,stroke:none
+  style live fill:#7ba05b,color:#fff,stroke:none
 ```
 
 Adding content is a conversation, not a CMS. I describe what I want, Claude writes the Markdown, and a push to `main` deploys in under a minute.
