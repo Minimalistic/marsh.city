@@ -1,6 +1,6 @@
 ---
 title: MealDeck
-description: Recipe intelligence and meal planning with dietary adaptation — now in private beta.
+description: Meal planning that actually thinks about what you're cooking — now in private beta.
 status: wip
 url: https://mealdeck.net
 tags: [node, sqlite, express, vanilla-js, claude-api]
@@ -8,18 +8,20 @@ started: 2025-01-01
 updated: 2026-04-09
 ---
 
-MealDeck is a recipe intelligence platform that goes beyond storing recipes. It understands ingredients, dietary constraints, and substitutions — so you can adapt what you cook to what you need.
+MealDeck is a meal planning app built around how people actually cook — not just what they cook. It handles the planning, the shopping, and the cooking itself.
 
 ## What it does
 
-MealDeck ingests recipes and breaks them down into structured data: ingredients, quantities, steps, timing. From there, it can adapt recipes to dietary requirements — allergies, medical diets, ingredient availability — by finding appropriate substitutions and rewriting the affected steps so the recipe still makes sense.
+**Week-to-week meal planning** that looks at what you're already buying. MealDeck groups recipes with overlapping ingredients so your grocery runs are smaller and less goes to waste. Plan a week of meals and the shopping list builds itself around shared ingredients.
 
-The substitution engine doesn't guess. It uses a deterministic lookup for dietary classifications where accuracy matters, with AI-assisted rewriting only where flexibility helps — like adjusting cooking instructions when you swap one protein for another.
+**Cook mode** turns your device into a hands-free kitchen companion. Step-by-step instructions, one page at a time, controlled entirely by voice — say "next" or "back" to navigate, "ingredients" to check the list. No touching your phone with raw-chicken hands.
+
+**AI recipe adaptation** lets you modify recipes for dietary needs, ingredient swaps, or serving size changes. Tell it what you need and it adjusts the recipe intelligently — not just the ingredient list, but the instructions too.
 
 ## How it's built
 
-Node.js and Express on the backend, SQLite for all data persistence, vanilla JavaScript on the frontend. The Anthropic API handles recipe step rewriting during substitutions and natural language recipe import. No frameworks, no build step — the same stack I use across all my projects, chosen for speed and simplicity when building solo.
+Node.js and Express on the backend, SQLite for all data persistence, vanilla JavaScript on the frontend. The Anthropic API powers recipe adaptation and natural language recipe import. No frameworks, no build step — the same stack I use across all my projects, chosen for speed and simplicity when building solo.
 
 ## Who it's for
 
-Anyone who cooks regularly and deals with dietary constraints — whether that's managing a medical diet, cooking for a household with mixed needs, or just trying to use what's already in the fridge.
+Anyone who cooks regularly and wants to spend less time planning and more time cooking — especially if you're feeding a household, managing a budget, or dealing with dietary constraints.
