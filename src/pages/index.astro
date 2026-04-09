@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+const posts = (await getCollection('posts', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+const projects = (await getCollection('projects'))
+  .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf())
+  .slice(0, 3);
+---
+<Base>
+  <h1>Hi, I'm Jason 🌿</h1>
+  <p class="tagline">
+    I build things, write occasionally, and tend a small forest of side projects.
+    This is where they live.
+  </p>
+
+  <h2>Recent projects</h2>
+  {projects.map((p) => (
+    <a class="card" href={`/projects/${p.id}/`}>
+      <h3>{p.data.title} <span class="status">{p.data.status}</span></h3>
+      <p class="meta">{p.data.description}</p>
+    </a>
+  ))}
+
+  <h2>Latest writing</h2>
+  {posts.length === 0 && <p class="meta" style="color: var(--fg-soft);">Nothing yet — coming soon.</p>}
+  {posts.map((p) => (
+    <a class="card" href={`/posts/${p.id}/`}>
+      <h3>{p.data.title}</h3>
+      <p class="meta">{p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+    </a>
+  ))}
+</Base>

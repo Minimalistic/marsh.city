@@ -1,0 +1,72 @@
+---
+import '../styles/global.css';
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title = 'marsh.city', description = "Jason Marsh's corner of the internet" } = Astro.props;
+const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{fullTitle}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="layout">
+      <nav class="site-nav">
+        <a href="/" class="brand">
+          <svg class="leaf" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C7 2 3 6 3 11c0 6 5 11 9 11s9-5 9-11c0-5-4-9-9-9zm0 3c.5 3 2 5 5 5.5-1 4-4 7-5 7s-4-3-5-7c3-.5 4.5-2.5 5-5.5z"/>
+          </svg>
+          marsh.city
+        </a>
+        <div class="links">
+          <a href="/projects/">projects</a>
+          <a href="/posts/">posts</a>
+          <a href="/playground/">playground</a>
+          <a href="/now/">now</a>
+          <a href="/about/">about</a>
+        </div>
+      </nav>
+
+      <main>
+        <slot />
+      </main>
+
+      <footer class="site-foot">
+        <span>© Jason Marsh</span>
+        <span><a href="https://github.com/Minimalistic/marsh.city">source</a></span>
+      </footer>
+    </div>
+
+    <script>
+      // client-side mermaid: transforms ```mermaid code blocks to rendered diagrams
+      const blocks = document.querySelectorAll('pre > code.language-mermaid, code.language-mermaid');
+      if (blocks.length > 0) {
+        const mermaid = (await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')).default;
+        const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral', fontFamily: 'Inter, sans-serif' });
+        blocks.forEach((code, i) => {
+          const pre = code.closest('pre') || code;
+          const div = document.createElement('div');
+          div.className = 'mermaid';
+          div.id = `mermaid-${i}`;
+          div.textContent = code.textContent || '';
+          pre.replaceWith(div);
+        });
+        await mermaid.run();
+      }
+    </script>
+  </body>
+</html>
