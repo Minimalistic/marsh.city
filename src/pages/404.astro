@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="404" description="Page not found">
+  <div class="four-oh-four">
+    <h1>404</h1>
+    <p class="lost-message">You've wandered off the trail.</p>
+    <p class="lost-hint">The path you're looking for doesn't exist — maybe it was moved, maybe it never was.</p>
+    <a href="/" class="back-link">Back to the clearing</a>
+  </div>
+</Base>
+
+<style>
+  .four-oh-four {
+    text-align: center;
+    padding: 6rem 1rem 4rem;
+  }
+  .four-oh-four h1 {
+    font-size: clamp(5rem, 15vw, 10rem);
+    margin: 0;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--leaf) 0%, var(--leaf-pale) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0.3;
+  }
+  .lost-message {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: var(--fg);
+    margin: 1.5rem 0 0.5rem;
+  }
+  .lost-hint {
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+    max-width: 400px;
+    margin: 0 auto 2rem;
+  }
+  .back-link {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+  }
+</style>

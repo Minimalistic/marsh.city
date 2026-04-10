@@ -77,6 +77,17 @@ html {
   scroll-behavior: smooth;
 }
 
+/* --- keyboard focus --- */
+
+:focus-visible {
+  outline: 2px solid var(--leaf);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* --- text selection --- */
 
 ::selection {
@@ -341,6 +352,17 @@ footer.site-foot a:hover {
 
 /* --- hero / intro --- */
 
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .hero {
   margin-bottom: 4rem;
   position: relative;
@@ -351,31 +373,18 @@ footer.site-foot a:hover {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  opacity: 0;
-  transform: translateY(24px);
-  animation: hero-in 0.7s ease forwards;
+  animation: hero-rise 0.8s ease both;
 }
 .hero .subtitle {
   color: var(--fg-soft);
   font-size: 1.15rem;
   line-height: 1.65;
   max-width: 560px;
-  opacity: 0;
-  transform: translateY(18px);
-  animation: hero-in 0.6s ease 0.25s forwards;
-}
-
-@keyframes hero-in {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  animation: hero-rise 0.8s ease 0.15s both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hero h1, .hero .subtitle {
-    opacity: 1;
-    transform: none;
     animation: none;
   }
 }
