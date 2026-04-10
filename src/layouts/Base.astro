@@ -33,6 +33,7 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
     </svg>
 
     <div class="layout">
+      <a href="#main" class="skip-link">Skip to main content</a>
       <nav class="site-nav">
         <a href="/" class="brand">marsh.city</a>
         <div class="links">
@@ -44,7 +45,7 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
         </div>
       </nav>
 
-      <main>
+      <main id="main">
         <slot />
       </main>
 
@@ -198,12 +199,15 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
           const btn = document.createElement('button');
           btn.className = 'code-copy';
           btn.textContent = 'copy';
+          btn.setAttribute('aria-label', 'Copy code to clipboard');
           btn.addEventListener('click', async () => {
             await navigator.clipboard.writeText(code.textContent || '');
             btn.textContent = 'copied';
+            btn.setAttribute('aria-label', 'Code copied to clipboard');
             btn.classList.add('copied');
             setTimeout(() => {
               btn.textContent = 'copy';
+              btn.setAttribute('aria-label', 'Copy code to clipboard');
               btn.classList.remove('copied');
             }, 1500);
           });

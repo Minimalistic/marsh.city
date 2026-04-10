@@ -229,6 +229,26 @@ hr {
   border-radius: var(--radius);
 }
 
+/* --- skip link --- */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  background: var(--leaf);
+  color: var(--bg);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  z-index: 10001;
+  text-decoration: none;
+}
+.skip-link::after { display: none; }
+.skip-link:focus {
+  top: 1rem;
+}
+
 /* --- layout --- */
 
 .layout {
@@ -417,6 +437,15 @@ footer.site-foot a:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .status-wip { animation: none; }
+  .card {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+  .card::before {
+    display: none;
+  }
 }
 
 /* --- demo badge --- */
@@ -482,11 +511,18 @@ footer.site-foot a:hover {
 }
 .hero h1 {
   margin-bottom: 0.5rem;
+  color: var(--fg);
   background: linear-gradient(135deg, var(--fg) 0%, var(--ink-soft) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: hero-rise 0.8s ease both;
+}
+@media (forced-colors: active) {
+  .hero h1 {
+    -webkit-text-fill-color: unset;
+    background: none;
+  }
 }
 .hero .subtitle {
   color: var(--fg-soft);
@@ -582,7 +618,9 @@ footer.site-foot a:hover {
     margin-top: 0;
     transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.35s ease;
   }
-  .card:hover .tags {
+  .card:hover .tags,
+  .card:focus-visible .tags,
+  .card:focus-within .tags {
     max-height: 3rem;
     opacity: 1;
     margin-top: 0.6rem;
