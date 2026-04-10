@@ -268,29 +268,15 @@ nav.site-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 700px;
-  margin: 0 auto;
-  padding: calc(0.75rem + env(safe-area-inset-top)) 1.5rem 0.75rem;
-  background: transparent;
+  padding: calc(0.75rem + env(safe-area-inset-top)) max(1.5rem, calc((100% - 700px) / 2 + 1.5rem)) 0.75rem;
+  border-bottom: 1px solid var(--border-leaf);
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   transition: padding 0.3s ease, box-shadow 0.3s ease;
 }
-nav.site-nav::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -50vw;
-  right: -50vw;
-  bottom: 0;
-  background: color-mix(in srgb, var(--bg) 80%, transparent);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  border-bottom: 1px solid var(--border-leaf);
-  z-index: -1;
-}
 nav.site-nav.scrolled {
-  padding: calc(0.5rem + env(safe-area-inset-top)) 1.5rem 0.5rem;
+  padding: calc(0.5rem + env(safe-area-inset-top)) max(1.5rem, calc((100% - 700px) / 2 + 1.5rem)) 0.5rem;
   box-shadow: 0 1px 12px -2px rgba(0, 0, 0, 0.1);
 }
 nav.site-nav .brand {
@@ -813,11 +799,11 @@ body::after {
   .layout::before { display: none; }
 
   nav.site-nav {
-    padding: calc(0.6rem + env(safe-area-inset-top)) 1rem 0.6rem;
+    padding: calc(0.6rem + env(safe-area-inset-top)) 1rem 0.6rem !important;
     gap: 0.75rem;
   }
   nav.site-nav.scrolled {
-    padding: calc(0.4rem + env(safe-area-inset-top)) 1rem 0.4rem;
+    padding: calc(0.4rem + env(safe-area-inset-top)) 1rem 0.4rem !important;
   }
   .layout {
     padding-top: calc(3.25rem + env(safe-area-inset-top));
