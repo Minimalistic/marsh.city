@@ -300,6 +300,13 @@ footer.site-foot {
   font-size: 0.85rem;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+.foot-links {
+  display: flex;
+  gap: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
 }
 footer.site-foot a {
   color: var(--fg-muted);
@@ -488,6 +495,10 @@ footer.site-foot a:hover {
   max-width: 560px;
   animation: hero-rise 0.8s ease 0.15s both;
 }
+.hero .subtitle strong {
+  color: var(--fg);
+  font-weight: 600;
+}
 
 @keyframes hero-rise {
   from {
@@ -523,16 +534,21 @@ footer.site-foot a:hover {
   color: var(--fg);
 }
 .section-header a {
-  font-size: 0.82rem;
-  color: var(--fg-muted);
-  border: none;
+  font-size: 0.8rem;
+  color: var(--fg-soft);
+  border: 1px solid var(--border);
+  padding: 0.2em 0.7em;
+  border-radius: 999px;
   font-family: var(--font-mono);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 .section-header a::after {
-  background: var(--accent);
+  display: none;
 }
 .section-header a:hover {
   color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-glow);
 }
 
 /* --- tag list --- */
@@ -761,6 +777,10 @@ body::after {
   footer.site-foot {
     flex-direction: column;
     gap: 0.5rem;
+    align-items: flex-start;
+  }
+  .foot-links {
+    gap: 1rem;
   }
 
   .hero h1 {
