@@ -13,7 +13,7 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <title>{fullTitle}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -59,24 +59,6 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
         </div>
       </footer>
     </div>
-
-    <script is:inline>
-      // sticky nav scroll state
-      (() => {
-        const nav = document.querySelector('nav.site-nav');
-        if (!nav) return;
-        let ticking = false;
-        window.addEventListener('scroll', () => {
-          if (!ticking) {
-            requestAnimationFrame(() => {
-              nav.classList.toggle('scrolled', window.scrollY > 20);
-              ticking = false;
-            });
-            ticking = true;
-          }
-        }, { passive: true });
-      })();
-    </script>
 
     <script is:inline>
       // staggered scroll fade-in for cards, sections, hero
