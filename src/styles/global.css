@@ -411,18 +411,67 @@ footer.site-foot a:hover {
   margin: 1.5rem 0;
 }
 
-/* --- decorative leaves --- */
+/* --- monstera canopy --- */
 
-.deco-leaves {
+.canopy {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
+}
+
+.canopy-leaf {
+  position: absolute;
   color: var(--leaf);
-  overflow: visible;
+  filter: blur(0.5px);
+}
+
+.leaf-1 {
+  width: 480px;
+  height: auto;
+  top: -100px;
+  right: -80px;
+  opacity: 0.06;
+  transform-origin: 80% 10%;
+  animation: sway-1 8s ease-in-out infinite;
+}
+
+.leaf-2 {
+  width: 380px;
+  height: auto;
+  top: 35%;
+  left: -120px;
+  opacity: 0.04;
+  transform: scaleX(-1) rotate(-20deg);
+  transform-origin: 20% 20%;
+  animation: sway-2 11s ease-in-out infinite;
+}
+
+.leaf-3 {
+  width: 340px;
+  height: auto;
+  bottom: -60px;
+  right: 5%;
+  opacity: 0.05;
+  transform: rotate(145deg);
+  transform-origin: center;
+  animation: sway-3 13s ease-in-out infinite;
+}
+
+@keyframes sway-1 {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  50% { transform: rotate(2.5deg) translateY(4px); }
+}
+
+@keyframes sway-2 {
+  0%, 100% { transform: scaleX(-1) rotate(-20deg) translateY(0); }
+  50% { transform: scaleX(-1) rotate(-16deg) translateY(-6px); }
+}
+
+@keyframes sway-3 {
+  0%, 100% { transform: rotate(145deg) translateX(0); }
+  50% { transform: rotate(148deg) translateX(8px); }
 }
 
 /* --- brand leaf --- */
@@ -444,7 +493,7 @@ nav.site-nav .brand:hover .brand-leaf {
   .layout {
     padding: 1.25rem 1rem 4rem;
   }
-  .deco-leaves { display: none; }
+  .canopy { display: none; }
 
   nav.site-nav {
     flex-direction: column;
