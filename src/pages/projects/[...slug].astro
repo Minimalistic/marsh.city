@@ -11,12 +11,14 @@ const { project } = Astro.props;
 const { Content } = await render(project);
 ---
 <Post title={project.data.title} description={project.data.description}>
-  <p>
+  <div class="project-meta">
     <span class="status">{project.data.status}</span>
-    {project.data.repo && <> · <a href={project.data.repo}>repo</a></>}
-    {project.data.url && <> · <a href={project.data.url}>live</a></>}
-    {project.data.updated && <> · <span class="meta">Updated {project.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span></>}
-  </p>
+    {project.data.repo && <a href={project.data.repo} class="project-link">repo</a>}
+    {project.data.updated && <span class="meta">Updated {project.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>}
+  </div>
+  {project.data.url && (
+    <a href={project.data.url} class="live-demo-btn">Try the live demo</a>
+  )}
   <p class="tagline">{project.data.description}</p>
   <Content />
 </Post>

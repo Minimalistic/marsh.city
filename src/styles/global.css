@@ -428,6 +428,45 @@ footer.site-foot a:hover {
   border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
+/* --- project page meta + live demo button --- */
+
+.project-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.project-link {
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+}
+
+.live-demo-btn {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 0.5em 1.25em;
+  border-radius: var(--radius-sm);
+  background: var(--leaf);
+  color: var(--bg);
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  margin-bottom: 1.25rem;
+}
+
+.live-demo-btn:hover {
+  background: var(--leaf-bright);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--leaf) 30%, transparent);
+}
+
+.live-demo-btn::after {
+  display: none;
+}
+
 /* --- hero / intro --- */
 
 .hero {
