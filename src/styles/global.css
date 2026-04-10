@@ -266,19 +266,7 @@ nav.site-nav {
   padding-bottom: 1.5rem;
   margin-bottom: 3.5rem;
   border-bottom: 1px solid var(--border-leaf);
-  position: relative;
 }
-nav.site-nav::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 60px;
-  height: 2px;
-  background: var(--leaf);
-  border-radius: 1px;
-}
-
 nav.site-nav .brand {
   font-family: var(--font-mono);
   font-size: 0.95rem;
@@ -803,10 +791,6 @@ body::after {
   nav.site-nav .links {
     gap: 1rem;
   }
-  nav.site-nav::after {
-    width: 40px;
-  }
-
   .section-header {
     flex-direction: column;
     gap: 0.25rem;
