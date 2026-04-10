@@ -23,9 +23,53 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
     />
   </head>
   <body>
+    <!-- decorative monstera leaves -->
+    <svg class="deco-leaves" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- large leaf, top right -->
+      <g opacity="0.07" transform="translate(580, -40) rotate(25)">
+        <path d="M120 10C80 10 20 60 10 140C5 180 15 230 40 270C65 310 100 340 130 350
+                 C130 350 110 290 115 240C120 190 140 150 160 130C180 110 200 105 200 105
+                 C200 105 170 90 150 60C140 40 135 20 120 10Z"
+              fill="currentColor"/>
+        <!-- leaf veins -->
+        <path d="M95 140C105 180 115 240 130 350" stroke="currentColor" stroke-width="2" opacity="0.4" fill="none"/>
+        <path d="M95 140C70 170 50 210 40 270" stroke="currentColor" stroke-width="1.2" opacity="0.3" fill="none"/>
+        <path d="M95 140C120 155 145 145 160 130" stroke="currentColor" stroke-width="1.2" opacity="0.3" fill="none"/>
+        <path d="M95 140C125 120 155 108 200 105" stroke="currentColor" stroke-width="1" opacity="0.25" fill="none"/>
+        <path d="M95 140C100 110 120 70 150 60" stroke="currentColor" stroke-width="1" opacity="0.25" fill="none"/>
+        <!-- fenestrations (holes) -->
+        <ellipse cx="75" cy="210" rx="12" ry="20" transform="rotate(-10 75 210)" fill="var(--bg)"/>
+        <ellipse cx="55" cy="260" rx="8" ry="14" transform="rotate(-15 55 260)" fill="var(--bg)"/>
+        <ellipse cx="115" cy="185" rx="10" ry="16" transform="rotate(15 115 185)" fill="var(--bg)"/>
+        <ellipse cx="140" cy="145" rx="7" ry="11" transform="rotate(30 140 145)" fill="var(--bg)"/>
+      </g>
+      <!-- smaller leaf, left side -->
+      <g opacity="0.04" transform="translate(-60, 200) rotate(-15) scale(0.7)">
+        <path d="M120 10C80 10 20 60 10 140C5 180 15 230 40 270C65 310 100 340 130 350
+                 C130 350 110 290 115 240C120 190 140 150 160 130C180 110 200 105 200 105
+                 C200 105 170 90 150 60C140 40 135 20 120 10Z"
+              fill="currentColor"/>
+        <path d="M95 140C105 180 115 240 130 350" stroke="currentColor" stroke-width="2" opacity="0.4" fill="none"/>
+        <path d="M95 140C70 170 50 210 40 270" stroke="currentColor" stroke-width="1.2" opacity="0.3" fill="none"/>
+        <path d="M95 140C120 155 145 145 160 130" stroke="currentColor" stroke-width="1.2" opacity="0.3" fill="none"/>
+        <ellipse cx="75" cy="210" rx="12" ry="20" transform="rotate(-10 75 210)" fill="var(--bg)"/>
+        <ellipse cx="115" cy="185" rx="10" ry="16" transform="rotate(15 115 185)" fill="var(--bg)"/>
+      </g>
+    </svg>
+
     <div class="layout">
       <nav class="site-nav">
-        <a href="/" class="brand">marsh.city</a>
+        <a href="/" class="brand">
+          <svg class="brand-leaf" viewBox="0 0 24 28" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C8 2 3 7 2 14C1.5 18 3 23 6 26C6 26 5.5 20 7 16C8.5 12 11 9 13 8
+                     C15 7 17 7 17 7C17 7 15 5 13 3.5C12.5 2.8 12 2 12 2Z" opacity="0.9"/>
+            <path d="M9.5 14C10 17 10.5 20 6 26" stroke="var(--bg)" stroke-width="0.6" fill="none" opacity="0.4"/>
+            <path d="M9.5 14C8 16 5.5 19 2 14" stroke="var(--bg)" stroke-width="0.5" fill="none" opacity="0.3"/>
+            <path d="M9.5 14C11 13 13 10 13 8" stroke="var(--bg)" stroke-width="0.5" fill="none" opacity="0.3"/>
+            <ellipse cx="7" cy="18" rx="1.5" ry="2.5" transform="rotate(-10 7 18)" fill="var(--bg)" opacity="0.25"/>
+          </svg>
+          marsh.city
+        </a>
         <div class="links">
           <a href="/projects/">projects</a>
           <a href="/posts/">posts</a>

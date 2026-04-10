@@ -162,6 +162,8 @@ hr {
 /* --- layout --- */
 
 .layout {
+  position: relative;
+  z-index: 1;
   max-width: 700px;
   margin: 0 auto;
   padding: 2rem 1.5rem 6rem;
@@ -409,19 +411,31 @@ footer.site-foot a:hover {
   margin: 1.5rem 0;
 }
 
-/* --- decorative leaf --- */
+/* --- decorative leaves --- */
 
-.layout::before {
-  content: '';
+.deco-leaves {
   position: fixed;
-  top: -120px;
-  right: -80px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(ellipse at center, var(--accent-glow), transparent 70%);
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
+  color: var(--leaf);
+  overflow: visible;
+}
+
+/* --- brand leaf --- */
+
+.brand-leaf {
+  width: 1.1em;
+  height: 1.3em;
+  vertical-align: -0.2em;
+  color: var(--leaf);
+  transition: color 0.2s ease;
+}
+nav.site-nav .brand:hover .brand-leaf {
+  color: var(--leaf-bright);
 }
 
 /* --- responsive --- */
@@ -430,7 +444,7 @@ footer.site-foot a:hover {
   .layout {
     padding: 1.25rem 1rem 4rem;
   }
-  .layout::before { display: none; }
+  .deco-leaves { display: none; }
 
   nav.site-nav {
     flex-direction: column;
