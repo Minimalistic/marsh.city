@@ -6,15 +6,16 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
   .slice(0, 3);
 const projects = (await getCollection('projects'))
   .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf())
-  .slice(0, 4);
+  .slice(0, 6);
 ---
 <Base description="Jason Marsh — developer, technologist, builder of AI-integrated tools.">
   <div class="hero">
     <h1>Jason Marsh</h1>
     <p class="subtitle">
-      Developer and technologist in Duluth, MN. I build AI-integrated tools,
-      direct technology at a disability services nonprofit, and ship
-      production software as a solo builder. This is where the work lives.
+      Developer and technologist in Duluth, MN. 13+ years in IT, directing
+      technology at a nonprofit by day, shipping AI-integrated tools solo
+      by night. From accessible kiosk apps to IoT hardware to recipe
+      intelligence — I build the whole thing.
     </p>
   </div>
 

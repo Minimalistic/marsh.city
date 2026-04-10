@@ -1,6 +1,6 @@
 ---
 title: MealDeck
-description: Meal planning that actually thinks about what you're cooking — now in private beta.
+description: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation — in private beta at mealdeck.net.
 status: wip
 url: https://mealdeck.net
 tags: [node, sqlite, express, vanilla-js, claude-api]

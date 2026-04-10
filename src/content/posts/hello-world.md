@@ -3,6 +3,7 @@ title: Hello, world
 description: A first post, mostly to make sure the plumbing works.
 date: 2026-04-08
 tags: [meta]
+draft: true
 ---
 
 This is the first post on `marsh.city`. If you're reading it, the pipeline works:

@@ -1,6 +1,6 @@
 ---
 title: RadioGridXL
-description: A single-file HTML5 radio streaming app built for accessibility — now deployed to older adults at a nonprofit.
+description: A zero-dependency, single-file radio streaming app with WCAG AA accessibility — deployed to older adults at a nonprofit.
 status: shipped
 repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio.html

@@ -1,6 +1,6 @@
 ---
 title: EchoEtcher
-description: An AI-powered pipeline that turns voice memos into structured Markdown notes in your Obsidian vault.
+description: Voice memos to structured Obsidian notes — local Whisper transcription piped through Claude for formatting, tagging, and organization.
 status: wip
 repo: https://github.com/Minimalistic/EchoEtcher
 tags: [python, whisper, claude-api, obsidian, ai]
