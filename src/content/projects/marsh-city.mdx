@@ -158,10 +158,14 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
 
   const steps = Array.from(diagram.querySelectorAll('.flow-step'));
 
-  function drawLines() {
-    svg.innerHTML = '';
+  let drawn = false;
+  let lines = [];
+  let arrows = [];
+
+  function drawLines(animate) {
     const rect = diagram.getBoundingClientRect();
 
+    let idx = 0;
     for (let i = 0; i < steps.length - 1; i++) {
       const a = steps[i].querySelector('.flow-icon');
       const b = steps[i + 1].querySelector('.flow-icon');
@@ -173,16 +177,46 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
       const x2 = bRect.left + bRect.width / 2 - rect.left;
       const y2 = bRect.top + bRect.height / 2 - rect.top;
 
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      let line, arrow;
+      if (!drawn) {
+        line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        svg.appendChild(line);
+        lines.push(line);
+
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const len = 7;
+        const ax = x2 - Math.cos(angle) * (bRect.width / 2 + 4);
+        const ay = y2 - Math.sin(angle) * (bRect.height / 2 + 4);
+        const p1x = ax - len * Math.cos(angle - 0.4);
+        const p1y = ay - len * Math.sin(angle - 0.4);
+        const p2x = ax - len * Math.cos(angle + 0.4);
+        const p2y = ay - len * Math.sin(angle + 0.4);
+
+        arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        arrow.setAttribute('points', ax+','+ay+' '+p1x+','+p1y+' '+p2x+','+p2y);
+        arrow.classList.add('pulse');
+        svg.appendChild(arrow);
+        arrows.push(arrow);
+
+        if (animate) {
+          line.style.animation = 'flow-line-in 0.3s ease forwards';
+          line.style.animationDelay = (0.15 + i * 0.2) + 's';
+          arrow.style.animationDelay = (0.3 + i * 0.2) + 's';
+        } else {
+          line.style.opacity = '0.45';
+          arrow.style.opacity = '0.45';
+        }
+      } else {
+        line = lines[i];
+        arrow = arrows[i];
+      }
+
       line.setAttribute('x1', x1);
       line.setAttribute('y1', y1);
       line.setAttribute('x2', x2);
       line.setAttribute('y2', y2);
-      line.style.animation = 'flow-line-in 0.3s ease forwards';
-      line.style.animationDelay = (0.15 + i * 0.2) + 's';
-      svg.appendChild(line);
 
-      // arrowhead
+      // update arrowhead position on resize
       const angle = Math.atan2(y2 - y1, x2 - x1);
       const len = 7;
       const ax = x2 - Math.cos(angle) * (bRect.width / 2 + 4);
@@ -191,13 +225,9 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
       const p1y = ay - len * Math.sin(angle - 0.4);
       const p2x = ax - len * Math.cos(angle + 0.4);
       const p2y = ay - len * Math.sin(angle + 0.4);
-
-      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
       arrow.setAttribute('points', ax+','+ay+' '+p1x+','+p1y+' '+p2x+','+p2y);
-      arrow.classList.add('pulse');
-      arrow.style.animationDelay = (0.3 + i * 0.2) + 's';
-      svg.appendChild(arrow);
     }
+    drawn = true;
   }
 
   // stagger step visibility
@@ -206,13 +236,17 @@ The site you're reading right now. Built with [Astro](https://astro.build), depl
   });
 
   // draw lines after steps are visible
-  setTimeout(drawLines, 100);
+  setTimeout(() => drawLines(true), 100);
 
-  // redraw on resize
+  // reposition on resize (no animation replay)
   let resizeTimer;
+  let lastWidth = window.innerWidth;
   window.addEventListener('resize', () => {
+    // ignore mobile scroll-triggered resizes (only height changes)
+    if (window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(drawLines, 100);
+    resizeTimer = setTimeout(() => drawLines(false), 100);
   });
 })();
 `}</script>
