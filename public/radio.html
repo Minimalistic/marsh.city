@@ -1,0 +1,3807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RadioGridXL</title>
+<style>
+
+/* --- RESET & ROOT VARIABLES --- */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* -- Dark theme (default) -- */
+:root {
+  --accent: #f0c040;
+
+  --header-bg: #0d0d1a;
+  --header-text: #ffffff;
+  --header-sub: #aaaacc;
+
+  --screen-bg: #0d0d1a;
+  --status-bg: #0d0d1a;
+  --status-text: #aaaaaa;
+  --status-border: #222244;
+
+  --settings-bg: #1a1a2e;
+  --settings-text: #ffffff;
+  --settings-label: #aaaacc;
+  --settings-border: #333355;
+  --settings-input-bg: #0d0d1a;
+
+  --pill-bg: #1a4a1a;
+  --pill-text: #88ee88;
+
+  --stop-idle-bg: #111122;
+  --stop-idle-text: #7777aa;
+  --stop-idle-border: #1a1a33;
+  --stop-active-bg: #3a0d0d;
+  --stop-active-text: #ff6b6b;
+  --stop-active-border: #662222;
+  --stop-paused-bg: #1a1400;
+  --stop-paused-text: #f0c040;
+  --stop-paused-border: #4a3800;
+
+  --overlay-bg: rgba(0, 0, 0, 0.88);
+  --overlay-text: #ffffff;
+  --overlay-sub: #aaaacc;
+  --overlay-btn-bg: #59c4e5;
+  --overlay-btn-text: #0c2039;
+
+  --conn-good: #88ee88;
+  --conn-buf: #f0c040;
+  --conn-bad: #ff6b6b;
+  --conn-idle: #444466;
+}
+
+/* -- Light theme overrides -- */
+html.theme-light {
+  --accent: #b06a00;
+
+  --header-bg: #eaeaf4;
+  --header-text: #0c2039;
+  --header-sub: #555577;
+
+  --screen-bg: #f0f0f8;
+  --status-bg: #eaeaf4;
+  --status-text: #444466;
+  --status-border: #ccccdd;
+
+  --settings-bg: #ffffff;
+  --settings-text: #0c2039;
+  --settings-label: #555577;
+  --settings-border: #ccccdd;
+  --settings-input-bg: #f0f0f8;
+
+  --pill-bg: #d4f4d4;
+  --pill-text: #1a6b1a;
+
+  --stop-idle-bg: #e0e0ec;
+  --stop-idle-text: #555577;
+  --stop-idle-border: #ccccdd;
+  --stop-active-bg: #fde8e8;
+  --stop-active-text: #cc2222;
+  --stop-active-border: #f0aaaa;
+  --stop-paused-bg: #fdf6e0;
+  --stop-paused-text: #7a5200;
+  --stop-paused-border: #e8d080;
+
+  --overlay-bg: rgba(240, 240, 248, 0.95);
+  --overlay-text: #0c2039;
+  --overlay-sub: #555577;
+  --overlay-btn-bg: #1a3a6b;
+  --overlay-btn-text: #ffffff;
+
+  --conn-good: #1a6b1a;
+  --conn-buf: #b06a00;
+  --conn-bad: #cc2222;
+  --conn-idle: #aaaacc;
+}
+
+/* -- MonoRadio Dark -- */
+html.theme-mono-dark {
+  --accent: #b0b0b0;
+
+  --header-bg: #0a0a0c;
+  --header-text: #e0e0e0;
+  --header-sub: #808080;
+
+  --screen-bg: #0a0a0c;
+  --status-bg: #0a0a0c;
+  --status-text: #707070;
+  --status-border: #1e1e22;
+
+  --settings-bg: #141418;
+  --settings-text: #e0e0e0;
+  --settings-label: #909090;
+  --settings-border: #2a2a30;
+  --settings-input-bg: #0a0a0c;
+
+  --pill-bg: #1a1a1e;
+  --pill-text: #b0b0b0;
+
+  --stop-idle-bg: #111114;
+  --stop-idle-text: #888890;
+  --stop-idle-border: #1a1a1e;
+  --stop-active-bg: #1e1e22;
+  --stop-active-text: #e0e0e0;
+  --stop-active-border: #3a3a40;
+  --stop-paused-bg: #222228;
+  --stop-paused-text: #c0c0c0;
+  --stop-paused-border: #505058;
+
+  --overlay-bg: rgba(0, 0, 0, 0.92);
+  --overlay-text: #e0e0e0;
+  --overlay-sub: #808080;
+  --overlay-btn-bg: #e0e0e0;
+  --overlay-btn-text: #0a0a0c;
+
+  --conn-good: #a0a0a0;
+  --conn-buf: #d0d0d0;
+  --conn-bad: #e06060;
+  --conn-idle: #2a2a30;
+
+  --mono-btn-bg: #16161a;
+  --mono-btn-border: #2a2a30;
+  --mono-btn-text: #d0d0d0;
+  --mono-btn-sub: #808080;
+  --mono-btn-active-bg: #22222a;
+  --mono-btn-active-border: #505058;
+  --mono-btn-glow: rgba(255, 255, 255, 0.04);
+}
+
+/* -- MonoRadio Light -- */
+html.theme-mono-light {
+  --accent: #404040;
+
+  --header-bg: #f0eeeb;
+  --header-text: #1a1a1a;
+  --header-sub: #707070;
+
+  --screen-bg: #f5f3f0;
+  --status-bg: #f0eeeb;
+  --status-text: #808080;
+  --status-border: #d8d6d2;
+
+  --settings-bg: #ffffff;
+  --settings-text: #1a1a1a;
+  --settings-label: #606060;
+  --settings-border: #d8d6d2;
+  --settings-input-bg: #f5f3f0;
+
+  --pill-bg: #e8e6e2;
+  --pill-text: #404040;
+
+  --stop-idle-bg: #eae8e4;
+  --stop-idle-text: #606060;
+  --stop-idle-border: #d8d6d2;
+  --stop-active-bg: #e0deda;
+  --stop-active-text: #1a1a1a;
+  --stop-active-border: #a0a0a0;
+  --stop-paused-bg: #f0eeea;
+  --stop-paused-text: #404040;
+  --stop-paused-border: #b8b6b2;
+
+  --overlay-bg: rgba(245, 243, 240, 0.96);
+  --overlay-text: #1a1a1a;
+  --overlay-sub: #606060;
+  --overlay-btn-bg: #1a1a1a;
+  --overlay-btn-text: #ffffff;
+
+  --conn-good: #404040;
+  --conn-buf: #606060;
+  --conn-bad: #a03030;
+  --conn-idle: #c0c0c0;
+
+  --mono-btn-bg: #ffffff;
+  --mono-btn-border: #d0cec8;
+  --mono-btn-text: #1a1a1a;
+  --mono-btn-sub: #707070;
+  --mono-btn-active-bg: #f0eeeb;
+  --mono-btn-active-border: #808080;
+  --mono-btn-glow: rgba(0, 0, 0, 0.03);
+}
+
+
+/* --- ACCESSIBILITY --- */
+
+/* Screen-reader-only content — visually hidden but announced */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Visible focus ring for keyboard navigation (all platforms) */
+*:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Suppress focus outlines for mouse/touch interactions */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Shared reset for chrome-less buttons */
+.adv-btn, .adv-stop, .adv-sleep-btn, #settings-close,
+.stream-action-btn, .emoji-tab, .emoji-cell {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+
+/* --- APP SHELL (full-viewport flex column) --- */
+
+html, body {
+  height: 100%;
+  background: var(--screen-bg);
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh; /* fallback for older browsers */
+  width: 100vw;
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--screen-bg);
+  transition: background 0.3s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@supports (height: 100dvh) {
+  #app { height: 100dvh; }
+}
+
+audio { display: none; }
+
+
+/* --- DESKTOP CARD MODE --- */
+
+html.is-desktop body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #07070f;
+  overflow: hidden;
+  height: 100vh;
+}
+
+html.is-desktop.theme-light body {
+  background: #b0b0c8;
+}
+
+html.is-desktop #app {
+  width: min(740px, 100vw);
+  height: min(860px, 100vh);
+  min-height: 520px;
+  border-radius: 14px;
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+/* Fill-view removes the card frame */
+html.is-desktop.fill-view body { background: var(--screen-bg); }
+html.is-desktop.fill-view #app { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+
+/* "Desktop Preview" badge — only shown in card mode */
+#platform-badge {
+  display: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--header-sub);
+  opacity: 0.45;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+html.is-desktop:not(.fill-view) #platform-badge { display: block; }
+
+
+/* --- HEADER --- */
+
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--settings-border);
+  flex-shrink: 0;
+  gap: 12px;
+  transition: padding 0.2s;
+}
+
+/* Compact header for tight viewports */
+#header.compact {
+  padding: 4px 12px;
+  gap: 8px;
+}
+#header.compact #logo-svg { width: 24px; height: 32px; }
+#header.compact #org-name { font-size: 12px; }
+
+#logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+#logo-svg { flex-shrink: 0; width: 38px; height: 50px; }
+.logo-body { fill: #ffffff; transition: fill 0.3s; }
+html.theme-light .logo-body { fill: #0c2039; }
+.logo-cyan { fill: #59c4e5; stroke: #59c4e5; }
+
+#org-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--header-text);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  margin: 0;
+}
+html.is-desktop #org-name { font-size: 16px; }
+
+/* -- Connection status dot (idle / buffering / good / error) -- */
+#conn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--conn-idle);
+  transition: background 0.3s;
+  font-size: 0;
+  color: transparent;
+  overflow: hidden;
+}
+#conn-dot.good { background: var(--conn-good); }
+#conn-dot.buffering { background: var(--conn-buf); animation: pulse 1.4s ease-in-out infinite; }
+#conn-dot.error { background: var(--conn-bad); }
+
+/* -- Sleep timer countdown shown in header when active -- */
+#sleep-indicator {
+  display: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(240, 192, 64, 0.12);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#sleep-indicator.visible { display: inline-block; }
+
+
+/* --- STREAM BUTTONS --- */
+
+#buttons {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 4px;
+  overflow: hidden;
+  padding: 4px;
+}
+
+/* Switch to 2-column grid when there are more than 3 streams */
+#buttons.grid-mode { flex-direction: row; flex-wrap: wrap; gap: var(--btn-gap, 6px); padding: var(--btn-gap, 6px); }
+#buttons.grid-mode .stream-btn {
+  flex: 1 1 calc(100% / var(--btn-cols, 2) - var(--btn-gap, 6px));
+  min-height: 0;
+  height: var(--btn-row-h, auto);
+}
+
+/* Primary stream spans full width when odd count in grid mode */
+#buttons.grid-mode .stream-btn.primary { flex: 0 0 100%; }
+
+.stream-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btn-inner-gap, 6px);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.25s, filter 0.2s;
+  padding: var(--btn-pad, 16px) var(--btn-pad-h, 20px);
+  position: relative;
+  overflow: hidden;
+}
+.stream-btn:active { filter: brightness(1.15); }
+
+/* Active stream styling — bright glow + accent border */
+.stream-btn.active {
+  filter: brightness(1.3);
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+/* Emoji icon — flattened to solid icon look (grayscale + high contrast) */
+.btn-emoji { font-size: var(--btn-emoji-size, 32px); line-height: 1; filter: grayscale(1) contrast(2) brightness(1.3); opacity: 0.9; }
+html.theme-light .btn-emoji { filter: grayscale(1) contrast(2) brightness(0.8); opacity: 0.85; }
+
+/* Button text */
+.btn-label {
+  font-size: var(--btn-label-size, 34px);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  text-align: center;
+  color: #ffffff;
+  transition: transform 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.btn-sublabel {
+  font-size: var(--btn-sub-size, 15px);
+  font-weight: 600;
+  text-align: center;
+  color: #ffffff;
+  opacity: 0.7;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+/* "Now Playing" label — only visible on active button */
+.btn-state {
+  font-size: var(--btn-state-size, 12px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.3s;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.stream-btn.active .btn-state { opacity: 1; font-size: calc(var(--btn-label-size, 34px) * 0.7); letter-spacing: 0; }
+.stream-btn.paused .btn-state { opacity: 1; font-size: calc(var(--btn-label-size, 34px) * 0.7); letter-spacing: 0; }
+.stream-btn.failed { opacity: 0.4; filter: grayscale(0.8); }
+.stream-btn.failed .btn-state { opacity: 1; color: var(--conn-bad); }
+
+/* Hide secondary text when buttons are tight */
+#buttons.hide-sub .btn-sublabel { display: none; }
+#buttons.hide-sub .btn-state { display: none; }
+#buttons.hide-sub .btn-emoji { display: none; }
+
+/* Compact mode: emoji-only buttons for dense grids */
+#buttons.compact-mode .btn-emoji {
+  font-size: var(--btn-emoji-size, 48px);
+  filter: none;
+  opacity: 1;
+}
+#buttons.compact-mode .btn-label,
+#buttons.compact-mode .btn-sublabel { display: none; }
+
+/* First-letter fallback styling (when no emoji is set) */
+#buttons.compact-mode .btn-emoji {
+  line-height: 1;
+}
+
+/* Paused stream styling — dimmed version of active */
+.stream-btn.paused {
+  filter: brightness(1.0);
+  box-shadow: inset 0 0 0 3px var(--accent);
+  opacity: 0.7;
+}
+.stream-btn.paused .btn-state { opacity: 1; }
+
+/* -- MonoRadio button overrides -- */
+html[class*="theme-mono"] .stream-btn {
+  background: var(--mono-btn-bg) !important;
+  border: 1px solid var(--mono-btn-border);
+  box-shadow: 0 1px 3px var(--mono-btn-glow);
+}
+html[class*="theme-mono"] .stream-btn.active {
+  background: var(--mono-btn-active-bg) !important;
+  border-color: var(--mono-btn-active-border);
+  box-shadow: 0 0 12px var(--mono-btn-glow), inset 0 0 0 2px var(--accent);
+  filter: none;
+}
+html[class*="theme-mono"] .stream-btn.paused {
+  background: var(--mono-btn-bg) !important;
+  border-color: var(--mono-btn-active-border);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  filter: none;
+}
+html[class*="theme-mono"] .btn-label { color: var(--mono-btn-text); }
+html[class*="theme-mono"] .btn-sublabel { color: var(--mono-btn-sub); opacity: 0.55; }
+html[class*="theme-mono"] .btn-emoji { filter: grayscale(1) contrast(3) brightness(1.4); opacity: 0.35; }
+html.theme-mono-light .btn-emoji { filter: grayscale(1) contrast(3) brightness(0.3); opacity: 0.3; }
+html[class*="theme-mono"] .btn-state { color: var(--accent); }
+
+/* MonoRadio logo — pure black/white, no color */
+html.theme-mono-dark .logo-body { fill: #e0e0e0; }
+html.theme-mono-dark .logo-cyan { fill: #e0e0e0; stroke: #e0e0e0; opacity: 0.3; }
+html.theme-mono-light .logo-body { fill: #1a1a1a; }
+html.theme-mono-light .logo-cyan { fill: #1a1a1a; stroke: #1a1a1a; opacity: 0.3; }
+
+/* MonoRadio header text */
+html[class*="theme-mono"] #org-name { letter-spacing: 0.04em; }
+
+/* MonoRadio settings chips & accents */
+html[class*="theme-mono"] .chip.selected { border-color: var(--accent); color: var(--accent); }
+html[class*="theme-mono"] .color-chip { filter: grayscale(1); opacity: 0.5; }
+html[class*="theme-mono"] .color-chip.selected { opacity: 0.8; }
+
+/* MonoRadio desktop bg */
+html.is-desktop.theme-mono-dark body { background: #050508; }
+html.is-desktop.theme-mono-light body { background: #d8d6d2; }
+
+
+/* --- TEXT SIZE SCALING --- */
+
+html[data-size="large"] .btn-label { font-size: var(--btn-label-size, 40px); }
+html[data-size="large"] .btn-sublabel { font-size: var(--btn-sub-size, 17px); }
+html[data-size="large"] .btn-emoji { font-size: var(--btn-emoji-size, 38px); }
+
+html[data-size="xlarge"] .btn-label { font-size: var(--btn-label-size, 52px); }
+html[data-size="xlarge"] .btn-sublabel { font-size: var(--btn-sub-size, 21px); }
+html[data-size="xlarge"] .btn-emoji { font-size: var(--btn-emoji-size, 48px); }
+
+html[data-size="ultra"] .btn-label { font-size: 11vmin; }
+html[data-size="ultra"] .btn-sublabel { font-size: 4vmin; }
+html[data-size="ultra"] .btn-emoji { font-size: 10vmin; }
+
+/* Ultra in grid mode needs smaller sizing to fit */
+html[data-size="ultra"] #buttons.grid-mode .btn-label { font-size: 7vmin; }
+html[data-size="ultra"] #buttons.grid-mode .btn-sublabel { font-size: 3vmin; }
+html[data-size="ultra"] #buttons.grid-mode .btn-emoji { font-size: 6vmin; }
+
+
+/* --- ANIMATIONS --- */
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Tap feedback — brief white flash overlay on button press */
+@keyframes tapFlash { 0% { opacity: 0.5; } 100% { opacity: 0; } }
+.tap-flash { position: absolute; inset: 0; background: white; opacity: 0; pointer-events: none; }
+.tap-flash.flash { animation: tapFlash 0.25s ease-out; }
+
+
+/* --- SIMPLE STOP BAR --- */
+
+#simple-stop {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 74px;
+  width: 100%;
+  border: none;
+  border-top: 2px solid var(--stop-idle-border);
+  background: var(--stop-idle-bg);
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s, filter 0.2s;
+}
+html.is-desktop #simple-stop { height: 80px; }
+#simple-stop.active { background: var(--stop-active-bg); border-top-color: var(--stop-active-border); }
+#simple-stop.paused { background: var(--stop-paused-bg); border-top-color: var(--stop-paused-border); }
+#simple-stop.paused #simple-stop-label { color: var(--stop-paused-text); }
+#simple-stop:active { filter: brightness(1.2); }
+
+#simple-stop-square {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--stop-idle-text);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+#simple-stop.active #simple-stop-square { background: var(--stop-active-text); }
+
+#simple-stop-label {
+  font-size: 21px;
+  font-weight: 900;
+  color: var(--stop-idle-text);
+  letter-spacing: 0.04em;
+  transition: color 0.3s;
+}
+html.is-desktop #simple-stop-label { font-size: 23px; }
+html[data-size="large"] #simple-stop-label { font-size: 24px; }
+html[data-size="xlarge"] #simple-stop-label { font-size: 28px; }
+html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
+#simple-stop.active #simple-stop-label { color: var(--stop-active-text); }
+
+
+/* --- ADVANCED TRANSPORT BAR --- */
+
+#adv-transport {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 10px 18px;
+  min-height: 70px;
+  background: var(--stop-idle-bg);
+  border-top: 2px solid var(--stop-idle-border);
+  transition: background 0.3s, border-color 0.3s;
+  position: relative;
+}
+#adv-transport.visible { display: flex; }
+#adv-transport.has-playing {
+  background: var(--stop-active-bg);
+  border-top-color: var(--stop-active-border);
+}
+
+#adv-left,
+#adv-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+#adv-left { justify-content: flex-end; }
+#adv-right { justify-content: flex-start; gap: 8px; }
+
+/* Skip buttons */
+.adv-btn {
+  padding: 8px 12px;
+  color: var(--stop-idle-text);
+  font-size: 22px;
+  font-weight: 900;
+  transition: color 0.2s, transform 0.1s;
+  line-height: 1;
+}
+.adv-btn:active { transform: scale(0.9); }
+.adv-btn.active { color: var(--stop-active-text); }
+
+/* Center stop button */
+.adv-stop {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin: 0 12px;
+}
+.adv-stop:active { transform: scale(0.92); }
+
+.adv-stop-square {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  background: var(--stop-idle-text);
+  transition: background 0.3s;
+}
+#adv-transport.has-playing .adv-stop-square { background: var(--stop-active-text); }
+#adv-transport.has-playing .adv-btn { color: var(--stop-active-text); }
+
+/* Sleep timer button */
+.adv-sleep-btn {
+  padding: 8px;
+  color: var(--stop-idle-text);
+  font-size: 18px;
+  transition: color 0.2s;
+  position: absolute;
+  right: 18px;
+}
+#adv-transport.has-playing .adv-sleep-btn { color: var(--stop-active-text); }
+
+/* Skip action toast (e.g. "Back 15s") */
+#skip-toast {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  padding: 12px 24px;
+  border-radius: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 60;
+  white-space: nowrap;
+}
+#skip-toast.visible { opacity: 1; }
+
+/* "LIVE" badge — shown for non-seekable streams */
+#adv-live-badge {
+  display: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ff6b6b;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  white-space: nowrap;
+}
+#adv-live-badge.visible { display: inline-block; }
+
+
+/* --- OVERLAYS --- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 32px 24px;
+  text-align: center;
+  gap: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+  overflow-y: auto;
+}
+.overlay.visible { opacity: 1; pointer-events: all; }
+
+.overlay-icon { font-size: 52px; line-height: 1; }
+
+.overlay-title {
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--overlay-text);
+  line-height: 1.1;
+}
+html.is-desktop .overlay-title { font-size: 34px; }
+
+.overlay-body {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--overlay-sub);
+  line-height: 1.5;
+  max-width: 460px;
+}
+html.is-desktop .overlay-body { font-size: 20px; }
+
+.overlay-btn {
+  margin-top: 8px;
+  padding: 16px 40px;
+  border-radius: 12px;
+  border: none;
+  background: var(--overlay-btn-bg);
+  color: var(--overlay-btn-text);
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: filter 0.2s, transform 0.15s;
+}
+.overlay-btn:active { filter: brightness(0.9); }
+
+/* -- Sleep timer option buttons -- */
+.sleep-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 360px;
+}
+.sleep-opt {
+  padding: 14px 24px;
+  border-radius: 10px;
+  border: 2px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--overlay-text);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 100px;
+  text-align: center;
+}
+.sleep-opt:active { background: var(--accent); color: #111; }
+.sleep-opt.cancel { border-color: var(--stop-active-text); color: var(--stop-active-text); }
+
+
+/* --- PIN OVERLAY --- */
+
+#pin-dots {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 4px 0 12px;
+}
+.pin-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--settings-border);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+.pin-dot.wrong { background: #ff6b6b; border-color: #ff6b6b; }
+
+#pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 280px;
+  width: 100%;
+}
+.pin-key {
+  padding: 14px 8px;
+  border-radius: 10px;
+  border: 2px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--overlay-text);
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.pin-key:active { background: var(--accent); color: #111; transform: scale(0.95); }
+.pin-key-wide { font-size: 14px; font-weight: 700; }
+
+#in-pin { letter-spacing: 0.2em; font-size: 16px; padding: 10px 12px; }
+
+/* Short viewport — shrink PIN overlay to fit without scrolling */
+@media (max-height: 480px) {
+  #pin-overlay { padding: 12px 16px; gap: 8px; }
+  #pin-overlay .overlay-icon { font-size: 32px; }
+  #pin-overlay .overlay-title { font-size: 20px; }
+  #pin-overlay .overlay-body { font-size: 14px; }
+  #pin-dots { margin: 2px 0 6px; gap: 8px; }
+  .pin-dot { width: 14px; height: 14px; }
+  #pin-pad { gap: 4px; max-width: 240px; }
+  .pin-key { padding: 8px 6px; font-size: 18px; border-radius: 8px; }
+  .pin-key-wide { font-size: 12px; }
+}
+
+/* Very short viewport (landscape phones) — further compact */
+@media (max-height: 360px) {
+  #pin-overlay { padding: 6px 12px; gap: 4px; }
+  #pin-overlay .overlay-icon { display: none; }
+  #pin-overlay .overlay-title { font-size: 16px; }
+  #pin-overlay .overlay-body { font-size: 12px; }
+  #pin-dots { margin: 0 0 4px; }
+  .pin-dot { width: 12px; height: 12px; }
+  .pin-key { padding: 6px 4px; font-size: 16px; }
+}
+
+
+/* --- SETTINGS PANEL --- */
+
+#settings-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(360px, 94vw);
+  background: var(--settings-bg);
+  border-left: 1px solid var(--settings-border);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  z-index: 100;
+  overflow-y: auto;
+}
+#settings-panel.animated { transition: transform 0.3s ease; }
+#settings-panel.open { transform: translateX(0); }
+
+#settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--settings-border);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: var(--settings-bg);
+  z-index: 1;
+}
+#settings-title { font-size: 16px; font-weight: 800; color: var(--settings-text); }
+#settings-close {
+  color: var(--settings-text);
+  font-size: 26px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 300;
+  transition: color 0.2s;
+}
+
+/* -- Section layout -- */
+.s-section { padding: 14px 20px; border-bottom: 1px solid var(--settings-border); }
+.s-section-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--settings-label);
+  margin-bottom: 10px;
+}
+.s-hint {
+  font-size: 11px;
+  color: var(--settings-label);
+  opacity: 0.75;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+.s-row { margin-bottom: 12px; }
+.s-row:last-child { margin-bottom: 0; }
+.s-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--settings-label);
+  margin-bottom: 4px;
+  display: block;
+}
+.s-input {
+  width: 100%;
+  background: var(--settings-input-bg);
+  border: 1px solid var(--settings-border);
+  border-radius: 6px;
+  color: var(--settings-text);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: monospace;
+  font-weight: 600;
+}
+.s-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* -- Selection chips (theme, size, etc.) -- */
+.theme-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--settings-label); margin-bottom: 4px; opacity: 0.7; }
+.chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.chip-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.chip-row { display: flex; gap: 6px; }
+.chip {
+  padding: 12px 6px;
+  border-radius: 7px;
+  border: 2px solid var(--settings-border);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+  color: var(--settings-label);
+  background: var(--settings-input-bg);
+  transition: border-color 0.15s, color 0.15s, transform 0.15s, filter 0.15s;
+  flex: 1;
+  /* Reset button defaults for keyboard accessibility */
+  font-family: inherit;
+}
+.chip.selected { border-color: var(--accent); color: var(--accent); }
+.chip:active { filter: brightness(1.2); }
+
+/* Desktop-only view section — hidden on mobile */
+#view-section { display: none; }
+html.is-desktop #view-section { display: block; }
+
+/* Android-only device section — hidden on desktop */
+#device-section { display: block; }
+html.is-desktop #device-section { display: none; }
+
+.vol-row { display: flex; align-items: center; gap: 10px; padding: 2px 0; }
+#vol-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--settings-border);
+  cursor: pointer;
+}
+#vol-slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+#vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+#vol-val {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--settings-text);
+  min-width: 34px;
+  text-align: right;
+}
+
+/* -- Stream editor -- */
+.stream-entry {
+  padding: 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--settings-border);
+  border-radius: 8px;
+  background: var(--settings-input-bg);
+  position: relative;
+}
+.stream-entry .s-row { margin-bottom: 8px; }
+.stream-entry .s-label { font-size: 11px; }
+.stream-entry .s-input { font-size: 12px; padding: 6px 8px; }
+
+.stream-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+.stream-entry-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--settings-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.stream-primary-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(240, 192, 64, 0.12);
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.stream-entry-actions { display: flex; gap: 4px; align-items: center; }
+.stream-action-btn {
+  color: var(--settings-label);
+  font-size: 16px;
+  padding: 2px 6px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.stream-action-btn:active { opacity: 1; }
+.stream-action-btn.danger { color: var(--stop-active-text); }
+
+.emoji-input { width: 50px; font-size: 20px; text-align: center; font-family: inherit; padding: 4px; cursor: pointer; -webkit-user-select: none; user-select: none; }
+
+/* Emoji picker overlay */
+.emoji-picker-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.emoji-picker-overlay.open { display: flex; }
+.emoji-picker {
+  background: var(--settings-bg);
+  border-radius: 14px;
+  padding: 16px;
+  width: min(360px, 90vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.emoji-picker-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--settings-text);
+  margin-bottom: 8px;
+  text-align: center;
+}
+.emoji-picker-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+}
+.emoji-tab {
+  flex: 0 0 auto;
+  border-bottom: 2px solid transparent;
+  color: var(--settings-label);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+.emoji-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  overflow-y: auto;
+  max-height: 50vh;
+  padding: 4px 0;
+}
+.emoji-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  transition: background 0.1s;
+}
+.emoji-cell:active { background: var(--settings-border); }
+@media (hover: hover) and (pointer: fine) {
+  .emoji-cell:hover { background: var(--settings-border); }
+}
+.emoji-picker-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.emoji-picker-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.emoji-picker-clear, .emoji-picker-cancel {
+  background: var(--settings-border);
+  color: var(--settings-text);
+}
+.inline-row { display: flex; gap: 8px; align-items: flex-end; }
+.inline-row > div { flex: 1; }
+.inline-row > div.narrow { flex: 0 0 70px; }
+
+/* Stream color picker chips */
+.color-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.color-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.color-chip.selected { border-color: var(--accent); transform: scale(1.15); }
+.color-chip:active { transform: scale(0.9); }
+
+/* Add stream button */
+.stream-add-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed var(--settings-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--settings-label);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+.stream-add-btn:active { border-color: var(--accent); color: var(--accent); }
+
+.stream-add-row {
+  display: flex;
+  gap: 6px;
+}
+.stream-add-row .stream-add-btn { flex: 1; }
+.stream-browse-btn {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border: 2px dashed var(--settings-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--settings-label);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+.stream-browse-btn:active { border-color: var(--accent); color: var(--accent); }
+
+.stream-hint {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(240, 192, 64, 0.1);
+  border: 1px solid rgba(240, 192, 64, 0.25);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Stream browser overlay */
+.stream-browser-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.stream-browser-overlay.open { display: flex; }
+.stream-browser {
+  background: var(--settings-bg);
+  border-radius: 14px;
+  padding: 16px;
+  width: min(420px, 94vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+.stream-browser-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--settings-text);
+  margin-bottom: 10px;
+  text-align: center;
+}
+.stream-browser-search {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.stream-browser-search input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+.stream-browser-search button {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.stream-browser-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.stream-browser-filters select {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 12px;
+  font-family: inherit;
+}
+.stream-browser-results {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 120px;
+  max-height: 55vh;
+}
+.stream-browser-empty {
+  text-align: center;
+  color: var(--settings-label);
+  font-size: 13px;
+  padding: 30px 10px;
+  line-height: 1.5;
+}
+.sb-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--settings-border);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+.sb-result:active { background: var(--settings-border); }
+@media (hover: hover) and (pointer: fine) {
+  .sb-result:hover { background: var(--settings-border); }
+}
+.sb-result-info { flex: 1; min-width: 0; }
+.sb-result-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--settings-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sb-result-meta {
+  font-size: 11px;
+  color: var(--settings-label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.sb-result-add {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #111;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sb-result-play {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--settings-border);
+  color: var(--settings-text);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stream-browser-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.stream-browser-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--settings-border);
+  color: var(--settings-text);
+}
+.sb-loading {
+  text-align: center;
+  color: var(--settings-label);
+  font-size: 13px;
+  padding: 30px 10px;
+}
+
+/* Apply button */
+#apply-btn {
+  margin: 14px 20px 10px;
+  padding: 13px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #111;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  width: calc(100% - 40px);
+  letter-spacing: 0.02em;
+  transition: filter 0.2s, transform 0.15s;
+}
+#apply-btn:active { filter: brightness(0.9); }
+
+.device-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  border-radius: 8px;
+  border: 2px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s, filter 0.15s;
+}
+.device-btn:active { filter: brightness(1.2); }
+
+#reset-btn {
+  margin: 8px 20px 0;
+  padding: 11px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+  background: transparent;
+  color: var(--settings-label);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  width: calc(100% - 40px);
+}
+#reset-btn:active { border-color: #ff6b6b; color: #ff6b6b; }
+
+#reset-overlay {
+  position: fixed;
+  z-index: 10000;
+}
+
+/* Reset confirm overlay */
+.reset-confirm-btn {
+  padding: 16px 40px;
+  border-radius: 12px;
+  border: none;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.reset-confirm-yes {
+  background: #ff6b6b;
+  color: #ffffff;
+}
+.reset-confirm-yes:active { filter: brightness(0.85); }
+.reset-confirm-no {
+  background: var(--overlay-btn-bg);
+  color: var(--overlay-btn-text);
+}
+.reset-confirm-no:active { filter: brightness(0.9); }
+
+#discard-overlay { z-index: 200; position: fixed; }
+
+#settings-version {
+  text-align: center;
+  padding: 8px 20px 16px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--settings-label);
+  opacity: 0.5;
+}
+
+
+/* --- HOVER STATES (mouse-only) --- */
+
+@media (hover: hover) and (pointer: fine) {
+  .stream-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    transition: background 0.22s;
+    pointer-events: none;
+  }
+  .stream-btn:hover::after { background: rgba(255, 255, 255, 0.04); }
+  #simple-stop:hover { filter: brightness(1.15); }
+  .adv-btn:hover { color: var(--accent); }
+  .chip:hover:not(.selected) { border-color: var(--accent); color: var(--settings-text); transform: scale(1.05); }
+  .chip.selected:hover { filter: brightness(1.12); }
+  .overlay-btn:hover { filter: brightness(1.12); transform: scale(1.03); }
+  #apply-btn:hover { filter: brightness(1.1); transform: scale(1.015); }
+  .device-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #settings-close:hover { color: var(--accent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  #conn-dot.buffering { animation: none; }
+  .tap-flash.flash { animation: none; }
+  #settings-panel.animated { transition: none; }
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== HEADER ========== -->
+  <header id="header">
+    <div id="logo-area" role="button" tabindex="0" aria-label="RadioGridXL — tap 5 times for settings">
+      <svg id="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+      <h1 id="org-name">RadioGridXL</h1>
+    </div>
+    <div id="conn-dot" role="status" aria-live="polite" aria-label="Connection: idle"></div>
+    <span id="sleep-indicator" role="timer" aria-live="polite" aria-label="Sleep timer"></span>
+    <span id="platform-badge" aria-hidden="true">Desktop Preview</span>
+  </header>
+
+  <!-- ========== STREAM BUTTONS (rendered by JS) ========== -->
+  <main id="buttons" aria-label="Audio streams"></main>
+
+  <!-- Hidden audio element — the actual player -->
+  <audio id="audio-player" preload="none"></audio>
+
+  <!-- ========== SIMPLE STOP BAR (default transport) ========== -->
+  <button id="simple-stop" onclick="softStop()" aria-label="Stop playback" aria-disabled="true">
+    <div id="simple-stop-square" aria-hidden="true"></div>
+    <span id="simple-stop-label">Stop</span>
+  </button>
+
+  <!-- ========== ADVANCED TRANSPORT BAR ========== -->
+  <nav id="adv-transport" aria-label="Playback controls">
+    <div id="adv-left">
+      <button class="adv-btn" id="adv-skip-back" onclick="skipBack()" aria-label="Skip back 15 seconds">&#9664;&#9664;</button>
+    </div>
+    <button class="adv-stop" onclick="softStop()" aria-label="Stop playback"><div class="adv-stop-square" aria-hidden="true"></div></button>
+    <div id="adv-right">
+      <button class="adv-btn" id="adv-skip-fwd" onclick="skipFwd()" aria-label="Skip forward 30 seconds">&#9654;&#9654;</button>
+      <button class="adv-sleep-btn" onclick="showSleepOverlay()" aria-label="Sleep timer">&#9202;</button>
+      <span id="adv-live-badge" role="status" aria-live="polite">● Live</span>
+    </div>
+  </nav>
+
+  <!-- Skip action toast — announced to screen readers -->
+  <div id="skip-toast" role="status" aria-live="polite"></div>
+
+<!-- ========== CONNECTION ERROR OVERLAY ========== -->
+  <div class="overlay" id="nonet-overlay" role="alertdialog" aria-modal="true" aria-labelledby="nonet-overlay-title">
+    <div class="overlay-icon" aria-hidden="true">&#128246;</div>
+    <div class="overlay-title" id="nonet-overlay-title">Having Trouble Connecting</div>
+    <div class="overlay-body" id="nonet-overlay-body">Please check that the tablet is connected to Wi-Fi, or ask someone for help.</div>
+    <button class="overlay-btn" onclick="retryStream()">Try Again</button>
+  </div>
+
+  <!-- ========== SLEEP TIMER OVERLAY ========== -->
+  <div class="overlay" id="sleep-overlay" role="dialog" aria-modal="true" aria-labelledby="sleep-overlay-title">
+    <div class="overlay-icon" aria-hidden="true">&#128164;</div>
+    <div class="overlay-title" id="sleep-overlay-title">Sleep Timer</div>
+    <div class="overlay-body">Stop playback after:</div>
+    <div class="sleep-options" role="group" aria-label="Timer duration options">
+      <button class="sleep-opt" onclick="setSleep(15)">15 min</button>
+      <button class="sleep-opt" onclick="setSleep(30)">30 min</button>
+      <button class="sleep-opt" onclick="setSleep(120)">2 hours</button>
+      <button class="sleep-opt" onclick="setSleep(240)">4 hours</button>
+      <button class="sleep-opt cancel" onclick="setSleep(0)">Cancel Timer</button>
+    </div>
+    <button class="overlay-btn" onclick="closeSleepOverlay()" style="margin-top:4px;padding:12px 32px;font-size:16px;">Close</button>
+  </div>
+
+  <!-- ========== DISCARD CHANGES OVERLAY ========== -->
+  <div class="overlay" id="discard-overlay" role="alertdialog" aria-modal="true" aria-labelledby="discard-overlay-title">
+    <div class="overlay-icon" aria-hidden="true">&#128221;</div>
+    <div class="overlay-title" id="discard-overlay-title">Discard Changes?</div>
+    <div class="overlay-body">You have unsaved changes. Close without applying?</div>
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button class="reset-confirm-btn reset-confirm-no" onclick="cancelDiscard()">Go Back</button>
+      <button class="reset-confirm-btn reset-confirm-yes" onclick="confirmDiscard()">Discard</button>
+    </div>
+  </div>
+
+  <!-- ========== PIN OVERLAY (technician access gate) ========== -->
+  <div class="overlay" id="pin-overlay" role="dialog" aria-modal="true" aria-labelledby="pin-overlay-title">
+    <div class="overlay-icon" aria-hidden="true">&#128272;</div>
+    <div class="overlay-title" id="pin-overlay-title">Technician Access</div>
+    <div class="overlay-body">Enter the setup PIN to continue.</div>
+    <div id="pin-dots" aria-hidden="true">
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+    </div>
+    <div id="pin-status" class="sr-only" role="status" aria-live="polite"></div>
+    <div id="pin-pad" role="group" aria-label="PIN keypad">
+      <button class="pin-key" onclick="pinKey('1')" aria-label="1">1</button>
+      <button class="pin-key" onclick="pinKey('2')" aria-label="2">2</button>
+      <button class="pin-key" onclick="pinKey('3')" aria-label="3">3</button>
+      <button class="pin-key" onclick="pinKey('4')" aria-label="4">4</button>
+      <button class="pin-key" onclick="pinKey('5')" aria-label="5">5</button>
+      <button class="pin-key" onclick="pinKey('6')" aria-label="6">6</button>
+      <button class="pin-key" onclick="pinKey('7')" aria-label="7">7</button>
+      <button class="pin-key" onclick="pinKey('8')" aria-label="8">8</button>
+      <button class="pin-key" onclick="pinKey('9')" aria-label="9">9</button>
+      <button class="pin-key pin-key-wide" onclick="pinCancel()" aria-label="Cancel">Cancel</button>
+      <button class="pin-key" onclick="pinKey('0')" aria-label="0">0</button>
+      <button class="pin-key pin-key-wide" onclick="pinBackspace()" aria-label="Delete last digit">&#9003;</button>
+    </div>
+    <div id="pin-error" role="alert" aria-live="assertive" style="color:#ff6b6b;font-size:14px;font-weight:700;min-height:20px;margin-top:4px;">&nbsp;</div>
+  </div>
+
+  <!-- ========== SETTINGS PANEL (technician only) ========== -->
+  <aside id="settings-panel" role="dialog" aria-labelledby="settings-title" aria-modal="true">
+    <div id="settings-header">
+      <span id="settings-title">Settings</span>
+      <button id="settings-close" onclick="closeSettings()" aria-label="Close settings">&#215;</button>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title">Organization Name</div>
+      <div class="s-row">
+        <label class="s-label" for="in-org-name">Shown in the header (use Enter for a second line)</label>
+        <textarea class="s-input" id="in-org-name" rows="2" maxlength="80" style="resize:none;font-family:inherit;" aria-label="Organization name" oninput="previewOrgName()"></textarea>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title" id="theme-label">Theme</div>
+      <div class="theme-group-label">Default</div>
+      <div class="chip-grid" role="radiogroup" aria-labelledby="theme-label">
+        <button class="chip" onclick="selectChip(this,'theme','dark')" data-group="theme" data-val="dark" role="radio" aria-checked="false">Dark</button>
+        <button class="chip" onclick="selectChip(this,'theme','light')" data-group="theme" data-val="light" role="radio" aria-checked="false">Light</button>
+        <button class="chip" onclick="selectChip(this,'theme','auto')" data-group="theme" data-val="auto" role="radio" aria-checked="false">Auto<br><small>System</small></button>
+      </div>
+      <div class="theme-group-label" style="margin-top:8px;" id="theme-mono-label">MonoRadio</div>
+      <div class="chip-grid" role="radiogroup" aria-labelledby="theme-mono-label">
+        <button class="chip" onclick="selectChip(this,'theme','mono-dark')" data-group="theme" data-val="mono-dark" role="radio" aria-checked="false">Dark</button>
+        <button class="chip" onclick="selectChip(this,'theme','mono-light')" data-group="theme" data-val="mono-light" role="radio" aria-checked="false">Light</button>
+        <button class="chip" onclick="selectChip(this,'theme','mono-auto')" data-group="theme" data-val="mono-auto" role="radio" aria-checked="false">Auto<br><small>System</small></button>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title" id="size-label">Text Size</div>
+      <div class="chip-grid chip-grid-4" role="radiogroup" aria-labelledby="size-label">
+        <button class="chip" onclick="selectChip(this,'size','normal')" data-group="size" data-val="normal" role="radio" aria-checked="false">Normal</button>
+        <button class="chip" onclick="selectChip(this,'size','large')" data-group="size" data-val="large" role="radio" aria-checked="false">Large</button>
+        <button class="chip" onclick="selectChip(this,'size','xlarge')" data-group="size" data-val="xlarge" role="radio" aria-checked="false">X-Large</button>
+        <button class="chip" onclick="selectChip(this,'size','ultra')" data-group="size" data-val="ultra" role="radio" aria-checked="false">Ultra</button>
+      </div>
+    </div>
+
+    <div class="s-section" id="view-section">
+      <div class="s-section-title" id="view-label">Desktop View</div>
+      <div class="chip-row" role="radiogroup" aria-labelledby="view-label">
+        <button class="chip" onclick="selectChip(this,'fillview','off')" data-group="fillview" data-val="off" role="radio" aria-checked="false">Card</button>
+        <button class="chip" onclick="selectChip(this,'fillview','on')" data-group="fillview" data-val="on" role="radio" aria-checked="false">Fill View</button>
+      </div>
+    </div>
+
+    <div class="s-section" id="vol-section">
+      <div class="s-section-title">Max App Volume</div>
+      <label class="s-label" style="margin-bottom:6px;">Caps the app's audio output. Device volume buttons still work up to this limit.</label>
+      <div class="vol-row">
+        <span style="font-size:15px;line-height:1;" aria-hidden="true">&#128264;</span>
+        <input type="range" id="vol-slider" min="0" max="100" value="100" oninput="setVolume(this.value)" aria-label="Max app volume">
+        <span id="vol-val" aria-hidden="true">100%</span>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title" id="controls-label">Advanced Controls</div>
+      <div class="chip-row" role="radiogroup" aria-labelledby="controls-label">
+        <button class="chip" onclick="selectChip(this,'advanced','off')" data-group="advanced" data-val="off" role="radio" aria-checked="false">Simple</button>
+        <button class="chip" onclick="selectChip(this,'advanced','on')" data-group="advanced" data-val="on" role="radio" aria-checked="false">Advanced<br><small>Skip &amp; Sleep</small></button>
+      </div>
+      <div class="s-hint">Simple shows only a Stop button. Advanced adds skip back/forward and a sleep timer that stops playback after a set time.</div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title" id="haptics-label">Haptic Feedback</div>
+      <div class="chip-row" role="radiogroup" aria-labelledby="haptics-label">
+        <button class="chip" onclick="selectChip(this,'haptics','on')" data-group="haptics" data-val="on" role="radio" aria-checked="false">On</button>
+        <button class="chip" onclick="selectChip(this,'haptics','off')" data-group="haptics" data-val="off" role="radio" aria-checked="false">Off</button>
+      </div>
+      <div class="s-hint">Vibrates briefly on button taps. Only available on mobile devices that support it.</div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title" id="tts-label">Voice Announcements</div>
+      <div class="chip-row" role="radiogroup" aria-labelledby="tts-label">
+        <button class="chip" onclick="selectChip(this,'tts','off')" data-group="tts" data-val="off" role="radio" aria-checked="false">Off</button>
+        <button class="chip" onclick="selectChip(this,'tts','on')" data-group="tts" data-val="on" role="radio" aria-checked="false">On</button>
+      </div>
+      <div class="s-hint">Speaks aloud what is happening — "Now playing…", "Paused", "Stopped" — when a stream button or stop bar is tapped. To change the voice or improve quality, use OS Settings below (Accessibility → Text-to-Speech).</div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title" id="chime-label">Audio Tones</div>
+      <div class="chip-row" role="radiogroup" aria-labelledby="chime-label">
+        <button class="chip" onclick="selectChip(this,'chime','off')" data-group="chime" data-val="off" role="radio" aria-checked="false">Off</button>
+        <button class="chip" onclick="selectChip(this,'chime','on')" data-group="chime" data-val="on" role="radio" aria-checked="false">On</button>
+      </div>
+      <div class="s-hint">Plays a short rising tone when a stream starts or resumes, and a falling tone when paused.</div>
+    </div>
+
+<div class="s-section">
+      <div class="s-section-title">Audio Streams</div>
+      <div id="stream-editor"></div>
+      <div class="stream-add-row" id="stream-add-row">
+        <button class="stream-add-btn" id="stream-add-btn" onclick="addStreamEntry()">+ Add Blank</button>
+        <button class="stream-browse-btn" onclick="openStreamBrowser()">&#128269; Browse</button>
+      </div>
+      <div class="stream-hint" id="stream-hint" style="display:none" role="note"></div>
+    </div>
+
+    <div class="s-section" id="device-section">
+      <div class="s-section-title">Device</div>
+      <button class="device-btn" onclick="openWifiSettings()" aria-label="Open Wi-Fi settings">&#128246; Setup WiFi</button>
+      <button class="device-btn" onclick="openLiveCaptionSettings()" aria-label="Open Live Caption settings">&#128292; Live Caption</button>
+      <button class="device-btn" onclick="openOsSettings()" aria-label="Open OS settings">&#9881;&#65039; OS Settings</button>
+      <div class="s-hint">Live Caption transcribes audio playing on the device in real time — enable it in Accessibility settings. OS Settings gives access to everything else: Wi-Fi, text-to-speech voice, display brightness, and more.</div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title">Setup PIN</div>
+      <div class="s-row">
+        <label class="s-label" for="in-pin">Current PIN (tap logo 5&times; to access settings)</label>
+        <input class="s-input" id="in-pin" type="text" inputmode="numeric" maxlength="8" value="" aria-label="Setup PIN">
+      </div>
+    </div>
+
+    <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
+    <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.3.1</div>
+  </aside>
+
+  <!-- ========== STREAM BROWSER POPUP ========== -->
+  <div id="stream-browser-overlay" class="stream-browser-overlay" role="dialog" aria-labelledby="sb-title" aria-modal="true">
+    <div class="stream-browser">
+      <div class="stream-browser-title" id="sb-title">Browse Radio Stations</div>
+      <div class="stream-browser-search">
+        <input type="text" id="sb-search" placeholder="Search by name..." aria-label="Search stations" autocomplete="off">
+        <button onclick="searchStations()">Search</button>
+      </div>
+      <div class="stream-browser-filters">
+        <select id="sb-country" aria-label="Filter by country">
+          <option value="">Any country</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+          <option value="CA">Canada</option>
+          <option value="AU">Australia</option>
+          <option value="DE">Germany</option>
+          <option value="FR">France</option>
+          <option value="NL">Netherlands</option>
+          <option value="IE">Ireland</option>
+          <option value="JP">Japan</option>
+          <option value="BR">Brazil</option>
+          <option value="MX">Mexico</option>
+          <option value="ES">Spain</option>
+          <option value="IT">Italy</option>
+          <option value="IN">India</option>
+        </select>
+        <select id="sb-tag" aria-label="Filter by genre">
+          <option value="">Any genre</option>
+          <option value="pop">Pop</option>
+          <option value="rock">Rock</option>
+          <option value="jazz">Jazz</option>
+          <option value="classical">Classical</option>
+          <option value="country">Country</option>
+          <option value="electronic">Electronic</option>
+          <option value="hip hop">Hip Hop</option>
+          <option value="r&b">R&B</option>
+          <option value="blues">Blues</option>
+          <option value="folk">Folk</option>
+          <option value="reggae">Reggae</option>
+          <option value="latin">Latin</option>
+          <option value="christian">Christian</option>
+          <option value="news">News</option>
+          <option value="talk">Talk</option>
+          <option value="sports">Sports</option>
+          <option value="ambient">Ambient</option>
+          <option value="lounge">Lounge</option>
+        </select>
+      </div>
+      <div class="stream-browser-results" id="sb-results" role="region" aria-label="Search results" aria-live="polite">
+        <div class="stream-browser-empty">Search for stations by name, or pick a country and genre to browse.</div>
+      </div>
+      <div class="stream-browser-actions">
+        <button onclick="closeStreamBrowser()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== EMOJI PICKER POPUP ========== -->
+  <div id="emoji-picker-overlay" class="emoji-picker-overlay" role="dialog" aria-labelledby="emoji-picker-title" aria-modal="true">
+    <div class="emoji-picker">
+      <div class="emoji-picker-title" id="emoji-picker-title">Choose an icon</div>
+      <div class="emoji-picker-tabs" id="emoji-tabs" role="tablist" aria-label="Emoji categories"></div>
+      <div class="emoji-grid" id="emoji-grid" role="tabpanel"></div>
+      <div class="emoji-picker-actions">
+        <button class="emoji-picker-clear" onclick="emojiPickerSelect('')">Clear</button>
+        <button class="emoji-picker-cancel" onclick="closeEmojiPicker()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== RESET CONFIRM OVERLAY (outside #app so it covers entire viewport) ========== -->
+<div class="overlay" id="reset-overlay" role="alertdialog" aria-modal="true" aria-labelledby="reset-overlay-title">
+  <div class="overlay-icon" aria-hidden="true">&#9888;&#65039;</div>
+  <div class="overlay-title" id="reset-overlay-title">Reset Everything?</div>
+  <div class="overlay-body">This will restore all settings and streams to factory defaults. Your PIN will not change.</div>
+  <div style="display:flex; gap:12px; margin-top:8px;">
+    <button class="reset-confirm-btn reset-confirm-no" onclick="cancelReset()">Cancel</button>
+    <button class="reset-confirm-btn reset-confirm-yes" onclick="executeReset()">Reset</button>
+  </div>
+</div>
+
+<script>
+
+/* ================================================================
+   PLATFORM DETECTION
+   Determines if the device is mobile (Android/iOS) or desktop.
+   This affects which UI features are shown (volume slider, card
+   mode, haptics, etc.) and cannot change at runtime.
+   ================================================================ */
+
+const platform = (function () {
+  const ua = navigator.userAgent || '';
+  const isAndroid = /android/i.test(ua);
+  const isIOS = /ipad|iphone|ipod/i.test(ua);
+  const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  const isMobile = isAndroid || isIOS || (navigator.maxTouchPoints > 0 && hasCoarsePointer);
+  return { isAndroid, isIOS, isMobile, isDesktop: !isMobile };
+})();
+
+document.documentElement.classList.add(platform.isDesktop ? 'is-desktop' : 'is-android');
+
+
+/* ================================================================
+   COLOR PALETTES
+   Eight distinct hues for stream buttons. Each has dark and light
+   theme variants with idle (bg) and playing (active) states.
+
+   Design goals:
+   - All backgrounds maintain WCAG AA contrast (4.5:1+) with white
+     text, even though buttons use large text (3:1 would suffice)
+   - Hues are well-separated so buttons are visually distinct
+   - Active state is noticeably brighter than idle in dark mode,
+     and deeper in light mode, reinforced by CSS brightness filter
+   - For color blindness: rely on OS accessibility settings (the
+     kiosk tablets support system-level color correction filters)
+   ================================================================ */
+
+const PALETTE = [
+  { id: 'blue',   dark: { bg: '#1a3d6e', active: '#2b6cb0' }, light: { bg: '#2b6cb0', active: '#1a4178' } },
+  { id: 'green',  dark: { bg: '#1a5235', active: '#2d8a5e' }, light: { bg: '#27804a', active: '#1a5535' } },
+  { id: 'purple', dark: { bg: '#3f1d70', active: '#6436b5' }, light: { bg: '#5a3aad', active: '#3d2478' } },
+  { id: 'teal',   dark: { bg: '#155858', active: '#22908e' }, light: { bg: '#1f7f7d', active: '#155a58' } },
+  { id: 'red',    dark: { bg: '#6d1f1f', active: '#b03636' }, light: { bg: '#a13030', active: '#7a2020' } },
+  { id: 'amber',  dark: { bg: '#6b4d10', active: '#a67c1a' }, light: { bg: '#8f6a18', active: '#664c10' } },
+  { id: 'slate',  dark: { bg: '#2a4058', active: '#436a95' }, light: { bg: '#3e6088', active: '#2c4560' } },
+  { id: 'rose',   dark: { bg: '#6a1d42', active: '#a83070' }, light: { bg: '#952a60', active: '#701d45' } },
+];
+
+
+/* === PROFILE CONFIG — build-profile.mjs replaces this block === */
+const PROFILE = {
+  orgName: 'RadioGridXL',
+  pin: '',
+  logoSvg: '<circle class="logo-body" cx="50" cy="55" r="14"/><path class="logo-cyan" fill="none" stroke-width="5" stroke-linecap="round" d="M 26,55 a 24,24 0 0 1 48,0" opacity="0.5"/><path class="logo-cyan" fill="none" stroke-width="5" stroke-linecap="round" d="M 14,55 a 36,36 0 0 1 72,0" opacity="0.35"/><path class="logo-cyan" fill="none" stroke-width="5" stroke-linecap="round" d="M 74,55 a 24,24 0 0 1 -48,0" opacity="0.5"/><path class="logo-cyan" fill="none" stroke-width="5" stroke-linecap="round" d="M 86,55 a 36,36 0 0 1 -72,0" opacity="0.35"/>',
+  logoViewBox: '0 0 100 100',
+  streams: [
+    {
+      id: 's1',
+      label: 'SomaFM Groove Salad',
+      sub: 'Ambient and downtempo, 24/7',
+      url: 'https://ice2.somafm.com/groovesalad-128-mp3',
+      emoji: '🎵',
+      color: 'green'
+    },
+    {
+      id: 's2',
+      label: 'SomaFM Drone Zone',
+      sub: 'Atmospheric textures with minimal beats',
+      url: 'https://ice2.somafm.com/dronezone-128-mp3',
+      emoji: '🌌',
+      color: 'blue'
+    }
+  ]
+};
+/* === END PROFILE CONFIG === */
+
+
+/* ================================================================
+   APP STATE
+   `cfg` holds all user-configurable settings (persisted to LocalStorage).
+   The other variables track runtime state that resets on page load.
+   ================================================================ */
+
+const cfg = {
+  orgName: PROFILE.orgName,
+  theme: 'auto',
+  size: 'large',
+  fillview: 'on',
+  volume: 100,
+  advanced: 'off',
+  haptics: 'on',
+  tts: 'off',
+  chime: 'on',
+  streams: JSON.parse(JSON.stringify(PROFILE.streams))
+};
+
+/* Playback state */
+let playing = null;       // ID of the currently playing stream, or null
+let paused = false;       // Whether the currently playing stream is paused
+let retryTimer = null;    // setTimeout handle for auto-retry on error
+let fadeTimer = null;     // setInterval handle for volume fade-in on stream start
+let pendingFade = false;  // true when a new stream start should fade in once playing fires
+let retryCount = 0;       // consecutive errors before marking stream as failed
+const failedStreams = new Set(); // stream IDs that have exhausted retries
+
+/* Sleep timer state */
+let sleepRemaining = 0;   // seconds remaining until auto-stop
+let sleepTick = null;     // setInterval handle for countdown
+
+/* UI timers */
+let skipToastTimer = null; // setTimeout handle for skip action toast
+
+/* Wake lock */
+let wakeLock = null;      // WakeLockSentinel — keeps screen on during playback
+
+/* Focus management — tracks what had focus before an overlay opened */
+let focusBeforeOverlay = null;
+
+/* Settings preview — snapshot of cfg before editing, used to revert on cancel */
+let cfgSnapshot = null;
+
+
+/* ================================================================
+   DOM REFERENCES
+   Cached once at startup to avoid repeated lookups.
+   ================================================================ */
+
+const audio        = document.getElementById('audio-player');
+const buttonsEl    = document.getElementById('buttons');
+const connDot      = document.getElementById('conn-dot');
+const sleepInd     = document.getElementById('sleep-indicator');
+const simpleStop   = document.getElementById('simple-stop');
+const advTransport = document.getElementById('adv-transport');
+const skipToast    = document.getElementById('skip-toast');
+const nonetOverlay = document.getElementById('nonet-overlay');
+
+
+/* ================================================================
+   INITIALIZATION
+   Runs once on page load. Loads saved settings, applies the theme,
+   renders stream buttons, and sets up platform-specific overrides.
+   ================================================================ */
+
+function init() {
+  // Inject profile logo into the SVG element
+  if (PROFILE.logoSvg) {
+    var svg = document.getElementById('logo-svg');
+    svg.innerHTML = PROFILE.logoSvg;
+    if (PROFILE.logoViewBox) svg.setAttribute('viewBox', PROFILE.logoViewBox);
+  }
+
+  loadSettings();
+  applyTheme();
+  applyOrgName();
+  renderButtons();
+  updateMode();
+
+  // Apply max volume cap
+  audio.volume = cfg.volume / 100;
+  document.getElementById('vol-slider').value = cfg.volume;
+  document.getElementById('vol-val').textContent = cfg.volume + '%';
+
+  // Desktop-specific adjustments
+  if (platform.isDesktop) {
+    document.getElementById('vol-overlay-body').innerHTML =
+      'Use your <strong>system volume controls</strong> or the slider in Settings to adjust.';
+    document.getElementById('nonet-overlay-body').textContent =
+      'Please check your network connection, or try again in a moment.';
+  }
+
+// Re-apply theme when system dark/light preference changes (for "auto" mode)
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+    if (cfg.theme === 'auto' || cfg.theme === 'mono-auto') applyTheme();
+  });
+
+  // Sync initial aria-checked state for settings chips
+  syncChips();
+
+  // Re-layout buttons on resize (orientation change, Safari toolbar show/hide)
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(renderButtons, 100);
+  });
+}
+
+
+/* ================================================================
+   PERSISTENCE — LocalStorage
+   Config key: 'rgxl_cfg' (JSON object)
+   PIN key:    'rgxl_pin' (plain string, managed separately)
+   ================================================================ */
+
+/**
+ * Load settings from LocalStorage into `cfg`.
+ * Each value is validated against an allowlist before being accepted.
+ * Corrupt or missing storage gracefully falls back to defaults.
+ */
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('rgxl_cfg') || '{}');
+
+    if (typeof s.orgName === 'string' && s.orgName.trim()) cfg.orgName = s.orgName;
+    if (['dark', 'light', 'auto', 'mono-dark', 'mono-light', 'mono-auto'].includes(s.theme)) cfg.theme = s.theme;
+    if (['normal', 'large', 'xlarge', 'ultra'].includes(s.size)) cfg.size = s.size;
+    if (['on', 'off'].includes(s.fillview))               cfg.fillview = s.fillview;
+    if (['on', 'off'].includes(s.advanced))               cfg.advanced = s.advanced;
+    if (['on', 'off'].includes(s.haptics))                cfg.haptics = s.haptics;
+    if (['on', 'off'].includes(s.tts))                    cfg.tts = s.tts;
+    if (['on', 'off'].includes(s.chime))                  cfg.chime = s.chime;
+
+    if (typeof s.volume === 'number' && s.volume >= 0 && s.volume <= 100) {
+      cfg.volume = Math.round(s.volume);
+    }
+
+    if (Array.isArray(s.streams) && s.streams.length > 0 && s.streams.length <= 8) {
+      // Only accept stream entries that have the required fields
+      cfg.streams = s.streams
+        .filter(st => st && typeof st.id === 'string' && typeof st.label === 'string')
+        .slice(0, 8);
+      if (cfg.streams.length === 0) {
+        cfg.streams = JSON.parse(JSON.stringify(PROFILE.streams));
+      }
+    }
+  } catch (e) {
+    /* Corrupt storage — use defaults */
+  }
+}
+
+/** Save current config to LocalStorage. */
+function saveSettings() {
+  try {
+    localStorage.setItem('rgxl_cfg', JSON.stringify({
+      orgName: cfg.orgName,
+      theme: cfg.theme,
+      size: cfg.size,
+      fillview: cfg.fillview,
+      volume: cfg.volume,
+      advanced: cfg.advanced,
+      haptics: cfg.haptics,
+      tts: cfg.tts,
+      chime: cfg.chime,
+      streams: cfg.streams
+    }));
+  } catch (e) {
+    /* LocalStorage full or unavailable — silently fail */
+  }
+}
+
+
+/* ================================================================
+   THEME
+   Resolves "auto" to the system preference, then applies the
+   appropriate CSS classes and re-renders buttons with new colors.
+   ================================================================ */
+
+/** Returns 'light' or 'dark' based on config and system preference. */
+function resolveTheme() {
+  var t = cfg.theme;
+  if (t === 'auto') {
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  if (t === 'mono-auto') {
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'mono-light' : 'mono-dark';
+  }
+  return t;
+}
+
+/** Apply the current theme, size, and desktop view mode to the DOM. */
+function applyTheme() {
+  const resolved = resolveTheme();
+  const base = platform.isDesktop ? 'is-desktop' : 'is-android';
+  const fill = (platform.isDesktop && cfg.fillview === 'on') ? ' fill-view' : '';
+  document.documentElement.className = base + fill + ' theme-' + resolved;
+  document.documentElement.setAttribute('data-size', cfg.size);
+  renderButtons();
+}
+
+/** Apply the configurable organization name to the header. */
+function applyOrgName() {
+  var el = document.getElementById('org-name');
+  // Split on newlines to support multi-line names (joined with <br>)
+  var lines = cfg.orgName.split('\n');
+  el.innerHTML = lines.map(l => escHtml(l)).join('<br>');
+  // Update aria-label with plain text version
+  document.getElementById('logo-area').setAttribute('aria-label',
+    cfg.orgName.replace(/\n/g, ' ') + ' — tap 5 times for settings');
+}
+
+/**
+ * Look up the color scheme for a given palette ID and theme.
+ * Falls back to the first palette if the ID is unrecognized.
+ */
+function getColor(colorId, themeKey) {
+  const p = PALETTE.find(c => c.id === colorId);
+  if (!p) return PALETTE[0][themeKey];
+  return p[themeKey];
+}
+
+
+/* ================================================================
+   STREAM BUTTON RENDERING
+   Rebuilds all stream buttons from `cfg.streams`. Called on init,
+   theme change, and after playback state changes.
+   Uses grid layout (2 columns) when there are more than 3 streams.
+   ================================================================ */
+
+function renderButtons() {
+  const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
+  const count = cfg.streams.length;
+
+  // Measure available height by subtracting fixed siblings from the app container.
+  // This is more reliable than reading buttonsEl.clientHeight which depends on
+  // flex layout and content that we're about to replace.
+  var appEl = document.getElementById('app');
+  var headerEl = document.getElementById('header');
+  var simpleStop = document.getElementById('simple-stop');
+  var advTrans = document.getElementById('adv-transport');
+  var appH = appEl.clientHeight;
+  var headerH = headerEl.offsetHeight;
+  var transportH = (advTrans && advTrans.classList.contains('visible'))
+    ? advTrans.offsetHeight
+    : simpleStop.offsetHeight;
+  var availH = appH - headerH - transportH;
+  if (availH < 100) availH = window.innerHeight - 150; // absolute fallback
+
+
+  // Determine column count based on stream count and aspect ratio.
+  // Landscape or wide screens use more columns to reduce row count.
+  var isLandscape = window.innerWidth > window.innerHeight;
+  var cols = 1;
+  if (count <= 3 && !isLandscape) cols = 1;
+  else if (count <= 4) cols = 2;
+  else if (isLandscape && count >= 6) cols = Math.min(4, count);
+  else if (isLandscape) cols = Math.min(3, count);
+  else cols = 2;
+
+  var rows = Math.ceil(count / cols);
+  var useGrid = cols > 1;
+  var oddGrid = useGrid && count % cols !== 0;
+
+  buttonsEl.innerHTML = '';
+  buttonsEl.classList.toggle('grid-mode', useGrid);
+  buttonsEl.style.setProperty('--btn-cols', cols);
+
+  var heightPerRow = availH / rows;
+
+  // Display mode tiers based on available height per row:
+  //   Full:       emoji + label + sublabel + state  (needs ~130px+)
+  //   Label-only: just the title                     (needs ~60px+)
+  //   Compact:    emoji/initial icon only             (any height)
+  //
+  // On small portrait screens (phones), 5+ streams in 2-col grid
+  // means 3-4 rows in ~400-550px — never enough for full text.
+  // Use stream count as the primary driver, heightPerRow as refinement.
+  var compact, hideSub;
+  if (count <= 3) {
+    // 1-3 stacked: always full, plenty of room
+    compact = false;
+    hideSub = heightPerRow < 120;
+  } else if (count === 4) {
+    // 2x2 grid: full on tablets, may need label-only on phones
+    compact = false;
+    hideSub = heightPerRow < 130;
+  } else if (count <= 5) {
+    // 3 rows: label-only on most screens, compact if very tight
+    compact = heightPerRow < 70;
+    hideSub = !compact && heightPerRow < 160;
+  } else {
+    // 6-8 streams: always compact emoji-only
+    compact = true;
+    hideSub = false;
+  }
+
+  buttonsEl.classList.toggle('compact-mode', compact);
+
+  // Compact header when rows are very tight
+  var useCompactHeader = heightPerRow < 80 && count > 4;
+  headerEl.classList.toggle('compact', useCompactHeader);
+  if (useCompactHeader && !headerEl._wasCompact) {
+    headerH = headerEl.offsetHeight;
+    availH = appH - headerH - transportH;
+    heightPerRow = availH / rows;
+  }
+  headerEl._wasCompact = useCompactHeader;
+  buttonsEl.classList.toggle('hide-sub', hideSub);
+
+  // Calculate scale from available height.
+  // Target: each row gets its fair share of space, buttons fill it.
+  var gap = 6;
+  var totalGaps = (rows - 1) * gap + gap * 2; // gaps + padding
+  var rowH = (availH - totalGaps) / rows;
+
+  // Set explicit row height so grid-mode buttons don't overflow
+  if (useGrid) {
+    buttonsEl.style.setProperty('--btn-row-h', Math.floor(rowH) + 'px');
+  } else {
+    buttonsEl.style.removeProperty('--btn-row-h');
+  }
+
+  // Base sizes — hideSub removes sublabel/emoji/state, keeping just title
+  var sizeMode = document.documentElement.getAttribute('data-size') || '';
+  var basePad = compact ? 8 : 16;
+  var baseEmoji = compact ? 48 : (hideSub ? 0 : 32);
+  var baseLabel = compact ? 0 : 34;
+  var baseSub = compact ? 0 : (hideSub ? 0 : 15);
+  var baseState = compact ? 11 : (hideSub ? 0 : 12);
+  if (!compact && sizeMode === 'large') { baseLabel = 40; baseSub = 17; baseEmoji = 38; }
+  else if (!compact && sizeMode === 'xlarge') { baseLabel = 52; baseSub = 21; baseEmoji = 48; }
+  if (compact && sizeMode === 'large') baseEmoji = 54;
+  else if (compact && sizeMode === 'xlarge') baseEmoji = 64;
+
+  // Estimate content height at scale=1 and derive scale from that
+  var contentH1 = basePad * 2 + baseEmoji + (compact ? baseState : baseLabel + baseSub + baseState) + 12;
+  var scale = Math.min(1, rowH / contentH1);
+  scale = Math.max(0.3, scale); // floor — never go invisibly small
+
+  // Ultra mode uses vmin units — handled separately via CSS, skip overrides
+  if (sizeMode === 'ultra') {
+    ['--btn-label-size','--btn-sub-size','--btn-emoji-size','--btn-state-size',
+     '--btn-pad','--btn-pad-h','--btn-inner-gap','--btn-gap'].forEach(
+      function(p) { buttonsEl.style.removeProperty(p); });
+  } else {
+    buttonsEl.style.setProperty('--btn-label-size', Math.round(baseLabel * scale) + 'px');
+    buttonsEl.style.setProperty('--btn-sub-size', Math.round(baseSub * scale) + 'px');
+    buttonsEl.style.setProperty('--btn-emoji-size', Math.round(baseEmoji * scale) + 'px');
+    buttonsEl.style.setProperty('--btn-state-size', Math.round(baseState * scale) + 'px');
+    buttonsEl.style.setProperty('--btn-pad', Math.round(basePad * scale) + 'px');
+    buttonsEl.style.setProperty('--btn-pad-h', Math.round(basePad * scale) + 'px');
+    buttonsEl.style.setProperty('--btn-inner-gap', Math.round(3 * scale) + 'px');
+    buttonsEl.style.setProperty('--btn-gap', Math.round(gap * Math.max(scale, 0.5)) + 'px');
+  }
+
+  cfg.streams.forEach((s, i) => {
+    const c = getColor(s.color || PALETTE[i % PALETTE.length].id, themeKey);
+    const isActive = playing === s.id;
+    const isPrimary = oddGrid && i === 0;
+    const isFailed = failedStreams.has(s.id);
+
+    const btn = document.createElement('button');
+    const isPaused = isActive && paused;
+    btn.className = 'stream-btn' + (isActive && !isPaused ? ' active' : '') + (isPaused ? ' paused' : '') + (isPrimary ? ' primary' : '') + (isFailed ? ' failed' : '');
+    btn.id = 'btn-' + s.id;
+    btn.style.background = (isActive && !isPaused) ? c.active : c.bg;
+    btn.setAttribute('data-bg', c.bg);
+    btn.setAttribute('data-active', c.active);
+    btn.onclick = () => playStream(s.id);
+
+    // Accessible label always includes full stream name + description
+    var label = 'Play ' + s.label;
+    if (s.sub) label += ', ' + s.sub;
+    if (isFailed) label = s.label + ' — unavailable, tap to try again';
+    else if (isPaused) label = 'Paused: ' + s.label + ', tap to resume';
+    else if (isActive) label = 'Now playing: ' + s.label;
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+
+    // Build inner HTML — all user content is escaped to prevent XSS
+    let html = '<div class="tap-flash" aria-hidden="true"></div>';
+
+    if (compact) {
+      // Compact mode: show emoji or first-letter fallback, hide text
+      var icon = s.emoji || s.label.charAt(0).toUpperCase();
+      html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(icon) + '</div>';
+      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
+    } else {
+      // Full mode: emoji + label + sublabel
+      if (s.emoji) html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(s.emoji) + '</div>';
+      html += '<div class="btn-label">' + escHtml(s.label) + '</div>';
+      if (s.sub) html += '<div class="btn-sublabel">' + escHtml(s.sub) + '</div>';
+      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
+    }
+
+    btn.innerHTML = html;
+    buttonsEl.appendChild(btn);
+  });
+}
+
+
+/* ================================================================
+   HTML / ATTRIBUTE ESCAPING
+   Used whenever user-provided content (stream labels, descriptions,
+   emoji) is inserted into the DOM via innerHTML or attribute values.
+   ================================================================ */
+
+/** Escape text for safe insertion into innerHTML. Uses DOM-based escaping. */
+function escHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+/** Escape text for safe insertion into HTML attribute values. */
+function escAttr(t) {
+  return t
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+
+/* ================================================================
+   TRANSPORT MODE — simple vs. advanced
+   Simple: full-width Stop button only.
+   Advanced: adds skip back/forward, sleep timer, live badge.
+   Configured by technician in settings.
+   ================================================================ */
+
+/** Show/hide the correct transport bar based on config. */
+function updateMode() {
+  const adv = cfg.advanced === 'on';
+  simpleStop.style.display = adv ? 'none' : 'flex';
+  advTransport.classList.toggle('visible', adv);
+  updateSkipButtons();
+}
+
+/** Show/hide skip buttons based on whether the stream is seekable. */
+function updateSkipButtons() {
+  if (cfg.advanced !== 'on') return;
+
+  const skipBackBtn = document.getElementById('adv-skip-back');
+  const skipFwdBtn = document.getElementById('adv-skip-fwd');
+  const liveBadge = document.getElementById('adv-live-badge');
+
+  // Skip is only available for finite-duration (non-live) streams
+  const canSkip = playing && isFinite(audio.duration) && audio.duration > 0;
+  skipBackBtn.style.display = canSkip ? '' : 'none';
+  skipFwdBtn.style.display = canSkip ? '' : 'none';
+  liveBadge.classList.toggle('visible', !!playing && !canSkip);
+}
+
+/** Update simple stop bar appearance and accessibility state. */
+function updateSimpleStop() {
+  const isPlaying = !!playing;
+  const isPaused = isPlaying && paused;
+  simpleStop.classList.toggle('active', isPlaying && !isPaused);
+  simpleStop.classList.toggle('paused', isPaused);
+  simpleStop.setAttribute('aria-disabled', isPlaying ? 'false' : 'true');
+
+  const labelEl = document.getElementById('simple-stop-label');
+  const squareEl = document.getElementById('simple-stop-square');
+  if (isPaused) {
+    const s = cfg.streams.find(x => x.id === playing);
+    const name = s ? s.label : 'Stream';
+    labelEl.textContent = '▶  Resume ' + name;
+    squareEl.style.display = 'none';
+    simpleStop.setAttribute('aria-label', 'Resume ' + name);
+  } else {
+    labelEl.textContent = 'Stop';
+    squareEl.style.display = '';
+    simpleStop.setAttribute('aria-label', 'Stop playback');
+  }
+}
+
+/** Update advanced transport bar appearance based on playback state. */
+function updateAdvTransport() {
+  advTransport.classList.toggle('has-playing', !!playing);
+  updateSkipButtons();
+}
+
+
+/* ================================================================
+   PLAYBACK
+   Manages the HTML5 audio element. Includes auto-retry on errors
+   (up to 4 attempts before showing the connection error overlay).
+   ================================================================ */
+
+/** Fade audio volume from 0 up to the configured level over ~2 seconds.
+    Called only after the playing event fires so buffering time doesn't eat the fade. */
+function fadeInAudio() {
+  clearInterval(fadeTimer);
+  const target = cfg.volume / 100;
+  const steps = 50;
+  const intervalMs = 4000 / steps;
+  let step = 0;
+  fadeTimer = setInterval(() => {
+    step++;
+    audio.volume = Math.min(target, (step / steps) * target);
+    if (step >= steps) { clearInterval(fadeTimer); fadeTimer = null; }
+  }, intervalMs);
+}
+
+/** Start playing a stream by its ID. Switches if already playing another.
+    Tapping the active stream toggles pause/resume. */
+function playStream(id) {
+  clearTimeout(retryTimer);
+  retryCount = 0;
+  failedStreams.delete(id);
+  hideOverlay(nonetOverlay);
+
+  // Tapping the already-playing stream toggles pause/resume
+  if (playing === id) {
+    if (paused) {
+      paused = false;
+      const p = audio.play();
+      if (p) p.catch(() => {});
+      setConnStatus('buffering');
+      requestWakeLock();
+      feedback('up', 'Resuming');
+    } else {
+      paused = true;
+      audio.pause();
+      setConnStatus('idle');
+      releaseWakeLock();
+      feedback('down', 'Paused');
+    }
+    doHaptic(id);
+    renderButtons();
+    updateSimpleStop();
+    updateAdvTransport();
+    return;
+  }
+
+  const s = cfg.streams.find(x => x.id === id);
+  if (!s) return;
+
+  playing = id;
+  paused = false;
+
+  feedback('up', 'Now playing ' + s.label);
+  doHaptic(id);
+
+  clearInterval(fadeTimer); fadeTimer = null;
+  audio.pause();
+  audio.volume = 0;   // silence until playing event fires and fade begins
+  pendingFade = true;
+  audio.src = s.url;
+  audio.load();
+  const p = audio.play();
+  if (p) p.catch(() => {}); // Suppress AbortError from rapid play/pause
+  renderButtons();
+  updateSimpleStop();
+  updateAdvTransport();
+  setConnStatus('buffering');
+  requestWakeLock();
+}
+
+/** Stop all playback and reset UI to idle state. */
+function stopPlayback() {
+  if (!playing) return;
+
+  clearInterval(fadeTimer); fadeTimer = null;
+  pendingFade = false;
+  clearTimeout(retryTimer);
+  audio.pause();
+  audio.src = '';
+
+  const wasPlaying = playing;
+  playing = null;
+  paused = false;
+  retryCount = 0;
+
+  doHaptic(wasPlaying);
+  renderButtons();
+  updateSimpleStop();
+  updateAdvTransport();
+  setConnStatus('idle');
+  hideOverlay(nonetOverlay);
+  clearSleep();
+  releaseWakeLock();
+}
+
+/** Soft stop — pauses the stream and shows a resume prompt on the stop bar.
+    Tapping again resumes. Tapping a different stream clears the paused state. */
+function softStop() {
+  if (!playing) return;
+
+  if (paused) {
+    // Already soft-paused — resume
+    paused = false;
+    const p = audio.play();
+    if (p) p.catch(() => {});
+    setConnStatus('buffering');
+    requestWakeLock();
+    feedback('up', 'Resuming');
+  } else {
+    // Pause and keep playing ID so resume is possible
+    paused = true;
+    audio.pause();
+    setConnStatus('idle');
+    releaseWakeLock();
+    feedback('down', 'Paused');
+  }
+
+  doHaptic(playing);
+  renderButtons();
+  updateSimpleStop();
+  updateAdvTransport();
+}
+
+/** Skip backward 15 seconds (non-live streams only). */
+function skipBack() {
+  if (!playing) return;
+  if (!isFinite(audio.duration) && !audio.seekable.length) {
+    showSkipToast('Live stream — cannot skip');
+    return;
+  }
+  audio.currentTime = Math.max(0, audio.currentTime - 15);
+  doHaptic(playing);
+  showSkipToast('⏪ Back 15s');
+}
+
+/** Skip forward 30 seconds (non-live streams only). */
+function skipFwd() {
+  if (!playing) return;
+  if (!isFinite(audio.duration) && !audio.seekable.length) {
+    showSkipToast('Live stream — cannot skip');
+    return;
+  }
+  audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 30);
+  doHaptic(playing);
+  showSkipToast('⏩ Forward 30s');
+}
+
+/** Show a brief centered toast message for skip actions. */
+function showSkipToast(msg) {
+  skipToast.textContent = msg;
+  skipToast.classList.add('visible');
+  clearTimeout(skipToastTimer);
+  skipToastTimer = setTimeout(() => skipToast.classList.remove('visible'), 1200);
+}
+
+/** Retry the current stream (called from the error overlay button). */
+function retryStream() {
+  hideOverlay(nonetOverlay);
+  if (!playing) return;
+
+  const s = cfg.streams.find(x => x.id === playing);
+  if (!s) return;
+
+  audio.src = s.url;
+  audio.load();
+  const p = audio.play();
+  if (p) p.catch(() => {});
+  setConnStatus('buffering');
+}
+
+
+/* ================================================================
+   AUDIO EVENT HANDLERS
+   Monitor the HTML5 audio element for state changes and errors.
+   ================================================================ */
+
+audio.addEventListener('playing', () => {
+  retryCount = 0;
+  if (playing) setConnStatus('good');
+  updateSkipButtons();
+  if (pendingFade) { pendingFade = false; fadeInAudio(); }
+});
+
+audio.addEventListener('waiting', () => {
+  if (playing) setConnStatus('buffering');
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  updateSkipButtons();
+});
+
+audio.addEventListener('error', () => {
+  if (!playing) return;
+  retryCount++;
+  setConnStatus('error');
+
+  // After 4 consecutive errors, gray out the button and stop retrying quietly
+  if (retryCount >= 4) {
+    failedStreams.add(playing);
+    retryCount = 0;
+    stopPlayback();
+    return;
+  }
+
+  // Auto-retry after 4 seconds
+  retryTimer = setTimeout(() => {
+    if (!playing) return;
+    const s = cfg.streams.find(x => x.id === playing);
+    if (!s) return;
+    audio.src = s.url;
+    audio.load();
+    const p = audio.play();
+    if (p) p.catch(() => {});
+  }, 4000);
+});
+
+
+/* ================================================================
+   CONNECTION STATUS
+   Updates the visual dot and its aria-label for screen readers.
+   ================================================================ */
+
+const CONN_LABELS = {
+  idle: 'Connection: idle',
+  buffering: 'Connection: buffering',
+  good: 'Connection: connected',
+  error: 'Connection: error'
+};
+
+function setConnStatus(status) {
+  connDot.className = status === 'idle' ? '' : status;
+  var label = CONN_LABELS[status] || CONN_LABELS.idle;
+  connDot.setAttribute('aria-label', label);
+  connDot.textContent = label;
+}
+
+
+/* ================================================================
+   OVERLAY MANAGEMENT
+   Shows/hides overlays with focus management. When an overlay opens,
+   focus moves to it. When it closes, focus returns to what was
+   focused before. Escape key closes the topmost overlay.
+   ================================================================ */
+
+/** Focusable element selector for focus trapping. */
+var FOCUSABLE = 'button:not([disabled]):not([tabindex="-1"]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]';
+
+/** Trap Tab/Shift+Tab focus inside a container element. */
+function trapFocus(e, container) {
+  if (e.key !== 'Tab') return;
+  var focusable = Array.from(container.querySelectorAll(FOCUSABLE)).filter(
+    function(el) { return el.offsetParent !== null; }
+  );
+  if (focusable.length === 0) return;
+  var first = focusable[0];
+  var last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
+/** Show an overlay and move focus to its first focusable element. */
+function showOverlay(el) {
+  focusBeforeOverlay = document.activeElement;
+  el.classList.add('visible');
+  el._focusTrap = function(e) { trapFocus(e, el); };
+  el.addEventListener('keydown', el._focusTrap);
+  // Move focus to the first button inside the overlay
+  var firstBtn = el.querySelector('button');
+  if (firstBtn) requestAnimationFrame(() => firstBtn.focus());
+}
+
+/** Hide an overlay and return focus to what was focused before. */
+function hideOverlay(el) {
+  el.classList.remove('visible');
+  if (el._focusTrap) {
+    el.removeEventListener('keydown', el._focusTrap);
+    el._focusTrap = null;
+  }
+  if (focusBeforeOverlay && focusBeforeOverlay.focus) {
+    focusBeforeOverlay.focus();
+    focusBeforeOverlay = null;
+  }
+}
+
+/** Find the topmost visible overlay and close it. Returns true if one was closed. */
+function closeTopmostOverlay() {
+  // Emoji picker has highest z-index
+  var emojiOverlay = document.getElementById('emoji-picker-overlay');
+  if (emojiOverlay.classList.contains('open')) {
+    closeEmojiPicker();
+    return true;
+  }
+  // Stream browser next
+  var sbOverlay = document.getElementById('stream-browser-overlay');
+  if (sbOverlay.classList.contains('open')) {
+    closeStreamBrowser();
+    return true;
+  }
+  // Check overlays first (may be on top of settings panel, e.g. discard confirm)
+  var overlays = document.querySelectorAll('.overlay.visible');
+  if (overlays.length > 0) {
+    var topOverlay = overlays[overlays.length - 1];
+    hideOverlay(topOverlay);
+    return true;
+  }
+  // Then check settings panel
+  var settingsPanel = document.getElementById('settings-panel');
+  if (settingsPanel.classList.contains('open')) {
+    closeSettings();
+    return true;
+  }
+  return false;
+}
+
+
+/* ================================================================
+   HAPTIC FEEDBACK
+   Provides a brief vibration and visual flash on button press.
+   Can be disabled by the technician in settings.
+   ================================================================ */
+
+function doHaptic(streamId) {
+  if (cfg.haptics !== 'on') return;
+
+  // Visual flash on the stream button
+  const el = streamId ? document.querySelector('#btn-' + streamId + ' .tap-flash') : null;
+  if (el) {
+    el.classList.remove('flash');
+    void el.offsetWidth; // Force reflow to restart the animation
+    el.classList.add('flash');
+  }
+
+  // Device vibration (mobile only, silently ignored on desktop)
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+
+/* ================================================================
+   TEXT-TO-SPEECH
+   Announces playback actions aloud when enabled in settings.
+   Uses the Web Speech API — device agnostic, no external deps.
+   ================================================================ */
+
+function speak(text) {
+  if (cfg.tts !== 'on') return;
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+}
+
+/** Play chime then speak — ensures TTS doesn't overlap the tone. */
+function feedback(direction, text) {
+  chime(direction);
+  if (cfg.tts === 'on' && window.speechSynthesis) {
+    setTimeout(() => speak(text), 800);
+  }
+}
+
+/** Shared AudioContext for chime tones — reused to avoid exhausting the browser limit. */
+let chimeCtx = null;
+
+/** Play a two-note chime. direction: 'up' (play/resume) or 'down' (pause). */
+function chime(direction) {
+  if (cfg.chime !== 'on') return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  try {
+    if (!chimeCtx || chimeCtx.state === 'closed') chimeCtx = new Ctx();
+    if (chimeCtx.state === 'suspended') chimeCtx.resume();
+    const freqs = direction === 'up' ? [440, 660] : [660, 440];
+    freqs.forEach((freq, i) => {
+      const osc = chimeCtx.createOscillator();
+      const gain = chimeCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(chimeCtx.destination);
+      const t = chimeCtx.currentTime + i * 0.13;
+      const peak = 0.6 * (cfg.volume / 100);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(peak, t + 0.01);
+      gain.gain.linearRampToValueAtTime(0, t + 0.11);
+      osc.start(t);
+      osc.stop(t + 0.13);
+    });
+  } catch (e) {}
+}
+
+
+/* ================================================================
+   SLEEP TIMER
+   Automatically stops playback after a set duration.
+   Countdown is shown in the header's sleep indicator.
+   ================================================================ */
+
+function showSleepOverlay() {
+  showOverlay(document.getElementById('sleep-overlay'));
+}
+
+function closeSleepOverlay() {
+  hideOverlay(document.getElementById('sleep-overlay'));
+}
+
+/** Start a sleep timer for the given number of minutes. Pass 0 to cancel. */
+function setSleep(minutes) {
+  clearSleep();
+  closeSleepOverlay();
+  if (minutes <= 0) return;
+
+  sleepRemaining = minutes * 60;
+  updateSleepDisplay();
+  sleepInd.classList.add('visible');
+
+  sleepTick = setInterval(() => {
+    sleepRemaining--;
+    if (sleepRemaining <= 0) {
+      clearSleep();
+      stopPlayback();
+      return;
+    }
+    updateSleepDisplay();
+  }, 1000);
+}
+
+/** Cancel any active sleep timer and hide the indicator. */
+function clearSleep() {
+  clearInterval(sleepTick);
+  sleepRemaining = 0;
+  sleepInd.classList.remove('visible');
+  sleepInd.textContent = '';
+}
+
+/** Update the header's sleep countdown display. */
+function updateSleepDisplay() {
+  const m = Math.floor(sleepRemaining / 60);
+  const s = sleepRemaining % 60;
+  sleepInd.textContent = '💤 ' + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+
+/* ================================================================
+   WAKE LOCK
+   Keeps the tablet screen on while audio is playing.
+   Automatically re-acquired when the app returns to the foreground.
+   ================================================================ */
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+  } catch (e) {
+    /* Wake lock not available or denied — non-critical */
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+}
+
+// Re-acquire wake lock when returning from background (OS may release it)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && playing) {
+    requestWakeLock();
+  }
+});
+
+
+/* ================================================================
+   VOLUME — max app volume cap (all platforms)
+   Scales the HTML5 audio element volume (0–1.0). Device hardware
+   buttons still control system volume independently.
+   ================================================================ */
+
+function setVolume(val) {
+  cfg.volume = parseInt(val, 10);
+  audio.volume = cfg.volume / 100;
+  document.getElementById('vol-val').textContent = cfg.volume + '%';
+  document.getElementById('vol-slider').setAttribute('aria-valuetext', cfg.volume + ' percent');
+}
+
+
+/* ================================================================
+   DEVICE UTILITIES
+   Platform-specific actions available from the settings panel.
+   ================================================================ */
+
+/** Open Android OS Wi-Fi settings via native bridge (APK) or intent URI (fallback). */
+function openWifiSettings() {
+  if (window.AndroidBridge && window.AndroidBridge.openWifiSettings) {
+    window.AndroidBridge.openWifiSettings();
+  } else {
+    window.location.href = 'intent:#Intent;action=android.settings.WIFI_SETTINGS;end';
+  }
+}
+
+/** Open Android OS main settings via native bridge (APK) or intent URI (fallback). */
+function openOsSettings() {
+  if (window.AndroidBridge && window.AndroidBridge.openOsSettings) {
+    window.AndroidBridge.openOsSettings();
+  } else {
+    window.location.href = 'intent:#Intent;action=android.settings.SETTINGS;end';
+  }
+}
+
+/** Open Live Caption / accessibility settings. Android intent goes directly to
+    the Accessibility screen where Live Caption is found on Android 10+. */
+function openLiveCaptionSettings() {
+  if (window.AndroidBridge && window.AndroidBridge.openAccessibilitySettings) {
+    window.AndroidBridge.openAccessibilitySettings();
+  } else {
+    window.location.href = 'intent:#Intent;action=android.settings.ACCESSIBILITY_SETTINGS;end';
+  }
+}
+
+
+/* ================================================================
+   SETTINGS PANEL
+   Slide-out panel for technician configuration. Accessible only
+   after entering the correct PIN (tap logo 5 times to trigger).
+   ================================================================ */
+
+function openSettings() {
+  var panel = document.getElementById('settings-panel');
+  focusBeforeOverlay = document.activeElement;
+
+  // Snapshot current config so we can revert on cancel
+  cfgSnapshot = JSON.parse(JSON.stringify(cfg));
+
+  // Reset to a known hidden state (clears stale classes from interrupted animations)
+  panel.classList.remove('open', 'animated');
+  // Force the browser to compute the hidden position before starting the transition
+  getComputedStyle(panel).transform;
+  panel.classList.add('animated');
+  // Use rAF so the browser registers the transition before the target state is set
+  requestAnimationFrame(function() { panel.classList.add('open'); });
+
+  // Sync volume slider with current value
+  document.getElementById('vol-slider').value = cfg.volume;
+  document.getElementById('vol-val').textContent = cfg.volume + '%';
+
+  // Sync org name textarea
+  document.getElementById('in-org-name').value = cfg.orgName;
+
+  renderStreamEditor();
+  syncChips();
+
+  // Focus trap + move focus to the close button for keyboard users
+  panel._focusTrap = function(e) { trapFocus(e, panel); };
+  panel.addEventListener('keydown', panel._focusTrap);
+  requestAnimationFrame(() => document.getElementById('settings-close').focus());
+}
+
+/** Check whether current cfg differs from the snapshot taken at open time. */
+function hasUnsavedChanges() {
+  if (!cfgSnapshot) return false;
+  // Read any pending stream editor input into cfg before comparing
+  readStreamEditor();
+  var orgVal = document.getElementById('in-org-name').value || PROFILE.orgName;
+  if (orgVal !== cfgSnapshot.orgName) return true;
+  for (var k of ['theme', 'size', 'fillview', 'advanced', 'haptics', 'tts', 'chime']) {
+    if (cfg[k] !== cfgSnapshot[k]) return true;
+  }
+  if (cfg.volume !== cfgSnapshot.volume) return true;
+  if (JSON.stringify(cfg.streams) !== JSON.stringify(cfgSnapshot.streams)) return true;
+  var curPin = document.getElementById('in-pin').value.replace(/\D/g, '');
+  var oldPin = getPin();
+  if (curPin !== oldPin && (curPin === '' || curPin.length >= 4)) return true;
+  return false;
+}
+
+function closeSettings() {
+  // If there are unsaved changes, show confirmation overlay
+  if (hasUnsavedChanges()) {
+    showOverlay(document.getElementById('discard-overlay'));
+    return;
+  }
+  doCloseSettings();
+}
+
+function cancelDiscard() {
+  hideOverlay(document.getElementById('discard-overlay'));
+}
+
+function confirmDiscard() {
+  hideOverlay(document.getElementById('discard-overlay'));
+  doCloseSettings();
+}
+
+/** Actually close the settings panel, reverting any unapplied changes. */
+function doCloseSettings() {
+  // Revert to snapshot if settings were not applied
+  if (cfgSnapshot) {
+    cfg.orgName = cfgSnapshot.orgName;
+    cfg.theme = cfgSnapshot.theme;
+    cfg.size = cfgSnapshot.size;
+    cfg.fillview = cfgSnapshot.fillview;
+    cfg.volume = cfgSnapshot.volume;
+    cfg.advanced = cfgSnapshot.advanced;
+    cfg.haptics = cfgSnapshot.haptics;
+    cfg.tts = cfgSnapshot.tts;
+    cfg.chime = cfgSnapshot.chime;
+    cfg.streams = cfgSnapshot.streams;
+    cfgSnapshot = null;
+
+    // Re-apply reverted settings to the UI
+    applyOrgName();
+    applyTheme();
+    updateMode();
+    renderButtons();
+    updateSimpleStop();
+    updateAdvTransport();
+    audio.volume = cfg.volume / 100;
+  }
+
+  var panel = document.getElementById('settings-panel');
+  if (panel._focusTrap) {
+    panel.removeEventListener('keydown', panel._focusTrap);
+    panel._focusTrap = null;
+  }
+  panel.classList.remove('open');
+  // Remove animated class after slide-out completes (timeout fallback if transitionend doesn't fire)
+  var tid = setTimeout(function() { panel.classList.remove('animated'); }, 350);
+  panel.addEventListener('transitionend', function handler() {
+    panel.removeEventListener('transitionend', handler);
+    clearTimeout(tid);
+    panel.classList.remove('animated');
+  });
+  if (focusBeforeOverlay && focusBeforeOverlay.focus) {
+    focusBeforeOverlay.focus();
+    focusBeforeOverlay = null;
+  }
+}
+
+/** Live-preview the organization name as it's typed. */
+function previewOrgName() {
+  cfg.orgName = document.getElementById('in-org-name').value || PROFILE.orgName;
+  applyOrgName();
+}
+
+/** Sync all settings chip selections and aria-checked state. */
+function syncChips() {
+  ['theme', 'size', 'fillview', 'advanced', 'haptics', 'tts', 'chime'].forEach(g => {
+    document.querySelectorAll('.chip[data-group="' + g + '"]').forEach(c => {
+      var isSelected = c.dataset.val === cfg[g];
+      c.classList.toggle('selected', isSelected);
+      c.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+    });
+  });
+}
+
+/** Handle a chip selection — update config, aria state, and apply visual changes. */
+function selectChip(el, group, val) {
+  cfg[group] = val;
+
+  document.querySelectorAll('.chip[data-group="' + group + '"]').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-checked', 'false');
+  });
+  el.classList.add('selected');
+  el.setAttribute('aria-checked', 'true');
+
+  if (group === 'theme' || group === 'size' || group === 'fillview') applyTheme();
+  if (group === 'advanced') updateMode();
+}
+
+
+/* ================================================================
+   STREAM EDITOR
+   Allows technicians to add, edit, reorder, and remove streams.
+   Each stream has: icon (emoji), label, description, URL, color.
+   Maximum of 8 streams. At least 1 must remain.
+   ================================================================ */
+
+/** Render the stream editor form inside the settings panel. */
+function renderStreamEditor() {
+  const editor = document.getElementById('stream-editor');
+  const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
+  editor.innerHTML = '';
+
+  cfg.streams.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'stream-entry';
+    div.setAttribute('role', 'group');
+    div.setAttribute('aria-label', 'Stream ' + (i + 1) + ': ' + s.label);
+
+    // Build color palette picker chips
+    let colorChipsHtml = '<div class="color-chips" role="radiogroup" aria-label="Button color">';
+    PALETTE.forEach(p => {
+      const sel = (s.color === p.id) ? ' selected' : '';
+      const checked = (s.color === p.id) ? 'true' : 'false';
+      colorChipsHtml +=
+        '<button class="color-chip' + sel + '"' +
+        ' style="background:' + p[themeKey].bg + ';"' +
+        ' data-color="' + p.id + '"' +
+        ' data-idx="' + i + '"' +
+        ' role="radio"' +
+        ' aria-checked="' + checked + '"' +
+        ' aria-label="' + p.id + '"' +
+        ' onclick="selectStreamColor(this,' + i + ',\'' + p.id + '\')"></button>';
+    });
+    colorChipsHtml += '</div>';
+
+    // Build stream entry HTML — all user values are attribute-escaped
+    var num = i + 1;
+    var showPrimaryBadge = i === 0 && cfg.streams.length > 3 && cfg.streams.length % 2 === 1;
+    div.innerHTML =
+      '<div class="stream-entry-header">' +
+        '<span class="stream-entry-num">Stream ' + num +
+          (showPrimaryBadge ? ' <span class="stream-primary-badge">Primary — full width</span>' : '') +
+        '</span>' +
+        '<div class="stream-entry-actions">' +
+          (i > 0 ? '<button class="stream-action-btn" onclick="moveStream(' + i + ',-1)" aria-label="Move stream ' + num + ' up">&#9650;</button>' : '') +
+          (i < cfg.streams.length - 1 ? '<button class="stream-action-btn" onclick="moveStream(' + i + ',1)" aria-label="Move stream ' + num + ' down">&#9660;</button>' : '') +
+          (cfg.streams.length > 1 ? '<button class="stream-action-btn danger" onclick="removeStreamEntry(' + i + ')" aria-label="Remove stream ' + num + '">&#10005;</button>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="inline-row">' +
+        '<div class="narrow"><div class="s-row"><label class="s-label">Icon</label>' +
+          '<button type="button" class="s-input emoji-input" data-field="emoji" data-idx="' + i + '" aria-label="Stream ' + num + ' icon" onclick="openEmojiPicker(' + i + ')">' + (s.emoji ? escHtml(s.emoji) : '<span style="opacity:0.4">—</span>') + '</button>' +
+          '<input type="hidden" data-field="emoji" data-idx="' + i + '" value="' + escAttr(s.emoji || '') + '"></div></div>' +
+        '<div><div class="s-row"><label class="s-label">Label</label>' +
+          '<input class="s-input" data-field="label" data-idx="' + i + '" value="' + escAttr(s.label) + '" aria-label="Stream ' + num + ' label" oninput="previewStreamEdit()"></div></div>' +
+      '</div>' +
+      '<div class="s-row"><label class="s-label">Description</label>' +
+        '<input class="s-input" data-field="sub" data-idx="' + i + '" value="' + escAttr(s.sub || '') + '" aria-label="Stream ' + num + ' description" oninput="previewStreamEdit()"></div>' +
+      '<div class="s-row"><label class="s-label">Stream URL</label>' +
+        '<input class="s-input" data-field="url" data-idx="' + i + '" value="' + escAttr(s.url) + '" aria-label="Stream ' + num + ' URL"></div>' +
+      '<div class="s-row"><label class="s-label">Button Color</label>' + colorChipsHtml + '</div>';
+
+    editor.appendChild(div);
+  });
+
+  // Hide add/browse row when at the 8-stream maximum
+  document.getElementById('stream-add-row').style.display =
+    cfg.streams.length >= 8 ? 'none' : 'flex';
+
+  // Show hint when 5+ streams — layout adapts but user should be aware
+  var hint = document.getElementById('stream-hint');
+  if (cfg.streams.length >= 5) {
+    hint.style.display = 'block';
+    if (cfg.streams.length >= 6) {
+      hint.textContent = 'With ' + cfg.streams.length + ' streams, buttons show emoji only. Set an icon for each stream for best results.';
+    } else {
+      hint.textContent = 'With 5+ streams, text will shrink to fit. Adding more will switch to emoji-only buttons — set an icon for each stream.';
+    }
+  } else {
+    hint.style.display = 'none';
+  }
+}
+
+/** Update a stream's color and re-render the editor + live preview. */
+function selectStreamColor(el, idx, colorId) {
+  readStreamEditor();
+  cfg.streams[idx].color = colorId;
+  renderStreamEditor();
+  renderButtons();
+}
+
+/** Swap a stream with its neighbor (dir: -1 = up, 1 = down). */
+function moveStream(idx, dir) {
+  readStreamEditor();
+  const target = idx + dir;
+  if (target < 0 || target >= cfg.streams.length) return;
+
+  const temp = cfg.streams[idx];
+  cfg.streams[idx] = cfg.streams[target];
+  cfg.streams[target] = temp;
+  renderStreamEditor();
+  renderButtons();
+}
+
+/** Add a new blank stream entry to the editor. */
+function addStreamEntry() {
+  if (cfg.streams.length >= 8) return;
+  readStreamEditor();
+
+  const colorIdx = cfg.streams.length % PALETTE.length;
+  cfg.streams.push({
+    id: 's' + Date.now(),
+    label: 'New Stream',
+    sub: '',
+    url: '',
+    emoji: '',
+    color: PALETTE[colorIdx].id
+  });
+  renderStreamEditor();
+  renderButtons();
+}
+
+/** Remove a stream entry. Stops playback if that stream is playing. */
+function removeStreamEntry(idx) {
+  if (cfg.streams.length <= 1) return;
+  readStreamEditor();
+
+  const removed = cfg.streams[idx];
+  if (playing === removed.id) stopPlayback();
+  cfg.streams.splice(idx, 1);
+  renderStreamEditor();
+  renderButtons();
+}
+
+/** Live-preview stream label/description/emoji changes as the user types. */
+function previewStreamEdit() {
+  readStreamEditor();
+  renderButtons();
+}
+
+/** Read all input values from the stream editor form back into cfg.streams. */
+function readStreamEditor() {
+  document.querySelectorAll('#stream-editor .s-input, #stream-editor input[type="hidden"]').forEach(input => {
+    const idx = parseInt(input.dataset.idx, 10);
+    const field = input.dataset.field;
+    if (cfg.streams[idx] && field) {
+      if (input.tagName === 'BUTTON') return; // skip emoji button (value is in hidden input)
+      cfg.streams[idx][field] = input.value;
+    }
+  });
+}
+
+
+/* ================================================================
+   STREAM BROWSER
+   Searches the Radio Browser API (radio-browser.info) to let
+   technicians discover and add radio stations by name, country,
+   or genre — instead of manually entering stream URLs.
+   ================================================================ */
+
+var sbPreviewAudio = null;
+
+/** Pick a random Radio Browser API server for load distribution. */
+async function getRadioBrowserBase() {
+  try {
+    const resp = await fetch('https://all.api.radio-browser.info/json/servers');
+    const servers = await resp.json();
+    if (servers.length > 0) {
+      const pick = servers[Math.floor(Math.random() * servers.length)];
+      return 'https://' + pick.name;
+    }
+  } catch (e) { /* fall through to default */ }
+  return 'https://de1.api.radio-browser.info';
+}
+
+function openStreamBrowser() {
+  var overlay = document.getElementById('stream-browser-overlay');
+  overlay.classList.add('open');
+  overlay._focusTrap = function(e) { trapFocus(e, overlay); };
+  overlay.addEventListener('keydown', overlay._focusTrap);
+  document.getElementById('sb-search').value = '';
+  document.getElementById('sb-country').value = '';
+  document.getElementById('sb-tag').value = '';
+  document.getElementById('sb-results').innerHTML =
+    '<div class="stream-browser-empty">Search for stations by name, or pick a country and genre to browse.</div>';
+  document.getElementById('sb-search').focus();
+}
+
+function closeStreamBrowser() {
+  stopSbPreview();
+  var overlay = document.getElementById('stream-browser-overlay');
+  if (overlay._focusTrap) {
+    overlay.removeEventListener('keydown', overlay._focusTrap);
+    overlay._focusTrap = null;
+  }
+  overlay.classList.remove('open');
+}
+
+async function searchStations() {
+  const query = document.getElementById('sb-search').value.trim();
+  const country = document.getElementById('sb-country').value;
+  const tag = document.getElementById('sb-tag').value;
+
+  if (!query && !country && !tag) return;
+
+  const results = document.getElementById('sb-results');
+  results.innerHTML = '<div class="sb-loading">Searching...</div>';
+
+  try {
+    const base = await getRadioBrowserBase();
+    const params = new URLSearchParams({
+      limit: '40',
+      order: 'clickcount',
+      reverse: 'true',
+      hidebroken: 'true'
+    });
+    if (query) params.set('name', query);
+    if (country) params.set('countrycode', country);
+    if (tag) params.set('tag', tag);
+
+    const resp = await fetch(base + '/json/stations/search?' + params.toString());
+
+    if (!resp.ok) throw new Error('API returned ' + resp.status);
+
+    const stations = await resp.json();
+    renderBrowserResults(stations);
+  } catch (err) {
+    results.innerHTML =
+      '<div class="stream-browser-empty">Search failed. Check your network connection and try again.</div>';
+  }
+}
+
+function renderBrowserResults(stations) {
+  const results = document.getElementById('sb-results');
+
+  if (!stations || stations.length === 0) {
+    results.innerHTML = '<div class="stream-browser-empty">No stations found. Try different search terms.</div>';
+    return;
+  }
+
+  // Dedupe by URL — the API sometimes returns duplicates
+  const seen = new Set();
+  const unique = stations.filter(s => {
+    if (!s.url_resolved || seen.has(s.url_resolved)) return false;
+    seen.add(s.url_resolved);
+    return true;
+  });
+
+  results.innerHTML = '';
+  unique.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'sb-result';
+
+    const tags = [s.country, s.tags ? s.tags.split(',')[0] : '', s.bitrate ? s.bitrate + 'kbps' : '']
+      .filter(Boolean).join(' · ');
+
+    div.innerHTML =
+      '<button class="sb-result-play" onclick="event.stopPropagation();toggleSbPreview(\'' + escAttr(s.url_resolved) + '\',this)" aria-label="Preview ' + escAttr(s.name) + '" title="Preview">&#9654;</button>' +
+      '<div class="sb-result-info" aria-hidden="true">' +
+        '<div class="sb-result-name">' + escHtml(s.name) + '</div>' +
+        '<div class="sb-result-meta">' + escHtml(tags) + '</div>' +
+      '</div>' +
+      '<button class="sb-result-add" onclick="event.stopPropagation();addFromBrowser(' + i + ')" aria-label="Add ' + escAttr(s.name) + '">+ Add</button>';
+
+    div.dataset.stationIdx = i;
+    results.appendChild(div);
+  });
+
+  // Stash results for addFromBrowser
+  results._stations = unique;
+}
+
+function toggleSbPreview(url, btn) {
+  if (sbPreviewAudio && sbPreviewAudio.src === url) {
+    stopSbPreview();
+    return;
+  }
+  stopSbPreview();
+  sbPreviewAudio = new Audio(url);
+  sbPreviewAudio.volume = 0.5;
+  sbPreviewAudio.play().catch(function() {});
+  btn.innerHTML = '&#9724;';
+  btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Preview', 'Stop preview of'));
+  btn.style.background = 'var(--accent)';
+  btn.style.color = '#111';
+  sbPreviewAudio.addEventListener('ended', function() { stopSbPreview(); });
+  sbPreviewAudio.addEventListener('error', function() { stopSbPreview(); });
+}
+
+function stopSbPreview() {
+  if (sbPreviewAudio) {
+    sbPreviewAudio.pause();
+    sbPreviewAudio.src = '';
+    sbPreviewAudio = null;
+  }
+  // Reset all preview buttons
+  document.querySelectorAll('.sb-result-play').forEach(function(btn) {
+    btn.innerHTML = '&#9654;';
+    btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Stop preview of', 'Preview'));
+    btn.style.background = '';
+    btn.style.color = '';
+  });
+}
+
+function addFromBrowser(idx) {
+  const results = document.getElementById('sb-results');
+  const stations = results._stations;
+  if (!stations || !stations[idx]) return;
+  if (cfg.streams.length >= 8) return;
+
+  stopSbPreview();
+  readStreamEditor();
+
+  const s = stations[idx];
+  const colorIdx = cfg.streams.length % PALETTE.length;
+  cfg.streams.push({
+    id: 's' + Date.now(),
+    label: s.name.substring(0, 40),
+    sub: [s.country, s.tags ? s.tags.split(',')[0] : ''].filter(Boolean).join(' — '),
+    url: s.url_resolved,
+    emoji: '',
+    color: PALETTE[colorIdx].id
+  });
+
+  renderStreamEditor();
+  renderButtons();
+  closeStreamBrowser();
+}
+
+// Allow Enter key to trigger search
+document.addEventListener('DOMContentLoaded', function() {
+  var sbInput = document.getElementById('sb-search');
+  if (sbInput) {
+    sbInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); searchStations(); }
+    });
+  }
+
+  // Prevent all touch-scroll on the main interface (no pull-to-refresh,
+  // no rubber-banding). Allow scrolling only inside designated containers.
+  // Also block pinch-to-zoom (multi-touch) everywhere — this is a kiosk app.
+  document.addEventListener('touchmove', function(e) {
+    // Block pinch zoom (2+ fingers) unconditionally
+    if (e.touches.length > 1) { e.preventDefault(); return; }
+    var el = e.target;
+    while (el && el !== document.body) {
+      // Allow scroll inside settings sidebar and overlay scroll containers
+      if (el.id === 'settings-panel' || el.classList.contains('stream-browser-results') ||
+          el.classList.contains('emoji-grid') || el.classList.contains('emoji-picker-tabs')) {
+        return;
+      }
+      el = el.parentElement;
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  // Safari-specific: block gesturestart (pinch/rotate gestures)
+  document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+  document.addEventListener('gesturechange', function(e) { e.preventDefault(); });
+  document.addEventListener('gestureend', function(e) { e.preventDefault(); });
+});
+
+
+/* ================================================================
+   EMOJI PICKER
+   Cross-platform popup for selecting stream icons. Uses a curated
+   set of emoji organized by category. Works on Android, iOS, and
+   desktop without any external dependencies.
+   ================================================================ */
+
+var emojiPickerIdx = -1;
+
+var EMOJI_CATEGORIES = [
+  { name: 'Music', emojis: ['🎵', '🎶', '🎸', '🎹', '🎺', '🎻', '🎷', '🥁', '🎤', '🎧', '🎼', '🪗', '🪘', '🪕', '🪈'] },
+  { name: 'Radio', emojis: ['📻', '📡', '🔊', '📢', '📣', '🎙️', '🎚️', '🎛️', '📺', '💿', '📀', '💽', '🔌', '🔋'] },
+  { name: 'Nature', emojis: ['🌅', '🌄', '🌊', '🌿', '🌸', '🌺', '🌻', '🌲', '🌴', '🍀', '🌈', '⛅', '🌙', '⭐', '✨', '🌎', '🔥', '💧', '❄️', '🌾'] },
+  { name: 'Faces', emojis: ['😀', '😎', '🥰', '😇', '🤩', '😌', '🧘', '💆', '🙏', '💪', '👋', '👍', '❤️', '💛', '💙', '💜', '🤍', '🖤', '💚', '🧡'] },
+  { name: 'Places', emojis: ['🏠', '⛪', '🏛️', '🏢', '🏫', '🏥', '🕌', '🕍', '⛩️', '🏰', '🗼', '🌆', '🏞️', '🗻', '🏖️'] },
+  { name: 'Food', emojis: ['☕', '🍵', '🧃', '🍺', '🍷', '🎂', '🍕', '🍔', '🌽', '🍎', '🍇', '🍓', '🥐', '🍪', '🧁'] },
+  { name: 'Things', emojis: ['📰', '📖', '📚', '✏️', '🔔', '💡', '🕯️', '🎁', '🎈', '🎉', '🏆', '🎯', '🧩', '♟️', '🎲'] },
+  { name: 'Travel', emojis: ['✈️', '🚗', '🚂', '⛵', '🚀', '🛸', '🏍️', '🚲', '🛶', '⚓', '🗺️', '🧳', '🏕️', '🎡', '🎢'] },
+  { name: 'Animals', emojis: ['🐶', '🐱', '🐦', '🦅', '🦋', '🐝', '🐠', '🐬', '🦊', '🦁', '🐻', '🐼', '🦉', '🐸', '🐢'] },
+  { name: 'Symbols', emojis: ['☮️', '✝️', '☪️', '🕉️', '✡️', '🔯', '♾️', '💠', '🔷', '🔶', '🟢', '🟡', '🔴', '⚪', '♥️', '♠️', '♦️', '♣️', '⚡', '☀️'] }
+];
+
+var emojiPickerReturnFocus = null;
+
+function openEmojiPicker(idx) {
+  emojiPickerIdx = idx;
+  emojiPickerReturnFocus = document.activeElement;
+  renderEmojiTabs(0);
+  renderEmojiGrid(0);
+  var overlay = document.getElementById('emoji-picker-overlay');
+  overlay.classList.add('open');
+  overlay._focusTrap = function(e) { trapFocus(e, overlay); };
+  overlay.addEventListener('keydown', overlay._focusTrap);
+  // Move focus to first emoji tab for keyboard accessibility
+  var firstTab = overlay.querySelector('.emoji-tab');
+  if (firstTab) firstTab.focus();
+}
+
+function closeEmojiPicker() {
+  var overlay = document.getElementById('emoji-picker-overlay');
+  if (overlay._focusTrap) {
+    overlay.removeEventListener('keydown', overlay._focusTrap);
+    overlay._focusTrap = null;
+  }
+  overlay.classList.remove('open');
+  emojiPickerIdx = -1;
+  if (emojiPickerReturnFocus) {
+    emojiPickerReturnFocus.focus();
+    emojiPickerReturnFocus = null;
+  }
+}
+
+// Close emoji picker on backdrop tap
+document.getElementById('emoji-picker-overlay').addEventListener('click', function (e) {
+  if (e.target === this) closeEmojiPicker();
+});
+
+function renderEmojiTabs(activeIdx) {
+  var html = '';
+  EMOJI_CATEGORIES.forEach(function (cat, i) {
+    html += '<button class="emoji-tab' + (i === activeIdx ? ' active' : '') + '" role="tab" aria-selected="' + (i === activeIdx) + '" aria-controls="emoji-grid" tabindex="' + (i === activeIdx ? '0' : '-1') + '" onclick="switchEmojiTab(' + i + ')">' + escHtml(cat.name) + '</button>';
+  });
+  document.getElementById('emoji-tabs').innerHTML = html;
+
+  // Arrow key navigation between tabs
+  document.getElementById('emoji-tabs').onkeydown = function (e) {
+    var tabs = Array.from(this.querySelectorAll('[role="tab"]'));
+    var idx = tabs.indexOf(document.activeElement);
+    if (idx === -1) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      var next = (idx + 1) % tabs.length;
+      switchEmojiTab(next);
+      document.getElementById('emoji-tabs').querySelectorAll('[role="tab"]')[next].focus();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      var prev = (idx - 1 + tabs.length) % tabs.length;
+      switchEmojiTab(prev);
+      document.getElementById('emoji-tabs').querySelectorAll('[role="tab"]')[prev].focus();
+    }
+  };
+}
+
+function switchEmojiTab(catIdx) {
+  renderEmojiTabs(catIdx);
+  renderEmojiGrid(catIdx);
+}
+
+function renderEmojiGrid(catIdx) {
+  var emojis = EMOJI_CATEGORIES[catIdx].emojis;
+  var html = '';
+  emojis.forEach(function (em) {
+    html += '<button type="button" class="emoji-cell" onclick="emojiPickerSelect(this.textContent)" aria-label="' + em + '">' + em + '</button>';
+  });
+  document.getElementById('emoji-grid').innerHTML = html;
+}
+
+function emojiPickerSelect(emoji) {
+  if (emojiPickerIdx < 0) return;
+  var idx = emojiPickerIdx;
+
+  // Update hidden input value
+  var hidden = document.querySelector('#stream-editor input[type="hidden"][data-field="emoji"][data-idx="' + idx + '"]');
+  if (hidden) hidden.value = emoji;
+
+  // Update visible button text
+  var btn = document.querySelector('#stream-editor button.emoji-input[data-idx="' + idx + '"]');
+  if (btn) btn.innerHTML = emoji ? escHtml(emoji) : '<span style="opacity:0.4">—</span>';
+
+  closeEmojiPicker();
+  previewStreamEdit();
+}
+
+
+/* ================================================================
+   APPLY SETTINGS
+   Called when the technician presses "Apply & Close". Validates
+   stream data, saves everything, and refreshes the UI.
+   ================================================================ */
+
+/**
+ * Validate that a stream URL uses http or https.
+ * Rejects javascript:, data:, and other potentially dangerous schemes.
+ */
+function isValidStreamUrl(url) {
+  if (!url) return true; // Empty URL is allowed (stream just won't play)
+  return /^https?:\/\//i.test(url.trim());
+}
+
+function applySettings() {
+  readStreamEditor();
+
+  // Read org name (fall back to default if blank)
+  var orgVal = document.getElementById('in-org-name').value.trim();
+  cfg.orgName = orgVal || PROFILE.orgName;
+
+  // Sanitize stream data
+  cfg.streams.forEach((s, i) => {
+    if (!s.label.trim()) s.label = 'Stream ' + (i + 1);
+    if (!isValidStreamUrl(s.url)) s.url = '';
+  });
+
+  // Update PIN if changed (4–8 digits, or empty to disable)
+  var newPin = document.getElementById('in-pin').value.replace(/\D/g, '');
+  if (newPin === '' || newPin.length >= 4) setPin(newPin.slice(0, 8));
+
+  // Clear snapshot so closeSettings() won't revert
+  cfgSnapshot = null;
+
+  // Refresh the entire UI
+  applyOrgName();
+  applyTheme();
+  updateMode();
+  renderButtons();
+  updateSimpleStop();
+  updateAdvTransport();
+  saveSettings();
+  closeSettings();
+}
+
+
+/* ================================================================
+   RESET TO DEFAULTS
+   Two-tap confirm: first tap shows warning, second tap executes.
+   Resets all settings and streams to factory defaults. PIN is
+   preserved (it's stored separately).
+   ================================================================ */
+
+function confirmReset() {
+  showOverlay(document.getElementById('reset-overlay'));
+}
+
+function cancelReset() {
+  hideOverlay(document.getElementById('reset-overlay'));
+}
+
+function executeReset() {
+  hideOverlay(document.getElementById('reset-overlay'));
+
+  // Stop any playback
+  stopPlayback();
+
+  // Reset all config to defaults
+  cfg.orgName = PROFILE.orgName;
+  cfg.theme = 'auto';
+  cfg.size = 'large';
+  cfg.fillview = 'on';
+  cfg.volume = 100;
+  cfg.advanced = 'off';
+  cfg.haptics = 'on';
+  cfg.tts = 'off';
+  cfg.chime = 'on';
+  cfg.streams = JSON.parse(JSON.stringify(PROFILE.streams));
+  setPin(PROFILE.pin);
+
+  // Clear snapshot so close won't revert
+  cfgSnapshot = null;
+
+  // Save, refresh UI, and close settings
+  saveSettings();
+  applyOrgName();
+  applyTheme();
+  updateMode();
+  renderButtons();
+  updateSimpleStop();
+  updateAdvTransport();
+  audio.volume = cfg.volume / 100;
+  closeSettings();
+}
+
+
+/* ================================================================
+   PIN SYSTEM
+   Protects settings access. Tap the logo 5 times within 2 seconds
+   to trigger the PIN overlay. Locks out after 5 failed attempts
+   with an escalating delay (5s increments, max 30s).
+   ================================================================ */
+
+const PIN_DEFAULT = PROFILE.pin;
+let tapCount = 0;
+let tapTimer = null;
+let pinEntry = '';
+let pinFailCount = 0;
+let pinLocked = false;
+
+const pinOverlay = document.getElementById('pin-overlay');
+const pinDots = document.querySelectorAll('.pin-dot');
+const pinErrorEl = document.getElementById('pin-error');
+const pinStatusEl = document.getElementById('pin-status');
+
+/** Get the current PIN from LocalStorage, or the default if not set. */
+function getPin() {
+  try {
+    return localStorage.getItem('rgxl_pin') || PIN_DEFAULT;
+  } catch (e) {
+    return PIN_DEFAULT;
+  }
+}
+
+/** Save a new PIN to LocalStorage. */
+function setPin(v) {
+  try {
+    localStorage.setItem('rgxl_pin', v);
+  } catch (e) {
+    /* LocalStorage unavailable */
+  }
+}
+
+// Logo tap counter — 5 taps within 2 seconds opens the PIN overlay
+document.getElementById('logo-area').addEventListener('click', function (e) {
+  e.stopPropagation();
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+
+  if (tapCount >= 5) {
+    tapCount = 0;
+    clearTimeout(tapTimer);
+    if (getPin()) { showPinOverlay(); } else { openSettings(); }
+  }
+});
+
+// Also allow Enter/Space on logo area for keyboard users
+document.getElementById('logo-area').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    this.click();
+  }
+});
+
+/** Show the PIN entry overlay with a fresh state. */
+function showPinOverlay() {
+  pinEntry = '';
+  pinErrorEl.innerHTML = '&nbsp;';
+  pinStatusEl.textContent = '';
+  pinDots.forEach(d => d.classList.remove('filled', 'wrong'));
+  showOverlay(pinOverlay);
+}
+
+/** Handle a PIN digit press. Validates after 4 digits are entered. */
+function pinKey(n) {
+  if (pinLocked || pinEntry.length >= 4) return;
+
+  pinEntry += n;
+  pinDots[pinEntry.length - 1].classList.add('filled');
+  // Announce digit count to screen readers without revealing digits
+  pinStatusEl.textContent = pinEntry.length + ' of 4 digits entered';
+
+  if (pinEntry.length === 4) {
+    setTimeout(() => {
+      if (pinEntry === getPin()) {
+        // Correct PIN — open settings
+        hideOverlay(pinOverlay);
+        pinEntry = '';
+        pinFailCount = 0;
+        openSettings();
+        document.getElementById('in-pin').value = getPin();
+      } else {
+        // Wrong PIN
+        pinFailCount++;
+        pinDots.forEach(d => { d.classList.remove('filled'); d.classList.add('wrong'); });
+
+        if (pinFailCount >= 5) {
+          // Lockout: escalating delay (5s per failure, capped at 30s)
+          var lockSec = Math.min(30, pinFailCount * 5);
+          pinLocked = true;
+          pinErrorEl.textContent = 'Too many attempts — wait ' + lockSec + 's';
+          setTimeout(() => {
+            pinLocked = false;
+            pinDots.forEach(d => d.classList.remove('wrong'));
+            pinEntry = '';
+            pinErrorEl.innerHTML = '&nbsp;';
+            pinStatusEl.textContent = 'PIN cleared, try again';
+          }, lockSec * 1000);
+        } else {
+          pinErrorEl.textContent = 'Incorrect PIN — try again';
+          setTimeout(() => {
+            pinDots.forEach(d => d.classList.remove('wrong'));
+            pinEntry = '';
+            pinErrorEl.innerHTML = '&nbsp;';
+            pinStatusEl.textContent = 'PIN cleared, try again';
+          }, 800);
+        }
+      }
+    }, 200);
+  }
+}
+
+/** Delete the last entered PIN digit. */
+function pinBackspace() {
+  if (pinEntry.length === 0) return;
+  pinDots[pinEntry.length - 1].classList.remove('filled');
+  pinEntry = pinEntry.slice(0, -1);
+  pinErrorEl.innerHTML = '&nbsp;';
+  pinStatusEl.textContent = pinEntry.length + ' of 4 digits entered';
+}
+
+/** Cancel PIN entry and close the overlay. */
+function pinCancel() {
+  hideOverlay(pinOverlay);
+  pinEntry = '';
+}
+
+
+/* ================================================================
+   KEYBOARD NAVIGATION
+   Global keyboard handler for Escape key to close overlays/dialogs.
+   ================================================================ */
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') {
+    closeTopmostOverlay();
+  }
+});
+
+
+/* ================================================================
+   BOOT
+   ================================================================ */
+
+init();
+
+</script>
+</body>
+</html>
