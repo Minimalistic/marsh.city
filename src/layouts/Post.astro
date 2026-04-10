@@ -8,6 +8,7 @@ interface Props {
 const { title, description, date } = Astro.props;
 ---
 <Base title={title} description={description}>
+  <div class="reading-progress" id="reading-progress"></div>
   <article>
     <h1>{title}</h1>
     {date && <p class="meta" style="color: var(--fg-soft); font-size: 0.9rem;">
@@ -15,4 +16,21 @@ const { title, description, date } = Astro.props;
     </p>}
     <slot />
   </article>
+
+  <script is:inline>
+    (() => {
+      const bar = document.getElementById('reading-progress');
+      if (!bar) return;
+      function update() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (docHeight <= 0) { bar.style.opacity = '0'; return; }
+        const pct = Math.min(scrollTop / docHeight, 1) * 100;
+        bar.style.width = pct + '%';
+        bar.style.opacity = pct > 0 ? '1' : '0';
+      }
+      window.addEventListener('scroll', update, { passive: true });
+      update();
+    })();
+  </script>
 </Base>
