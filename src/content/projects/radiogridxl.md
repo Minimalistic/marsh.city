@@ -1,6 +1,6 @@
 ---
 title: RadioGridXL
-description: A single-file HTML5 radio streaming app built for accessibility — deployed to senior citizens at a disability services nonprofit.
+description: A single-file HTML5 radio streaming app built for accessibility — now deployed to older adults at a nonprofit.
 status: shipped
 repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio.html
@@ -9,7 +9,7 @@ started: 2026-03-01
 updated: 2026-04-09
 ---
 
-RadioGridXL is a radio streaming app in a single HTML file — no dependencies, no build step, no backend. I built it on my own time, then adapted it for deployment at the nonprofit where I work, putting it in the hands of senior citizens who just want to listen to music without fighting a UI.
+RadioGridXL is a radio streaming app in a single HTML file — no dependencies, no build step, no backend. I built it on my own time, then adapted it for deployment at the nonprofit where I work, putting it in the hands of older adults and anyone who wants to listen to music without navigating a complicated interface.
 
 [Try the live demo](/radio.html)
 
@@ -46,4 +46,4 @@ A profile system supports branded variants — a build script swaps in custom st
 
 ## Who it's for
 
-Anyone who needs a simple, reliable way to listen to audio streams — but especially people for whom mainstream music apps are too cluttered, too small, or too confusing. It's currently deployed to senior citizens through the nonprofit where I direct technology.
+Anyone who needs a simple, reliable way to listen to audio streams — whether that's older adults, people with disabilities, or anyone who finds mainstream music apps too cluttered or overwhelming. It's currently deployed through the nonprofit where I direct technology, serving people who benefit from a straightforward interface that stays out of the way.
