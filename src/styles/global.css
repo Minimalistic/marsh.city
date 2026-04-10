@@ -493,7 +493,9 @@ nav.site-nav .brand:hover .brand-leaf {
   .layout {
     padding: 1.25rem 1rem 4rem;
   }
-  .canopy { display: none; }
+  .leaf-1 { width: 280px; top: -60px; right: -80px; opacity: 0.05; }
+  .leaf-2 { width: 220px; top: 40%; left: -100px; opacity: 0.035; }
+  .leaf-3 { width: 200px; bottom: -40px; right: -20px; opacity: 0.04; }
 
   nav.site-nav {
     flex-direction: column;
