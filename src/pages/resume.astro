@@ -1,7 +1,154 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Resume">
+<Base title="Resume" description="Jason Marsh — Director of Technology, solo developer, assistive technology specialist.">
   <h1>Resume</h1>
-  <p class="tagline">Coming soon. (Or just ask Claude to fill it in.)</p>
+
+  <div class="prose">
+    <p class="resume-intro">
+      Director of Technology with 13+ years in IT and a solo dev practice focused on
+      AI-integrated tools, accessibility, and full-stack product delivery.
+    </p>
+
+    <h2>Experience</h2>
+
+    <div class="resume-entry">
+      <div class="resume-header">
+        <strong>Director of Technology</strong>
+        <span class="meta">May 2025 – Present</span>
+      </div>
+      <div class="resume-org">Lighthouse Center for Vital Living — Duluth, MN</div>
+      <ul>
+        <li>Direct all technology strategy, infrastructure, and assistive technology services for a nonprofit serving people with disabilities and aging populations</li>
+        <li>Manage the AT lending library — evaluating, deploying, and supporting devices for clients</li>
+        <li>Built and deployed <a href="/projects/radiogridxl/">RadioGridXL</a>, an accessibility-first streaming app now in use by older adults at the organization</li>
+      </ul>
+    </div>
+
+    <div class="resume-entry">
+      <div class="resume-header">
+        <strong>IT Manager & AT Specialist</strong>
+        <span class="meta">2022 – 2025</span>
+      </div>
+      <div class="resume-org">Lighthouse Center for Vital Living — Duluth, MN</div>
+      <ul>
+        <li>Managed IT infrastructure and led assistive technology evaluations and deployments</li>
+        <li>Developed internal tools for workflow documentation and device tracking</li>
+      </ul>
+    </div>
+
+    <div class="resume-entry">
+      <div class="resume-header">
+        <strong>Tech Specialist</strong>
+        <span class="meta">Oct 2020 – 2022</span>
+      </div>
+      <div class="resume-org">Lighthouse Center for Vital Living — Duluth, MN</div>
+    </div>
+
+    <div class="resume-entry">
+      <div class="resume-header">
+        <strong>Head Illustrator & Concept Artist</strong>
+        <span class="meta">Jul 2018 – Dec 2020</span>
+      </div>
+      <div class="resume-org">The Urban Cowgirl</div>
+      <ul>
+        <li>Created black and white western-themed noir illustrations for publication</li>
+      </ul>
+    </div>
+
+    <h2>Solo Development</h2>
+    <p>
+      I build and ship production software independently. Highlights:
+    </p>
+    <ul>
+      <li><a href="/projects/mealdeck/">MealDeck</a> — meal planning app with AI-powered recipe adaptation, voice-controlled cook mode, smart grocery grouping</li>
+      <li><a href="/projects/radiogridxl/">RadioGridXL</a> — zero-dependency accessible radio streaming app, WCAG AA, deployed to end users</li>
+      <li><a href="/projects/petfeedr/">PetFeedr</a> — Raspberry Pi automated pet feeder with PWA interface and scheduling</li>
+      <li><a href="/projects/echoetcher/">EchoEtcher</a> — voice-to-structured-notes pipeline using Whisper and local LLMs</li>
+    </ul>
+
+    <h2>Skills</h2>
+    <div class="resume-skills">
+      <div>
+        <strong>Languages & Frameworks</strong>
+        <p>JavaScript (Node.js, Express, vanilla JS), Python, SQL, HTML/CSS</p>
+      </div>
+      <div>
+        <strong>AI & ML</strong>
+        <p>Claude API, prompt engineering, Whisper, Ollama, RAG architectures, computer vision</p>
+      </div>
+      <div>
+        <strong>Infrastructure</strong>
+        <p>SQLite, Docker, Linux, Raspberry Pi, Tailscale, GitHub Actions</p>
+      </div>
+      <div>
+        <strong>Accessibility</strong>
+        <p>WCAG compliance, assistive technology evaluation, screen readers, adaptive interfaces</p>
+      </div>
+    </div>
+
+    <h2>Education & Certifications</h2>
+    <div class="resume-entry">
+      <div class="resume-header">
+        <strong>Assistive Technology Applications Certificate (ATASC)</strong>
+      </div>
+      <div class="resume-org">California State University, Northridge</div>
+    </div>
+    <div class="resume-entry">
+      <div class="resume-header">
+        <strong>Fullstack Web Developer Nanodegree</strong>
+      </div>
+      <div class="resume-org">Udacity</div>
+    </div>
+    <div class="resume-entry">
+      <div class="resume-header">
+        <strong>B.S. Game Art & Design</strong>
+      </div>
+      <div class="resume-org">The Art Institute of Pittsburgh</div>
+    </div>
+
+    <h2>Get in touch</h2>
+    <ul>
+      <li>Email: <a href="mailto:regularlyjason@icloud.com">regularlyjason@icloud.com</a></li>
+      <li>LinkedIn: <a href="https://www.linkedin.com/in/jason-marsh">jason-marsh</a></li>
+      <li>GitHub: <a href="https://github.com/Minimalistic">Minimalistic</a></li>
+    </ul>
+  </div>
 </Base>
+
+<style>
+  .resume-intro {
+    font-size: 1.1rem;
+    color: var(--fg-soft);
+    margin-bottom: 2rem;
+  }
+  .resume-entry {
+    margin-bottom: 1.25rem;
+  }
+  .resume-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .resume-org {
+    color: var(--fg-soft);
+    font-size: 0.9rem;
+    margin-bottom: 0.35rem;
+  }
+  .resume-entry ul {
+    margin-top: 0.35rem;
+  }
+  .resume-skills {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .resume-skills p {
+    margin: 0.25rem 0 0;
+    font-size: 0.9rem;
+    color: var(--fg-soft);
+  }
+</style>

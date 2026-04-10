@@ -34,7 +34,7 @@ const projects = (await getCollection('projects'))
     })() : null;
     return (
       <a class="card" href={`/projects/${p.id}/`}>
-        <h3>{p.data.title}<span class={`status status-${p.data.status}`}>{p.data.status}</span></h3>
+        <h3>{p.data.title}<span class={`status status-${p.data.status}`}>{p.data.status}</span>{p.data.url && <span class="demo-badge">live demo</span>}</h3>
         <p class="meta">{p.data.description}</p>
         {ago && <p class="meta" style="margin-top:0.25rem;font-size:0.78rem;color:var(--fg-muted)">updated {ago}</p>}
         {p.data.tags && p.data.tags.length > 0 && (

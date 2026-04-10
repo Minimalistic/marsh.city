@@ -412,6 +412,22 @@ footer.site-foot a:hover {
   .status-wip { animation: none; }
 }
 
+/* --- demo badge --- */
+
+.demo-badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  padding: 0.15em 0.55em;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  text-transform: lowercase;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
 /* --- hero / intro --- */
 
 .hero {
@@ -498,18 +514,24 @@ footer.site-foot a:hover {
   border: 1px solid var(--border);
 }
 
-/* tags inside cards: hidden until hover */
+/* tags inside cards: always visible, animate on hover for desktop flair */
 .card .tags {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  margin-top: 0;
-  transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.35s ease;
-}
-.card:hover .tags {
-  max-height: 3rem;
-  opacity: 1;
   margin-top: 0.6rem;
+  transition: opacity 0.3s ease;
+}
+@media (hover: hover) {
+  .card .tags {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-top: 0;
+    transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.35s ease;
+  }
+  .card:hover .tags {
+    max-height: 3rem;
+    opacity: 1;
+    margin-top: 0.6rem;
+  }
 }
 
 /* --- active nav indicator --- */

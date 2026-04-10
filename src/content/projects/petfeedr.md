@@ -1,7 +1,7 @@
 ---
 title: PetFeedr
 description: Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment.
-status: shipped
+status: wip
 repo: https://github.com/Minimalistic/PetFeedr
 tags: [python, raspberry-pi, iot, flask, pwa]
 started: 2025-06-01
