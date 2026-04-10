@@ -4,7 +4,9 @@ import Base from '../layouts/Base.astro';
 <Base title="About" description="About Jason Marsh — developer, technologist, assistive technology specialist.">
   <h1>About</h1>
 
-  <div class="prose">
+  <div class="about-intro">
+    <img src="/jason.jpg" alt="Jason Marsh" class="about-photo" width="200" height="200" />
+    <div class="prose">
     <p>
       I'm Jason — a developer and technologist based in Duluth, Minnesota, with 13+
       years in IT. I direct technology at a nonprofit where I manage infrastructure,
@@ -13,7 +15,10 @@ import Base from '../layouts/Base.astro';
       technology. I hold an Assistive Technology Applications
       Certificate from CSUN.
     </p>
+    </div>
+  </div>
 
+  <div class="prose">
     <p>
       Outside of that role, I build production software as a solo developer. I've
       shipped <a href="/projects/mealdeck/">a meal planning app</a> with AI-powered
@@ -53,3 +58,32 @@ import Base from '../layouts/Base.astro';
     </ul>
   </div>
 </Base>
+
+<style>
+  .about-intro {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  .about-photo {
+    border-radius: var(--radius-lg);
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: var(--shadow);
+  }
+  .about-intro .prose p {
+    margin-bottom: 0;
+  }
+  @media (max-width: 600px) {
+    .about-intro {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .about-photo {
+      width: 160px;
+      height: 160px;
+    }
+  }
+</style>
