@@ -96,6 +96,25 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
     </script>
 
     <script is:inline>
+      // card shimmer — play animation on click/tap, navigate after it finishes
+      function initShimmer() {
+        document.querySelectorAll('.card').forEach(card => {
+          card.addEventListener('click', e => {
+            const href = card.getAttribute('href');
+            if (!href) return;
+            e.preventDefault();
+            card.classList.remove('shimmer');
+            void card.offsetWidth; // force reflow to restart animation
+            card.classList.add('shimmer');
+            setTimeout(() => { window.location.href = href; }, 450);
+          });
+        });
+      }
+      initShimmer();
+      document.addEventListener('astro:page-load', initShimmer);
+    </script>
+
+    <script is:inline>
       // fireflies — nighttime only, with parallax
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
