@@ -9,6 +9,19 @@ const projects = (await getCollection('projects'))
   .slice(0, 6);
 ---
 <Base description="Jason Marsh — developer, technologist, builder of AI-integrated tools.">
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Jason Marsh",
+    "url": "https://marsh.city",
+    "jobTitle": "Director of Technology",
+    "worksFor": { "@type": "Organization", "name": "Lighthouse Center for Vital Living" },
+    "knowsAbout": ["Assistive Technology", "Node.js", "Python", "AI Engineering", "LLM Integration", "Accessibility"],
+    "sameAs": [
+      "https://github.com/Minimalistic",
+      "https://www.linkedin.com/in/jason-marsh"
+    ]
+  })} />
   <div class="hero">
     <h1>Jason Marsh</h1>
     <p class="subtitle">
@@ -33,7 +46,7 @@ const projects = (await getCollection('projects'))
     })() : null;
     return (
       <a class="card" href={`/projects/${p.id}/`}>
-        <h3>{p.data.title}<span class={`status status-${p.data.status}`}>{p.data.status}</span>{p.data.url && <span class="demo-badge">live demo</span>}</h3>
+        <h3>{p.data.title}<span class={`status status-${p.data.status}`} aria-label={({ idea: 'Idea', wip: 'Work in progress', shipped: 'Shipped', archived: 'Archived' })[p.data.status]}>{p.data.status}</span>{p.data.url && <span class="demo-badge">live demo</span>}</h3>
         <p class="meta">{p.data.description}</p>
         {ago && <p class="meta" style="margin-top:0.25rem;font-size:0.78rem;color:var(--fg-muted)">updated {ago}</p>}
         {p.data.tags && p.data.tags.length > 0 && (

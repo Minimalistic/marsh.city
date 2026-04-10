@@ -8,7 +8,16 @@ interface Props {
 const { title, description, date } = Astro.props;
 ---
 <Base title={title} description={description}>
-  <div class="reading-progress" id="reading-progress"></div>
+  {date && <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": title,
+    ...(description && { "description": description }),
+    "datePublished": date.toISOString().split('T')[0],
+    "author": { "@type": "Person", "name": "Jason Marsh", "url": "https://marsh.city" },
+    "publisher": { "@type": "Person", "name": "Jason Marsh", "url": "https://marsh.city" }
+  })} />}
+  <div class="reading-progress" id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
   <article>
     <h1>{title}</h1>
     {date && <p class="meta" style="color: var(--fg-soft); font-size: 0.9rem;">
@@ -28,6 +37,7 @@ const { title, description, date } = Astro.props;
         const pct = Math.min(scrollTop / docHeight, 1) * 100;
         bar.style.width = pct + '%';
         bar.style.opacity = pct > 0 ? '1' : '0';
+        bar.setAttribute('aria-valuenow', Math.round(pct).toString());
       }
       window.addEventListener('scroll', update, { passive: true });
       update();
