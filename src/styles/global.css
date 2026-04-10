@@ -424,6 +424,46 @@ footer.site-foot a:hover {
   z-index: -1;
 }
 
+/* --- film grain --- */
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.035;
+  filter: url(#grain);
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  body::after {
+    mix-blend-mode: soft-light;
+    opacity: 0.06;
+  }
+}
+
+/* --- scroll fade-in --- */
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* --- fireflies --- */
 
 .firefly {

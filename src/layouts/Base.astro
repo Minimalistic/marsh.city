@@ -23,6 +23,13 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
     />
   </head>
   <body>
+    <!-- SVG noise filter for film grain -->
+    <svg style="position:absolute;width:0;height:0" aria-hidden="true">
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+      </filter>
+    </svg>
+
     <div class="layout">
       <nav class="site-nav">
         <a href="/" class="brand">marsh.city</a>
@@ -43,6 +50,33 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
         <span><a href="https://github.com/Minimalistic/marsh.city">source</a></span>
       </footer>
     </div>
+
+    <script is:inline>
+      // staggered scroll fade-in for cards, sections, hero
+      (() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const targets = document.querySelectorAll(
+          '.card, .section-header, .hero, .article-header, .prose > h2, .prose > blockquote'
+        );
+        targets.forEach(el => el.classList.add('fade-in'));
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              // stagger siblings
+              const parent = entry.target.parentElement;
+              const siblings = [...parent.querySelectorAll(':scope > .fade-in:not(.visible)')];
+              const idx = siblings.indexOf(entry.target);
+              const delay = Math.max(0, idx) * 80;
+              setTimeout(() => entry.target.classList.add('visible'), delay);
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        targets.forEach(el => observer.observe(el));
+      })();
+    </script>
 
     <script is:inline>
       // fireflies — nighttime only, with parallax
