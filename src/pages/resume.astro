@@ -231,8 +231,11 @@ import Base from '../layouts/Base.astro';
     .layout::before,
     body::after { display: none !important; }
 
-    body, .layout {
+    *, *::before, *::after {
       background: white !important;
+      box-shadow: none !important;
+    }
+    body, .layout {
       color: #1a1a1a !important;
       padding: 0 !important;
       margin: 0 !important;
