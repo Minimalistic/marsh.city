@@ -45,6 +45,78 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
     </div>
 
     <script is:inline>
+      // fireflies — gentle glowing dots drifting across the page
+      (() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const COUNT = 12;
+        const container = document.body;
+
+        for (let i = 0; i < COUNT; i++) {
+          const el = document.createElement('div');
+          el.className = 'firefly';
+          container.appendChild(el);
+          animateFirefly(el, true);
+        }
+
+        function animateFirefly(el, first) {
+          // random start position
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * window.innerHeight;
+          el.style.left = x + 'px';
+          el.style.top = y + 'px';
+
+          // drift distance
+          const dx = (Math.random() - 0.5) * 200;
+          const dy = (Math.random() - 0.5) * 160;
+
+          // timing
+          const fadeIn = 800 + Math.random() * 1200;
+          const glow = 2000 + Math.random() * 4000;
+          const fadeOut = 800 + Math.random() * 1200;
+          const totalDrift = fadeIn + glow + fadeOut;
+          const delay = first ? Math.random() * 5000 : 200 + Math.random() * 3000;
+
+          const size = 3 + Math.random() * 5;
+          el.style.width = size + 'px';
+          el.style.height = size + 'px';
+
+          setTimeout(() => {
+            const start = performance.now();
+            function tick(now) {
+              const elapsed = now - start;
+              const progress = Math.min(elapsed / totalDrift, 1);
+
+              // ease position
+              const ease = progress;
+              el.style.transform = `translate(${dx * ease}px, ${dy * ease}px)`;
+
+              // fade envelope: in → hold → out
+              let opacity;
+              if (elapsed < fadeIn) {
+                opacity = (elapsed / fadeIn) * 0.7;
+              } else if (elapsed < fadeIn + glow) {
+                // gentle pulse while glowing
+                const t = (elapsed - fadeIn) / glow;
+                opacity = 0.5 + 0.2 * Math.sin(t * Math.PI * 2);
+              } else {
+                opacity = 0.7 * (1 - (elapsed - fadeIn - glow) / fadeOut);
+              }
+              el.style.opacity = Math.max(0, opacity);
+
+              if (progress < 1) {
+                requestAnimationFrame(tick);
+              } else {
+                el.style.opacity = 0;
+                animateFirefly(el, false);
+              }
+            }
+            requestAnimationFrame(tick);
+          }, delay);
+        }
+      })();
+    </script>
+
+    <script is:inline>
       // client-side mermaid: transforms ```mermaid code blocks to rendered diagrams
       // is:inline prevents Astro from bundling — needed for dynamic CDN import
       (async () => {

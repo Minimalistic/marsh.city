@@ -424,6 +424,27 @@ footer.site-foot a:hover {
   z-index: -1;
 }
 
+/* --- fireflies --- */
+
+.firefly {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--leaf-bright);
+  box-shadow:
+    0 0 6px 2px rgba(141, 184, 96, 0.4),
+    0 0 16px 4px rgba(141, 184, 96, 0.15);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .firefly { display: none; }
+}
+
 /* --- responsive --- */
 
 @media (max-width: 600px) {
