@@ -351,12 +351,33 @@ footer.site-foot a:hover {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  opacity: 0;
+  transform: translateY(24px);
+  animation: hero-in 0.7s ease forwards;
 }
 .hero .subtitle {
   color: var(--fg-soft);
   font-size: 1.15rem;
   line-height: 1.65;
   max-width: 560px;
+  opacity: 0;
+  transform: translateY(18px);
+  animation: hero-in 0.6s ease 0.25s forwards;
+}
+
+@keyframes hero-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero h1, .hero .subtitle {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }
 
 /* --- section headers --- */
