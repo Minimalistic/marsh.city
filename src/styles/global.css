@@ -77,17 +77,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* --- keyboard focus --- */
-
-:focus-visible {
-  outline: 2px solid var(--leaf);
-  outline-offset: 3px;
-  border-radius: var(--radius-sm);
-}
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
 /* --- text selection --- */
 
 ::selection {
@@ -184,6 +173,37 @@ pre {
   overflow-x: auto;
   border: 1px solid var(--border);
   line-height: 1.5;
+  position: relative;
+}
+
+/* --- code copy button --- */
+
+.code-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--bg-elev2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  z-index: 2;
+}
+pre:hover .code-copy {
+  opacity: 1;
+}
+.code-copy:hover {
+  color: var(--leaf);
+  border-color: var(--leaf);
+}
+.code-copy.copied {
+  color: var(--leaf);
+  border-color: var(--leaf);
 }
 pre code {
   background: transparent;
@@ -195,6 +215,18 @@ hr {
   border: none;
   border-top: 1px solid var(--border-leaf);
   margin: 3rem 0;
+}
+
+/* --- focus styles --- */
+
+:focus-visible {
+  outline: 2px solid var(--leaf);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+.card:focus-visible {
+  outline-offset: 2px;
+  border-radius: var(--radius);
 }
 
 /* --- layout --- */
@@ -309,16 +341,12 @@ footer.site-foot a:hover {
     rgba(255, 255, 255, 0.06) 50%,
     transparent 70%
   );
+  transition: left 0.6s ease;
   pointer-events: none;
   z-index: 1;
 }
-.card.shimmer::before {
-  animation: card-shimmer 0.5s ease forwards;
-}
-
-@keyframes card-shimmer {
-  from { left: -100%; }
-  to { left: 120%; }
+.card:hover::before {
+  left: 120%;
 }
 .card:hover {
   border-left-color: var(--leaf);
@@ -353,19 +381,38 @@ footer.site-foot a:hover {
   color: var(--leaf);
   border: 1px solid color-mix(in srgb, var(--leaf) 20%, transparent);
 }
+.status-wip {
+  background: color-mix(in srgb, var(--leaf-bright) 15%, transparent);
+  color: var(--leaf-bright);
+  border-color: color-mix(in srgb, var(--leaf-bright) 25%, transparent);
+  animation: status-pulse 2.5s ease-in-out infinite;
+}
+.status-shipped {
+  background: color-mix(in srgb, var(--moss) 15%, transparent);
+  color: var(--moss);
+  border-color: color-mix(in srgb, var(--moss) 25%, transparent);
+}
+.status-idea {
+  background: color-mix(in srgb, var(--bark) 10%, transparent);
+  color: var(--bark-light);
+  border-color: color-mix(in srgb, var(--bark) 15%, transparent);
+}
+.status-archived {
+  background: color-mix(in srgb, var(--fg-muted) 8%, transparent);
+  color: var(--fg-muted);
+  border-color: color-mix(in srgb, var(--fg-muted) 12%, transparent);
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-wip { animation: none; }
+}
 
 /* --- hero / intro --- */
-
-@keyframes hero-rise {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .hero {
   margin-bottom: 4rem;
@@ -385,6 +432,17 @@ footer.site-foot a:hover {
   line-height: 1.65;
   max-width: 560px;
   animation: hero-rise 0.8s ease 0.15s both;
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -438,6 +496,31 @@ footer.site-foot a:hover {
   padding: 0.15em 0.5em;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+}
+
+/* tags inside cards: hidden until hover */
+.card .tags {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  margin-top: 0;
+  transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.35s ease;
+}
+.card:hover .tags {
+  max-height: 3rem;
+  opacity: 1;
+  margin-top: 0.6rem;
+}
+
+/* --- active nav indicator --- */
+
+nav.site-nav .links a[aria-current="page"] {
+  color: var(--fg);
+}
+nav.site-nav .links a[aria-current="page"]::after {
+  left: 0;
+  right: 0;
+  background: var(--leaf);
 }
 
 /* --- content prose --- */

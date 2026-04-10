@@ -23,12 +23,28 @@ const projects = (await getCollection('projects'))
     <h2>Projects</h2>
     <a href="/projects/">View all</a>
   </div>
-  {projects.map((p) => (
-    <a class="card" href={`/projects/${p.id}/`}>
-      <h3>{p.data.title}<span class="status">{p.data.status}</span></h3>
-      <p class="meta">{p.data.description}</p>
-    </a>
-  ))}
+  {projects.map((p) => {
+    const ago = p.data.updated ? (() => {
+      const days = Math.floor((Date.now() - p.data.updated.valueOf()) / 86400000);
+      if (days === 0) return 'today';
+      if (days === 1) return 'yesterday';
+      if (days < 30) return `${days}d ago`;
+      if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+      return `${Math.floor(days / 365)}y ago`;
+    })() : null;
+    return (
+      <a class="card" href={`/projects/${p.id}/`}>
+        <h3>{p.data.title}<span class={`status status-${p.data.status}`}>{p.data.status}</span></h3>
+        <p class="meta">{p.data.description}</p>
+        {ago && <p class="meta" style="margin-top:0.25rem;font-size:0.78rem;color:var(--fg-muted)">updated {ago}</p>}
+        {p.data.tags && p.data.tags.length > 0 && (
+          <div class="tags">
+            {p.data.tags.map((t: string) => <span class="tag">{t}</span>)}
+          </div>
+        )}
+      </a>
+    );
+  })}
 
   {posts.length > 0 && (
     <>

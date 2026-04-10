@@ -1,12 +1,13 @@
 ---
 import '../styles/global.css';
-import { ClientRouter } from 'astro:transitions';
 interface Props {
   title?: string;
   description?: string;
 }
 const { title = 'marsh.city', description = "Jason Marsh's corner of the internet" } = Astro.props;
 const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
+const path = Astro.url.pathname;
+const isActive = (href: string) => path.startsWith(href) ? 'page' as const : undefined;
 ---
 <!doctype html>
 <html lang="en">
@@ -14,20 +15,8 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://marsh.city" />
-    <meta property="og:image" content="https://marsh.city/og-image.svg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={fullTitle} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content="https://marsh.city/og-image.svg" />
     <title>{fullTitle}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <ClientRouter />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -47,10 +36,10 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
       <nav class="site-nav">
         <a href="/" class="brand">marsh.city</a>
         <div class="links">
-          <a href="/projects/">projects</a>
-          <a href="/posts/">posts</a>
-          <a href="/now/">now</a>
-          <a href="/about/">about</a>
+          <a href="/projects/" aria-current={isActive('/projects/')}>projects</a>
+          <a href="/posts/" aria-current={isActive('/posts/')}>posts</a>
+          <a href="/now/" aria-current={isActive('/now/')}>now</a>
+          <a href="/about/" aria-current={isActive('/about/')}>about</a>
         </div>
       </nav>
 
@@ -66,19 +55,17 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
 
     <script is:inline>
       // staggered scroll fade-in for cards, sections, hero
-      function initFadeIn() {
+      (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const targets = document.querySelectorAll(
           '.card, .section-header, .hero, .article-header, .prose > h2, .prose > blockquote'
         );
-        targets.forEach(el => {
-          el.classList.remove('visible');
-          el.classList.add('fade-in');
-        });
+        targets.forEach(el => el.classList.add('fade-in'));
 
         const observer = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
+              // stagger siblings
               const parent = entry.target.parentElement;
               const siblings = [...parent.querySelectorAll(':scope > .fade-in:not(.visible)')];
               const idx = siblings.indexOf(entry.target);
@@ -90,28 +77,7 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
         }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
         targets.forEach(el => observer.observe(el));
-      }
-      initFadeIn();
-      document.addEventListener('astro:page-load', initFadeIn);
-    </script>
-
-    <script is:inline>
-      // card shimmer — play animation on click/tap, navigate after it finishes
-      function initShimmer() {
-        document.querySelectorAll('.card').forEach(card => {
-          card.addEventListener('click', e => {
-            const href = card.getAttribute('href');
-            if (!href) return;
-            e.preventDefault();
-            card.classList.remove('shimmer');
-            void card.offsetWidth; // force reflow to restart animation
-            card.classList.add('shimmer');
-            setTimeout(() => { window.location.href = href; }, 450);
-          });
-        });
-      }
-      initShimmer();
-      document.addEventListener('astro:page-load', initShimmer);
+      })();
     </script>
 
     <script is:inline>
@@ -214,6 +180,29 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
             requestAnimationFrame(tick);
           }, delay);
         }
+      })();
+    </script>
+
+    <script is:inline>
+      // code block copy buttons
+      (() => {
+        document.querySelectorAll('pre > code').forEach(code => {
+          const pre = code.parentElement;
+          if (pre.querySelector('.code-copy')) return;
+          const btn = document.createElement('button');
+          btn.className = 'code-copy';
+          btn.textContent = 'copy';
+          btn.addEventListener('click', async () => {
+            await navigator.clipboard.writeText(code.textContent || '');
+            btn.textContent = 'copied';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              btn.textContent = 'copy';
+              btn.classList.remove('copied');
+            }, 1500);
+          });
+          pre.appendChild(btn);
+        });
       })();
     </script>
 
