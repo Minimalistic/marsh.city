@@ -432,7 +432,7 @@ footer.site-foot a:hover {
   height: auto;
   top: -100px;
   right: -80px;
-  opacity: 0.06;
+  opacity: 0.13;
   transform-origin: 80% 10%;
   animation: sway-1 8s ease-in-out infinite;
 }
@@ -442,7 +442,7 @@ footer.site-foot a:hover {
   height: auto;
   top: 35%;
   left: -120px;
-  opacity: 0.04;
+  opacity: 0.09;
   transform: scaleX(-1) rotate(-20deg);
   transform-origin: 20% 20%;
   animation: sway-2 11s ease-in-out infinite;
@@ -453,7 +453,7 @@ footer.site-foot a:hover {
   height: auto;
   bottom: -60px;
   right: 5%;
-  opacity: 0.05;
+  opacity: 0.1;
   transform: rotate(145deg);
   transform-origin: center;
   animation: sway-3 13s ease-in-out infinite;
@@ -493,9 +493,9 @@ nav.site-nav .brand:hover .brand-leaf {
   .layout {
     padding: 1.25rem 1rem 4rem;
   }
-  .leaf-1 { width: 280px; top: -60px; right: -80px; opacity: 0.05; }
-  .leaf-2 { width: 220px; top: 40%; left: -100px; opacity: 0.035; }
-  .leaf-3 { width: 200px; bottom: -40px; right: -20px; opacity: 0.04; }
+  .leaf-1 { width: 300px; top: -60px; right: -60px; opacity: 0.12; }
+  .leaf-2 { width: 240px; top: 40%; left: -80px; opacity: 0.08; }
+  .leaf-3 { width: 220px; bottom: -40px; right: -10px; opacity: 0.1; }
 
   nav.site-nav {
     flex-direction: column;
