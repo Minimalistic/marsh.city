@@ -207,10 +207,11 @@ import Base from '../layouts/Base.astro';
     background: color-mix(in srgb, var(--leaf) 8%, var(--bg-elev2));
   }
 
-  @media print {
-    .resume-top { display: block; }
-    .resume-download { display: none; }
 
+</style>
+
+<style is:global>
+  @media print {
     /* hide site chrome */
     nav.site-nav,
     footer.site-foot,
@@ -226,6 +227,9 @@ import Base from '../layouts/Base.astro';
       max-width: none !important;
       font-size: 11pt !important;
     }
+
+    .resume-top { display: block; }
+    .resume-download { display: none; }
 
     /* add name header for PDF */
     .resume-top::before {
