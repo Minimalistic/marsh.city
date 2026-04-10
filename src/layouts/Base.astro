@@ -45,31 +45,61 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
     </div>
 
     <script is:inline>
-      // fireflies — gentle glowing dots drifting across the page
+      // fireflies — nighttime only, with parallax
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const hour = new Date().getHours();
+        if (hour >= 6 && hour < 20) return;
+
         const COUNT = 12;
         const container = document.body;
+        const flies = [];
+
+        // parallax state — smooth mouse tracking
+        let mouseX = 0.5, mouseY = 0.5;
+        let smoothX = 0.5, smoothY = 0.5;
+
+        document.addEventListener('mousemove', e => {
+          mouseX = e.clientX / window.innerWidth;
+          mouseY = e.clientY / window.innerHeight;
+        });
 
         for (let i = 0; i < COUNT; i++) {
           const el = document.createElement('div');
           el.className = 'firefly';
           container.appendChild(el);
-          animateFirefly(el, true);
+          const depth = 0.3 + Math.random() * 0.7; // parallax depth layer
+          flies.push({ el, depth, dx: 0, dy: 0, driftX: 0, driftY: 0 });
+          animateFirefly(flies[i], true);
         }
 
-        function animateFirefly(el, first) {
-          // random start position
+        // parallax loop — applies a gentle offset based on mouse + depth
+        function parallaxLoop() {
+          smoothX += (mouseX - smoothX) * 0.04;
+          smoothY += (mouseY - smoothY) * 0.04;
+          const offsetBaseX = (smoothX - 0.5) * 60;
+          const offsetBaseY = (smoothY - 0.5) * 40;
+
+          for (const fly of flies) {
+            const px = offsetBaseX * fly.depth;
+            const py = offsetBaseY * fly.depth;
+            fly.el.style.transform =
+              `translate(${fly.driftX + px}px, ${fly.driftY + py}px)`;
+          }
+          requestAnimationFrame(parallaxLoop);
+        }
+        requestAnimationFrame(parallaxLoop);
+
+        function animateFirefly(fly, first) {
+          const { el } = fly;
           const x = Math.random() * window.innerWidth;
           const y = Math.random() * window.innerHeight;
           el.style.left = x + 'px';
           el.style.top = y + 'px';
 
-          // drift distance
           const dx = (Math.random() - 0.5) * 200;
           const dy = (Math.random() - 0.5) * 160;
 
-          // timing
           const fadeIn = 800 + Math.random() * 1200;
           const glow = 2000 + Math.random() * 4000;
           const fadeOut = 800 + Math.random() * 1200;
@@ -80,22 +110,23 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
           el.style.width = size + 'px';
           el.style.height = size + 'px';
 
+          fly.driftX = 0;
+          fly.driftY = 0;
+
           setTimeout(() => {
             const start = performance.now();
             function tick(now) {
               const elapsed = now - start;
               const progress = Math.min(elapsed / totalDrift, 1);
 
-              // ease position
-              const ease = progress;
-              el.style.transform = `translate(${dx * ease}px, ${dy * ease}px)`;
+              // update drift (parallax loop reads this)
+              fly.driftX = dx * progress;
+              fly.driftY = dy * progress;
 
-              // fade envelope: in → hold → out
               let opacity;
               if (elapsed < fadeIn) {
                 opacity = (elapsed / fadeIn) * 0.7;
               } else if (elapsed < fadeIn + glow) {
-                // gentle pulse while glowing
                 const t = (elapsed - fadeIn) / glow;
                 opacity = 0.5 + 0.2 * Math.sin(t * Math.PI * 2);
               } else {
@@ -107,7 +138,7 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
                 requestAnimationFrame(tick);
               } else {
                 el.style.opacity = 0;
-                animateFirefly(el, false);
+                animateFirefly(fly, false);
               }
             }
             requestAnimationFrame(tick);
