@@ -28,9 +28,9 @@ import Base from '../layouts/Base.astro';
       <ul>
         <li>Lead IT and Assistive Technology divisions for a nonprofit serving people with disabilities and aging populations, overseeing infrastructure, AT services, and an AT lending library partnered with the Minnesota STAR Program</li>
         <li>One of four organizational leaders reporting to the Executive Director; contribute to strategic planning, budgeting, and cross-department decision-making</li>
-        <li>Manage a team of four including an IT support specialist, an ATP, and two AT specialists; oversee hiring, training, and development</li>
+        <li>Manage a team of four including an IT support specialist, an ATP, and two AT specialists</li>
         <li>Restructured AT billing operations and coached staff on proposals and invoicing, growing annual service revenue from $17K to over $200K</li>
-        <li>Hold ATACP certification from CSUN; conduct AT assessments and recommend AI-powered solutions including Be My Eyes, Seeing AI, OrCam Reader, and Meta Ray-Ban smart glasses</li>
+        <li>Conduct AT assessments and recommend AI-powered solutions including Be My Eyes, Seeing AI, OrCam Reader, and Meta Ray-Ban smart glasses</li>
       </ul>
     </div>
 
@@ -41,11 +41,11 @@ import Base from '../layouts/Base.astro';
       </div>
       <div class="resume-org">Lighthouse Center for Vital Living — Duluth, MN</div>
       <ul>
-        <li>Assumed IT management responsibilities, conducted a full systems audit, and established thorough documentation and standardized processes organization-wide</li>
-        <li>Led cloud migration from on-premises infrastructure to Microsoft 365 and Azure AD during a simultaneous building relocation, reducing annual IT costs by $15,000+</li>
+        <li>Conducted full systems audit; established documentation and standardized processes organization-wide</li>
+        <li>Led cloud migration to Microsoft 365 and Azure AD during a building relocation, reducing annual IT costs by $15,000+</li>
         <li>Established disaster recovery procedures, security protocols, and a technology replacement plan</li>
-        <li>Managed endpoints via Microsoft Intune (Windows) and IBM MaaS360 (iOS/Android) covering MDM, app deployment, and compliance</li>
-        <li>Built a centralized request tracking system with Microsoft Forms and Excel to streamline IT and AT workflows</li>
+        <li>Managed endpoints via Microsoft Intune (Windows) and IBM MaaS360 (iOS/Android) for MDM, app deployment, and compliance</li>
+        <li>Built centralized request tracking system to streamline IT and AT workflows</li>
       </ul>
     </div>
 
@@ -57,7 +57,7 @@ import Base from '../layouts/Base.astro';
       <div class="resume-org">Lighthouse Center for Vital Living — Duluth, MN</div>
       <ul>
         <li>Evaluated and configured assistive technology — screen readers, magnification tools, wearable devices — for clients with disabilities and aging-related needs</li>
-        <li>Trained staff and clients on AT usage; attended ATIA and Closing The Gap conferences to stay current on emerging products</li>
+        <li>Trained staff and clients on AT usage; attended ATIA and Closing The Gap conferences</li>
       </ul>
     </div>
 
@@ -68,72 +68,35 @@ import Base from '../layouts/Base.astro';
       </div>
       <div class="resume-org">Westside Pet Clinic — Duluth, MN</div>
       <ul>
-        <li>Sole IT administrator for a veterinary practice over eight years, managing all hardware, networking, and software</li>
-        <li>Led transition from paper records to electronic medical systems and developed custom internal workflows</li>
+        <li>Sole IT administrator for eight years, managing all hardware, networking, and software</li>
+        <li>Led transition from paper records to electronic medical systems; developed custom internal workflows</li>
       </ul>
     </div>
 
     <h2>Independent Projects</h2>
-    <p>
-      I build and ship production software independently. Select projects:
-    </p>
-    <ul>
-      <li><a href="/projects/mealdeck/">MealDeck</a> — meal planning app with AI-powered recipe adaptation, voice-controlled cook mode, and smart grocery grouping</li>
-      <li><a href="/projects/radiogridxl/">RadioGridXL</a> — zero-dependency accessible radio streaming app, WCAG AA compliant, deployed to older adults at my organization</li>
-      <li><a href="/projects/petfeedr/">PetFeedr</a> — Python-backed automated pet feeder with web interface, configurable scheduling, adjustable portions, and feed-time randomization</li>
-      <li><a href="/projects/echoetcher/">EchoEtcher</a> — voice-to-structured-notes pipeline using local Whisper transcription and LLM processing</li>
-      <li>AI Object Identification for the Blind (in development) — enclosed device where users place items for camera-based identification via LLM processing, reading text aloud and describing objects for users with vision loss</li>
+    <ul class="projects-compact">
+      <li><a href="/projects/mealdeck/">MealDeck</a> — meal planning with AI recipe adaptation, voice-controlled cook mode, smart grocery grouping</li>
+      <li><a href="/projects/radiogridxl/">RadioGridXL</a> — zero-dependency accessible radio streaming app, WCAG AA, deployed to older adults at my organization</li>
+      <li><a href="/projects/petfeedr/">PetFeedr</a> — Raspberry Pi automated pet feeder with web interface, scheduling, and feed-time randomization</li>
+      <li><a href="/projects/echoetcher/">EchoEtcher</a> — voice-to-structured-notes pipeline using local Whisper and LLM processing</li>
+      <li>AI Object Identification for the Blind (in development) — enclosed device using camera-based LLM identification, reading text aloud and describing objects for users with vision loss</li>
     </ul>
 
     <h2>Technical Skills</h2>
-    <div class="resume-skills">
-      <div>
-        <strong>Infrastructure</strong>
-        <p>Microsoft 365, Azure AD, Active Directory, Windows Server, Hyper-V, VMware/ESXi, Proxmox VE, DNS/DHCP, VPN, TCP/IP, Firewall Management</p>
-      </div>
-      <div>
-        <strong>Endpoint & Security</strong>
-        <p>Microsoft Intune, IBM MaaS360, Linux Administration, Disaster Recovery, Incident Response, Access Control, Cloud Security</p>
-      </div>
-      <div>
-        <strong>Development</strong>
-        <p>Python, JavaScript, Node.js, Express, PowerShell, HTML/CSS, SQL, LLM Integration & Prompt Engineering, Computer Vision APIs, Git, Arduino/ESP-8266</p>
-      </div>
-      <div>
-        <strong>Platforms</strong>
-        <p>SharePoint, Microsoft Teams, ServiceNow, FreshDesk, Docker, Tailscale, GitHub Actions, Remote Desktop</p>
-      </div>
-    </div>
+    <dl class="resume-skills-compact">
+      <div><dt>Infrastructure</dt><dd>Microsoft 365, Azure AD, Active Directory, Windows Server, Hyper-V, VMware/ESXi, Proxmox VE, DNS/DHCP, VPN, Firewall Management</dd></div>
+      <div><dt>Endpoint & Security</dt><dd>Microsoft Intune, IBM MaaS360, Linux Administration, Disaster Recovery, Incident Response, Cloud Security</dd></div>
+      <div><dt>Development</dt><dd>Python, JavaScript, Node.js, Express, PowerShell, HTML/CSS, SQL, LLM Integration & Prompt Engineering, Computer Vision, Git, Arduino/ESP-8266</dd></div>
+      <div><dt>Platforms</dt><dd>SharePoint, Microsoft Teams, ServiceNow, FreshDesk, Docker, Tailscale, GitHub Actions</dd></div>
+    </dl>
 
     <h2>Education & Certifications</h2>
-    <div class="resume-entry">
-      <div class="resume-header">
-        <strong>Assistive Technology Applications Certificate (ATACP)</strong>
-        <span class="meta">Sept 2025</span>
-      </div>
-      <div class="resume-org">California State University, Northridge</div>
-    </div>
-    <div class="resume-entry">
-      <div class="resume-header">
-        <strong>Network Administration & Cybersecurity (coursework)</strong>
-        <span class="meta">2022</span>
-      </div>
-      <div class="resume-org">Lake Superior College</div>
-    </div>
-    <div class="resume-entry">
-      <div class="resume-header">
-        <strong>Full Stack Web Developer Nanodegree</strong>
-        <span class="meta">June 2018</span>
-      </div>
-      <div class="resume-org">Udacity</div>
-    </div>
-    <div class="resume-entry">
-      <div class="resume-header">
-        <strong>B.S. Video Game Art & Design</strong>
-        <span class="meta">Mar 2010</span>
-      </div>
-      <div class="resume-org">Art Institute of Pittsburgh</div>
-    </div>
+    <table class="resume-edu">
+      <tr><td><strong>Assistive Technology Applications Certificate (ATACP)</strong></td><td>CSUN</td><td class="meta">2025</td></tr>
+      <tr><td><strong>Network Admin & Cybersecurity</strong> (coursework)</td><td>Lake Superior College</td><td class="meta">2022</td></tr>
+      <tr><td><strong>Full Stack Web Developer Nanodegree</strong></td><td>Udacity</td><td class="meta">2018</td></tr>
+      <tr><td><strong>B.S. Video Game Art & Design</strong></td><td>Art Institute of Pittsburgh</td><td class="meta">2010</td></tr>
+    </table>
 
     <h2>Get in touch</h2>
     <ul>
@@ -148,11 +111,11 @@ import Base from '../layouts/Base.astro';
   .resume-intro {
     font-size: 1.05rem;
     color: var(--fg-soft);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     line-height: 1.7;
   }
   .resume-entry {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
   }
   .resume-header {
     display: flex;
@@ -164,22 +127,62 @@ import Base from '../layouts/Base.astro';
   .resume-org {
     color: var(--fg-soft);
     font-size: 0.9rem;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.25rem;
   }
   .resume-entry ul {
-    margin-top: 0.35rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
   }
-  .resume-skills {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-    margin: 1rem 0;
+  .resume-entry li {
+    margin-bottom: 0.15rem;
   }
-  .resume-skills p {
-    margin: 0.25rem 0 0;
-    font-size: 0.9rem;
+  .projects-compact {
+    margin-top: 0.25rem;
+  }
+  .projects-compact li {
+    margin-bottom: 0.25rem;
+  }
+
+  /* skills as inline definition list */
+  .resume-skills-compact {
+    margin: 0.5rem 0 1rem;
+  }
+  .resume-skills-compact div {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    line-height: 1.5;
+  }
+  .resume-skills-compact dt {
+    font-weight: 600;
+    font-size: 0.85rem;
+    min-width: 130px;
+    flex-shrink: 0;
+    color: var(--fg);
+  }
+  .resume-skills-compact dd {
+    margin: 0;
+    font-size: 0.88rem;
     color: var(--fg-soft);
   }
+
+  /* education as compact table */
+  .resume-edu {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin: 0.5rem 0 1rem;
+  }
+  .resume-edu td {
+    padding: 0.3rem 0.5rem 0.3rem 0;
+    vertical-align: baseline;
+    border: none;
+  }
+  .resume-edu td:last-child {
+    text-align: right;
+    white-space: nowrap;
+  }
+
   .resume-top {
     display: flex;
     justify-content: space-between;
@@ -207,63 +210,83 @@ import Base from '../layouts/Base.astro';
     background: color-mix(in srgb, var(--leaf) 8%, var(--bg-elev2));
   }
 
-
+  @media (max-width: 600px) {
+    .resume-skills-compact div {
+      flex-direction: column;
+      gap: 0;
+    }
+    .resume-skills-compact dt {
+      min-width: auto;
+    }
+    .resume-edu td:nth-child(2) {
+      display: none;
+    }
+  }
 </style>
 
 <style is:global>
   @media print {
-    /* hide site chrome */
     nav.site-nav,
     footer.site-foot,
     .layout::before,
     body::after { display: none !important; }
 
-    /* reset backgrounds */
     body, .layout {
       background: white !important;
       color: #1a1a1a !important;
       padding: 0 !important;
       margin: 0 !important;
       max-width: none !important;
-      font-size: 11pt !important;
+      font-size: 10.5pt !important;
+      line-height: 1.45 !important;
     }
 
     .resume-top { display: block; }
     .resume-download { display: none; }
 
-    /* add name header for PDF */
     .resume-top::before {
       content: 'Jason Marsh';
       display: block;
       font-family: var(--font-serif);
-      font-size: 22pt;
+      font-size: 20pt;
       font-weight: 600;
-      margin-bottom: 0.15em;
+      margin-bottom: 0.1em;
     }
     .resume-top::after {
       content: 'Duluth, MN \2022  regularlyjason@icloud.com \2022  linkedin.com/in/jason-marsh \2022  github.com/Minimalistic';
       display: block;
-      font-size: 9pt;
+      font-size: 8.5pt;
       color: #555;
-      margin-bottom: 1em;
+      margin-bottom: 0.75em;
     }
     h1 { display: none; }
 
     h2 {
-      font-size: 12pt !important;
-      margin-top: 1.25rem !important;
+      font-size: 11pt !important;
+      margin-top: 0.9rem !important;
+      margin-bottom: 0.4rem !important;
       border-color: #ccc !important;
+      padding-bottom: 0.2rem !important;
     }
     .resume-intro {
-      font-size: 10pt !important;
+      font-size: 9.5pt !important;
       color: #333 !important;
+      margin-bottom: 0.5rem !important;
+      line-height: 1.5 !important;
     }
-    .resume-entry { margin-bottom: 0.75rem; }
-    .resume-org { font-size: 9pt !important; }
-    .resume-skills { gap: 0.5rem; }
-    .resume-skills p { font-size: 9pt !important; }
+    .resume-entry { margin-bottom: 0.5rem !important; }
+    .resume-entry li { margin-bottom: 0 !important; font-size: 9.5pt; }
+    .resume-org { font-size: 8.5pt !important; }
+    .resume-skills-compact dt { font-size: 9pt !important; }
+    .resume-skills-compact dd { font-size: 9pt !important; }
+    .resume-skills-compact div { margin-bottom: 0.15rem !important; }
+    .resume-edu { font-size: 9pt !important; }
+    .resume-edu td { padding: 0.15rem 0.5rem 0.15rem 0 !important; }
+    .projects-compact li { font-size: 9.5pt; margin-bottom: 0.1rem !important; }
 
     a { color: #1a1a1a !important; text-decoration: none !important; }
     a::after { display: none !important; }
+
+    .prose ul, .prose ol { padding-left: 1rem !important; }
   }
 </style>
