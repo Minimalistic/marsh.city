@@ -2,7 +2,10 @@
 import Base from '../layouts/Base.astro';
 ---
 <Base title="Resume" description="Jason Marsh — Director of Technology, 13+ years IT, assistive technology, infrastructure, and solo development.">
-  <h1>Resume</h1>
+  <div class="resume-top">
+    <h1>Resume</h1>
+    <button class="resume-download" onclick="window.print()">Save as PDF</button>
+  </div>
 
   <div class="prose">
     <p class="resume-intro">
@@ -176,5 +179,87 @@ import Base from '../layouts/Base.astro';
     margin: 0.25rem 0 0;
     font-size: 0.9rem;
     color: var(--fg-soft);
+  }
+  .resume-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .resume-top h1 {
+    margin-bottom: 0;
+  }
+  .resume-download {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    padding: 0.45em 1.1em;
+    border-radius: var(--radius-sm);
+    background: var(--bg-elev2);
+    color: var(--fg-soft);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .resume-download:hover {
+    color: var(--leaf);
+    border-color: var(--leaf);
+    background: color-mix(in srgb, var(--leaf) 8%, var(--bg-elev2));
+  }
+
+  @media print {
+    .resume-top { display: block; }
+    .resume-download { display: none; }
+
+    /* hide site chrome */
+    nav.site-nav,
+    footer.site-foot,
+    .layout::before,
+    body::after { display: none !important; }
+
+    /* reset backgrounds */
+    body, .layout {
+      background: white !important;
+      color: #1a1a1a !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: none !important;
+      font-size: 11pt !important;
+    }
+
+    /* add name header for PDF */
+    .resume-top::before {
+      content: 'Jason Marsh';
+      display: block;
+      font-family: var(--font-serif);
+      font-size: 22pt;
+      font-weight: 600;
+      margin-bottom: 0.15em;
+    }
+    .resume-top::after {
+      content: 'Duluth, MN \2022  regularlyjason@icloud.com \2022  linkedin.com/in/jason-marsh \2022  github.com/Minimalistic';
+      display: block;
+      font-size: 9pt;
+      color: #555;
+      margin-bottom: 1em;
+    }
+    h1 { display: none; }
+
+    h2 {
+      font-size: 12pt !important;
+      margin-top: 1.25rem !important;
+      border-color: #ccc !important;
+    }
+    .resume-intro {
+      font-size: 10pt !important;
+      color: #333 !important;
+    }
+    .resume-entry { margin-bottom: 0.75rem; }
+    .resume-org { font-size: 9pt !important; }
+    .resume-skills { gap: 0.5rem; }
+    .resume-skills p { font-size: 9pt !important; }
+
+    a { color: #1a1a1a !important; text-decoration: none !important; }
+    a::after { display: none !important; }
   }
 </style>
