@@ -593,26 +593,9 @@ footer.site-foot a:hover {
   border: 1px solid var(--border);
 }
 
-/* tags inside cards: always visible, animate on hover for desktop flair */
+/* tags inside cards */
 .card .tags {
   margin-top: 0.6rem;
-  transition: opacity 0.3s ease;
-}
-@media (hover: hover) {
-  .card .tags {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    margin-top: 0;
-    transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.35s ease;
-  }
-  .card:hover .tags,
-  .card:focus-visible .tags,
-  .card:focus-within .tags {
-    max-height: 3rem;
-    opacity: 1;
-    margin-top: 0.6rem;
-  }
 }
 
 /* --- active nav indicator --- */
