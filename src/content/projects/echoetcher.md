@@ -1,18 +1,18 @@
 ---
 title: EchoEtcher
-description: Voice memos to structured Obsidian notes — local Whisper transcription piped through Claude for formatting, tagging, and organization.
+description: Voice memos to structured Obsidian notes — local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
 status: wip
 repo: https://github.com/Minimalistic/EchoEtcher
-tags: [python, whisper, claude-api, obsidian, ai]
+tags: [python, whisper, ollama, obsidian, ai]
 started: 2025-09-01
 updated: 2026-03-15
 ---
 
-EchoEtcher watches a folder for audio files, transcribes them with Whisper, processes the transcript through an LLM, and drops a clean, tagged Markdown note into your Obsidian vault. Talk into your phone, and structured notes appear in your knowledge base.
+EchoEtcher watches a folder for audio files, transcribes them with Whisper, processes the transcript through a local LLM, and drops a clean, tagged Markdown note into your Obsidian vault. Talk into your phone, and structured notes appear in your knowledge base.
 
 ## What it does
 
-Record a voice memo — a thought, a journal entry, a project idea. EchoEtcher picks it up automatically, transcribes it locally using OpenAI's Whisper model, then sends the transcript through Claude to extract structure: headings, key points, tags, and clean prose. The result lands in your Obsidian vault as a properly formatted Markdown file.
+Record a voice memo — a thought, a journal entry, a project idea. EchoEtcher picks it up automatically, transcribes it locally using OpenAI's Whisper model, then sends the transcript through Ollama (or optionally Claude) to extract structure: headings, key points, tags, and clean prose. The result lands in your Obsidian vault as a properly formatted Markdown file.
 
 For longer recordings, it chunks the audio with overlap to keep context across segments. A custom Whisper prompt guides transcription toward natural, conversational speech patterns — proper punctuation and sentence structure, not raw dictation.
 
