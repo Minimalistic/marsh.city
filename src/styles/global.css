@@ -55,7 +55,7 @@
     --border-leaf: rgba(141, 184, 96, 0.15);
     --fg: #ddd9ca;
     --fg-soft: #a0a090;
-    --fg-muted: #787870;
+    --fg-muted: #908f85;
     --accent: var(--leaf-bright);
     --accent-bright: var(--leaf-pale);
     --accent-glow: rgba(109, 154, 72, 0.08);
@@ -194,7 +194,8 @@ pre {
   transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   z-index: 2;
 }
-pre:hover .code-copy {
+pre:hover .code-copy,
+.code-copy:focus-visible {
   opacity: 1;
 }
 .code-copy:hover {
@@ -289,6 +290,9 @@ nav.site-nav .links {
 }
 nav.site-nav .links a {
   color: var(--fg-soft);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 nav.site-nav .links a::after {
   background: var(--leaf);
@@ -318,6 +322,9 @@ footer.site-foot {
 }
 footer.site-foot a {
   color: var(--fg-muted);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 footer.site-foot a::after {
   background: var(--fg-muted);

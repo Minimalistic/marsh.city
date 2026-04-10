@@ -6,6 +6,7 @@ interface Props {
 }
 const { title = 'marsh.city', description = "Jason Marsh's corner of the internet" } = Astro.props;
 const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
 const path = Astro.url.pathname;
 const isActive = (href: string) => path.startsWith(href) ? 'page' as const : undefined;
 ---
@@ -16,6 +17,15 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <title>{fullTitle}</title>
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="marsh.city" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -40,7 +50,6 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
           <a href="/projects/" aria-current={isActive('/projects/')}>projects</a>
           <a href="/posts/" aria-current={isActive('/posts/')}>posts</a>
           <a href="/resume/" aria-current={isActive('/resume/')}>resume</a>
-          <a href="/now/" aria-current={isActive('/now/')}>now</a>
           <a href="/about/" aria-current={isActive('/about/')}>about</a>
         </div>
       </nav>
@@ -219,5 +228,7 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
     <!-- mermaid script removed — no content uses it yet.
          Re-add when needed, ideally only on pages with mermaid blocks
          to avoid Safari cross-origin warnings on every page. -->
+
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d6eace1f27904e13b9d20419621d042b"}'></script>
   </body>
 </html>
