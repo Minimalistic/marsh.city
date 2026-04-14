@@ -10,6 +10,21 @@ import Base from '../layouts/Base.astro';
     <button class="resume-download" onclick="window.print()" aria-label="Print resume or save as PDF">Save as PDF</button>
   </div>
 
+  <div class="resume-print-header" aria-hidden="true">
+    <div class="resume-print-name">Jason Marsh</div>
+    <p class="resume-print-contact">
+      Duluth,&nbsp;MN
+      <span class="sep">•</span>
+      <a href="mailto:regularlyjason@icloud.com">regularlyjason@icloud.com</a>
+      <span class="sep">•</span>
+      <a href="https://marsh.city/">marsh.city</a>
+      <span class="sep">•</span>
+      <a href="https://www.linkedin.com/in/jason-marsh">linkedin.com/in/jason-marsh</a>
+      <span class="sep">•</span>
+      <a href="https://github.com/Minimalistic">github.com/Minimalistic</a>
+    </p>
+  </div>
+
   <div class="prose">
     <p class="resume-intro">
       Director of Technology with 13+ years of IT experience spanning infrastructure
@@ -78,10 +93,10 @@ import Base from '../layouts/Base.astro';
 
     <h2>Independent Projects</h2>
     <ul class="projects-compact">
-      <li><a href="/projects/mealdeck/">MealDeck</a> — meal planning with AI recipe adaptation, voice-controlled cook mode, smart grocery grouping</li>
-      <li><a href="/projects/radiogridxl/">RadioGridXL</a> — zero-dependency accessible radio streaming app, WCAG AA, deployed to older adults at my organization</li>
-      <li><a href="/projects/petfeedr/">PetFeedr</a> — Raspberry Pi automated pet feeder with web interface, scheduling, and feed-time randomization</li>
-      <li><a href="/projects/echoetcher/">EchoEtcher</a> — voice-to-structured-notes pipeline using local Whisper and LLM processing</li>
+      <li><a href="/projects/mealdeck/">MealDeck<span class="open-icon" aria-hidden="true">↗</span></a> — meal planning with AI recipe adaptation, voice-controlled cook mode, smart grocery grouping</li>
+      <li><a href="/projects/radiogridxl/">RadioGridXL<span class="open-icon" aria-hidden="true">↗</span></a> — zero-dependency accessible radio streaming app, WCAG AA, deployed to older adults at my organization</li>
+      <li><a href="/projects/petfeedr/">PetFeedr<span class="open-icon" aria-hidden="true">↗</span></a> — Raspberry Pi automated pet feeder with web interface, scheduling, and feed-time randomization</li>
+      <li><a href="/projects/echoetcher/">EchoEtcher<span class="open-icon" aria-hidden="true">↗</span></a> — voice-to-structured-notes pipeline using local Whisper and LLM processing</li>
       <li>InfoVault (in development) — handheld device using camera-based LLM identification to read text aloud and describe objects for users with vision loss</li>
     </ul>
 
@@ -102,13 +117,7 @@ import Base from '../layouts/Base.astro';
       <tr><td><strong>B.S. Video Game Art & Design</strong></td><td>Art Institute of Pittsburgh</td><td class="meta">2010</td></tr>
     </table>
 
-    <h2 class="resume-contact-heading">Get in touch</h2>
     <div class="resume-contact">
-      <ul class="resume-contact-list">
-        <li>Email: <a href="mailto:regularlyjason@icloud.com">regularlyjason@icloud.com</a></li>
-        <li>LinkedIn: <a href="https://www.linkedin.com/in/jason-marsh">jason-marsh</a></li>
-        <li>GitHub: <a href="https://github.com/Minimalistic">Minimalistic</a></li>
-      </ul>
       <a href="/" class="resume-qr" aria-label="Link to marsh.city">
         <img src="/qr.svg" alt="QR code linking to marsh.city" width="72" height="72" />
         <span>marsh.city</span>
@@ -261,12 +270,26 @@ import Base from '../layouts/Base.astro';
 
   .resume-contact {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1.5rem;
   }
-  .resume-contact ul {
-    margin: 0;
+  .resume-print-header { display: none; }
+
+  .projects-compact a .open-icon {
+    display: inline-block;
+    font-size: 0.8em;
+    margin-left: 0.15em;
+    color: var(--leaf);
+    opacity: 0.75;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .projects-compact a:hover .open-icon {
+    transform: translate(1px, -1px);
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .projects-compact a:hover .open-icon { transform: none; }
   }
   .resume-qr {
     display: flex;
@@ -339,32 +362,30 @@ import Base from '../layouts/Base.astro';
       line-height: 1.45 !important;
     }
 
-    .resume-top {
+    .resume-top { display: none !important; }
+
+    .resume-print-header {
       display: block !important;
       border-bottom: 1px solid #ccc;
       padding-bottom: 0.4rem;
       margin-bottom: 0.5rem;
     }
-    .resume-title { display: none !important; }
-    .resume-download { display: none !important; }
-
-    .resume-top::before {
-      content: 'Jason Marsh';
-      display: block;
+    .resume-print-name {
       font-family: var(--font-serif);
       font-size: 22pt;
       font-weight: 600;
       line-height: 1;
       margin-bottom: 0.3em;
     }
-    /* non-breaking spaces (\00A0) inside multi-word items keep each contact
-       token together so the line breaks only at the bullet separators */
-    .resume-top::after {
-      content: 'Duluth,\00A0MN  \2022  regularlyjason@icloud.com  \2022  marsh.city  \2022  linkedin.com/in/jason-marsh  \2022  github.com/Minimalistic';
-      display: block;
+    .resume-print-contact {
       font-size: 8.5pt;
-      line-height: 1.55;
-      color: #555;
+      line-height: 1.6;
+      color: #555 !important;
+      margin: 0 !important;
+    }
+    .resume-print-contact .sep {
+      margin: 0 0.35em;
+      color: #888;
     }
     h1 { display: none; }
 
@@ -391,28 +412,41 @@ import Base from '../layouts/Base.astro';
     .resume-edu td { padding: 0.15rem 0.5rem 0.15rem 0 !important; }
     .projects-compact li { font-size: 9.5pt; margin-bottom: 0.1rem !important; }
 
-    /* contact info is already in the print header line — suppress the
-       redundant bottom block, keep the QR as a scan-back flourish */
-    .resume-contact-heading,
-    .resume-contact-list { display: none !important; }
     .resume-contact {
       justify-content: center !important;
       margin-top: 0.75rem !important;
+    }
+    .resume-qr {
+      border: none !important;
+      padding: 0 !important;
     }
     .resume-qr span { font-size: 7.5pt !important; }
 
     a { color: #1a1a1a !important; text-decoration: none !important; }
     a::after { display: none !important; }
 
-    /* give clickable project/contact links a pill button affordance in print */
-    .projects-compact a,
-    .resume-contact a {
+    /* real anchors in the print header stay inline, no pill styling */
+    .resume-print-contact a {
+      color: #555 !important;
+      border: none !important;
+      padding: 0 !important;
+      display: inline !important;
+    }
+
+    /* give project links a pill-button affordance with an ↗ open indicator */
+    .projects-compact a {
       display: inline-block;
       border: 0.5pt solid #888 !important;
       border-radius: 3pt;
       padding: 0 0.4em;
       font-weight: 500;
       line-height: 1.35;
+    }
+    .projects-compact a .open-icon {
+      color: #555 !important;
+      font-size: 0.85em;
+      margin-left: 0.15em;
+      opacity: 1 !important;
     }
 
     .prose ul, .prose ol { padding-left: 1rem !important; }
