@@ -102,9 +102,9 @@ import Base from '../layouts/Base.astro';
       <tr><td><strong>B.S. Video Game Art & Design</strong></td><td>Art Institute of Pittsburgh</td><td class="meta">2010</td></tr>
     </table>
 
-    <h2>Get in touch</h2>
+    <h2 class="resume-contact-heading">Get in touch</h2>
     <div class="resume-contact">
-      <ul>
+      <ul class="resume-contact-list">
         <li>Email: <a href="mailto:regularlyjason@icloud.com">regularlyjason@icloud.com</a></li>
         <li>LinkedIn: <a href="https://www.linkedin.com/in/jason-marsh">jason-marsh</a></li>
         <li>GitHub: <a href="https://github.com/Minimalistic">Minimalistic</a></li>
@@ -390,6 +390,16 @@ import Base from '../layouts/Base.astro';
     .resume-edu { font-size: 9pt !important; }
     .resume-edu td { padding: 0.15rem 0.5rem 0.15rem 0 !important; }
     .projects-compact li { font-size: 9.5pt; margin-bottom: 0.1rem !important; }
+
+    /* contact info is already in the print header line — suppress the
+       redundant bottom block, keep the QR as a scan-back flourish */
+    .resume-contact-heading,
+    .resume-contact-list { display: none !important; }
+    .resume-contact {
+      justify-content: center !important;
+      margin-top: 0.75rem !important;
+    }
+    .resume-qr span { font-size: 7.5pt !important; }
 
     a { color: #1a1a1a !important; text-decoration: none !important; }
     a::after { display: none !important; }
