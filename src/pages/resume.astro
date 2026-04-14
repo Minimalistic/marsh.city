@@ -340,10 +340,7 @@ import Base from '../layouts/Base.astro';
     }
 
     .resume-top {
-      display: grid !important;
-      grid-template-columns: 1fr auto;
-      gap: 1.2rem;
-      align-items: end;
+      display: block !important;
       border-bottom: 1px solid #ccc;
       padding-bottom: 0.4rem;
       margin-bottom: 0.5rem;
@@ -358,16 +355,16 @@ import Base from '../layouts/Base.astro';
       font-size: 22pt;
       font-weight: 600;
       line-height: 1;
-      align-self: end;
+      margin-bottom: 0.3em;
     }
+    /* non-breaking spaces (\00A0) inside multi-word items keep each contact
+       token together so the line breaks only at the bullet separators */
     .resume-top::after {
-      content: 'Duluth, MN\A regularlyjason@icloud.com\A marsh.city\A linkedin.com/in/jason-marsh\A github.com/Minimalistic';
+      content: 'Duluth,\00A0MN  \2022  regularlyjason@icloud.com  \2022  marsh.city  \2022  linkedin.com/in/jason-marsh  \2022  github.com/Minimalistic';
       display: block;
-      white-space: pre;
-      font-size: 8pt;
-      line-height: 1.5;
+      font-size: 8.5pt;
+      line-height: 1.55;
       color: #555;
-      text-align: right;
     }
     h1 { display: none; }
 
