@@ -23,7 +23,9 @@ const { title, description, date } = Astro.props;
     {date && <p class="meta" style="color: var(--fg-soft); font-size: 0.9rem;">
       {date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
     </p>}
-    <slot />
+    <div class="prose">
+      <slot />
+    </div>
   </article>
 
   <script is:inline>
