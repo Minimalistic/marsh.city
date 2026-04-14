@@ -346,7 +346,7 @@ footer.site-foot {
   width: 100%;
   /* extends well above the footer so foliage encroaches into content area */
   height: calc(100% + 35vh);
-  z-index: -1;
+  z-index: 0;
   object-fit: cover;
   object-position: center 100%;
   display: block;
@@ -403,7 +403,13 @@ footer.site-foot a:hover {
 .card {
   position: relative;
   background:
-    linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev2) 100%);
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--bg-elev) 82%, transparent) 0%,
+      color-mix(in srgb, var(--bg-elev2) 82%, transparent) 100%
+    );
+  backdrop-filter: blur(10px) saturate(135%);
+  -webkit-backdrop-filter: blur(10px) saturate(135%);
   padding: 1.5rem 1.5rem 1.25rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
