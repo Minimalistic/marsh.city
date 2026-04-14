@@ -1189,7 +1189,7 @@ nav.site-nav .links a[aria-current="page"]::after {
 
 @media (max-width: 600px) {
   .layout {
-    padding: 4.5rem 1rem 4rem;
+    padding: 5.5rem 1rem 4rem;
   }
   .layout::before { display: none; }
 
@@ -1207,7 +1207,7 @@ nav.site-nav .links a[aria-current="page"]::after {
     justify-content: center;
   }
   main, h1, h2, h3, h4, [id] {
-    scroll-margin-top: 4rem;
+    scroll-margin-top: 5.5rem;
   }
   .section-header {
     flex-direction: column;
