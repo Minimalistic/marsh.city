@@ -284,6 +284,14 @@ nav.site-nav {
     background: color-mix(in srgb, var(--bg) 94%, transparent);
   }
 }
+
+/* Keep jump / tab-into-view targets clear of the fixed nav pill. */
+main, h1, h2, h3, h4, [id] {
+  scroll-margin-top: 5rem;
+}
+main:focus {
+  outline: none;
+}
 nav.site-nav .brand {
   font-family: var(--font-mono);
   font-size: 0.95rem;
@@ -428,6 +436,24 @@ footer.site-foot a:hover {
 
 /* --- status badges --- */
 
+/* Status colors shift between light and dark mode so small (0.68rem) badge
+   text clears WCAG AA contrast in both. Light mode uses deep earth tones;
+   dark mode uses bright foliage. */
+:root {
+  --status-idea: var(--bark);
+  --status-wip: var(--moss);
+  --status-shipped: var(--moss);
+  --status-archived: var(--fg-muted);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --status-idea: var(--leaf-pale);
+    --status-wip: var(--leaf-bright);
+    --status-shipped: var(--leaf);
+    --status-archived: var(--fg-muted);
+  }
+}
+
 .status {
   display: inline-block;
   font-size: 0.68rem;
@@ -437,32 +463,30 @@ footer.site-foot a:hover {
   text-transform: lowercase;
   vertical-align: middle;
   margin-left: 0.4rem;
-}
-.status {
-  background: color-mix(in srgb, var(--leaf) 12%, transparent);
-  color: var(--leaf);
-  border: 1px solid color-mix(in srgb, var(--leaf) 20%, transparent);
+  background: color-mix(in srgb, var(--status-wip) 12%, transparent);
+  color: var(--status-wip);
+  border: 1px solid color-mix(in srgb, var(--status-wip) 22%, transparent);
 }
 .status-wip {
-  background: color-mix(in srgb, var(--leaf-bright) 15%, transparent);
-  color: var(--leaf-bright);
-  border-color: color-mix(in srgb, var(--leaf-bright) 25%, transparent);
+  background: color-mix(in srgb, var(--status-wip) 14%, transparent);
+  color: var(--status-wip);
+  border-color: color-mix(in srgb, var(--status-wip) 28%, transparent);
   animation: status-pulse 2.5s ease-in-out infinite;
 }
 .status-shipped {
-  background: color-mix(in srgb, var(--moss) 15%, transparent);
-  color: var(--moss);
-  border-color: color-mix(in srgb, var(--moss) 25%, transparent);
+  background: color-mix(in srgb, var(--status-shipped) 14%, transparent);
+  color: var(--status-shipped);
+  border-color: color-mix(in srgb, var(--status-shipped) 26%, transparent);
 }
 .status-idea {
-  background: color-mix(in srgb, var(--bark) 10%, transparent);
-  color: var(--bark-light);
-  border-color: color-mix(in srgb, var(--bark) 15%, transparent);
+  background: color-mix(in srgb, var(--status-idea) 10%, transparent);
+  color: var(--status-idea);
+  border-color: color-mix(in srgb, var(--status-idea) 20%, transparent);
 }
 .status-archived {
-  background: color-mix(in srgb, var(--fg-muted) 8%, transparent);
-  color: var(--fg-muted);
-  border-color: color-mix(in srgb, var(--fg-muted) 12%, transparent);
+  background: color-mix(in srgb, var(--status-archived) 8%, transparent);
+  color: var(--status-archived);
+  border-color: color-mix(in srgb, var(--status-archived) 15%, transparent);
 }
 
 @keyframes status-pulse {
@@ -811,6 +835,9 @@ nav.site-nav .links a[aria-current="page"]::after {
   nav.site-nav .links {
     gap: 0.9rem;
     font-size: 0.85rem;
+  }
+  main, h1, h2, h3, h4, [id] {
+    scroll-margin-top: 4rem;
   }
   .section-header {
     flex-direction: column;
