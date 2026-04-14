@@ -340,7 +340,10 @@ footer.site-foot {
   color: var(--fg);
 }
 .site-foot-foliage {
-  /* pinned to viewport bottom — never leaves the bottom of the screen */
+  /* pinned to viewport bottom — never leaves the bottom of the screen.
+     background-size: max(100%, 150vh) auto forces image to be wide enough
+     that its aspect-preserved height always exceeds container height, so
+     background-position-y actually pans on tall/narrow mobile viewports. */
   position: fixed;
   left: 0;
   right: 0;
@@ -348,13 +351,15 @@ footer.site-foot {
   width: 100%;
   height: 70vh;
   z-index: 0;
-  object-fit: cover;
-  object-position: center 0%;
   display: block;
   opacity: 0.4;
   pointer-events: none;
   user-select: none;
-  will-change: object-position;
+  background-image: url(/footer-foliage.webp);
+  background-size: max(100%, 150vh) auto;
+  background-position: center 0%;
+  background-repeat: no-repeat;
+  will-change: background-position;
   /* soft fade at top so the image dissolves into page bg instead of a hard edge */
   mask-image: linear-gradient(to bottom, transparent 0%, black 45%, black 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 45%, black 100%);
@@ -860,6 +865,25 @@ nav.site-nav .links a[aria-current="page"]::after {
     transform: none;
     transition: none;
   }
+}
+
+/* --- starfield (nighttime, dark mode only) --- */
+
+.starfield {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 55vh;
+  pointer-events: none;
+  /* same z-index as foliage/fireflies; canvas is prepended to <body> so DOM order
+     puts it behind the foliage, while fireflies (appended last) stay in front. */
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 1.8s ease-in;
+  /* fade the bottom of the sky into the foliage/horizon */
+  mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
 }
 
 /* --- fireflies --- */

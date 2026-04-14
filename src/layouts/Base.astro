@@ -53,7 +53,7 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
     </div>
 
     <footer class="site-foot">
-      <img class="site-foot-foliage" src="/footer-foliage.webp" alt="" aria-hidden="true" />
+      <div class="site-foot-foliage" aria-hidden="true"></div>
       <div class="site-foot-inner">
         <span>© Jason Marsh</span>
         <div class="foot-links">
@@ -89,6 +89,151 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
         }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
         targets.forEach(el => observer.observe(el));
+      })();
+    </script>
+
+    <script is:inline>
+      // starfield — nighttime only, dark mode only, top portion of viewport
+      (() => {
+        const hour = new Date().getHours();
+        if (hour >= 6 && hour < 20) return;
+        if (!window.matchMedia('(prefers-color-scheme: dark)').matches) return;
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const canvas = document.createElement('canvas');
+        canvas.className = 'starfield';
+        canvas.setAttribute('aria-hidden', 'true');
+        // prepend so it paints behind foliage (same z-index, earlier in DOM)
+        document.body.insertBefore(canvas, document.body.firstChild);
+        const ctx = canvas.getContext('2d');
+
+        let W = 0, H = 0, DPR = 1;
+        const stars = [];
+        const STAR_COUNT = 90;
+        const shooters = [];
+        let shooterTimer = 0;
+
+        function resize() {
+          DPR = Math.min(window.devicePixelRatio || 1, 2);
+          W = canvas.clientWidth;
+          H = canvas.clientHeight;
+          canvas.width = W * DPR;
+          canvas.height = H * DPR;
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          stars.length = 0;
+          for (let i = 0; i < STAR_COUNT; i++) {
+            // y^0.6 weights density toward the top of the sky
+            stars.push({
+              x: Math.random() * W,
+              y: Math.pow(Math.random(), 0.6) * H,
+              r: Math.random() * 0.85 + 0.22,
+              base: 0.35 + Math.random() * 0.5,
+              phase: Math.random() * Math.PI * 2,
+              speed: 0.0005 + Math.random() * 0.0011,
+              tint: Math.random() < 0.18 ? '#cfd9ff'
+                  : Math.random() < 0.18 ? '#ffe4be'
+                  : '#ffffff',
+            });
+          }
+        }
+
+        function scheduleShooter() {
+          // rare: 18-55 seconds between shooting stars
+          shooterTimer = 18000 + Math.random() * 37000;
+        }
+
+        function emitShooter() {
+          const fromLeft = Math.random() < 0.5;
+          const startX = fromLeft
+            ? -40 + Math.random() * W * 0.35
+            : W * 0.65 + Math.random() * W * 0.35;
+          const startY = Math.random() * H * 0.35;
+          // shallow diagonal, angled away from origin side
+          const angle = fromLeft
+            ? (Math.PI * 0.10) + Math.random() * 0.12   // down-right
+            : (Math.PI * 0.78) + Math.random() * 0.12;  // down-left
+          const speed = 7 + Math.random() * 4;
+          shooters.push({
+            x: startX, y: startY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0,
+            maxLife: 55 + Math.random() * 35,
+          });
+        }
+
+        let lastTs = performance.now();
+        function frame(now) {
+          const dt = now - lastTs;
+          lastTs = now;
+
+          ctx.clearRect(0, 0, W, H);
+
+          for (const s of stars) {
+            const tw = reduce
+              ? s.base
+              : s.base * (0.78 + 0.22 * Math.sin(now * s.speed + s.phase));
+            ctx.globalAlpha = tw;
+            ctx.fillStyle = s.tint;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill();
+            if (s.r > 0.7) {
+              ctx.globalAlpha = tw * 0.2;
+              ctx.beginPath();
+              ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          ctx.globalAlpha = 1;
+
+          if (!reduce) {
+            shooterTimer -= dt;
+            if (shooterTimer <= 0) {
+              emitShooter();
+              scheduleShooter();
+            }
+          }
+
+          for (let i = shooters.length - 1; i >= 0; i--) {
+            const sh = shooters[i];
+            sh.life++;
+            sh.x += sh.vx;
+            sh.y += sh.vy;
+            const t = sh.life / sh.maxLife;
+            const alpha = t < 0.15 ? (t / 0.15) : (1 - (t - 0.15) / 0.85);
+            const vmag = Math.hypot(sh.vx, sh.vy) || 1;
+            const tailLen = 70;
+            const tx = sh.x - (sh.vx / vmag) * tailLen;
+            const ty = sh.y - (sh.vy / vmag) * tailLen;
+            const grad = ctx.createLinearGradient(sh.x, sh.y, tx, ty);
+            grad.addColorStop(0, `rgba(255, 246, 220, ${Math.max(0, alpha)})`);
+            grad.addColorStop(1, 'rgba(255, 246, 220, 0)');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 1.6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(sh.x, sh.y);
+            ctx.lineTo(tx, ty);
+            ctx.stroke();
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, alpha)})`;
+            ctx.beginPath();
+            ctx.arc(sh.x, sh.y, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (sh.life >= sh.maxLife || sh.x < -100 || sh.x > W + 100 || sh.y > H + 100) {
+              shooters.splice(i, 1);
+            }
+          }
+
+          requestAnimationFrame(frame);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        scheduleShooter();
+        requestAnimationFrame(frame);
+        requestAnimationFrame(() => { canvas.style.opacity = '1'; });
       })();
     </script>
 
@@ -289,7 +434,7 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
           const max = document.documentElement.scrollHeight - window.innerHeight;
           const raw = max > 0 ? window.scrollY / max : 1;
           const progress = Math.max(0, Math.min(1, raw / PAN_SPAN));
-          img.style.objectPosition = `center ${progress * 100}%`;
+          img.style.backgroundPosition = `center ${progress * 100}%`;
           ticking = false;
         }
         function onScroll() {
