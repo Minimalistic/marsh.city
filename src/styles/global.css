@@ -97,8 +97,8 @@ body {
     var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
-  font-size: 17px;
-  line-height: 1.7;
+  font-size: 18.5px;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -352,22 +352,72 @@ footer.site-foot {
   height: 70vh;
   z-index: 0;
   display: block;
-  opacity: 0.4;
+  opacity: 1;
   pointer-events: none;
   user-select: none;
   background-image: url(/footer-foliage.webp);
   background-size: max(100%, 150vh) auto;
-  background-position: center 0%;
+  background-position: center var(--foliage-pos, 0%);
   background-repeat: no-repeat;
-  will-change: background-position;
-  /* soft fade at top so the image dissolves into page bg instead of a hard edge */
-  mask-image: linear-gradient(to bottom, transparent 0%, black 45%, black 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 45%, black 100%);
+  will-change: background-position, filter, opacity;
+  /* subtle ambient dim so the foliage reads darker at night even before the
+     color-tint pseudo lands. Most of the lighting comes from ::before below. */
+  filter:
+    brightness(calc(1 - 0.22 * var(--night-factor, 0)))
+    saturate(calc(1 - 0.2 * var(--night-factor, 0)));
+  /* hidden until the sky script has applied its first lighting pass, to avoid
+     a "full-brightness flash" at load before the tint/dim kick in */
+  opacity: 0;
+  transition: filter 0.6s ease, opacity 0.8s ease-in;
 }
-@media (prefers-color-scheme: dark) {
-  .site-foot-foliage {
-    opacity: 0.55;
-  }
+html.sky-ready .site-foot-foliage { opacity: 1; }
+/* realistic lighting: multiply the foliage with the current sky-horizon color
+   so amber golden-hour light, violet dusk, and cold moonlight actually wash
+   the leaves. Masked to the foliage shape so gaps aren't tinted. */
+.site-foot-foliage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--sky-horizon, transparent);
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+  pointer-events: none;
+  mask-image: url(/footer-foliage.webp);
+  -webkit-mask-image: url(/footer-foliage.webp);
+  mask-size: max(100%, 150vh) auto;
+  -webkit-mask-size: max(100%, 150vh) auto;
+  mask-position: center var(--foliage-pos, 0%);
+  -webkit-mask-position: center var(--foliage-pos, 0%);
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  transition: background 6s ease;
+}
+/* "deeper into the jungle" — top-dark → transparent gradient painted ONLY over
+   the foliage leaves (masked by the same image) so the transparent gaps between
+   leaves aren't darkened. Intensity scales with scroll (--foliage-dark, 0–1). */
+.site-foot-foliage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(4, 10, 6, 0.82) 0%,
+    rgba(4, 10, 6, 0.45) 40%,
+    transparent 100%
+  );
+  /* max scroll-darken reduced to 30% of prior intensity — keeps the
+     "deeper into the jungle" cue subtle instead of heavy-handed */
+  opacity: calc(var(--foliage-dark, 0) * 0.3);
+  transition: opacity 0.15s linear;
+  pointer-events: none;
+  mask-image: url(/footer-foliage.webp);
+  -webkit-mask-image: url(/footer-foliage.webp);
+  mask-size: max(100%, 150vh) auto;
+  -webkit-mask-size: max(100%, 150vh) auto;
+  mask-position: center var(--foliage-pos, 0%);
+  -webkit-mask-position: center var(--foliage-pos, 0%);
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
 }
 .site-foot-inner {
   position: relative;
@@ -408,14 +458,16 @@ footer.site-foot a:hover {
 
 .card {
   position: relative;
+  /* low-alpha wash so the sky tint and foliage behind can seep through;
+     the heavy blur keeps text legible even at ~35% bg opacity. */
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--bg-elev) 82%, transparent) 0%,
-      color-mix(in srgb, var(--bg-elev2) 82%, transparent) 100%
+      color-mix(in srgb, var(--bg-elev) 35%, transparent) 0%,
+      color-mix(in srgb, var(--bg-elev2) 35%, transparent) 100%
     );
-  backdrop-filter: blur(10px) saturate(135%);
-  -webkit-backdrop-filter: blur(10px) saturate(135%);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
   padding: 1.5rem 1.5rem 1.25rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -480,14 +532,14 @@ footer.site-foot a:hover {
   transform: translateY(-1px);
 }
 .card h3 {
-  margin: 0 0 0.35rem;
-  font-size: 1.1rem;
+  margin: 0 0 0.4rem;
+  font-size: 1.3rem;
 }
 .card .meta {
   color: var(--fg-soft);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 /* --- status badges --- */
@@ -865,6 +917,232 @@ nav.site-nav .links a[aria-current="page"]::after {
     transform: none;
     transition: none;
   }
+}
+
+/* --- screen-reader-only utility --- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- command palette (⌘K) --- */
+
+.cmdk-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 0.5rem;
+  padding: 2px 6px;
+  background: color-mix(in srgb, var(--bg-elev2) 80%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.cmdk-trigger kbd {
+  font-family: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+.cmdk-trigger:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.cmdk {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  font-family: var(--font-sans);
+}
+.cmdk[hidden] { display: none; }
+.cmdk-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+  animation: cmdk-fade 0.15s ease-out;
+}
+.cmdk-panel {
+  position: relative;
+  width: min(580px, 92vw);
+  max-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--bg-elev) 92%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--border-leaf);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: cmdk-pop 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes cmdk-fade {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes cmdk-pop {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cmdk-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  outline: none;
+}
+.cmdk-input::placeholder { color: var(--fg-muted); }
+.cmdk-results {
+  list-style: none;
+  padding: 0.35rem;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+.cmdk-result {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--fg);
+}
+.cmdk-result[aria-selected="true"] {
+  background: color-mix(in srgb, var(--leaf) 18%, transparent);
+}
+.cmdk-result-type {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  min-width: 56px;
+  flex-shrink: 0;
+}
+.cmdk-result[aria-selected="true"] .cmdk-result-type { color: var(--accent); }
+.cmdk-result-title {
+  flex-shrink: 0;
+  color: var(--fg);
+}
+.cmdk-result-hint {
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+.cmdk-empty {
+  padding: 1rem 1.25rem;
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+.cmdk-hint {
+  display: flex;
+  gap: 1rem;
+  padding: 0.55rem 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+}
+.cmdk-hint kbd {
+  background: var(--bg-elev2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-right: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--fg-soft);
+}
+@media (max-width: 600px) {
+  .cmdk { padding-top: 4vh; }
+  .cmdk-trigger { display: none; }
+  .cmdk-hint { display: none; }
+  .cmdk-result-hint { display: none; }
+}
+
+/* --- theme toggle (nav button with sun/moon icons) --- */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: color-mix(in srgb, var(--bg-elev2) 80%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.2s ease;
+}
+.theme-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.theme-toggle:active { transform: scale(0.92); }
+.theme-toggle svg { display: block; }
+/* show sun during day, moon at night — .is-night is toggled by the sky script */
+.theme-toggle .icon-moon { display: none; }
+.theme-toggle.is-night .icon-sun  { display: none; }
+.theme-toggle.is-night .icon-moon { display: block; }
+
+/* --- sky (time-of-day gradient, always on) --- */
+
+.sky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 65vh;
+  pointer-events: none;
+  /* same z-index as foliage/stars/fireflies; earliest in DOM so it paints behind */
+  z-index: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--sky-top, transparent) 0%,
+    var(--sky-horizon, transparent) 55%,
+    transparent 100%
+  );
+  /* feather the bottom so the wash dissolves into the page/foliage */
+  mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  opacity: 0;
+  transition: opacity 1.8s ease-in, background 8s ease;
 }
 
 /* --- starfield (nighttime, dark mode only) --- */

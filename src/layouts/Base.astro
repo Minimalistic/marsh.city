@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { getCollection } from 'astro:content';
 interface Props {
   title?: string;
   description?: string;
@@ -9,6 +10,30 @@ const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
 const path = Astro.url.pathname;
 const isActive = (href: string) => path.startsWith(href) ? 'page' as const : undefined;
+
+// command palette index — built at render time, shipped as JSON to the client
+const projects = await getCollection('projects');
+const posts = await getCollection('posts', ({ data }) => !data.draft);
+const paletteItems = [
+  { type: 'page',    title: 'Home',     url: '/',          hint: 'landing' },
+  { type: 'page',    title: 'Projects', url: '/projects/', hint: 'all projects' },
+  { type: 'page',    title: 'Posts',    url: '/posts/',    hint: 'writing' },
+  { type: 'page',    title: 'About',    url: '/about/',    hint: 'who I am' },
+  { type: 'page',    title: 'Resume',   url: '/resume/',   hint: 'work history' },
+  { type: 'page',    title: 'Now',      url: '/now/',      hint: 'current focus' },
+  ...projects.map((p) => ({
+    type: 'project',
+    title: p.data.title,
+    url: `/projects/${p.id}/`,
+    hint: p.data.description,
+  })),
+  ...posts.map((p) => ({
+    type: 'post',
+    title: p.data.title,
+    url: `/posts/${p.id}/`,
+    hint: p.data.description ?? '',
+  })),
+];
 ---
 <!doctype html>
 <html lang="en">
@@ -35,6 +60,7 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
     />
   </head>
   <body>
+    <div class="sky" aria-hidden="true"></div>
 <div class="layout">
       <a href="#main" class="skip-link">Skip to main content</a>
       <nav class="site-nav">
@@ -44,12 +70,38 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
           <a href="/posts/" aria-current={isActive('/posts/')}>posts</a>
           <a href="/resume/" aria-current={isActive('/resume/')}>resume</a>
           <a href="/about/" aria-current={isActive('/about/')}>about</a>
+          <button type="button" class="theme-toggle" aria-label="Toggle day and night">
+            <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2"/>
+              <path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2M18.5 5.5l-1.4 1.4M6.9 17.1l-1.4 1.4M18.5 18.5l-1.4-1.4M6.9 6.9L5.5 5.5"/>
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+            </svg>
+          </button>
+          <button type="button" class="cmdk-trigger" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K">
+            <kbd>⌘</kbd><kbd>K</kbd>
+          </button>
         </div>
       </nav>
 
       <main id="main" tabindex="-1">
         <slot />
       </main>
+    </div>
+
+    <div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-labelledby="cmdk-input-label" hidden>
+      <div class="cmdk-backdrop" data-cmdk-close></div>
+      <div class="cmdk-panel" role="combobox" aria-expanded="true" aria-haspopup="listbox" aria-owns="cmdk-results">
+        <label id="cmdk-input-label" class="sr-only" for="cmdk-input">Search projects, posts, and pages</label>
+        <input id="cmdk-input" class="cmdk-input" type="text" placeholder="Search projects, posts, pages…" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="cmdk-results" />
+        <ul id="cmdk-results" class="cmdk-results" role="listbox"></ul>
+        <div class="cmdk-hint" aria-hidden="true">
+          <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+          <span><kbd>↵</kbd> open</span>
+          <span><kbd>esc</kbd> close</span>
+        </div>
+      </div>
     </div>
 
     <footer class="site-foot">
@@ -93,18 +145,168 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
     </script>
 
     <script is:inline>
-      // starfield — nighttime only, dark mode only, top portion of viewport
+      // shared clock: real time by default; sun/moon click can set a simulated
+      // hour that persists for the session. Other scripts (starfield, fireflies)
+      // subscribe to changes so night/day visuals follow the clock.
+      window.__clock = (() => {
+        let simulated = null;
+        const subs = new Set();
+        function hour() {
+          if (simulated !== null) return simulated;
+          const d = new Date();
+          return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+        }
+        function set(h) {
+          simulated = ((h % 24) + 24) % 24;
+          subs.forEach(fn => fn(simulated));
+        }
+        function on(fn) { subs.add(fn); return () => subs.delete(fn); }
+        return { hour, set, on };
+      })();
+
+      // how "nighty" a given hour is (0 = day, 1 = deep night), used by
+      // starfield + firefly visibility so dawn/dusk feel smooth.
+      window.__nightFactor = (h) => {
+        if (h <= 5 || h >= 21) return 1;
+        if (h >= 7 && h <= 19) return 0;
+        if (h > 5 && h < 7) return (7 - h) / 2;
+        return (h - 19) / 2;
+      };
+    </script>
+
+    <script is:inline>
+      // time-of-day sky grading + nav theme toggle.
+      // Sky: sets CSS vars --sky-top/--sky-horizon based on the clock's hour,
+      // interpolated between keyframes. The theme-toggle button in the nav
+      // shows a sun during the day and a moon at night; clicking it animates
+      // the clock forward 12 hours (real sunset/sunrise in between).
       (() => {
-        const hour = new Date().getHours();
-        if (hour >= 6 && hour < 20) return;
-        if (!window.matchMedia('(prefers-color-scheme: dark)').matches) return;
+        const sky = document.querySelector('.sky');
+        if (!sky) return;
+
+        const DARK = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // palette tuned for both light and dark bg; alpha fades the wash during
+        // midday so we don't fight the base palette, and intensifies at the
+        // dramatic hours (dawn, dusk).
+        // each entry: { h, top: [r,g,b,a], horizon: [r,g,b,a] }
+        const LIGHT_KEYFRAMES = [
+          { h: 0,   top: [8,12,28,0.85],      horizon: [22,28,52,0.65] },
+          { h: 5,   top: [30,35,70,0.80],     horizon: [110,85,100,0.55] },
+          { h: 6.5, top: [120,130,180,0.55],  horizon: [240,175,145,0.55] },
+          { h: 8,   top: [170,200,225,0.40],  horizon: [245,225,200,0.30] },
+          { h: 12,  top: [185,210,220,0.22],  horizon: [235,225,205,0.15] },
+          { h: 16,  top: [195,195,185,0.28],  horizon: [240,215,175,0.35] },
+          { h: 18,  top: [190,140,130,0.55],  horizon: [245,180,115,0.60] },
+          { h: 19,  top: [110,65,120,0.75],   horizon: [205,115,90,0.65] },
+          { h: 20,  top: [45,40,90,0.85],     horizon: [90,55,100,0.60] },
+          { h: 22,  top: [12,18,40,0.85],     horizon: [25,30,58,0.65] },
+          { h: 24,  top: [8,12,28,0.85],      horizon: [22,28,52,0.65] },
+        ];
+        const DARK_KEYFRAMES = [
+          { h: 0,   top: [4,7,16,0.95],       horizon: [12,18,35,0.80] },
+          { h: 5,   top: [14,18,42,0.90],     horizon: [55,42,65,0.70] },
+          { h: 6.5, top: [50,65,110,0.75],    horizon: [180,120,95,0.60] },
+          { h: 8,   top: [85,115,150,0.55],   horizon: [185,160,140,0.35] },
+          { h: 12,  top: [95,120,135,0.30],   horizon: [150,140,125,0.18] },
+          { h: 16,  top: [110,105,95,0.35],   horizon: [180,140,95,0.40] },
+          { h: 18,  top: [130,80,85,0.65],    horizon: [200,120,75,0.60] },
+          { h: 19,  top: [70,40,90,0.80],     horizon: [150,75,65,0.65] },
+          { h: 20,  top: [20,22,55,0.90],     horizon: [55,35,70,0.65] },
+          { h: 22,  top: [6,10,24,0.95],      horizon: [15,20,40,0.75] },
+          { h: 24,  top: [4,7,16,0.95],       horizon: [12,18,35,0.80] },
+        ];
+
+        const KF = DARK ? DARK_KEYFRAMES : LIGHT_KEYFRAMES;
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+        function lerpColor(a, b, t) {
+          return [
+            Math.round(lerp(a[0], b[0], t)),
+            Math.round(lerp(a[1], b[1], t)),
+            Math.round(lerp(a[2], b[2], t)),
+            lerp(a[3], b[3], t),
+          ];
+        }
+        function toRgba(c) {
+          return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3].toFixed(3)})`;
+        }
+        function interp(hour) {
+          for (let i = 0; i < KF.length - 1; i++) {
+            const a = KF[i], b = KF[i + 1];
+            if (hour >= a.h && hour <= b.h) {
+              const t = (b.h === a.h) ? 0 : (hour - a.h) / (b.h - a.h);
+              // smoothstep for gentler transitions near keyframes
+              const s = t * t * (3 - 2 * t);
+              return {
+                top: lerpColor(a.top, b.top, s),
+                horizon: lerpColor(a.horizon, b.horizon, s),
+              };
+            }
+          }
+          return { top: KF[0].top, horizon: KF[0].horizon };
+        }
+
+        // the nav's theme-toggle button switches sun/moon icon based on clock
+        const toggleBtn = document.querySelector('.theme-toggle');
+
+        function apply() {
+          const h = window.__clock.hour();
+          const { top, horizon } = interp(h);
+          document.documentElement.style.setProperty('--sky-top', toRgba(top));
+          document.documentElement.style.setProperty('--sky-horizon', toRgba(horizon));
+          const nf = window.__nightFactor(h);
+          document.documentElement.style.setProperty('--night-factor', nf.toFixed(3));
+          // reflect day/night on the nav toggle so the icon matches reality
+          if (toggleBtn) toggleBtn.classList.toggle('is-night', nf >= 0.5);
+        }
+
+        // click the nav toggle → animate 12 hours forward (real sunset/sunrise
+        // in between, with sky, foliage, stars, fireflies all following).
+        let animating = false;
+        function travel() {
+          if (animating) return;
+          animating = true;
+          const startH = window.__clock.hour();
+          const dur = 5500; // unhurried
+          const t0 = performance.now();
+          function step(now) {
+            const p = Math.min(1, (now - t0) / dur);
+            const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+            window.__clock.set(startH + e * 12);
+            if (p < 1) requestAnimationFrame(step);
+            else animating = false;
+          }
+          requestAnimationFrame(step);
+        }
+        if (toggleBtn) toggleBtn.addEventListener('click', travel);
+
+        apply();
+        // signal foliage (and anything else gated on lighting) that the first
+        // apply has happened — lets CSS fade them in without a harsh cut
+        document.documentElement.classList.add('sky-ready');
+        window.__clock.on(apply);
+        // also tick for real-time drift when idle
+        setInterval(apply, 60000);
+        requestAnimationFrame(() => { sky.style.opacity = '1'; });
+      })();
+    </script>
+
+    <script is:inline>
+      // starfield — always rendered, opacity follows the clock's night factor,
+      // so stars fade in at dusk and out at dawn (and respond to the sun/moon
+      // time-travel click).
+      (() => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         const canvas = document.createElement('canvas');
         canvas.className = 'starfield';
         canvas.setAttribute('aria-hidden', 'true');
-        // prepend so it paints behind foliage (same z-index, earlier in DOM)
-        document.body.insertBefore(canvas, document.body.firstChild);
+        // insert after .sky so sky paints first (back), then stars on top of it,
+        // then foliage and fireflies come in front (later in DOM)
+        const sky = document.querySelector('.sky');
+        if (sky) sky.insertAdjacentElement('afterend', canvas);
+        else document.body.insertBefore(canvas, document.body.firstChild);
         const ctx = canvas.getContext('2d');
 
         let W = 0, H = 0, DPR = 1;
@@ -166,6 +368,15 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
         function frame(now) {
           const dt = now - lastTs;
           lastTs = now;
+
+          // gate visibility on time-of-day (0 at noon → 1 at deep night)
+          const night = window.__nightFactor(window.__clock.hour());
+          canvas.style.opacity = night.toFixed(3);
+          if (night < 0.01) {
+            ctx.clearRect(0, 0, W, H);
+            requestAnimationFrame(frame);
+            return;
+          }
 
           ctx.clearRect(0, 0, W, H);
 
@@ -233,16 +444,15 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
         resize();
         scheduleShooter();
         requestAnimationFrame(frame);
-        requestAnimationFrame(() => { canvas.style.opacity = '1'; });
+        // opacity is driven per-frame by the night factor now
       })();
     </script>
 
     <script is:inline>
-      // fireflies — nighttime only, with parallax
+      // fireflies — always spawned; each fly's rendered opacity is multiplied
+      // by the clock's night factor so they fade in at dusk, out at dawn.
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const hour = new Date().getHours();
-        if (hour >= 6 && hour < 20) return;
 
         const COUNT = 12;
         const FLEE_RADIUS = 80;       // how close cursor must be to agitate
@@ -402,7 +612,9 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
               } else {
                 opacity = 0.7 * (1 - (elapsed - fadeIn - glow) / fadeOut);
               }
-              el.style.opacity = Math.max(0, opacity);
+              // dim by night factor so fireflies fade in at dusk / out at dawn
+              const night = window.__nightFactor(window.__clock.hour());
+              el.style.opacity = Math.max(0, opacity * night);
 
               if (progress < 1) {
                 requestAnimationFrame(tick);
@@ -434,7 +646,10 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
           const max = document.documentElement.scrollHeight - window.innerHeight;
           const raw = max > 0 ? window.scrollY / max : 1;
           const progress = Math.max(0, Math.min(1, raw / PAN_SPAN));
-          img.style.backgroundPosition = `center ${progress * 100}%`;
+          // --foliage-pos drives both the background pan AND the mask-image pan,
+          // so the darkening overlay stays perfectly aligned with the leaves.
+          document.documentElement.style.setProperty('--foliage-pos', `${(progress * 100).toFixed(2)}%`);
+          document.documentElement.style.setProperty('--foliage-dark', progress.toFixed(3));
           ticking = false;
         }
         function onScroll() {
@@ -468,6 +683,139 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
             }, 1500);
           });
           pre.appendChild(btn);
+        });
+      })();
+    </script>
+
+    <script is:inline define:vars={{ paletteItems }}>
+      // command palette (⌘K / Ctrl+K)
+      (() => {
+        const ITEMS = paletteItems;
+        const root = document.getElementById('cmdk');
+        const input = document.getElementById('cmdk-input');
+        const list = document.getElementById('cmdk-results');
+        const trigger = document.querySelector('.cmdk-trigger');
+        if (!root || !input || !list) return;
+
+        let filtered = ITEMS.slice(0, 30);
+        let selected = 0;
+        let lastFocused = null;
+
+        function escapeHtml(s) {
+          return String(s).replace(/[&<>"']/g, (c) =>
+            ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+        }
+
+        // simple scoring: exact substring (best), word-start match, then subsequence
+        function score(query, item) {
+          const q = query.toLowerCase();
+          const title = item.title.toLowerCase();
+          const hint = (item.hint || '').toLowerCase();
+          const hay = title + ' ' + hint;
+          if (title.startsWith(q)) return -1000 + title.length;
+          const titleIdx = title.indexOf(q);
+          if (titleIdx >= 0) return -500 + titleIdx;
+          const hayIdx = hay.indexOf(q);
+          if (hayIdx >= 0) return hayIdx;
+          // subsequence match over title+hint
+          let qi = 0;
+          for (let i = 0; i < hay.length && qi < q.length; i++) {
+            if (hay[i] === q[qi]) qi++;
+          }
+          return qi === q.length ? 1000 + hay.length : Infinity;
+        }
+
+        function filter(q) {
+          if (!q) return ITEMS.slice(0, 30);
+          const scored = ITEMS
+            .map((it) => ({ it, s: score(q, it) }))
+            .filter((x) => x.s !== Infinity)
+            .sort((a, b) => a.s - b.s)
+            .slice(0, 30);
+          return scored.map((x) => x.it);
+        }
+
+        function render() {
+          if (!filtered.length) {
+            list.innerHTML = '<li class="cmdk-empty" role="presentation">No matches</li>';
+            return;
+          }
+          list.innerHTML = filtered.map((it, i) => `
+            <li class="cmdk-result" role="option" id="cmdk-opt-${i}"
+                aria-selected="${i === selected}" data-idx="${i}">
+              <span class="cmdk-result-type">${it.type}</span>
+              <span class="cmdk-result-title">${escapeHtml(it.title)}</span>
+              <span class="cmdk-result-hint">${escapeHtml(it.hint || '')}</span>
+            </li>
+          `).join('');
+        }
+
+        function select(i) {
+          selected = Math.max(0, Math.min(i, filtered.length - 1));
+          const items = list.querySelectorAll('.cmdk-result');
+          items.forEach((el, idx) => el.setAttribute('aria-selected', idx === selected ? 'true' : 'false'));
+          input.setAttribute('aria-activedescendant', `cmdk-opt-${selected}`);
+          const el = items[selected];
+          if (el) el.scrollIntoView({ block: 'nearest' });
+        }
+
+        function open() {
+          lastFocused = document.activeElement;
+          root.hidden = false;
+          input.value = '';
+          filtered = ITEMS.slice(0, 30);
+          selected = 0;
+          render();
+          document.body.style.overflow = 'hidden';
+          setTimeout(() => input.focus(), 0);
+        }
+        function close() {
+          root.hidden = true;
+          document.body.style.overflow = '';
+          if (lastFocused && lastFocused.focus) lastFocused.focus();
+        }
+        function go(i) {
+          const it = filtered[i];
+          if (it) window.location.href = it.url;
+        }
+
+        input.addEventListener('input', () => {
+          filtered = filter(input.value.trim());
+          selected = 0;
+          render();
+        });
+
+        list.addEventListener('mousemove', (e) => {
+          const li = e.target.closest('.cmdk-result');
+          if (!li) return;
+          const idx = Number(li.dataset.idx);
+          if (idx !== selected) select(idx);
+        });
+        list.addEventListener('click', (e) => {
+          const li = e.target.closest('.cmdk-result');
+          if (!li) return;
+          go(Number(li.dataset.idx));
+        });
+
+        root.querySelector('[data-cmdk-close]').addEventListener('click', close);
+        if (trigger) trigger.addEventListener('click', open);
+
+        document.addEventListener('keydown', (e) => {
+          const mod = e.metaKey || e.ctrlKey;
+          if (mod && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            root.hidden ? open() : close();
+            return;
+          }
+          if (root.hidden) return;
+          switch (e.key) {
+            case 'Escape': e.preventDefault(); close(); break;
+            case 'ArrowDown': e.preventDefault(); select(selected + 1); break;
+            case 'ArrowUp': e.preventDefault(); select(selected - 1); break;
+            case 'Home': e.preventDefault(); select(0); break;
+            case 'End': e.preventDefault(); select(filtered.length - 1); break;
+            case 'Enter': e.preventDefault(); go(selected); break;
+          }
         });
       })();
     </script>
