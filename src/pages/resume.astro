@@ -120,12 +120,13 @@ import Base from '../layouts/Base.astro';
       <tr><td><strong>B.S. Video Game Art & Design</strong></td><td>Art Institute of Pittsburgh</td><td class="meta">2010</td></tr>
     </table>
 
-    <h2 class="resume-contact-heading">Get in touch</h2>
+    <h2>Get in touch</h2>
     <div class="resume-contact">
-      <p class="resume-contact-msg">
-        Thanks for reading. You can find ways to reach me in the footer,
-        or scan the code to head back to <strong>marsh.city</strong>.
-      </p>
+      <ul>
+        <li>Email: <a href="mailto:regularlyjason@icloud.com">regularlyjason@icloud.com</a></li>
+        <li>LinkedIn: <a href="https://www.linkedin.com/in/jason-marsh">jason-marsh</a></li>
+        <li>GitHub: <a href="https://github.com/Minimalistic">Minimalistic</a></li>
+      </ul>
       <a href="/" class="resume-qr" aria-label="Link to marsh.city">
         <img src="/qr.svg" alt="QR code linking to marsh.city" width="72" height="72" />
         <span>marsh.city</span>
@@ -279,15 +280,12 @@ import Base from '../layouts/Base.astro';
   .resume-contact {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     gap: 1.5rem;
     margin-top: 1rem;
   }
-  .resume-contact-msg {
+  .resume-contact ul {
     margin: 0;
-    color: var(--fg-soft);
-    max-width: 28rem;
-    line-height: 1.6;
   }
   .resume-print-header { display: none; }
 
@@ -430,12 +428,7 @@ import Base from '../layouts/Base.astro';
     .resume-contact {
       margin-top: 0.5rem !important;
     }
-    .resume-contact-msg {
-      font-size: 9pt !important;
-      color: #333 !important;
-      max-width: 4.5in;
-      line-height: 1.5 !important;
-    }
+    .resume-contact ul { font-size: 9pt !important; }
     .resume-qr {
       border: none !important;
       padding: 0 !important;
