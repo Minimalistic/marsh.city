@@ -1199,8 +1199,9 @@ nav.site-nav .links a[aria-current="page"]::after {
     padding: 0.25rem 0.9rem;
   }
   nav.site-nav .links {
-    gap: 0.9rem;
+    gap: 0.25rem 0.9rem;
     font-size: 0.85rem;
+    flex-wrap: wrap;
   }
   main, h1, h2, h3, h4, [id] {
     scroll-margin-top: 4rem;
@@ -1220,10 +1221,11 @@ nav.site-nav .links a[aria-current="page"]::after {
     padding: 0.6rem 0.9rem;
     flex-direction: column;
     gap: 0.5rem;
-    align-items: flex-start;
+    align-items: center;
   }
   .foot-links {
     gap: 1rem;
+    justify-content: center;
     flex-wrap: wrap;
   }
 
