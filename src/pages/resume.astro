@@ -117,7 +117,12 @@ import Base from '../layouts/Base.astro';
       <tr><td><strong>B.S. Video Game Art & Design</strong></td><td>Art Institute of Pittsburgh</td><td class="meta">2010</td></tr>
     </table>
 
+    <h2 class="resume-contact-heading">Get in touch</h2>
     <div class="resume-contact">
+      <p class="resume-contact-msg">
+        Thanks for reading. You can find ways to reach me in the footer,
+        or scan the code to head back to <strong>marsh.city</strong>.
+      </p>
       <a href="/" class="resume-qr" aria-label="Link to marsh.city">
         <img src="/qr.svg" alt="QR code linking to marsh.city" width="72" height="72" />
         <span>marsh.city</span>
@@ -270,9 +275,16 @@ import Base from '../layouts/Base.astro';
 
   .resume-contact {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    margin-top: 1.5rem;
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  .resume-contact-msg {
+    margin: 0;
+    color: var(--fg-soft);
+    max-width: 28rem;
+    line-height: 1.6;
   }
   .resume-print-header { display: none; }
 
@@ -412,6 +424,8 @@ import Base from '../layouts/Base.astro';
     .resume-edu td { padding: 0.15rem 0.5rem 0.15rem 0 !important; }
     .projects-compact li { font-size: 9.5pt; margin-bottom: 0.1rem !important; }
 
+    .resume-contact-heading,
+    .resume-contact-msg { display: none !important; }
     .resume-contact {
       justify-content: center !important;
       margin-top: 0.75rem !important;
