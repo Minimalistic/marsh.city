@@ -273,20 +273,22 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
     </script>
 
     <script is:inline>
-      // footer foliage "elevator descending" — pan image top→bottom as footer scrolls through viewport
+      // foliage "elevator descending" — image is pinned to viewport bottom,
+      // pans sky → forest floor as user scrolls through the page
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const footer = document.querySelector('footer.site-foot');
         const img = document.querySelector('.site-foot-foliage');
-        if (!footer || !img) return;
+        if (!img) return;
+        // PAN_SPAN: fraction of the page's total scrollable distance over which the pan completes.
+        //   1.0 = gentle, pan finishes exactly at the bottom of the page
+        //   0.6 = more pronounced, foliage floor reached 60% of the way down
+        //   0.4 = very dramatic
+        const PAN_SPAN = 0.9;
         let ticking = false;
         function update() {
-          const rect = footer.getBoundingClientRect();
-          const vh = window.innerHeight;
-          // progress: 0 when footer top hits viewport bottom (just peeking in),
-          //           1 when footer bottom leaves viewport top (scrolled past)
-          const progress = Math.max(0, Math.min(1, (vh - rect.top) / (vh + rect.height)));
-          // pan object-position from top (dark sky) to bottom (foliage floor)
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          const raw = max > 0 ? window.scrollY / max : 1;
+          const progress = Math.max(0, Math.min(1, raw / PAN_SPAN));
           img.style.objectPosition = `center ${progress * 100}%`;
           ticking = false;
         }

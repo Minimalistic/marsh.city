@@ -256,6 +256,9 @@ hr {
   max-width: 700px;
   margin: 0 auto;
   padding: 5.5rem 1.5rem 6rem;
+  /* sit above the fixed foliage image so content is legible */
+  position: relative;
+  z-index: 1;
 }
 
 /* --- navigation --- */
@@ -330,33 +333,31 @@ nav.site-nav .links a:hover {
 
 footer.site-foot {
   position: relative;
-  min-height: 32vh;
+  padding: 0.5rem 1.5rem 1.5rem;
   display: flex;
-  align-items: flex-end;
   justify-content: center;
-  padding: 0 1.5rem 1.75rem;
   font-size: 0.85rem;
   color: var(--fg);
 }
 .site-foot-foliage {
-  position: absolute;
+  /* pinned to viewport bottom — never leaves the bottom of the screen */
+  position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   width: 100%;
-  /* extends well above the footer so foliage encroaches into content area */
-  height: calc(100% + 35vh);
+  height: 70vh;
   z-index: 0;
   object-fit: cover;
-  object-position: center 100%;
+  object-position: center 0%;
   display: block;
   opacity: 0.4;
   pointer-events: none;
   user-select: none;
   will-change: object-position;
   /* soft fade at top so the image dissolves into page bg instead of a hard edge */
-  mask-image: linear-gradient(to bottom, transparent 0%, black 40%, black 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 40%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 45%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 45%, black 100%);
 }
 @media (prefers-color-scheme: dark) {
   .site-foot-foliage {
@@ -740,6 +741,19 @@ nav.site-nav .links a[aria-current="page"]::after {
   background: var(--leaf);
 }
 
+/* --- text legibility frost: applied to prose/hero so long-form text stays readable
+       over the fixed foliage. Cards/buttons already have their own frost. --- */
+
+.prose,
+.hero {
+  background: color-mix(in srgb, var(--bg) 28%, transparent);
+  backdrop-filter: blur(8px) saturate(115%);
+  -webkit-backdrop-filter: blur(8px) saturate(115%);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin: 0 -0.5rem;
+}
+
 /* --- content prose --- */
 
 .prose { max-width: 65ch; }
@@ -895,11 +909,10 @@ nav.site-nav .links a[aria-current="page"]::after {
   }
 
   footer.site-foot {
-    min-height: 28vh;
-    padding: 0 1rem 1rem;
+    padding: 0.5rem 1rem 1rem;
   }
   .site-foot-foliage {
-    height: calc(100% + 22vh);
+    height: 55vh;
   }
   .site-foot-inner {
     padding: 0.6rem 0.9rem;
