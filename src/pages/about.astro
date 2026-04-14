@@ -4,9 +4,8 @@ import Base from '../layouts/Base.astro';
 <Base title="About" description="About Jason Marsh — developer, technologist, assistive technology specialist.">
   <h1>About</h1>
 
-  <div class="about-intro">
-    <img src="/jason.jpg" alt="Jason Marsh, headshot portrait" class="about-photo" width="200" height="200" />
-    <div class="prose">
+  <div class="prose about-prose">
+    <img src="/jason.jpg" alt="Jason Marsh, headshot portrait" class="about-photo" width="240" height="240" />
     <p>
       I'm Jason — a developer and technologist based in Duluth, Minnesota, with 13+
       years in IT. I direct technology at a nonprofit where I manage infrastructure,
@@ -15,10 +14,7 @@ import Base from '../layouts/Base.astro';
       technology. I hold an Assistive Technology Applications
       Certificate from CSUN.
     </p>
-    </div>
-  </div>
 
-  <div class="prose">
     <p>
       Outside of that role, I build production software as a solo developer. I've
       shipped <a href="/projects/mealdeck/">a meal planning app</a> with AI-powered
@@ -60,30 +56,32 @@ import Base from '../layouts/Base.astro';
 </Base>
 
 <style>
-  .about-intro {
-    display: flex;
-    align-items: flex-start;
-    gap: 2rem;
-    margin-bottom: 0.5rem;
-  }
-  .about-photo {
+  /* magazine-style wrap: text flows to the right of the photo and continues
+     below it with the same visual gap on all sides */
+  .about-prose .about-photo {
+    float: left;
+    width: 240px;
+    height: 240px;
+    margin: 0.35rem 1.75rem 1rem 0;
     border-radius: var(--radius-lg);
     object-fit: cover;
-    flex-shrink: 0;
     box-shadow: var(--shadow);
+    shape-outside: inset(0 round var(--radius-lg));
   }
-  .about-intro .prose p {
-    margin-bottom: 0;
+  .about-prose p {
+    text-wrap: pretty;
+  }
+  /* clear the float before the h2 so "Get in touch" never sits beside the photo */
+  .about-prose h2 {
+    clear: left;
   }
   @media (max-width: 600px) {
-    .about-intro {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-    .about-photo {
+    .about-prose .about-photo {
+      float: none;
+      display: block;
       width: 160px;
       height: 160px;
+      margin: 0 auto 1.25rem;
     }
   }
 </style>
