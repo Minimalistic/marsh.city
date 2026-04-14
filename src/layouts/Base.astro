@@ -288,6 +288,15 @@ const paletteItems = [
       (() => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+        // track pinch-to-zoom so we can pause heavy canvas work and avoid
+        // crashing Safari's WebKit process during zoom compositing.
+        window.__isZoomed = false;
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', () => {
+            window.__isZoomed = Math.abs(window.visualViewport.scale - 1) > 0.05;
+          });
+        }
+
         const canvas = document.createElement('canvas');
         canvas.className = 'starfield';
         canvas.setAttribute('aria-hidden', 'true');
@@ -358,6 +367,9 @@ const paletteItems = [
         function frame(now) {
           const dt = now - lastTs;
           lastTs = now;
+
+          // pause during pinch-to-zoom to avoid overwhelming Safari
+          if (window.__isZoomed) { requestAnimationFrame(frame); return; }
 
           // crossfade with theme (0 in light, 1 in dark, tweens in between)
           const mix = window.__themeMix ?? 0;
@@ -504,6 +516,7 @@ const paletteItems = [
 
         // render loop — state machine: idle → fleeing → wandering → returning → idle
         function renderLoop() {
+          if (window.__isZoomed) { requestAnimationFrame(renderLoop); return; }
           const now = performance.now();
           for (const fly of flies) {
             const parallaxFactor = 0.15 + fly.depth * 0.35;
