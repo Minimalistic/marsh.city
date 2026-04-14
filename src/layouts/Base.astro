@@ -58,9 +58,23 @@ const paletteItems = [
       href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <script is:inline>
+      // set data-theme before CSS paints to avoid a flash.
+      // stored pref wins; otherwise follow system.
+      (() => {
+        let theme;
+        try {
+          const stored = localStorage.getItem('theme');
+          if (stored === 'light' || stored === 'dark') theme = stored;
+        } catch {}
+        if (!theme) {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
   </head>
   <body>
-    <div class="sky" aria-hidden="true"></div>
 <div class="layout">
       <a href="#main" class="skip-link">Skip to main content</a>
       <nav class="site-nav">
@@ -70,18 +84,39 @@ const paletteItems = [
           <a href="/posts/" aria-current={isActive('/posts/')}>posts</a>
           <a href="/resume/" aria-current={isActive('/resume/')}>resume</a>
           <a href="/about/" aria-current={isActive('/about/')}>about</a>
-          <button type="button" class="theme-toggle" aria-label="Toggle day and night">
-            <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="4.2"/>
-              <path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2M18.5 5.5l-1.4 1.4M6.9 17.1l-1.4 1.4M18.5 18.5l-1.4-1.4M6.9 6.9L5.5 5.5"/>
-            </svg>
-            <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
-            </svg>
-          </button>
-          <button type="button" class="cmdk-trigger" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K">
-            <kbd>⌘</kbd><kbd>K</kbd>
-          </button>
+          <div class="nav-menu">
+            <button type="button" class="nav-menu-btn" aria-label="Open menu" aria-expanded="false" aria-haspopup="true" aria-controls="nav-menu-panel">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <line x1="4" y1="7" x2="20" y2="7"/>
+                <line x1="4" y1="12" x2="20" y2="12"/>
+                <line x1="4" y1="17" x2="20" y2="17"/>
+              </svg>
+            </button>
+            <div class="nav-menu-panel" id="nav-menu-panel" role="menu" hidden>
+              <button type="button" class="theme-toggle" role="menuitem" aria-label="Toggle light and dark mode">
+                <span class="nav-menu-item-icon">
+                  <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4.2"/>
+                    <path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2M18.5 5.5l-1.4 1.4M6.9 17.1l-1.4 1.4M18.5 18.5l-1.4-1.4M6.9 6.9L5.5 5.5"/>
+                  </svg>
+                  <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+                  </svg>
+                </span>
+                <span class="nav-menu-item-label">Toggle day/night</span>
+              </button>
+              <button type="button" class="cmdk-trigger" role="menuitem" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K">
+                <span class="nav-menu-item-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/>
+                    <line x1="20" y1="20" x2="16.5" y2="16.5"/>
+                  </svg>
+                </span>
+                <span class="nav-menu-item-label">Search</span>
+                <span class="nav-menu-item-hint"><kbd>⌘</kbd><kbd>K</kbd></span>
+              </button>
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -145,168 +180,118 @@ const paletteItems = [
     </script>
 
     <script is:inline>
-      // shared clock: real time by default; sun/moon click can set a simulated
-      // hour that persists for the session. Other scripts (starfield, fireflies)
-      // subscribe to changes so night/day visuals follow the clock.
-      window.__clock = (() => {
-        let simulated = null;
-        const subs = new Set();
-        function hour() {
-          if (simulated !== null) return simulated;
-          const d = new Date();
-          return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
-        }
-        function set(h) {
-          simulated = ((h % 24) + 24) % 24;
-          subs.forEach(fn => fn(simulated));
-        }
-        function on(fn) { subs.add(fn); return () => subs.delete(fn); }
-        return { hour, set, on };
-      })();
+      // nav hamburger menu: toggles the panel that nests theme + search.
+      // click-outside + Escape close it; clicking an item inside also closes.
+      (() => {
+        const wrapper = document.querySelector('.nav-menu');
+        const btn = document.querySelector('.nav-menu-btn');
+        const panel = document.getElementById('nav-menu-panel');
+        if (!wrapper || !btn || !panel) return;
 
-      // how "nighty" a given hour is (0 = day, 1 = deep night), used by
-      // starfield + firefly visibility so dawn/dusk feel smooth.
-      window.__nightFactor = (h) => {
-        if (h <= 5 || h >= 21) return 1;
-        if (h >= 7 && h <= 19) return 0;
-        if (h > 5 && h < 7) return (7 - h) / 2;
-        return (h - 19) / 2;
-      };
+        function open() {
+          panel.hidden = false;
+          btn.setAttribute('aria-expanded', 'true');
+        }
+        function close() {
+          panel.hidden = true;
+          btn.setAttribute('aria-expanded', 'false');
+        }
+
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          panel.hidden ? open() : close();
+        });
+
+        panel.addEventListener('click', (e) => {
+          if (e.target.closest('.theme-toggle, .cmdk-trigger')) close();
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!panel.hidden && !wrapper.contains(e.target)) close();
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && !panel.hidden) {
+            close();
+            btn.focus();
+          }
+        });
+      })();
     </script>
 
     <script is:inline>
-      // time-of-day sky grading + nav theme toggle.
-      // Sky: sets CSS vars --sky-top/--sky-horizon based on the clock's hour,
-      // interpolated between keyframes. The theme-toggle button in the nav
-      // shows a sun during the day and a moon at night; clicking it animates
-      // the clock forward 12 hours (real sunset/sunrise in between).
+      // theme toggle: flip light/dark, persist choice, follow system when unset.
+      // window.__themeMix (0=light, 1=dark) is a smoothly-tweened value that
+      // starfield + fireflies multiply their opacity by — gives a crossfade
+      // when the user clicks the toggle instead of a hard snap.
       (() => {
-        const sky = document.querySelector('.sky');
-        if (!sky) return;
+        const root = document.documentElement;
+        const btn = document.querySelector('.theme-toggle');
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        const TRANSITION_MS = 700;
 
-        const DARK = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        window.__isDark = () => root.dataset.theme === 'dark';
+        window.__themeMix = window.__isDark() ? 1 : 0;
 
-        // palette tuned for both light and dark bg; alpha fades the wash during
-        // midday so we don't fight the base palette, and intensifies at the
-        // dramatic hours (dawn, dusk).
-        // each entry: { h, top: [r,g,b,a], horizon: [r,g,b,a] }
-        const LIGHT_KEYFRAMES = [
-          { h: 0,   top: [8,12,28,0.85],      horizon: [22,28,52,0.65] },
-          { h: 5,   top: [30,35,70,0.80],     horizon: [110,85,100,0.55] },
-          { h: 6.5, top: [120,130,180,0.55],  horizon: [240,175,145,0.55] },
-          { h: 8,   top: [170,200,225,0.40],  horizon: [245,225,200,0.30] },
-          { h: 12,  top: [185,210,220,0.22],  horizon: [235,225,205,0.15] },
-          { h: 16,  top: [195,195,185,0.28],  horizon: [240,215,175,0.35] },
-          { h: 18,  top: [190,140,130,0.55],  horizon: [245,180,115,0.60] },
-          { h: 19,  top: [110,65,120,0.75],   horizon: [205,115,90,0.65] },
-          { h: 20,  top: [45,40,90,0.85],     horizon: [90,55,100,0.60] },
-          { h: 22,  top: [12,18,40,0.85],     horizon: [25,30,58,0.65] },
-          { h: 24,  top: [8,12,28,0.85],      horizon: [22,28,52,0.65] },
-        ];
-        const DARK_KEYFRAMES = [
-          { h: 0,   top: [4,7,16,0.95],       horizon: [12,18,35,0.80] },
-          { h: 5,   top: [14,18,42,0.90],     horizon: [55,42,65,0.70] },
-          { h: 6.5, top: [50,65,110,0.75],    horizon: [180,120,95,0.60] },
-          { h: 8,   top: [85,115,150,0.55],   horizon: [185,160,140,0.35] },
-          { h: 12,  top: [95,120,135,0.30],   horizon: [150,140,125,0.18] },
-          { h: 16,  top: [110,105,95,0.35],   horizon: [180,140,95,0.40] },
-          { h: 18,  top: [130,80,85,0.65],    horizon: [200,120,75,0.60] },
-          { h: 19,  top: [70,40,90,0.80],     horizon: [150,75,65,0.65] },
-          { h: 20,  top: [20,22,55,0.90],     horizon: [55,35,70,0.65] },
-          { h: 22,  top: [6,10,24,0.95],      horizon: [15,20,40,0.75] },
-          { h: 24,  top: [4,7,16,0.95],       horizon: [12,18,35,0.80] },
-        ];
-
-        const KF = DARK ? DARK_KEYFRAMES : LIGHT_KEYFRAMES;
-
-        function lerp(a, b, t) { return a + (b - a) * t; }
-        function lerpColor(a, b, t) {
-          return [
-            Math.round(lerp(a[0], b[0], t)),
-            Math.round(lerp(a[1], b[1], t)),
-            Math.round(lerp(a[2], b[2], t)),
-            lerp(a[3], b[3], t),
-          ];
+        function updateIcon() {
+          if (btn) btn.classList.toggle('is-night', window.__isDark());
         }
-        function toRgba(c) {
-          return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3].toFixed(3)})`;
-        }
-        function interp(hour) {
-          for (let i = 0; i < KF.length - 1; i++) {
-            const a = KF[i], b = KF[i + 1];
-            if (hour >= a.h && hour <= b.h) {
-              const t = (b.h === a.h) ? 0 : (hour - a.h) / (b.h - a.h);
-              // smoothstep for gentler transitions near keyframes
-              const s = t * t * (3 - 2 * t);
-              return {
-                top: lerpColor(a.top, b.top, s),
-                horizon: lerpColor(a.horizon, b.horizon, s),
-              };
-            }
-          }
-          return { top: KF[0].top, horizon: KF[0].horizon };
-        }
+        updateIcon();
 
-        // the nav's theme-toggle button switches sun/moon icon based on clock
-        const toggleBtn = document.querySelector('.theme-toggle');
-
-        function apply() {
-          const h = window.__clock.hour();
-          const { top, horizon } = interp(h);
-          document.documentElement.style.setProperty('--sky-top', toRgba(top));
-          document.documentElement.style.setProperty('--sky-horizon', toRgba(horizon));
-          const nf = window.__nightFactor(h);
-          document.documentElement.style.setProperty('--night-factor', nf.toFixed(3));
-          // reflect day/night on the nav toggle so the icon matches reality
-          if (toggleBtn) toggleBtn.classList.toggle('is-night', nf >= 0.5);
-        }
-
-        // click the nav toggle → animate 12 hours forward (real sunset/sunrise
-        // in between, with sky, foliage, stars, fireflies all following).
-        let animating = false;
-        function travel() {
-          if (animating) return;
-          animating = true;
-          const startH = window.__clock.hour();
-          const dur = 5500; // unhurried
+        let tweenId = 0;
+        function tweenMix(target) {
+          const myId = ++tweenId;
+          const start = window.__themeMix;
           const t0 = performance.now();
           function step(now) {
-            const p = Math.min(1, (now - t0) / dur);
-            const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
-            window.__clock.set(startH + e * 12);
+            if (myId !== tweenId) return;
+            const p = Math.min(1, (now - t0) / TRANSITION_MS);
+            const e = p * p * (3 - 2 * p); // smoothstep
+            window.__themeMix = start + (target - start) * e;
             if (p < 1) requestAnimationFrame(step);
-            else animating = false;
           }
           requestAnimationFrame(step);
         }
-        if (toggleBtn) toggleBtn.addEventListener('click', travel);
 
-        apply();
-        // signal foliage (and anything else gated on lighting) that the first
-        // apply has happened — lets CSS fade them in without a harsh cut
-        document.documentElement.classList.add('sky-ready');
-        window.__clock.on(apply);
-        // also tick for real-time drift when idle
-        setInterval(apply, 60000);
-        requestAnimationFrame(() => { sky.style.opacity = '1'; });
+        function setTheme(next, animate) {
+          root.dataset.theme = next;
+          updateIcon();
+          if (animate) {
+            root.classList.add('theme-animating');
+            setTimeout(() => root.classList.remove('theme-animating'), TRANSITION_MS + 100);
+            tweenMix(next === 'dark' ? 1 : 0);
+          } else {
+            window.__themeMix = next === 'dark' ? 1 : 0;
+          }
+        }
+
+        mq.addEventListener('change', () => {
+          let stored = null;
+          try { stored = localStorage.getItem('theme'); } catch {}
+          if (stored !== 'light' && stored !== 'dark') {
+            setTheme(mq.matches ? 'dark' : 'light', true);
+          }
+        });
+
+        if (btn) btn.addEventListener('click', () => {
+          const next = window.__isDark() ? 'light' : 'dark';
+          try { localStorage.setItem('theme', next); } catch {}
+          setTheme(next, true);
+        });
       })();
     </script>
 
     <script is:inline>
-      // starfield — always rendered, opacity follows the clock's night factor,
-      // so stars fade in at dusk and out at dawn (and respond to the sun/moon
-      // time-travel click).
+      // starfield — rendered only in dark mode. Visibility reads the current
+      // theme via window.__isDark(); in light mode the canvas is hidden and
+      // the draw loop early-returns.
       (() => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         const canvas = document.createElement('canvas');
         canvas.className = 'starfield';
         canvas.setAttribute('aria-hidden', 'true');
-        // insert after .sky so sky paints first (back), then stars on top of it,
-        // then foliage and fireflies come in front (later in DOM)
-        const sky = document.querySelector('.sky');
-        if (sky) sky.insertAdjacentElement('afterend', canvas);
-        else document.body.insertBefore(canvas, document.body.firstChild);
+        document.body.insertBefore(canvas, document.body.firstChild);
         const ctx = canvas.getContext('2d');
 
         let W = 0, H = 0, DPR = 1;
@@ -369,10 +354,10 @@ const paletteItems = [
           const dt = now - lastTs;
           lastTs = now;
 
-          // gate visibility on time-of-day (0 at noon → 1 at deep night)
-          const night = window.__nightFactor(window.__clock.hour());
-          canvas.style.opacity = night.toFixed(3);
-          if (night < 0.01) {
+          // crossfade with theme (0 in light, 1 in dark, tweens in between)
+          const mix = window.__themeMix ?? 0;
+          canvas.style.opacity = mix.toFixed(3);
+          if (mix < 0.01) {
             ctx.clearRect(0, 0, W, H);
             requestAnimationFrame(frame);
             return;
@@ -449,18 +434,19 @@ const paletteItems = [
     </script>
 
     <script is:inline>
-      // fireflies — always spawned; each fly's rendered opacity is multiplied
-      // by the clock's night factor so they fade in at dusk, out at dawn.
+      // fireflies — always spawned, but visible only in dark mode
+      // (each fly's opacity is gated on window.__isDark()).
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-        const COUNT = 12;
+        const COUNT = 14;
         const FLEE_RADIUS = 80;       // how close cursor must be to agitate
         const FLEE_FORCE = 3.6;       // continuous repulsion strength
         const JITTER = 1.4;            // per-frame random nudge while agitated
         const WANDER_JITTER = 0.35;    // brownian drift while wandering away from home
         const DAMPING = 0.93;          // velocity friction per frame
-        const RETURN_SPRING = 0.003;   // gentle pull toward home during return phase
+        const RETURN_SPRING = 0.0014;  // very soft pull home — bugs don't b-line
+        const RETURN_JITTER = 0.22;    // keeps the return path meandering, not straight
         const WANDER_MIN_MS = 3000;
         const WANDER_MAX_MS = 8000;
         const IDLE = 0, FLEEING = 1, WANDERING = 2, RETURNING = 3;
@@ -487,9 +473,15 @@ const paletteItems = [
           const el = document.createElement('div');
           el.className = 'firefly';
           container.appendChild(el);
-          const depth = 0.3 + Math.random() * 0.7; // parallax depth layer
+          // depth drives parallax speed + visual scale so flies read as being
+          // at varying distances. All flies render behind cards regardless.
+          // Floor pushed lower (0.08) so more flies populate the far-distance
+          // end of the range, giving a deeper "fireflies in the jungle" feel.
+          const depth = 0.08 + Math.random() * 0.92;  // 0.08 – 1.0
+          const sizeFactor = 0.5 + depth * 0.6;       // 0.55 – 1.1
+          const opacityFactor = 0.45 + depth * 0.6;   // 0.50 – 1.05
           flies.push({
-            el, depth,
+            el, depth, sizeFactor, opacityFactor,
             baseX: 0, baseY: 0,
             spawnScrollY: scrollY,
             driftX: 0, driftY: 0,
@@ -497,6 +489,7 @@ const paletteItems = [
             fleeVX: 0, fleeVY: 0,
             mode: IDLE,
             returnAt: 0,
+            agitation: 0,  // 0–1, ramps up while disturbed, decays while calm
           });
           animateFirefly(flies[i], true);
         }
@@ -531,12 +524,18 @@ const paletteItems = [
               fly.fleeVY += (Math.random() - 0.5) * WANDER_JITTER;
               if (now >= fly.returnAt) fly.mode = RETURNING;
             } else if (fly.mode === RETURNING) {
-              // gentle spring pull back to home path
+              // soft spring + continuous brownian jitter — it's a bug finding
+              // its way back, not a missile homing on a target. The spring is
+              // weak and the jitter is persistent, so the path meanders.
               fly.fleeVX -= fly.fleeX * RETURN_SPRING;
               fly.fleeVY -= fly.fleeY * RETURN_SPRING;
+              fly.fleeVX += (Math.random() - 0.5) * RETURN_JITTER;
+              fly.fleeVY += (Math.random() - 0.5) * RETURN_JITTER;
               const offset = Math.hypot(fly.fleeX, fly.fleeY);
               const speed = Math.hypot(fly.fleeVX, fly.fleeVY);
-              if (offset < 2 && speed < 0.2) {
+              // loosened threshold — with constant jitter a fly rarely sits
+              // perfectly still, so "close enough" counts as home.
+              if (offset < 8 && speed < 0.8) {
                 fly.mode = IDLE;
                 fly.fleeX = 0; fly.fleeY = 0;
                 fly.fleeVX = 0; fly.fleeVY = 0;
@@ -548,6 +547,15 @@ const paletteItems = [
             fly.fleeVY *= DAMPING;
             fly.fleeX += fly.fleeVX;
             fly.fleeY += fly.fleeVY;
+
+            // brightness ramp while disturbed — bugs "excite" slowly and
+            // cool off slowly, so the boost reads as a sustained glow not a
+            // flicker. Read in the fadeIn/glow/fadeOut tick as a multiplier.
+            if (fly.mode === FLEEING || fly.mode === WANDERING) {
+              fly.agitation = Math.min(1, fly.agitation + 0.008);
+            } else {
+              fly.agitation = Math.max(0, fly.agitation - 0.004);
+            }
 
             const scrollOffset = -scrollY * parallaxFactor;
             fly.el.style.transform =
@@ -574,13 +582,13 @@ const paletteItems = [
           const dx = (Math.random() - 0.5) * 200;
           const dy = (Math.random() - 0.5) * 160;
 
-          const fadeIn = 800 + Math.random() * 1200;
-          const glow = 2000 + Math.random() * 4000;
-          const fadeOut = 800 + Math.random() * 1200;
+          const fadeIn = 1600 + Math.random() * 2400;
+          const glow = 4000 + Math.random() * 8000;
+          const fadeOut = 1600 + Math.random() * 2400;
           const totalDrift = fadeIn + glow + fadeOut;
           const delay = first ? Math.random() * 5000 : 200 + Math.random() * 3000;
 
-          const size = 3 + Math.random() * 5;
+          const size = (3 + Math.random() * 5) * fly.sizeFactor;
           el.style.width = size + 'px';
           el.style.height = size + 'px';
 
@@ -612,9 +620,14 @@ const paletteItems = [
               } else {
                 opacity = 0.7 * (1 - (elapsed - fadeIn - glow) / fadeOut);
               }
-              // dim by night factor so fireflies fade in at dusk / out at dawn
-              const night = window.__nightFactor(window.__clock.hour());
-              el.style.opacity = Math.max(0, opacity * night);
+              // crossfade with theme, then scale by the fly's depth-derived
+              // opacity factor so deeper flies read as farther/dimmer.
+              // agitation adds up to +55% brightness when fully excited.
+              // BRIGHTNESS is a global tuning dial on the whole firefly look.
+              const BRIGHTNESS = 1.25;
+              const mix = window.__themeMix ?? 0;
+              const boost = 1 + fly.agitation * 0.55;
+              el.style.opacity = Math.max(0, opacity * mix * fly.opacityFactor * boost * BRIGHTNESS);
 
               if (progress < 1) {
                 requestAnimationFrame(tick);

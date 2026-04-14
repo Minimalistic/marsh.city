@@ -1,12 +1,12 @@
 /* marsh.city — monstera forest */
 :root {
-  /* palette */
-  --cream: #f4f0e5;
-  --cream-soft: #eae5d6;
-  --cream-warm: #f0ead8;
-  --ink: #1a2b1e;
-  --ink-soft: #3d4f42;
-  --ink-muted: #5a6b5e;
+  /* palette — soft shaded-garden light, not bright-paper white */
+  --cream: #e8e6d2;
+  --cream-soft: #ddd9c2;
+  --cream-warm: #e2dcc4;
+  --ink: #243626;
+  --ink-soft: #44574a;
+  --ink-muted: #647366;
   --moss: #2d5016;
   --moss-deep: #1e3a0e;
   --leaf: #6d9a48;
@@ -17,12 +17,12 @@
   --bark-light: #7a6550;
   --soil: #3d3228;
   --canopy: #1a3312;
-  --dapple: rgba(141, 184, 96, 0.06);
+  --dapple: rgba(141, 184, 96, 0.1);
 
   /* semantic */
   --bg: var(--cream);
-  --bg-elev: #faf7ee;
-  --bg-elev2: #f5f0e3;
+  --bg-elev: #f0ecda;
+  --bg-elev2: #e4e0cc;
   --border: rgba(27, 42, 31, 0.1);
   --border-leaf: color-mix(in srgb, var(--leaf) 25%, transparent);
   --fg: var(--ink);
@@ -46,24 +46,22 @@
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0c150f;
-    --bg-elev: #13201a;
-    --bg-elev2: #192b21;
-    --border: rgba(168, 204, 133, 0.07);
-    --border-leaf: rgba(141, 184, 96, 0.15);
-    --fg: #ddd9ca;
-    --fg-soft: #a0a090;
-    --fg-muted: #908f85;
-    --accent: var(--leaf-bright);
-    --accent-bright: var(--leaf-pale);
-    --accent-glow: rgba(109, 154, 72, 0.08);
-    --shadow: 0 2px 12px -3px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 8px 32px -8px rgba(0, 0, 0, 0.6);
-    --shadow-glow: 0 0 32px -4px rgba(109, 154, 72, 0.08);
-    --dapple: rgba(109, 154, 72, 0.03);
-  }
+:root[data-theme="dark"] {
+  --bg: #0c150f;
+  --bg-elev: #13201a;
+  --bg-elev2: #192b21;
+  --border: rgba(168, 204, 133, 0.07);
+  --border-leaf: rgba(141, 184, 96, 0.15);
+  --fg: #ddd9ca;
+  --fg-soft: #a0a090;
+  --fg-muted: #908f85;
+  --accent: var(--leaf-bright);
+  --accent-bright: var(--leaf-pale);
+  --accent-glow: rgba(109, 154, 72, 0.08);
+  --shadow: 0 2px 12px -3px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px -8px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 32px -4px rgba(109, 154, 72, 0.08);
+  --dapple: rgba(109, 154, 72, 0.03);
 }
 
 /* --- reset & base --- */
@@ -312,6 +310,7 @@ nav.site-nav .brand:hover {
 
 nav.site-nav .links {
   display: flex;
+  align-items: center;
   gap: 1.5rem;
   font-size: 0.9rem;
 }
@@ -359,28 +358,19 @@ footer.site-foot {
   background-size: max(100%, 150vh) auto;
   background-position: center var(--foliage-pos, 0%);
   background-repeat: no-repeat;
-  will-change: background-position, filter, opacity;
-  /* subtle ambient dim so the foliage reads darker at night even before the
-     color-tint pseudo lands. Most of the lighting comes from ::before below. */
-  filter:
-    brightness(calc(1 - 0.22 * var(--night-factor, 0)))
-    saturate(calc(1 - 0.2 * var(--night-factor, 0)));
-  /* hidden until the sky script has applied its first lighting pass, to avoid
-     a "full-brightness flash" at load before the tint/dim kick in */
-  opacity: 0;
-  transition: filter 0.6s ease, opacity 0.8s ease-in;
+  will-change: background-position;
+  /* explicit filter identity so dark-mode tint can transition smoothly */
+  filter: brightness(1) saturate(1);
 }
-html.sky-ready .site-foot-foliage { opacity: 1; }
-/* realistic lighting: multiply the foliage with the current sky-horizon color
-   so amber golden-hour light, violet dusk, and cold moonlight actually wash
-   the leaves. Masked to the foliage shape so gaps aren't tinted. */
+/* nighttime foliage — cool moonlit blue multiply always present; opacity
+   scales up in dark mode so the ::before can crossfade between themes. */
 .site-foot-foliage::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--sky-horizon, transparent);
+  background: rgb(30, 42, 70);
   mix-blend-mode: multiply;
-  opacity: 0.6;
+  opacity: 0;
   pointer-events: none;
   mask-image: url(/footer-foliage.webp);
   -webkit-mask-image: url(/footer-foliage.webp);
@@ -390,7 +380,12 @@ html.sky-ready .site-foot-foliage { opacity: 1; }
   -webkit-mask-position: center var(--foliage-pos, 0%);
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
-  transition: background 6s ease;
+}
+:root[data-theme="dark"] .site-foot-foliage {
+  filter: brightness(0.55) saturate(0.85);
+}
+:root[data-theme="dark"] .site-foot-foliage::before {
+  opacity: 0.55;
 }
 /* "deeper into the jungle" — top-dark → transparent gradient painted ONLY over
    the foliage leaves (masked by the same image) so the transparent gaps between
@@ -425,10 +420,17 @@ html.sky-ready .site-foot-foliage { opacity: 1; }
   width: 100%;
   max-width: 700px;
   padding: 0.75rem 1.25rem;
-  background: color-mix(in srgb, var(--bg) 60%, transparent);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  /* match the .card formula so the footer sits in the same visual family */
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--bg-elev) 35%, transparent) 0%,
+      color-mix(in srgb, var(--bg-elev2) 35%, transparent) 100%
+    );
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-leaf);
   border-radius: var(--radius);
   display: flex;
   justify-content: space-between;
@@ -523,9 +525,7 @@ footer.site-foot a:hover {
 .card:hover::before {
   left: 120%;
 }
-@media (prefers-color-scheme: dark) {
-  .card::before { display: none; }
-}
+:root[data-theme="dark"] .card::before { display: none; }
 .card:hover {
   border-left-color: var(--leaf);
   box-shadow: var(--shadow), var(--shadow-glow);
@@ -553,13 +553,11 @@ footer.site-foot a:hover {
   --status-shipped: var(--moss);
   --status-archived: var(--fg-muted);
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --status-idea: var(--leaf-pale);
-    --status-wip: var(--leaf-bright);
-    --status-shipped: var(--leaf);
-    --status-archived: var(--fg-muted);
-  }
+:root[data-theme="dark"] {
+  --status-idea: var(--leaf-pale);
+  --status-wip: var(--leaf-bright);
+  --status-shipped: var(--leaf);
+  --status-archived: var(--fg-muted);
 }
 
 .status {
@@ -753,6 +751,11 @@ footer.site-foot a:hover {
   padding: 0.2em 0.7em;
   border-radius: 999px;
   font-family: var(--font-mono);
+  /* Frosted glass to match the cards — translucent wash + backdrop blur
+     so foliage and fireflies behind get diffused through the pill. */
+  background: color-mix(in srgb, var(--bg-elev) 35%, transparent);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 .section-header a::after {
@@ -798,17 +801,33 @@ nav.site-nav .links a[aria-current="page"]::after {
   background: var(--leaf);
 }
 
-/* --- text legibility frost: applied to prose/hero so long-form text stays readable
+/* --- text legibility frost: applied to prose so long-form text stays readable
        over the fixed foliage. Cards/buttons already have their own frost. --- */
 
-.prose,
-.hero {
+.prose {
   background: color-mix(in srgb, var(--bg) 28%, transparent);
   backdrop-filter: blur(8px) saturate(115%);
   -webkit-backdrop-filter: blur(8px) saturate(115%);
   border-radius: var(--radius);
   padding: 1rem 1.25rem;
   margin: 0 -0.5rem;
+}
+
+/* .hero takes the full card treatment — same frost formula as .card so the
+   intro block visually sits in the same family as the project/post cards. */
+.hero {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--bg-elev) 35%, transparent) 0%,
+      color-mix(in srgb, var(--bg-elev2) 35%, transparent) 100%
+    );
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-leaf);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.5rem 1.25rem;
 }
 
 /* --- content prose --- */
@@ -933,35 +952,110 @@ nav.site-nav .links a[aria-current="page"]::after {
   border: 0;
 }
 
+/* --- nav hamburger menu (nests theme toggle + ⌘K) --- */
+
+.nav-menu { position: relative; }
+
+.nav-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: color-mix(in srgb, var(--bg-elev2) 80%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.2s ease;
+}
+.nav-menu-btn:hover,
+.nav-menu-btn[aria-expanded="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.nav-menu-btn:active { transform: scale(0.94); }
+.nav-menu-btn svg { display: block; }
+
+.nav-menu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: color-mix(in srgb, var(--bg-elev) 92%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--border-leaf);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  animation: cmdk-pop 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.nav-menu-panel[hidden] { display: none; }
+
+.nav-menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+.nav-menu-item-label {
+  flex: 1;
+  text-align: left;
+}
+.nav-menu-item-hint {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+.nav-menu-item-hint kbd {
+  background: var(--bg-elev2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--fg-soft);
+  line-height: 1;
+}
+
 /* --- command palette (⌘K) --- */
 
 .cmdk-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  margin-left: 0.5rem;
-  padding: 2px 6px;
-  background: color-mix(in srgb, var(--bg-elev2) 80%, transparent);
-  border: 1px solid var(--border);
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  color: var(--fg-muted);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.2;
+  text-align: left;
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 .cmdk-trigger kbd {
-  font-family: inherit;
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-  font-size: inherit;
+  font-family: var(--font-mono);
 }
 .cmdk-trigger:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--accent-glow);
+  background: color-mix(in srgb, var(--leaf) 15%, transparent);
+  color: var(--fg);
 }
 
 .cmdk {
@@ -1087,65 +1181,40 @@ nav.site-nav .links a[aria-current="page"]::after {
 }
 @media (max-width: 600px) {
   .cmdk { padding-top: 4vh; }
-  .cmdk-trigger { display: none; }
   .cmdk-hint { display: none; }
   .cmdk-result-hint { display: none; }
 }
 
-/* --- theme toggle (nav button with sun/moon icons) --- */
+/* --- theme toggle (menu item with sun/moon icons) --- */
 
 .theme-toggle {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  margin-left: 0.5rem;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  background: color-mix(in srgb, var(--bg-elev2) 80%, transparent);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  color: var(--fg-muted);
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.2;
+  text-align: left;
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.2s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 .theme-toggle:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--accent-glow);
+  background: color-mix(in srgb, var(--leaf) 15%, transparent);
+  color: var(--fg);
 }
-.theme-toggle:active { transform: scale(0.92); }
 .theme-toggle svg { display: block; }
-/* show sun during day, moon at night — .is-night is toggled by the sky script */
+/* show sun on dark, moon on light — .is-night reflects current theme */
 .theme-toggle .icon-moon { display: none; }
 .theme-toggle.is-night .icon-sun  { display: none; }
 .theme-toggle.is-night .icon-moon { display: block; }
 
-/* --- sky (time-of-day gradient, always on) --- */
-
-.sky {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 65vh;
-  pointer-events: none;
-  /* same z-index as foliage/stars/fireflies; earliest in DOM so it paints behind */
-  z-index: 0;
-  background: linear-gradient(
-    to bottom,
-    var(--sky-top, transparent) 0%,
-    var(--sky-horizon, transparent) 55%,
-    transparent 100%
-  );
-  /* feather the bottom so the wash dissolves into the page/foliage */
-  mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
-  opacity: 0;
-  transition: opacity 1.8s ease-in, background 8s ease;
-}
-
-/* --- starfield (nighttime, dark mode only) --- */
+/* --- starfield (dark mode only; opacity set per-frame by script) --- */
 
 .starfield {
   position: fixed;
@@ -1159,9 +1228,30 @@ nav.site-nav .links a[aria-current="page"]::after {
   z-index: 0;
   opacity: 0;
   transition: opacity 1.8s ease-in;
-  /* fade the bottom of the sky into the foliage/horizon */
+  /* fade the bottom of the star region into the foliage/horizon */
   mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+}
+/* stars/fireflies fade smoothly via window.__themeMix, so no display:none
+   rule — it would snap them off and break the crossfade. */
+
+/* while the theme toggle is mid-transition, animate palette-bound props so
+   bg, text, borders, and the foliage filter crossfade instead of snapping.
+   Only active for ~700ms around the click to avoid globally slowing hover. */
+html.theme-animating,
+html.theme-animating *,
+html.theme-animating *::before,
+html.theme-animating *::after {
+  transition:
+    background-color 600ms ease,
+    background 600ms ease,
+    color 600ms ease,
+    border-color 600ms ease,
+    border-left-color 600ms ease,
+    fill 600ms ease,
+    stroke 600ms ease,
+    filter 600ms ease,
+    box-shadow 600ms ease !important;
 }
 
 /* --- fireflies --- */
@@ -1171,10 +1261,16 @@ nav.site-nav .links a[aria-current="page"]::after {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--leaf-bright);
+  /* All fireflies sit on the starfield's layer (z-index: 0) — .layout is at
+     z-index: 1 and contains the cards, so every fly renders *below* the
+     cards and the card's backdrop-filter blurs them through the glass.
+     Sprite is punched bright enough to survive the 35% wash + 14px blur. */
+  background: rgba(255, 255, 220, 0.95);
   box-shadow:
-    0 0 6px 2px rgba(141, 184, 96, 0.4),
-    0 0 16px 4px rgba(141, 184, 96, 0.15);
+    0 0 10px 3px rgba(230, 255, 180, 0.95),
+    0 0 40px 12px rgba(200, 240, 140, 0.7),
+    0 0 110px 32px rgba(170, 225, 115, 0.4),
+    0 0 230px 70px rgba(145, 210, 100, 0.22);
   pointer-events: none;
   z-index: 0;
   opacity: 0;
