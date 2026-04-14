@@ -299,14 +299,19 @@ const paletteItems = [
         const STAR_COUNT = 90;
         const shooters = [];
         let shooterTimer = 0;
+        // Safari crashes when canvas pixel count exceeds ~16M px
+        const MAX_CANVAS_DIM = 4096;
 
+        let resizeTimer = 0;
         function resize() {
           DPR = Math.min(window.devicePixelRatio || 1, 2);
           W = canvas.clientWidth;
           H = canvas.clientHeight;
-          canvas.width = W * DPR;
-          canvas.height = H * DPR;
-          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          const pw = Math.min(W * DPR, MAX_CANVAS_DIM);
+          const ph = Math.min(H * DPR, MAX_CANVAS_DIM);
+          canvas.width = pw;
+          canvas.height = ph;
+          ctx.setTransform(pw / W, 0, 0, ph / H, 0, 0);
           stars.length = 0;
           for (let i = 0; i < STAR_COUNT; i++) {
             // y^0.6 weights density toward the top of the sky
@@ -425,7 +430,10 @@ const paletteItems = [
           requestAnimationFrame(frame);
         }
 
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(resize, 150);
+        });
         resize();
         scheduleShooter();
         requestAnimationFrame(frame);
