@@ -50,8 +50,11 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
       <main id="main" tabindex="-1">
         <slot />
       </main>
+    </div>
 
-      <footer class="site-foot">
+    <footer class="site-foot">
+      <img class="site-foot-foliage" src="/footer-foliage.webp" alt="" aria-hidden="true" />
+      <div class="site-foot-inner">
         <span>© Jason Marsh</span>
         <div class="foot-links">
           <a href="mailto:regularlyjason@icloud.com">email</a>
@@ -59,8 +62,8 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
           <a href="https://www.linkedin.com/in/jason-marsh">linkedin</a>
           <a href="https://github.com/Minimalistic/marsh.city">source</a>
         </div>
-      </footer>
-    </div>
+      </div>
+    </footer>
 
     <script is:inline>
       // staggered scroll fade-in for cards, sections, hero
@@ -97,16 +100,32 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
         if (hour >= 6 && hour < 20) return;
 
         const COUNT = 12;
+        const FLEE_RADIUS = 80;       // how close cursor must be to agitate
+        const FLEE_FORCE = 3.6;       // continuous repulsion strength
+        const JITTER = 1.4;            // per-frame random nudge while agitated
+        const WANDER_JITTER = 0.35;    // brownian drift while wandering away from home
+        const DAMPING = 0.93;          // velocity friction per frame
+        const RETURN_SPRING = 0.003;   // gentle pull toward home during return phase
+        const WANDER_MIN_MS = 3000;
+        const WANDER_MAX_MS = 8000;
+        const IDLE = 0, FLEEING = 1, WANDERING = 2, RETURNING = 3;
         const container = document.body;
         const flies = [];
 
-        // parallax state — smooth mouse tracking
-        let mouseX = 0.5, mouseY = 0.5;
-        let smoothX = 0.5, smoothY = 0.5;
+        let scrollY = window.scrollY;
+        let mx = -9999, my = -9999;    // cursor position; off-screen until first move
+
+        document.addEventListener('scroll', () => {
+          scrollY = window.scrollY;
+        }, { passive: true });
 
         document.addEventListener('mousemove', e => {
-          mouseX = e.clientX / window.innerWidth;
-          mouseY = e.clientY / window.innerHeight;
+          mx = e.clientX;
+          my = e.clientY;
+        });
+        document.addEventListener('mouseleave', () => {
+          mx = -9999;
+          my = -9999;
         });
 
         for (let i = 0; i < COUNT; i++) {
@@ -114,33 +133,88 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
           el.className = 'firefly';
           container.appendChild(el);
           const depth = 0.3 + Math.random() * 0.7; // parallax depth layer
-          flies.push({ el, depth, dx: 0, dy: 0, driftX: 0, driftY: 0 });
+          flies.push({
+            el, depth,
+            baseX: 0, baseY: 0,
+            spawnScrollY: scrollY,
+            driftX: 0, driftY: 0,
+            fleeX: 0, fleeY: 0,
+            fleeVX: 0, fleeVY: 0,
+            mode: IDLE,
+            returnAt: 0,
+          });
           animateFirefly(flies[i], true);
         }
 
-        // parallax loop — applies a gentle offset based on mouse + depth
-        function parallaxLoop() {
-          smoothX += (mouseX - smoothX) * 0.04;
-          smoothY += (mouseY - smoothY) * 0.04;
-          const offsetBaseX = (smoothX - 0.5) * 60;
-          const offsetBaseY = (smoothY - 0.5) * 40;
-
+        // render loop — state machine: idle → fleeing → wandering → returning → idle
+        function renderLoop() {
+          const now = performance.now();
           for (const fly of flies) {
-            const px = offsetBaseX * fly.depth;
-            const py = offsetBaseY * fly.depth;
+            const parallaxFactor = 0.15 + fly.depth * 0.35;
+            const scrollDelta = scrollY - fly.spawnScrollY;
+            const flyX = fly.baseX + fly.driftX + fly.fleeX;
+            const flyY = fly.baseY + fly.driftY + fly.fleeY - scrollDelta * parallaxFactor;
+
+            const dx = flyX - mx;
+            const dy = flyY - my;
+            const dist = Math.hypot(dx, dy);
+            const cursorNear = dist < FLEE_RADIUS && dist > 0.01;
+
+            if (cursorNear) {
+              // agitated — strong continuous repulsion + jitter, no matter prior state
+              const force = (1 - dist / FLEE_RADIUS) * FLEE_FORCE;
+              fly.fleeVX += (dx / dist) * force + (Math.random() - 0.5) * JITTER;
+              fly.fleeVY += (dy / dist) * force + (Math.random() - 0.5) * JITTER;
+              fly.mode = FLEEING;
+            } else if (fly.mode === FLEEING) {
+              // cursor gone — start wandering in the new area for a random 3-8s
+              fly.mode = WANDERING;
+              fly.returnAt = now + WANDER_MIN_MS + Math.random() * (WANDER_MAX_MS - WANDER_MIN_MS);
+            } else if (fly.mode === WANDERING) {
+              // brownian drift, no pull home yet
+              fly.fleeVX += (Math.random() - 0.5) * WANDER_JITTER;
+              fly.fleeVY += (Math.random() - 0.5) * WANDER_JITTER;
+              if (now >= fly.returnAt) fly.mode = RETURNING;
+            } else if (fly.mode === RETURNING) {
+              // gentle spring pull back to home path
+              fly.fleeVX -= fly.fleeX * RETURN_SPRING;
+              fly.fleeVY -= fly.fleeY * RETURN_SPRING;
+              const offset = Math.hypot(fly.fleeX, fly.fleeY);
+              const speed = Math.hypot(fly.fleeVX, fly.fleeVY);
+              if (offset < 2 && speed < 0.2) {
+                fly.mode = IDLE;
+                fly.fleeX = 0; fly.fleeY = 0;
+                fly.fleeVX = 0; fly.fleeVY = 0;
+              }
+            }
+
+            // always apply damping + integrate
+            fly.fleeVX *= DAMPING;
+            fly.fleeVY *= DAMPING;
+            fly.fleeX += fly.fleeVX;
+            fly.fleeY += fly.fleeVY;
+
+            const scrollOffset = -scrollY * parallaxFactor;
             fly.el.style.transform =
-              `translate(${fly.driftX + px}px, ${fly.driftY + py}px)`;
+              `translate(${fly.driftX + fly.fleeX}px, ${fly.driftY + fly.fleeY + scrollOffset}px)`;
           }
-          requestAnimationFrame(parallaxLoop);
+          requestAnimationFrame(renderLoop);
         }
-        requestAnimationFrame(parallaxLoop);
+        requestAnimationFrame(renderLoop);
 
         function animateFirefly(fly, first) {
           const { el } = fly;
           const x = Math.random() * window.innerWidth;
-          const y = Math.random() * window.innerHeight;
+          // compensate for scroll parallax so respawned flies land in the visible viewport
+          const parallaxFactor = 0.15 + fly.depth * 0.35;
+          const viewportY = Math.random() * window.innerHeight;
+          const y = viewportY + scrollY * parallaxFactor;
           el.style.left = x + 'px';
           el.style.top = y + 'px';
+          // baseX/Y = viewport coordinates (matches mouse clientX/Y for flee detection)
+          fly.baseX = x;
+          fly.baseY = viewportY;
+          fly.spawnScrollY = scrollY;
 
           const dx = (Math.random() - 0.5) * 200;
           const dy = (Math.random() - 0.5) * 160;
@@ -157,6 +231,12 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
 
           fly.driftX = 0;
           fly.driftY = 0;
+          fly.fleeX = 0;
+          fly.fleeY = 0;
+          fly.fleeVX = 0;
+          fly.fleeVY = 0;
+          fly.mode = IDLE;
+          fly.returnAt = 0;
 
           setTimeout(() => {
             const start = performance.now();
@@ -189,6 +269,33 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
             requestAnimationFrame(tick);
           }, delay);
         }
+      })();
+    </script>
+
+    <script is:inline>
+      // footer foliage "elevator descending" — pan image top→bottom as footer scrolls through viewport
+      (() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const footer = document.querySelector('footer.site-foot');
+        const img = document.querySelector('.site-foot-foliage');
+        if (!footer || !img) return;
+        let ticking = false;
+        function update() {
+          const rect = footer.getBoundingClientRect();
+          const vh = window.innerHeight;
+          // progress: 0 when footer top hits viewport bottom (just peeking in),
+          //           1 when footer bottom leaves viewport top (scrolled past)
+          const progress = Math.max(0, Math.min(1, (vh - rect.top) / (vh + rect.height)));
+          // pan object-position from top (dark sky) to bottom (foliage floor)
+          img.style.objectPosition = `center ${progress * 100}%`;
+          ticking = false;
+        }
+        function onScroll() {
+          if (!ticking) { requestAnimationFrame(update); ticking = true; }
+        }
+        document.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        update();
       })();
     </script>
 
