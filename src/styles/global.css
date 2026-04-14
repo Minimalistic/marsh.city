@@ -1197,11 +1197,14 @@ nav.site-nav .links a[aria-current="page"]::after {
     top: 0.5rem;
     width: calc(100% - 1rem);
     padding: 0.25rem 0.9rem;
+    flex-direction: column;
+    gap: 0.2rem;
   }
   nav.site-nav .links {
     gap: 0.25rem 0.9rem;
     font-size: 0.85rem;
     flex-wrap: wrap;
+    justify-content: center;
   }
   main, h1, h2, h3, h4, [id] {
     scroll-margin-top: 4rem;
