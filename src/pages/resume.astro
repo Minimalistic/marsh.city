@@ -3,7 +3,10 @@ import Base from '../layouts/Base.astro';
 ---
 <Base title="Resume" description="Jason Marsh — Director of Technology, 13+ years IT, assistive technology, infrastructure, and solo development.">
   <div class="resume-top">
-    <h1>Resume</h1>
+    <div class="resume-title">
+      <span class="resume-kicker">Resume</span>
+      <h1>Jason Marsh</h1>
+    </div>
     <button class="resume-download" onclick="window.print()" aria-label="Print resume or save as PDF">Save as PDF</button>
   </div>
 
@@ -197,8 +200,22 @@ import Base from '../layouts/Base.astro';
     flex-wrap: wrap;
     gap: 1rem;
   }
+  .resume-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .resume-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--leaf);
+  }
   .resume-top h1 {
-    margin-bottom: 0;
+    margin: 0;
+    line-height: 1.1;
   }
   .resume-download {
     font-family: var(--font-mono);
@@ -209,12 +226,28 @@ import Base from '../layouts/Base.astro';
     color: var(--fg-soft);
     border: 1px solid var(--border);
     cursor: pointer;
-    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease,
+      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
   }
   .resume-download:hover {
     color: var(--leaf);
     border-color: var(--leaf);
     background: color-mix(in srgb, var(--leaf) 8%, var(--bg-elev2));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--leaf) 25%, transparent);
+  }
+  .resume-download:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px -1px color-mix(in srgb, var(--leaf) 20%, transparent);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .resume-download,
+    .resume-download:hover,
+    .resume-download:active {
+      transform: none;
+      transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
   }
 
   .resume-contact {
@@ -262,6 +295,11 @@ import Base from '../layouts/Base.astro';
 </style>
 
 <style is:global>
+  @page {
+    size: letter;
+    margin: 0.55in 0.6in;
+  }
+
   @media print {
     nav.site-nav,
     footer.site-foot,
@@ -281,23 +319,35 @@ import Base from '../layouts/Base.astro';
       line-height: 1.45 !important;
     }
 
-    .resume-top { display: block; }
-    .resume-download { display: none; }
+    .resume-top {
+      display: grid !important;
+      grid-template-columns: 1fr auto;
+      gap: 1.2rem;
+      align-items: end;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .resume-title { display: none !important; }
+    .resume-download { display: none !important; }
 
     .resume-top::before {
       content: 'Jason Marsh';
       display: block;
       font-family: var(--font-serif);
-      font-size: 20pt;
+      font-size: 22pt;
       font-weight: 600;
-      margin-bottom: 0.1em;
+      line-height: 1;
+      align-self: end;
     }
     .resume-top::after {
-      content: 'Duluth, MN \2022  regularlyjason@icloud.com \2022  linkedin.com/in/jason-marsh \2022  github.com/Minimalistic';
+      content: 'Duluth, MN\A regularlyjason@icloud.com\A marsh.city\A linkedin.com/in/jason-marsh\A github.com/Minimalistic';
       display: block;
-      font-size: 8.5pt;
+      white-space: pre;
+      font-size: 8pt;
+      line-height: 1.5;
       color: #555;
-      margin-bottom: 0.75em;
+      text-align: right;
     }
     h1 { display: none; }
 
