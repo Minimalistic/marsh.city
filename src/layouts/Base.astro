@@ -74,10 +74,25 @@ const paletteItems = [
       })();
     </script>
     <script is:inline>
-      // block pinch-to-zoom on iOS Safari (ignores viewport meta tag)
+      // block pinch-to-zoom on iOS Safari (ignores viewport meta tag).
+      // gesture events cover Safari; touchmove with 2+ fingers covers
+      // edge cases where gesture events slip through.
       document.addEventListener('gesturestart', e => e.preventDefault());
       document.addEventListener('gesturechange', e => e.preventDefault());
       document.addEventListener('gestureend', e => e.preventDefault());
+      document.addEventListener('touchmove', e => {
+        if (e.touches.length > 1) e.preventDefault();
+      }, { passive: false });
+      // if zoom somehow sneaks through, snap back to 1x
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          if (Math.abs(window.visualViewport.scale - 1) > 0.05) {
+            document.body.style.transform = 'scale(1)';
+            document.body.style.transformOrigin = '0 0';
+            window.scrollTo(0, window.scrollY);
+          }
+        });
+      }
     </script>
   </head>
   <body>
