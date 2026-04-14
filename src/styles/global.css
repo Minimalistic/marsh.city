@@ -348,6 +348,30 @@ footer.site-foot a:hover {
   color: var(--fg);
   overflow: hidden;
   transition: border-left-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  animation: card-enter 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.card:nth-of-type(1) { animation-delay: 40ms; }
+.card:nth-of-type(2) { animation-delay: 110ms; }
+.card:nth-of-type(3) { animation-delay: 180ms; }
+.card:nth-of-type(4) { animation-delay: 250ms; }
+.card:nth-of-type(5) { animation-delay: 320ms; }
+.card:nth-of-type(6) { animation-delay: 390ms; }
+.card:nth-of-type(n+7) { animation-delay: 450ms; }
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
 }
 .card::after { display: none; }
 .card::before {
@@ -484,6 +508,7 @@ footer.site-foot a:hover {
   color: var(--bg);
   text-decoration: none;
   font-weight: 500;
+  position: relative;
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
   margin-bottom: 1.25rem;
 }
@@ -496,6 +521,15 @@ footer.site-foot a:hover {
 
 .live-demo-btn::after {
   display: none;
+}
+
+/* hit-area extension so a pointer on the bottom edge doesn't lose hover
+   when the button lifts */
+.live-demo-btn::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
 }
 
 /* --- hero / intro --- */

@@ -67,7 +67,7 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const targets = document.querySelectorAll(
-          '.card, .section-header, .hero, .article-header, .prose > h2, .prose > blockquote'
+          '.section-header, .article-header, .prose > h2, .prose > blockquote'
         );
         targets.forEach(el => el.classList.add('fade-in'));
 
