@@ -39,7 +39,7 @@ const paletteItems = [
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content={description} />
     <title>{fullTitle}</title>
     <link rel="canonical" href={canonicalUrl} />
@@ -288,11 +288,6 @@ const paletteItems = [
       (() => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // check zoom every frame — event-based detection fires too late
-        // and Safari can crash before JS reacts during compositing.
-        const vv = window.visualViewport;
-        window.__isZoomed = () => vv ? Math.abs(vv.scale - 1) > 0.05 : false;
-
         const canvas = document.createElement('canvas');
         canvas.className = 'starfield';
         canvas.setAttribute('aria-hidden', 'true');
@@ -361,11 +356,6 @@ const paletteItems = [
         function frame(now) {
           const dt = now - lastTs;
           lastTs = now;
-
-          // hide canvas from compositor during zoom to prevent Safari crash
-          const zoomed = window.__isZoomed();
-          canvas.style.visibility = zoomed ? 'hidden' : '';
-          if (zoomed) { requestAnimationFrame(frame); return; }
 
           // crossfade with theme (0 in light, 1 in dark, tweens in between)
           const mix = window.__themeMix ?? 0;
@@ -512,7 +502,6 @@ const paletteItems = [
 
         // render loop — state machine: idle → fleeing → wandering → returning → idle
         function renderLoop() {
-          if (window.__isZoomed()) { requestAnimationFrame(renderLoop); return; }
           const now = performance.now();
           for (const fly of flies) {
             const parallaxFactor = 0.15 + fly.depth * 0.35;
@@ -621,7 +610,6 @@ const paletteItems = [
           setTimeout(() => {
             const start = performance.now();
             function tick(now) {
-              if (window.__isZoomed()) { requestAnimationFrame(tick); return; }
               const elapsed = now - start;
               const progress = Math.min(elapsed / totalDrift, 1);
 
