@@ -288,14 +288,10 @@ const paletteItems = [
       (() => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // track pinch-to-zoom so we can pause heavy canvas work and avoid
-        // crashing Safari's WebKit process during zoom compositing.
-        window.__isZoomed = false;
-        if (window.visualViewport) {
-          window.visualViewport.addEventListener('resize', () => {
-            window.__isZoomed = Math.abs(window.visualViewport.scale - 1) > 0.05;
-          });
-        }
+        // check zoom every frame — event-based detection fires too late
+        // and Safari can crash before JS reacts during compositing.
+        const vv = window.visualViewport;
+        window.__isZoomed = () => vv ? Math.abs(vv.scale - 1) > 0.05 : false;
 
         const canvas = document.createElement('canvas');
         canvas.className = 'starfield';
@@ -314,13 +310,11 @@ const paletteItems = [
         let resizeTimer = 0;
         function resize() {
           DPR = Math.min(window.devicePixelRatio || 1, 2);
-          W = canvas.clientWidth;
-          H = canvas.clientHeight;
-          const pw = Math.min(W * DPR, MAX_CANVAS_DIM);
-          const ph = Math.min(H * DPR, MAX_CANVAS_DIM);
-          canvas.width = pw;
-          canvas.height = ph;
-          ctx.setTransform(pw / W, 0, 0, ph / H, 0, 0);
+          W = canvas.clientWidth || 1;
+          H = canvas.clientHeight || 1;
+          canvas.width = Math.min(W * DPR, MAX_CANVAS_DIM);
+          canvas.height = Math.min(H * DPR, MAX_CANVAS_DIM);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
           stars.length = 0;
           for (let i = 0; i < STAR_COUNT; i++) {
             // y^0.6 weights density toward the top of the sky
@@ -368,8 +362,10 @@ const paletteItems = [
           const dt = now - lastTs;
           lastTs = now;
 
-          // pause during pinch-to-zoom to avoid overwhelming Safari
-          if (window.__isZoomed) { requestAnimationFrame(frame); return; }
+          // hide canvas from compositor during zoom to prevent Safari crash
+          const zoomed = window.__isZoomed();
+          canvas.style.visibility = zoomed ? 'hidden' : '';
+          if (zoomed) { requestAnimationFrame(frame); return; }
 
           // crossfade with theme (0 in light, 1 in dark, tweens in between)
           const mix = window.__themeMix ?? 0;
@@ -516,7 +512,7 @@ const paletteItems = [
 
         // render loop — state machine: idle → fleeing → wandering → returning → idle
         function renderLoop() {
-          if (window.__isZoomed) { requestAnimationFrame(renderLoop); return; }
+          if (window.__isZoomed()) { requestAnimationFrame(renderLoop); return; }
           const now = performance.now();
           for (const fly of flies) {
             const parallaxFactor = 0.15 + fly.depth * 0.35;
@@ -625,6 +621,7 @@ const paletteItems = [
           setTimeout(() => {
             const start = performance.now();
             function tick(now) {
+              if (window.__isZoomed()) { requestAnimationFrame(tick); return; }
               const elapsed = now - start;
               const progress = Math.min(elapsed / totalDrift, 1);
 
