@@ -109,10 +109,10 @@ import Base from '../layouts/Base.astro';
         <li>LinkedIn: <a href="https://www.linkedin.com/in/jason-marsh">jason-marsh</a></li>
         <li>GitHub: <a href="https://github.com/Minimalistic">Minimalistic</a></li>
       </ul>
-      <div class="resume-qr">
+      <a href="/resume/" class="resume-qr" aria-label="Link to this resume page at marsh.city/resume">
         <img src="/qr.svg" alt="QR code linking to marsh.city" width="72" height="72" />
         <span>marsh.city</span>
-      </div>
+      </a>
     </div>
   </div>
 </Base>
@@ -265,6 +265,16 @@ import Base from '../layouts/Base.astro';
     align-items: center;
     gap: 0.25rem;
     flex-shrink: 0;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.18s ease;
+  }
+  .resume-qr::after { display: none; }
+  .resume-qr:hover {
+    transform: translateY(-1px);
+  }
+  .resume-qr:hover span {
+    color: var(--leaf);
   }
   .resume-qr img {
     border-radius: var(--radius-sm);
@@ -273,6 +283,7 @@ import Base from '../layouts/Base.astro';
     font-family: var(--font-mono);
     font-size: 0.7rem;
     color: var(--fg-muted);
+    transition: color 0.2s ease;
   }
   @media (prefers-color-scheme: dark) {
     .resume-qr img {
@@ -376,6 +387,17 @@ import Base from '../layouts/Base.astro';
 
     a { color: #1a1a1a !important; text-decoration: none !important; }
     a::after { display: none !important; }
+
+    /* give clickable project/contact links a pill button affordance in print */
+    .projects-compact a,
+    .resume-contact a {
+      display: inline-block;
+      border: 0.5pt solid #888 !important;
+      border-radius: 3pt;
+      padding: 0 0.4em;
+      font-weight: 500;
+      line-height: 1.35;
+    }
 
     .prose ul, .prose ol { padding-left: 1rem !important; }
   }
