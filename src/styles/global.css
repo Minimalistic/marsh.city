@@ -281,7 +281,7 @@ nav.site-nav {
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 2rem);
-  max-width: 660px;
+  max-width: calc(700px - 3rem);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -290,7 +290,7 @@ nav.site-nav {
   backdrop-filter: saturate(1.6) blur(18px);
   -webkit-backdrop-filter: saturate(1.6) blur(18px);
   border: 1px solid var(--border-leaf);
-  border-radius: 999px;
+  border-radius: 20px;
   box-shadow: var(--shadow);
   z-index: 100;
 }
@@ -1079,6 +1079,35 @@ nav.site-nav .links a[aria-current="page"]::after {
 
 .nav-menu { position: relative; }
 
+/* desktop-only search icon sitting in the navbar — mirrors the hamburger
+   button styling so the two pill buttons read as a set. Hidden on mobile,
+   where ⌘K search is already accessible via the hamburger panel. */
+.nav-search {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: color-mix(in srgb, var(--bg-elev2) 80%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.2s ease;
+}
+.nav-search:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.nav-search:active { transform: scale(0.94); }
+.nav-search svg { display: block; }
+.nav-search::after { display: none; }
+/* Breakpoint logic for the search entry lives with the nav-stack media
+   query (≤720px → stack, hide nav-search; ≥721px → hide hamburger search). */
+
 .nav-menu-btn {
   display: inline-flex;
   align-items: center;
@@ -1406,33 +1435,49 @@ html.theme-animating *::after {
 
 /* --- responsive --- */
 
-@media (max-width: 600px) {
-  .layout {
-    padding: 5.5rem 1rem 4rem;
-  }
-  .layout::before { display: none; }
-
+/* Nav stacks into rows earlier than the rest of the layout — at ≤720px
+   there isn't horizontal room for brand + 4 links + search + hamburger
+   in one row, so the brand goes on top and the rest wrap underneath. */
+@media (max-width: 720px) {
   nav.site-nav {
     top: 0.5rem;
     width: calc(100% - 1rem);
-    padding: 0.25rem 0.9rem;
+    padding: 0.15rem 0.9rem;
     flex-direction: column;
     gap: 0;
   }
   nav.site-nav .brand {
-    padding-bottom: 0.15rem;
+    padding-bottom: 0;
     border-bottom: 1px solid var(--border-leaf);
-    margin-bottom: 0.15rem;
+    margin-bottom: 0;
+    line-height: 1.15;
   }
+  /* mobile keeps the 44px link tap target from the base rule */
   nav.site-nav .links {
     gap: 0.25rem 0.9rem;
     font-size: 0.85rem;
     flex-wrap: wrap;
     justify-content: center;
   }
+  .nav-search { display: none; }
   main, h1, h2, h3, h4, [id] {
     scroll-margin-top: 5.5rem;
   }
+}
+/* On narrow desktop (601–720px, stacked nav but mouse-driven) shrink the
+   link tap target so the stacked row is less tall, giving content below
+   more breathing room. Mobile keeps the 44px minimum for touch. */
+@media (min-width: 601px) and (max-width: 720px) {
+  nav.site-nav .links a { min-height: 34px; }
+}
+@media (min-width: 721px) {
+  .nav-menu-panel .cmdk-trigger { display: none; }
+}
+@media (max-width: 600px) {
+  .layout {
+    padding: 5.5rem 1rem 4rem;
+  }
+  .layout::before { display: none; }
   .section-header {
     flex-direction: column;
     gap: 0.25rem;

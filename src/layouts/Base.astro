@@ -106,6 +106,12 @@ const paletteItems = [
           <a href="/posts/" aria-current={isActive('/posts/')}>posts</a>
           <a href="/resume/" aria-current={isActive('/resume/')}>resume</a>
           <a href="/about/" aria-current={isActive('/about/')}>about</a>
+          <button type="button" class="cmdk-trigger nav-search" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K" title="Search (⌘K)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="20" y1="20" x2="16.5" y2="16.5"/>
+            </svg>
+          </button>
           <div class="nav-menu">
             <button type="button" class="nav-menu-btn" aria-label="Open menu" aria-expanded="false" aria-haspopup="true" aria-controls="nav-menu-panel">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -772,7 +778,7 @@ const paletteItems = [
         const root = document.getElementById('cmdk');
         const input = document.getElementById('cmdk-input');
         const list = document.getElementById('cmdk-results');
-        const trigger = document.querySelector('.cmdk-trigger');
+        const triggers = document.querySelectorAll('.cmdk-trigger');
         if (!root || !input || !list) return;
 
         let filtered = ITEMS.slice(0, 30);
@@ -876,7 +882,7 @@ const paletteItems = [
         });
 
         root.querySelector('[data-cmdk-close]').addEventListener('click', close);
-        if (trigger) trigger.addEventListener('click', open);
+        triggers.forEach(t => t.addEventListener('click', open));
 
         document.addEventListener('keydown', (e) => {
           const mod = e.metaKey || e.ctrlKey;
