@@ -324,7 +324,8 @@ const paletteItems = [
 
         let W = 0, H = 0, DPR = 1;
         const stars = [];
-        const STAR_COUNT = 90;
+        const isMobile = window.innerWidth <= 820;
+        const STAR_COUNT = isMobile ? 40 : 90;
         const shooters = [];
         let shooterTimer = 0;
         // Safari crashes when canvas pixel count exceeds ~16M px
@@ -392,10 +393,28 @@ const paletteItems = [
           });
         }
 
+        // pause canvas draws while scrolling on mobile — compositing the
+        // canvas behind backdrop-filter elements is the main source of jank
+        let _starScrolling = false;
+        let _starScrollTimer = 0;
+        if (isMobile) {
+          document.addEventListener('scroll', () => {
+            _starScrolling = true;
+            clearTimeout(_starScrollTimer);
+            _starScrollTimer = setTimeout(() => { _starScrolling = false; }, 150);
+          }, { passive: true });
+        }
+
         let lastTs = performance.now();
         function frame(now) {
           const dt = now - lastTs;
           lastTs = now;
+
+          // on mobile, skip redraws while actively scrolling
+          if (_starScrolling) {
+            requestAnimationFrame(frame);
+            return;
+          }
 
           // crossfade with theme (0 in light, 1 in dark, tweens in between)
           const mix = window.__themeMix ?? 0;
@@ -485,7 +504,8 @@ const paletteItems = [
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-        const COUNT = 14;
+        const _ffMobile = window.innerWidth <= 820;
+        const COUNT = _ffMobile ? 6 : 14;
         const FLEE_RADIUS = 80;       // how close cursor must be to agitate
         const FLEE_FORCE = 3.6;       // continuous repulsion strength
         const JITTER = 1.4;            // per-frame random nudge while agitated
@@ -540,8 +560,23 @@ const paletteItems = [
           animateFirefly(flies[i], true);
         }
 
+        // pause firefly physics while scrolling on mobile
+        let _ffScrolling = false;
+        let _ffScrollTimer = 0;
+        if (_ffMobile) {
+          document.addEventListener('scroll', () => {
+            _ffScrolling = true;
+            clearTimeout(_ffScrollTimer);
+            _ffScrollTimer = setTimeout(() => { _ffScrolling = false; }, 150);
+          }, { passive: true });
+        }
+
         // render loop — state machine: idle → fleeing → wandering → returning → idle
         function renderLoop() {
+          if (_ffScrolling) {
+            requestAnimationFrame(renderLoop);
+            return;
+          }
           const now = performance.now();
           // stage bounds — fireflies get clamped here so they can't drift
           // into the side frame on ultrawide viewports
