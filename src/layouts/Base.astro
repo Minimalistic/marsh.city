@@ -393,28 +393,10 @@ const paletteItems = [
           });
         }
 
-        // pause canvas draws while scrolling on mobile — compositing the
-        // canvas behind backdrop-filter elements is the main source of jank
-        let _starScrolling = false;
-        let _starScrollTimer = 0;
-        if (isMobile) {
-          document.addEventListener('scroll', () => {
-            _starScrolling = true;
-            clearTimeout(_starScrollTimer);
-            _starScrollTimer = setTimeout(() => { _starScrolling = false; }, 150);
-          }, { passive: true });
-        }
-
         let lastTs = performance.now();
         function frame(now) {
           const dt = now - lastTs;
           lastTs = now;
-
-          // on mobile, skip redraws while actively scrolling
-          if (_starScrolling) {
-            requestAnimationFrame(frame);
-            return;
-          }
 
           // crossfade with theme (0 in light, 1 in dark, tweens in between)
           const mix = window.__themeMix ?? 0;
@@ -560,23 +542,8 @@ const paletteItems = [
           animateFirefly(flies[i], true);
         }
 
-        // pause firefly physics while scrolling on mobile
-        let _ffScrolling = false;
-        let _ffScrollTimer = 0;
-        if (_ffMobile) {
-          document.addEventListener('scroll', () => {
-            _ffScrolling = true;
-            clearTimeout(_ffScrollTimer);
-            _ffScrollTimer = setTimeout(() => { _ffScrolling = false; }, 150);
-          }, { passive: true });
-        }
-
         // render loop — state machine: idle → fleeing → wandering → returning → idle
         function renderLoop() {
-          if (_ffScrolling) {
-            requestAnimationFrame(renderLoop);
-            return;
-          }
           const now = performance.now();
           // stage bounds — fireflies get clamped here so they can't drift
           // into the side frame on ultrawide viewports
@@ -760,15 +727,18 @@ const paletteItems = [
         //   0.6 = more pronounced, foliage floor reached 60% of the way down
         //   0.4 = very dramatic
         const PAN_SPAN = 0.9;
+        // on mobile the ::before/::after masks are hidden (see global.css)
+        // so skip the --foliage-dark update that only they consume
+        const _foliageMobile = window.innerWidth <= 820;
         let ticking = false;
         function update() {
           const max = document.documentElement.scrollHeight - window.innerHeight;
           const raw = max > 0 ? window.scrollY / max : 1;
           const progress = Math.max(0, Math.min(1, raw / PAN_SPAN));
-          // --foliage-pos drives both the background pan AND the mask-image pan,
-          // so the darkening overlay stays perfectly aligned with the leaves.
           document.documentElement.style.setProperty('--foliage-pos', `${(progress * 100).toFixed(2)}%`);
-          document.documentElement.style.setProperty('--foliage-dark', progress.toFixed(3));
+          if (!_foliageMobile) {
+            document.documentElement.style.setProperty('--foliage-dark', progress.toFixed(3));
+          }
           ticking = false;
         }
         function onScroll() {
