@@ -5,8 +5,10 @@ const projects = (await getCollection('projects'))
   .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf());
 ---
 <Base title="Projects">
-  <h1>Projects</h1>
-  <p class="tagline">Things I've built, am building, or am still daydreaming about.</p>
+  <div class="page-head">
+    <h1>Projects</h1>
+    <p class="tagline">Things I've built, am building, or am still daydreaming about.</p>
+  </div>
   {projects.map((p) => {
     const ago = p.data.updated ? (() => {
       const days = Math.floor((Date.now() - p.data.updated.valueOf()) / 86400000);

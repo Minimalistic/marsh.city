@@ -5,7 +5,9 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 <Base title="Posts">
-  <h1>Posts</h1>
+  <div class="page-head">
+    <h1>Posts</h1>
+  </div>
   {posts.map((p) => (
     <a class="card" href={`/posts/${p.id}/`}>
       <h3>{p.data.title}</h3>

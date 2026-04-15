@@ -1,15 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Resume" description="Jason Marsh — Director of Technology, 13+ years IT, assistive technology, infrastructure, and solo development.">
-  <div class="resume-top">
-    <div class="resume-title">
-      <span class="resume-kicker">Resume</span>
-      <h1>Jason Marsh</h1>
-    </div>
-    <button class="resume-download" onclick="window.print()" aria-label="Print resume or save as PDF">Save as PDF</button>
-  </div>
-
+<Base title="Resume" description="Jason Marsh - Director of Technology, 13+ years IT, assistive technology, infrastructure, and solo development.">
   <div class="resume-print-header" aria-hidden="true">
     <div class="resume-print-name">Jason Marsh</div>
     <p class="resume-print-contact">
@@ -26,6 +18,14 @@ import Base from '../layouts/Base.astro';
   </div>
 
   <div class="prose">
+    <div class="resume-top">
+      <div class="resume-title">
+        <span class="resume-kicker">Resume</span>
+        <h1>Jason Marsh</h1>
+      </div>
+      <button class="resume-download" onclick="window.print()" aria-label="Print resume or save as PDF">Save as PDF</button>
+    </div>
+
     <p class="resume-intro">
       Director of Technology with 13+ years of IT experience across infrastructure,
       assistive technology services, and team leadership. Promoted three times in
@@ -330,10 +330,8 @@ import Base from '../layouts/Base.astro';
     color: var(--fg-muted);
     transition: color 0.2s ease;
   }
-  @media (prefers-color-scheme: dark) {
-    .resume-qr img {
-      filter: invert(1);
-    }
+  :root[data-theme="dark"] .resume-qr img {
+    filter: invert(1);
   }
 
   @media (max-width: 600px) {

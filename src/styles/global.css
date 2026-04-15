@@ -44,9 +44,22 @@
   --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* stage — caps the fixed visual layer (foliage, stars, fireflies) at a
+     max width so ultrawide viewports don't balloon the foliage image. Beyond
+     the cap, the side margins become a deep-forest "frame" around the scene. */
+  --stage-max: 1200px;
+  --stage-width: min(100vw, var(--stage-max));
+  --stage-inset: max(0px, calc((100vw - var(--stage-max)) / 2));
+  --frame-bg: #243208;
+  --frame-rim: rgba(141, 184, 96, 0.9);
+  --frame-hatch: rgba(168, 204, 133, 0.05);
 }
 
 :root[data-theme="dark"] {
+  --frame-bg: #06090a;
+  --frame-rim: rgba(141, 184, 96, 0.3);
+  --frame-hatch: rgba(168, 204, 133, 0.05);
   --bg: #0c150f;
   --bg-elev: #13201a;
   --bg-elev2: #192b21;
@@ -339,16 +352,81 @@ footer.site-foot {
   font-size: 0.85rem;
   color: var(--fg);
 }
+/* --- stage frame: paints the side margins on ultrawide viewports so the
+   scene reads as a window/diorama cutout rather than a stretched image.
+   Zero-width on any viewport ≤ --stage-max, invisible. --- */
+.stage-frame {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.stage-frame::before,
+.stage-frame::after {
+  content: '';
+  position: absolute;
+  /* extend past viewport top/bottom so the cast box-shadow stays uniform
+     along the whole visible stage edge — corner rounding falls offscreen */
+  top: -200px;
+  bottom: -200px;
+  width: var(--stage-inset);
+  background-color: var(--frame-bg);
+  transition: background-color 600ms ease;
+}
+/* Layered frame treatment (back → front):
+   1. Diagonal hatch — subtle low-contrast texture so the bar reads as a
+      fabric/matte surface, not blank void.
+   2. Seam shadow — a 48px falloff at the stage-facing edge, selling depth.
+   3. 1px rim highlight — the "picture frame lip" catching light where the
+      wall meets the scene.  */
+/* Recessed-window treatment: the frame reads as the FRONT surface and the
+   stage as a cutout receding behind it. Two cues sell the depth:
+   1. A 3px bright rim exactly at the frame's inner edge (the cutout's front
+      lip catching light — you see the top of the frame wall, not its side).
+   2. A 60px soft shadow cast inward, darkening the stage edges so the scene
+      appears set back and enveloped by the frame. */
+.stage-frame::before {
+  left: 0;
+  background-image:
+    linear-gradient(
+      to right,
+      transparent 0,
+      transparent calc(100% - 3px),
+      var(--frame-rim) calc(100% - 3px),
+      var(--frame-rim) 100%
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 6px,
+      var(--frame-hatch) 6px 7px
+    );
+  box-shadow: 30px 0 60px -10px rgba(0, 0, 0, 0.55);
+}
+.stage-frame::after {
+  right: 0;
+  background-image:
+    linear-gradient(
+      to left,
+      transparent 0,
+      transparent calc(100% - 3px),
+      var(--frame-rim) calc(100% - 3px),
+      var(--frame-rim) 100%
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0 6px,
+      var(--frame-hatch) 6px 7px
+    );
+  box-shadow: -30px 0 60px -10px rgba(0, 0, 0, 0.55);
+}
 .site-foot-foliage {
   /* pinned to viewport bottom — never leaves the bottom of the screen.
-     background-size: max(100%, 150vh) auto forces image to be wide enough
-     that its aspect-preserved height always exceeds container height, so
-     background-position-y actually pans on tall/narrow mobile viewports. */
+     Width is capped by the stage so the foliage image stops scaling up on
+     ultrawide viewports; beyond --stage-max the sides become the frame. */
   position: fixed;
-  left: 0;
-  right: 0;
+  left: var(--stage-inset);
+  width: var(--stage-width);
   bottom: 0;
-  width: 100%;
   height: 70vh;
   z-index: 0;
   display: block;
@@ -415,13 +493,25 @@ footer.site-foot {
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
 }
+/* Short-viewport behavior on wide layouts: lock the foliage container to
+   the height it would have at a 800px-tall viewport, and let its bottom
+   slide below the viewport bottom. The foliage top stays anchored where
+   it "belongs," while the floor quietly overflows off-screen — no more
+   pan-driven top clipping. Mobile keeps its normal 70vh-hugs-bottom flow. */
+@media (min-width: 900px) {
+  .site-foot-foliage {
+    height: max(70vh, 560px);
+    bottom: min(0px, calc(100vh - 800px));
+  }
+}
 .site-foot-inner {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 700px;
+  /* line up with the card column: layout is 700px wide with 1.5rem of
+     horizontal padding on each side, so card outer width = 700 - 3rem. */
+  max-width: calc(700px - 3rem);
   padding: 0.75rem 1.25rem;
-  /* match the .card formula so the footer sits in the same visual family */
   background:
     linear-gradient(
       135deg,
@@ -431,7 +521,6 @@ footer.site-foot {
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--border-leaf);
   border-radius: var(--radius);
   display: flex;
   justify-content: space-between;
@@ -744,7 +833,40 @@ footer.site-foot a:hover {
   margin: 0;
   font-size: 1.25rem;
   color: var(--fg);
+  /* frosted-glass plaque to match the "view all" pill — keeps the title
+     legible when foliage/fireflies pass behind it */
+  display: inline-block;
+  padding: 0.2em 0.7em;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-elev) 35%, transparent);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
 }
+/* Bare-h1 fallback: if a page has a top-level h1 that isn't already inside
+   a frosted container (.prose, .page-head, .hero), it still gets a plaque
+   so titles don't float raw over the foliage. */
+main > h1 {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-elev) 35%, transparent);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+}
+/* Shared frosted container for page-title blocks (h1 + optional tagline).
+   Matches .prose so the title reads as the top of a unified content panel. */
+.page-head {
+  background: color-mix(in srgb, var(--bg) 28%, transparent);
+  backdrop-filter: blur(8px) saturate(115%);
+  -webkit-backdrop-filter: blur(8px) saturate(115%);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin: 0 -0.5rem 1.5rem;
+}
+.page-head > :first-child { margin-top: 0; }
+.page-head > :last-child { margin-bottom: 0; }
 .section-header a {
   font-size: 0.8rem;
   color: var(--fg-soft);
@@ -1220,8 +1342,8 @@ nav.site-nav .links a[aria-current="page"]::after {
 .starfield {
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100vw;
+  left: var(--stage-inset);
+  width: var(--stage-width);
   height: 55vh;
   pointer-events: none;
   /* same z-index as foliage/fireflies; canvas is prepended to <body> so DOM order

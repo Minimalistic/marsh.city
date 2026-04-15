@@ -96,6 +96,7 @@ const paletteItems = [
     </script>
   </head>
   <body>
+    <div class="stage-frame" aria-hidden="true"></div>
 <div class="layout">
       <a href="#main" class="skip-link">Skip to main content</a>
       <nav class="site-nav">
@@ -326,25 +327,37 @@ const paletteItems = [
         let resizeTimer = 0;
         function resize() {
           DPR = Math.min(window.devicePixelRatio || 1, 2);
+          const prevW = W, prevH = H;
           W = canvas.clientWidth || 1;
           H = canvas.clientHeight || 1;
           canvas.width = Math.min(W * DPR, MAX_CANVAS_DIM);
           canvas.height = Math.min(H * DPR, MAX_CANVAS_DIM);
           ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-          stars.length = 0;
-          for (let i = 0; i < STAR_COUNT; i++) {
-            // y^0.6 weights density toward the top of the sky
-            stars.push({
-              x: Math.random() * W,
-              y: Math.pow(Math.random(), 0.6) * H,
-              r: Math.random() * 0.85 + 0.22,
-              base: 0.35 + Math.random() * 0.5,
-              phase: Math.random() * Math.PI * 2,
-              speed: 0.0005 + Math.random() * 0.0011,
-              tint: Math.random() < 0.18 ? '#cfd9ff'
-                  : Math.random() < 0.18 ? '#ffe4be'
-                  : '#ffffff',
-            });
+          if (stars.length === 0) {
+            // first run — seed fresh
+            for (let i = 0; i < STAR_COUNT; i++) {
+              // y^0.6 weights density toward the top of the sky
+              stars.push({
+                x: Math.random() * W,
+                y: Math.pow(Math.random(), 0.6) * H,
+                r: Math.random() * 0.85 + 0.22,
+                base: 0.35 + Math.random() * 0.5,
+                phase: Math.random() * Math.PI * 2,
+                speed: 0.0005 + Math.random() * 0.0011,
+                tint: Math.random() < 0.18 ? '#cfd9ff'
+                    : Math.random() < 0.18 ? '#ffe4be'
+                    : '#ffffff',
+              });
+            }
+          } else if (prevW > 0 && prevH > 0) {
+            // rescale existing stars so they don't rerandomize on resize —
+            // avoids the "flicker + redistribute" feel while dragging window edges
+            const sx = W / prevW;
+            const sy = H / prevH;
+            for (const s of stars) {
+              s.x *= sx;
+              s.y *= sy;
+            }
           }
         }
 
@@ -524,9 +537,28 @@ const paletteItems = [
         // render loop — state machine: idle → fleeing → wandering → returning → idle
         function renderLoop() {
           const now = performance.now();
+          // stage bounds — fireflies get clamped here so they can't drift
+          // into the side frame on ultrawide viewports
+          const STAGE_MAX = 1200;
+          const vw = window.innerWidth;
+          const stageLeft = Math.max(0, (vw - STAGE_MAX) / 2);
+          const stageRight = vw - stageLeft;
+          const MARGIN = 8;
           for (const fly of flies) {
             const parallaxFactor = 0.15 + fly.depth * 0.35;
             const scrollDelta = scrollY - fly.spawnScrollY;
+            // soft wall: if flee offset would push the fly outside the stage,
+            // clamp and dampen-reverse the velocity so it bounces gently inward
+            {
+              const probeX = fly.baseX + fly.driftX + fly.fleeX;
+              if (probeX < stageLeft + MARGIN) {
+                fly.fleeX = (stageLeft + MARGIN) - fly.baseX - fly.driftX;
+                if (fly.fleeVX < 0) fly.fleeVX = -fly.fleeVX * 0.4;
+              } else if (probeX > stageRight - MARGIN) {
+                fly.fleeX = (stageRight - MARGIN) - fly.baseX - fly.driftX;
+                if (fly.fleeVX > 0) fly.fleeVX = -fly.fleeVX * 0.4;
+              }
+            }
             const flyX = fly.baseX + fly.driftX + fly.fleeX;
             const flyY = fly.baseY + fly.driftY + fly.fleeY - scrollDelta * parallaxFactor;
 
@@ -594,7 +626,13 @@ const paletteItems = [
 
         function animateFirefly(fly, first) {
           const { el } = fly;
-          const x = Math.random() * window.innerWidth;
+          // spawn within the stage bounds (see --stage-max in global.css) so
+          // flies don't drift into the side frame on ultrawide viewports.
+          const STAGE_MAX = 1200;
+          const vw = window.innerWidth;
+          const stageW = Math.min(vw, STAGE_MAX);
+          const stageInset = Math.max(0, (vw - STAGE_MAX) / 2);
+          const x = stageInset + Math.random() * stageW;
           // compensate for scroll parallax so respawned flies land in the visible viewport
           const parallaxFactor = 0.15 + fly.depth * 0.35;
           const viewportY = Math.random() * window.innerHeight;
