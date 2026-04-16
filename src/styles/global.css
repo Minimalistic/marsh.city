@@ -1360,11 +1360,14 @@ nav.site-nav .links a[aria-current="page"]::after {
   background: color-mix(in srgb, var(--leaf) 15%, transparent);
   color: var(--fg);
 }
-.theme-toggle svg { display: block; }
-/* show sun on dark, moon on light — .is-night reflects current theme */
-.theme-toggle .icon-moon { display: none; }
+.theme-toggle svg { display: none; }
+/* show sun for light, moon for dark, monitor for auto */
+.theme-toggle .icon-sun  { display: block; }
 .theme-toggle.is-night .icon-sun  { display: none; }
 .theme-toggle.is-night .icon-moon { display: block; }
+.theme-toggle.is-auto .icon-sun   { display: none; }
+.theme-toggle.is-auto .icon-moon  { display: none; }
+.theme-toggle.is-auto .icon-auto  { display: block; }
 
 /* --- starfield (dark mode only; opacity set per-frame by script) --- */
 

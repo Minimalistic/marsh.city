@@ -60,17 +60,16 @@ const paletteItems = [
     />
     <script is:inline>
       // set data-theme before CSS paints to avoid a flash.
-      // stored pref wins; otherwise follow system.
+      // stored pref wins; 'auto' (default) follows system.
       (() => {
-        let theme;
-        try {
-          const stored = localStorage.getItem('theme');
-          if (stored === 'light' || stored === 'dark') theme = stored;
-        } catch {}
-        if (!theme) {
-          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        document.documentElement.dataset.theme = theme;
+        let stored;
+        try { stored = localStorage.getItem('theme'); } catch {}
+        const pref = (stored === 'light' || stored === 'dark') ? stored : 'auto';
+        const resolved = pref === 'auto'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.dataset.theme = resolved;
+        document.documentElement.dataset.themePref = pref;
       })();
     </script>
     <script is:inline>
@@ -121,7 +120,7 @@ const paletteItems = [
               </svg>
             </button>
             <div class="nav-menu-panel" id="nav-menu-panel" role="menu" hidden>
-              <button type="button" class="theme-toggle" role="menuitem" aria-label="Toggle light and dark mode">
+              <button type="button" class="theme-toggle" role="menuitem" aria-label="Toggle theme: light, dark, or auto">
                 <span class="nav-menu-item-icon">
                   <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="4.2"/>
@@ -130,8 +129,13 @@ const paletteItems = [
                   <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
                   </svg>
+                  <svg class="icon-auto" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="13" rx="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                  </svg>
                 </span>
-                <span class="nav-menu-item-label">Toggle day/night</span>
+                <span class="nav-menu-item-label">Theme: <span class="theme-label">auto</span></span>
               </button>
               <button type="button" class="cmdk-trigger" role="menuitem" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K">
                 <span class="nav-menu-item-icon">
@@ -248,23 +252,29 @@ const paletteItems = [
     </script>
 
     <script is:inline>
-      // theme toggle: flip light/dark, persist choice, follow system when unset.
+      // theme toggle: cycle light → dark → auto, persist choice.
       // window.__themeMix (0=light, 1=dark) is a smoothly-tweened value that
       // starfield + fireflies multiply their opacity by — gives a crossfade
       // when the user clicks the toggle instead of a hard snap.
       (() => {
         const root = document.documentElement;
         const btn = document.querySelector('.theme-toggle');
+        const label = btn && btn.querySelector('.theme-label');
         const mq = window.matchMedia('(prefers-color-scheme: dark)');
         const TRANSITION_MS = 700;
+        const CYCLE = ['light', 'dark', 'auto'];
 
         window.__isDark = () => root.dataset.theme === 'dark';
         window.__themeMix = window.__isDark() ? 1 : 0;
 
-        function updateIcon() {
-          if (btn) btn.classList.toggle('is-night', window.__isDark());
+        function updateUI() {
+          if (!btn) return;
+          const pref = root.dataset.themePref || 'auto';
+          btn.classList.toggle('is-night', window.__isDark());
+          btn.classList.toggle('is-auto', pref === 'auto');
+          if (label) label.textContent = pref;
         }
-        updateIcon();
+        updateUI();
 
         let tweenId = 0;
         function tweenMix(target) {
@@ -283,7 +293,7 @@ const paletteItems = [
 
         function setTheme(next, animate) {
           root.dataset.theme = next;
-          updateIcon();
+          updateUI();
           if (animate) {
             root.classList.add('theme-animating');
             setTimeout(() => root.classList.remove('theme-animating'), TRANSITION_MS + 100);
@@ -293,18 +303,22 @@ const paletteItems = [
           }
         }
 
+        // system preference changes only affect auto mode
         mq.addEventListener('change', () => {
-          let stored = null;
-          try { stored = localStorage.getItem('theme'); } catch {}
-          if (stored !== 'light' && stored !== 'dark') {
+          if (root.dataset.themePref === 'auto') {
             setTheme(mq.matches ? 'dark' : 'light', true);
           }
         });
 
         if (btn) btn.addEventListener('click', () => {
-          const next = window.__isDark() ? 'light' : 'dark';
+          const current = root.dataset.themePref || 'auto';
+          const next = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length];
+          root.dataset.themePref = next;
           try { localStorage.setItem('theme', next); } catch {}
-          setTheme(next, true);
+          const resolved = next === 'auto'
+            ? (mq.matches ? 'dark' : 'light')
+            : next;
+          setTheme(resolved, true);
         });
       })();
     </script>
