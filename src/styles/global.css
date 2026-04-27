@@ -1000,7 +1000,7 @@ nav.site-nav .links a[aria-current="page"]::after {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  transform-origin: 0 0;
+  transform-origin: center center;
   will-change: transform;
 }
 .lightbox-close {

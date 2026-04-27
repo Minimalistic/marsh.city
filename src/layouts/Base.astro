@@ -972,6 +972,8 @@ const paletteItems = [
 
         function applyTransform() {
           if (!lbImg) return;
+          // use transform-origin center + scale, then translate for pan offset
+          lbImg.style.transformOrigin = 'center center';
           lbImg.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
         }
 
@@ -979,7 +981,7 @@ const paletteItems = [
           scale = 1; tx = 0; ty = 0;
           if (lbImg) {
             lbImg.style.transform = '';
-            lbImg.style.transformOrigin = '0 0';
+            lbImg.style.transformOrigin = 'center center';
           }
         }
 
@@ -999,7 +1001,6 @@ const paletteItems = [
             startTx = tx;
             startTy = ty;
           } else if (e.touches.length === 1 && scale > 1.05) {
-            // pan when zoomed
             e.preventDefault();
             panStartX = e.touches[0].clientX;
             panStartY = e.touches[0].clientY;
@@ -1014,11 +1015,26 @@ const paletteItems = [
             e.preventDefault();
             var d = dist(e.touches[0], e.touches[1]);
             var newScale = Math.min(5, Math.max(1, startScale * (d / startDist)));
-            // zoom toward the midpoint between fingers
+            // current midpoint between fingers
             var midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             var midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            tx = startTx + (midX - startMidX) - (midX - startTx) * (newScale / startScale - 1);
-            ty = startTy + (midY - startMidY) - (midY - startTy) * (newScale / startScale - 1);
+            // pan follows finger midpoint movement
+            var panDx = midX - startMidX;
+            var panDy = midY - startMidY;
+            // anchor zoom to the pinch point:
+            // the point under the initial midpoint should stay under the current midpoint.
+            // with transform-origin at center, the image center is the scale anchor,
+            // so we offset by how much the pinch point moves relative to center during scale.
+            var imgRect = lbImg.getBoundingClientRect();
+            var imgCx = imgRect.left + imgRect.width / 2;
+            var imgCy = imgRect.top + imgRect.height / 2;
+            // vector from image center to initial pinch point (in screen coords at startScale)
+            var ox = startMidX - imgCx;
+            var oy = startMidY - imgCy;
+            // scaling shifts that point; compensate so it tracks the fingers
+            var scaleRatio = newScale / startScale;
+            tx = startTx + panDx - ox * (scaleRatio - 1);
+            ty = startTy + panDy - oy * (scaleRatio - 1);
             scale = newScale;
             applyTransform();
           } else if (e.touches.length === 1 && scale > 1.05 && !isPinching) {
@@ -1031,11 +1047,10 @@ const paletteItems = [
 
         function onTouchEnd(e) {
           if (e.touches.length < 2) isPinching = false;
-          // snap back to 1x if barely zoomed
           if (scale < 1.05) resetTransform();
         }
 
-        // Safari gesture events (fallback)
+        // Safari gesture events (fallback — no anchor info, zoom from center)
         function onGestureStart(e) { e.preventDefault(); startScale = scale; }
         function onGestureChange(e) {
           e.preventDefault();
