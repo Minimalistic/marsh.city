@@ -1045,12 +1045,24 @@ nav.site-nav .links a[aria-current="page"]::after {
   font-family: var(--font-mono);
 }
 
-/* --- tagline (used on secondary pages) --- */
+/* --- tagline / project lede --- */
 
 .tagline {
   color: var(--fg-soft);
   font-size: 1.05rem;
   line-height: 1.65;
+  padding: 1rem 1.25rem;
+  background: var(--bg-elev);
+  border-left: 3px solid var(--leaf);
+  border-radius: var(--radius);
+  margin-bottom: 2rem;
+}
+
+/* give the first paragraph after the lede a gentle drop-cap feel */
+.prose > p:first-child {
+  font-size: 1.08rem;
+  line-height: 1.7;
+  color: var(--fg);
 }
 
 /* --- mermaid diagrams --- */
