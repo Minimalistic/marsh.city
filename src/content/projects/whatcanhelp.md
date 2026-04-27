@@ -55,6 +55,7 @@ Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic A
 
 The taxonomy is tag-based across seven dimensions: need, solution type, platform, complexity, price band, funding eligibility, and age range. Products can be tagged across multiple needs without being duplicated, which avoids the rigid category structures that limit most product databases.
 
-## Status
+## Updates
 
-WhatCanHelp is in active development. Jason is currently focused on cleaning up the data - normalizing product records and testing the matching pipeline. The plan is to publish it once the catalog is solid enough to be genuinely useful.
+### 2026-04-26
+Project page is up. Still in active development - current focus is data cleanup, normalizing product records and testing the intake matching pipeline. Exploring when to publish publicly.
