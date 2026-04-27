@@ -27,9 +27,16 @@ The catalog has two views - a card grid and a dense table - with faceted filters
 
 ## Complexity ratings
 
-Every product is rated on a four-tier scale: self-serve (green), guided setup (yellow), professional recommended (orange), and professional required (red). The badges show up everywhere - catalog, detail pages, reports.
+Every product is rated on a four-tier scale:
 
-The idea is that finding the right product isn't just about matching needs. It's also about whether someone - or their support network - can realistically get the device set up and keep it working. A product that addresses the right need but requires professional configuration to use is a different recommendation than one someone can unbox and start using.
+| Tier | Meaning |
+|---|---|
+| **Self-serve** | Unbox and start using independently |
+| **Guided setup** | Some initial help needed, then independent |
+| **Professional recommended** | Works best with professional guidance |
+| **Professional required** | Needs professional assessment and configuration |
+
+The badges show up everywhere - catalog, detail pages, reports. The idea is that finding the right product isn't just about matching needs. It's also about whether someone - or their support network - can realistically get the device set up and keep it working. A product that addresses the right need but requires professional configuration to use is a different recommendation than one someone can unbox and start using.
 
 ## Product detail and AI descriptions
 

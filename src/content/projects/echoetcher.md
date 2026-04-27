@@ -18,7 +18,15 @@ Record a voice memo — a thought, a project idea, a problem to work through. Ec
 
 For longer recordings, it chunks the audio with overlap to keep context across segments. A custom Whisper prompt guides transcription toward natural, conversational speech — proper punctuation and sentence structure, not raw dictation.
 
-## How it's built
+## How it works
+
+```mermaid
+flowchart LR
+  A[Voice memo] --> B[File watcher]
+  B --> C[Whisper transcription]
+  C --> D[LLM formatting]
+  D --> E[Obsidian note]
+```
 
 Python with a file watcher (watchdog) monitoring a configurable directory. Whisper runs locally — it auto-detects CUDA, MPS (Apple Silicon), or falls back to CPU. The processing pipeline supports multiple content types through a modular processor system, so audio and images can be handled differently.
 
