@@ -22,7 +22,7 @@ That was a deliberate choice. The audience includes older adults, family caregiv
 
 ## Guided intake
 
-![The four-step guided intake wizard with progress indicators and checkbox cards for selecting challenges](/images/whatcanhelp/intake.png)
+![The guided intake wizard showing step one with progress dots and option pills](/images/whatcanhelp/intake.png)
 
 The intake is a four-step conversational wizard, not a form dump. Step one asks who this is for - myself, my child, a parent, a student, a client. Step two presents challenge areas as a grid of checkbox cards: motor, speech, vision, hearing, cognition, learning, daily tasks, computer access.
 
@@ -32,7 +32,7 @@ Progress dots with connecting lines run across the top. You can see where you ar
 
 ## Browse catalog
 
-![The browsable product catalog with sidebar filters, complexity badges, and grid/table view toggle](/images/whatcanhelp/catalog.png)
+![The browsable product catalog with sidebar filters, complexity badges, and a highlights carousel](/images/whatcanhelp/catalog.png)
 
 The catalog supports two views - a card grid and a dense table - with a sidebar of faceted filters. Products show a thumbnail, name, manufacturer, price range, and a color-coded complexity badge.
 
@@ -42,7 +42,7 @@ That matters because one of the biggest failure modes in AT is recommending a pr
 
 ## Product detail
 
-![A product detail page showing the AI-generated description, complexity rating, pricing, and related products](/images/whatcanhelp/detail.png)
+![A product detail page showing the AI-generated description, complexity rating, and setup guidance](/images/whatcanhelp/detail.png)
 
 Each product page shows an AI-generated plain-language description, specifications, supported platforms, pricing with vendor links, and related products. The descriptions are written by Claude and stored after review - not generated on the fly - so they're consistent and editable.
 
@@ -50,15 +50,13 @@ The detail page also surfaces funding eligibility: which products qualify for Me
 
 ## PDF reports
 
-![A generated PDF report showing matched products with justifications and professional guidance notes](/images/whatcanhelp/report.png)
-
 The PDF export is the whole point of the workflow. After intake, WhatCanHelp generates a report that includes the person's profile, matched products with explanations of why each one fits, complexity warnings, and guidance notes. The PDF uses the same color system as the web interface - terracotta accents, complexity-tier badges - so it feels like a cohesive document, not a browser print dump.
 
 This exists because the gap between "found a good product" and "got it funded" is where most AT recommendations die. The report is formatted for the people who approve purchases: case managers, IEP teams, vocational rehab counselors. It gives them what they need to say yes.
 
 ## Accessibility controls
 
-![The header accessibility controls showing theme toggle and font size adjustment](/images/whatcanhelp/accessibility.png)
+![The header accessibility dropdown with theme toggle and text size controls](/images/whatcanhelp/accessibility.png)
 
 A dropdown in the header offers a theme toggle (auto/light/dark) and three font size levels. These aren't decorative - they're load-bearing for the audience. The font sizing uses relative units throughout, so bumping to the largest size scales everything proportionally without breaking layouts.
 
