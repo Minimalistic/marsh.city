@@ -8,20 +8,23 @@ started: 2025-01-01
 updated: 2026-04-09
 ---
 
-I cook most nights and I was tired of the weekly cycle: decide what to make, realize I'm missing three ingredients, go to the store, come home with things I already had. MealDeck is the app I wanted — meal planning that actually thinks about the shopping.
+MealDeck started as Jason exploring what he could build with AI, and grew into something genuinely useful. It's a meal planning app for discovering and sharing recipes, planning meals, and generating smart grocery lists — currently in use with friends and family.
 
 ## What it does
 
-**Week-to-week meal planning** that looks at what you're already buying. MealDeck groups recipes with overlapping ingredients so grocery runs are smaller and less goes to waste. Plan a week of meals and the shopping list builds itself around shared ingredients.
+**Meal planning** that groups recipes with overlapping ingredients so grocery runs are smaller and less goes to waste. Plan a week of meals and the shopping list builds itself around shared ingredients.
 
-**Cook mode** turns your device into a hands-free kitchen companion. Step-by-step instructions, one page at a time, controlled entirely by voice — say "next" or "back" to navigate, "ingredients" to check the list. I built this after one too many attempts to tap a phone screen with raw-chicken hands.
+**Cook mode** with voice control — hands-free, step-by-step instructions. Say "next" or "back" to navigate, "ingredients" to check the list.
 
-**AI recipe adaptation** modifies recipes for dietary needs, ingredient swaps, or serving size changes. Tell it what you need and it adjusts intelligently — not just the ingredient list, but the instructions too.
+**AI recipe adaptation** modifies recipes for dietary needs, ingredient swaps, or serving size changes. The Anthropic API adjusts both the ingredient list and the instructions.
+
+**Sharing** — find and share recipes with friends and family, explore what other people are cooking.
 
 ## How it's built
 
-Node.js and Express on the backend, SQLite for all data, vanilla JavaScript on the frontend. The Anthropic API powers recipe adaptation and natural language recipe import. No frameworks, no build step — the same stack behind most of my projects, chosen for speed and simplicity when building solo.
+Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic API powers recipe adaptation and natural language recipe import. No frameworks, no build step.
 
-## What's next
+## Updates
 
-I'm working on better pantry tracking — knowing what's already in the kitchen makes the shopping list smarter. The other missing piece is scaling: cook mode handles one recipe at a time, but real weeknight cooking means juggling two or three things with overlapping timers.
+### 2026-04-26
+In active use with friends and family. Continuing to test and explore ways to improve it further.

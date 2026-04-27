@@ -9,7 +9,7 @@ started: 2026-03-01
 updated: 2026-04-09
 ---
 
-I wanted a simple way to listen to internet radio. Big buttons, no account, no ads. That turned into a single HTML file — no dependencies, no build step, no backend — which turned into a real deployment at the nonprofit where I direct technology, in the hands of older adults who just want to listen to music without navigating a complicated interface.
+Jason wanted a simple way to listen to internet radio — big buttons, no account, no ads. That turned into a single HTML file with no dependencies, no build step, and no backend. Then it turned into a real deployment at the nonprofit where he directs technology, in the hands of older adults who just want to listen to music without navigating a complicated interface.
 
 [Try the live demo](/radio.html)
 
@@ -27,7 +27,7 @@ Big buttons, one per station. Tap to play, tap again to pause. That's the whole 
 
 ## Accessibility
 
-This isn't a checkbox exercise. The app was designed for elderly users and people with disabilities from the start:
+The app was designed for older adults and people with disabilities from the start — accessibility shaped the architecture, not the other way around:
 
 - WCAG AA verified contrast across all eight color palettes plus high-contrast monochrome modes
 - Full screen reader support — ARIA roles, labels, and live regions throughout
@@ -44,6 +44,7 @@ One HTML file. ~3,800 lines of vanilla HTML, CSS, and JavaScript. Zero external 
 
 A profile system supports branded variants — a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
 
-## What's next
+## Updates
 
-I'm working on better stream discovery and considering whether offline caching via Service Worker makes sense for environments with unreliable internet. The profile system also needs a web-based editor so other organizations can create branded deployments without touching code.
+### 2026-04-26
+Shipped and deployed. Next areas to explore: better stream discovery, offline caching via Service Worker for unreliable networks, and a web-based profile editor so other organizations can create branded deployments without touching code.
