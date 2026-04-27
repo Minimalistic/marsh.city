@@ -76,16 +76,18 @@ const paletteItems = [
       // block pinch-to-zoom on iOS Safari (ignores viewport meta tag).
       // gesture events cover Safari; touchmove with 2+ fingers covers
       // edge cases where gesture events slip through.
-      document.addEventListener('gesturestart', e => e.preventDefault());
-      document.addEventListener('gesturechange', e => e.preventDefault());
-      document.addEventListener('gestureend', e => e.preventDefault());
+      // allow zoom when lightbox is open so users can pinch-to-zoom images.
+      function _lbOpen() { return !!document.querySelector('.lightbox.open'); }
+      document.addEventListener('gesturestart', e => { if (!_lbOpen()) e.preventDefault(); });
+      document.addEventListener('gesturechange', e => { if (!_lbOpen()) e.preventDefault(); });
+      document.addEventListener('gestureend', e => { if (!_lbOpen()) e.preventDefault(); });
       document.addEventListener('touchmove', e => {
-        if (e.touches.length > 1) e.preventDefault();
+        if (e.touches.length > 1 && !_lbOpen()) e.preventDefault();
       }, { passive: false });
-      // if zoom somehow sneaks through, snap back to 1x
+      // if zoom somehow sneaks through (outside lightbox), snap back to 1x
       if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
-          if (Math.abs(window.visualViewport.scale - 1) > 0.05) {
+          if (Math.abs(window.visualViewport.scale - 1) > 0.05 && !_lbOpen()) {
             document.body.style.transform = 'scale(1)';
             document.body.style.transformOrigin = '0 0';
             window.scrollTo(0, window.scrollY);
@@ -926,6 +928,63 @@ const paletteItems = [
     <!-- mermaid script removed — no content uses it yet.
          Re-add when needed, ideally only on pages with mermaid blocks
          to avoid Safari cross-origin warnings on every page. -->
+
+    <script is:inline>
+      // lightbox — click any .prose img to view fullscreen with pinch-to-zoom
+      (() => {
+        let overlay = null;
+
+        function closeLightbox() {
+          if (!overlay) return;
+          overlay.classList.remove('open');
+          document.body.style.overflow = '';
+          setTimeout(() => { if (overlay) { overlay.remove(); overlay = null; } }, 250);
+        }
+
+        function openLightbox(src, alt) {
+          if (overlay) closeLightbox();
+          overlay = document.createElement('div');
+          overlay.className = 'lightbox';
+          overlay.setAttribute('role', 'dialog');
+          overlay.setAttribute('aria-modal', 'true');
+          overlay.setAttribute('aria-label', alt || 'Image preview');
+
+          const closeBtn = document.createElement('button');
+          closeBtn.className = 'lightbox-close';
+          closeBtn.setAttribute('aria-label', 'Close image preview');
+          closeBtn.innerHTML = '&#x2715;';
+          closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); });
+
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = alt || '';
+          img.draggable = false;
+
+          overlay.appendChild(closeBtn);
+          overlay.appendChild(img);
+          document.body.appendChild(overlay);
+          document.body.style.overflow = 'hidden';
+
+          // fade in on next frame
+          requestAnimationFrame(() => overlay && overlay.classList.add('open'));
+
+          // close on background click (not on the image itself)
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeLightbox();
+          });
+        }
+
+        // delegate clicks on prose images
+        document.addEventListener('click', (e) => {
+          const img = e.target.closest('.prose img');
+          if (img) openLightbox(img.src, img.alt);
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && overlay) closeLightbox();
+        });
+      })();
+    </script>
 
     <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d6eace1f27904e13b9d20419621d042b"}'></script>
   </body>
