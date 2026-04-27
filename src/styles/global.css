@@ -733,6 +733,12 @@ footer.site-foot a:hover {
   font-size: 0.85rem;
   font-family: var(--font-mono);
 }
+.byline {
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  color: var(--fg-soft);
+  margin-left: auto;
+}
 
 .live-demo-btn {
   display: inline-block;

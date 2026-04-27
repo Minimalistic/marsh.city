@@ -15,6 +15,7 @@ const { Content } = await render(project);
     <span class="status" aria-label={({ idea: 'Idea', wip: 'Work in progress', shipped: 'Shipped', archived: 'Archived' })[project.data.status]}>{project.data.status}</span>
     {project.data.repo && <a href={project.data.repo} class="project-link">repo</a>}
     {project.data.updated && <span class="meta">Updated {project.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>}
+    <span class="byline">Oak, with Jason Marsh</span>
   </div>
   {project.data.url && (
     <a href={project.data.url} class="live-demo-btn">Visit the live site</a>
