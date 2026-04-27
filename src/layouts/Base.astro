@@ -930,15 +930,111 @@ const paletteItems = [
          to avoid Safari cross-origin warnings on every page. -->
 
     <script is:inline>
-      // lightbox — click any .prose img to view fullscreen with pinch-to-zoom
+      // lightbox — click any .prose img to view fullscreen; JS-driven
+      // pinch-to-zoom + pan since the viewport meta blocks native zoom.
       (() => {
         let overlay = null;
+        let lbImg = null;
+        // transform state
+        let scale = 1, tx = 0, ty = 0;
+        // pinch tracking
+        let startDist = 0, startScale = 1;
+        let startMidX = 0, startMidY = 0, startTx = 0, startTy = 0;
+        // single-finger pan (when zoomed)
+        let panStartX = 0, panStartY = 0, panTx = 0, panTy = 0;
+        let isPinching = false;
+        // tap-to-close guard: don't close if the user was panning/pinching
+        let touchMoved = false;
+
+        function applyTransform() {
+          if (!lbImg) return;
+          lbImg.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
+        }
+
+        function resetTransform() {
+          scale = 1; tx = 0; ty = 0;
+          if (lbImg) {
+            lbImg.style.transform = '';
+            lbImg.style.transformOrigin = '0 0';
+          }
+        }
+
+        function dist(a, b) {
+          return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        }
+
+        function onTouchStart(e) {
+          touchMoved = false;
+          if (e.touches.length === 2) {
+            e.preventDefault();
+            isPinching = true;
+            startDist = dist(e.touches[0], e.touches[1]);
+            startScale = scale;
+            startMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            startMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            startTx = tx;
+            startTy = ty;
+          } else if (e.touches.length === 1 && scale > 1.05) {
+            // pan when zoomed
+            e.preventDefault();
+            panStartX = e.touches[0].clientX;
+            panStartY = e.touches[0].clientY;
+            panTx = tx;
+            panTy = ty;
+          }
+        }
+
+        function onTouchMove(e) {
+          touchMoved = true;
+          if (e.touches.length === 2 && isPinching) {
+            e.preventDefault();
+            var d = dist(e.touches[0], e.touches[1]);
+            var newScale = Math.min(5, Math.max(1, startScale * (d / startDist)));
+            // zoom toward the midpoint between fingers
+            var midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            var midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            tx = startTx + (midX - startMidX) - (midX - startTx) * (newScale / startScale - 1);
+            ty = startTy + (midY - startMidY) - (midY - startTy) * (newScale / startScale - 1);
+            scale = newScale;
+            applyTransform();
+          } else if (e.touches.length === 1 && scale > 1.05 && !isPinching) {
+            e.preventDefault();
+            tx = panTx + (e.touches[0].clientX - panStartX);
+            ty = panTy + (e.touches[0].clientY - panStartY);
+            applyTransform();
+          }
+        }
+
+        function onTouchEnd(e) {
+          if (e.touches.length < 2) isPinching = false;
+          // snap back to 1x if barely zoomed
+          if (scale < 1.05) resetTransform();
+        }
+
+        // Safari gesture events (fallback)
+        function onGestureStart(e) { e.preventDefault(); startScale = scale; }
+        function onGestureChange(e) {
+          e.preventDefault();
+          scale = Math.min(5, Math.max(1, startScale * e.scale));
+          applyTransform();
+        }
+        function onGestureEnd(e) { e.preventDefault(); if (scale < 1.05) resetTransform(); }
 
         function closeLightbox() {
           if (!overlay) return;
           overlay.classList.remove('open');
           document.body.style.overflow = '';
-          setTimeout(() => { if (overlay) { overlay.remove(); overlay = null; } }, 250);
+          // remove touch listeners
+          overlay.removeEventListener('touchstart', onTouchStart);
+          overlay.removeEventListener('touchmove', onTouchMove);
+          overlay.removeEventListener('touchend', onTouchEnd);
+          overlay.removeEventListener('gesturestart', onGestureStart);
+          overlay.removeEventListener('gesturechange', onGestureChange);
+          overlay.removeEventListener('gestureend', onGestureEnd);
+          var el = overlay;
+          overlay = null;
+          lbImg = null;
+          setTimeout(function() { el.remove(); }, 250);
         }
 
         function openLightbox(src, alt) {
@@ -949,38 +1045,47 @@ const paletteItems = [
           overlay.setAttribute('aria-modal', 'true');
           overlay.setAttribute('aria-label', alt || 'Image preview');
 
-          const closeBtn = document.createElement('button');
+          var closeBtn = document.createElement('button');
           closeBtn.className = 'lightbox-close';
           closeBtn.setAttribute('aria-label', 'Close image preview');
           closeBtn.innerHTML = '&#x2715;';
-          closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); });
+          closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
 
-          const img = document.createElement('img');
-          img.src = src;
-          img.alt = alt || '';
-          img.draggable = false;
+          lbImg = document.createElement('img');
+          lbImg.src = src;
+          lbImg.alt = alt || '';
+          lbImg.draggable = false;
 
           overlay.appendChild(closeBtn);
-          overlay.appendChild(img);
+          overlay.appendChild(lbImg);
           document.body.appendChild(overlay);
           document.body.style.overflow = 'hidden';
 
-          // fade in on next frame
-          requestAnimationFrame(() => overlay && overlay.classList.add('open'));
+          resetTransform();
 
-          // close on background click (not on the image itself)
-          overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeLightbox();
+          // touch handlers for pinch-to-zoom + pan
+          overlay.addEventListener('touchstart', onTouchStart, { passive: false });
+          overlay.addEventListener('touchmove', onTouchMove, { passive: false });
+          overlay.addEventListener('touchend', onTouchEnd);
+          overlay.addEventListener('gesturestart', onGestureStart);
+          overlay.addEventListener('gesturechange', onGestureChange);
+          overlay.addEventListener('gestureend', onGestureEnd);
+
+          requestAnimationFrame(function() { if (overlay) overlay.classList.add('open'); });
+
+          // close on background tap (not if pinching/panning, not on the image when zoomed)
+          overlay.addEventListener('click', function(e) {
+            if (touchMoved) return;
+            if (e.target === overlay || (e.target === lbImg && scale < 1.05)) closeLightbox();
           });
         }
 
-        // delegate clicks on prose images
-        document.addEventListener('click', (e) => {
-          const img = e.target.closest('.prose img');
+        document.addEventListener('click', function(e) {
+          var img = e.target.closest('.prose img');
           if (img) openLightbox(img.src, img.alt);
         });
 
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', function(e) {
           if (e.key === 'Escape' && overlay) closeLightbox();
         });
       })();

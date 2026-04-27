@@ -981,8 +981,9 @@ nav.site-nav .links a[aria-current="page"]::after {
   background: rgba(0, 0, 0, 0.92);
   opacity: 0;
   transition: opacity 0.25s ease;
-  touch-action: pinch-zoom pan-x pan-y;
+  touch-action: none;
   cursor: zoom-out;
+  overflow: hidden;
 }
 .lightbox.open { opacity: 1; }
 .lightbox img {
@@ -990,14 +991,17 @@ nav.site-nav .links a[aria-current="page"]::after {
   max-height: 92vh;
   object-fit: contain;
   border-radius: var(--radius);
-  touch-action: pinch-zoom pan-x pan-y;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 .lightbox-close {
   position: absolute;
   top: 1rem;
   right: 1rem;
+  z-index: 1;
   background: none;
   border: none;
   color: #fff;
