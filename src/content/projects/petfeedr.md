@@ -8,7 +8,16 @@ started: 2025-06-01
 updated: 2026-03-22
 ---
 
-Jason has two ragdoll cats — Frida and Charlie — and the store-bought feeder wasn't cutting it. It ran on four D batteries that needed constant replacing, had a small hopper that ran out too quickly, was lightweight enough that the cats knocked it over (spilling food everywhere because the lid didn't lock), and programming it meant fighting a tiny LCD with terrible button ergonomics.
+Jason has two ragdoll cats — Frida and Charlie — and the store-bought feeder wasn't cutting it.
+
+| | Store-bought | PetFeedr |
+|---|---|---|
+| **Power** | 4x D batteries | USB-powered Pi |
+| **Capacity** | Small hopper, frequent refills | Custom hopper size |
+| **Stability** | Lightweight, cats knocked it over | Heavy, secured base |
+| **Lid** | Popped open on impact, food everywhere | Locking lid |
+| **Programming** | Tiny LCD, bad button ergonomics | Web interface from any device |
+| **Schedule** | Fixed times only | Randomization mode (±30 min) |
 
 We replaced all of that with PetFeedr — a Raspberry Pi-powered feeder with a web interface. It's been running for about two years now.
 
@@ -18,7 +27,17 @@ Configurable feeding schedule with portion sizes — small, medium, or large. An
 
 The web interface shows a visual timeline of today's schedule, a 14-day activity log, and weekly stats with portion tracking. There's a manual feed button for on-demand use. The whole thing installs as a PWA.
 
-## How it's built
+## How it works
+
+```mermaid
+flowchart LR
+  A[Schedule engine] --> B{Feed time?}
+  B -->|Yes| C[Anti-jam agitation]
+  C --> D[Stepper motor dispense]
+  D --> E[Log portion + timestamp]
+  B -->|No| F[Sleep until next check]
+  G[Manual feed button] --> C
+```
 
 Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DRV8825 driver. The motor runs at 1/16 microstepping for quiet operation, with an anti-jam agitation cycle that reverses slightly before each dispense. Portion control is calibrated to step count — 100 steps per quarter cup.
 
