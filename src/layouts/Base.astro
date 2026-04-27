@@ -961,28 +961,24 @@ const paletteItems = [
         let lbImg = null;
         // transform state
         let scale = 1, tx = 0, ty = 0;
+        // natural center of the image (captured once on open, never changes)
+        let imgCx = 0, imgCy = 0;
         // pinch tracking
         let startDist = 0, startScale = 1;
         let startMidX = 0, startMidY = 0, startTx = 0, startTy = 0;
         // single-finger pan (when zoomed)
         let panStartX = 0, panStartY = 0, panTx = 0, panTy = 0;
         let isPinching = false;
-        // tap-to-close guard: don't close if the user was panning/pinching
         let touchMoved = false;
 
         function applyTransform() {
           if (!lbImg) return;
-          // use transform-origin center + scale, then translate for pan offset
-          lbImg.style.transformOrigin = 'center center';
           lbImg.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
         }
 
         function resetTransform() {
           scale = 1; tx = 0; ty = 0;
-          if (lbImg) {
-            lbImg.style.transform = '';
-            lbImg.style.transformOrigin = 'center center';
-          }
+          if (lbImg) lbImg.style.transform = '';
         }
 
         function dist(a, b) {
@@ -1015,26 +1011,17 @@ const paletteItems = [
             e.preventDefault();
             var d = dist(e.touches[0], e.touches[1]);
             var newScale = Math.min(5, Math.max(1, startScale * (d / startDist)));
-            // current midpoint between fingers
             var midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             var midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            // pan follows finger midpoint movement
-            var panDx = midX - startMidX;
-            var panDy = midY - startMidY;
-            // anchor zoom to the pinch point:
-            // the point under the initial midpoint should stay under the current midpoint.
-            // with transform-origin at center, the image center is the scale anchor,
-            // so we offset by how much the pinch point moves relative to center during scale.
-            var imgRect = lbImg.getBoundingClientRect();
-            var imgCx = imgRect.left + imgRect.width / 2;
-            var imgCy = imgRect.top + imgRect.height / 2;
-            // vector from image center to initial pinch point (in screen coords at startScale)
-            var ox = startMidX - imgCx;
-            var oy = startMidY - imgCy;
-            // scaling shifts that point; compensate so it tracks the fingers
-            var scaleRatio = newScale / startScale;
-            tx = startTx + panDx - ox * (scaleRatio - 1);
-            ty = startTy + panDy - oy * (scaleRatio - 1);
+            // find the image-space point under the initial pinch midpoint:
+            // viewport = imgCenter + tx + pointOffset * scale
+            // so pointOffset = (viewportPoint - imgCenter - tx) / scale
+            var px = (startMidX - imgCx - startTx) / startScale;
+            var py = (startMidY - imgCy - startTy) / startScale;
+            // solve for tx/ty so that same image point lands under current midpoint:
+            // midX = imgCx + tx + px * newScale
+            tx = midX - imgCx - px * newScale;
+            ty = midY - imgCy - py * newScale;
             scale = newScale;
             applyTransform();
           } else if (e.touches.length === 1 && scale > 1.05 && !isPinching) {
@@ -1050,7 +1037,7 @@ const paletteItems = [
           if (scale < 1.05) resetTransform();
         }
 
-        // Safari gesture events (fallback — no anchor info, zoom from center)
+        // Safari gesture events (no per-finger info, zoom from center)
         function onGestureStart(e) { e.preventDefault(); startScale = scale; }
         function onGestureChange(e) {
           e.preventDefault();
@@ -1095,12 +1082,28 @@ const paletteItems = [
           lbImg.alt = alt || '';
           lbImg.draggable = false;
 
+          // capture the image's natural center once it's laid out
+          lbImg.addEventListener('load', function() {
+            var r = lbImg.getBoundingClientRect();
+            imgCx = r.left + r.width / 2;
+            imgCy = r.top + r.height / 2;
+          });
+
           overlay.appendChild(closeBtn);
           overlay.appendChild(lbImg);
           document.body.appendChild(overlay);
           document.body.style.overflow = 'hidden';
 
           resetTransform();
+
+          // fallback: capture center on next frame in case image is cached and load already fired
+          requestAnimationFrame(function() {
+            if (lbImg && imgCx === 0) {
+              var r = lbImg.getBoundingClientRect();
+              imgCx = r.left + r.width / 2;
+              imgCy = r.top + r.height / 2;
+            }
+          });
 
           // touch handlers for pinch-to-zoom + pan
           overlay.addEventListener('touchstart', onTouchStart, { passive: false });
