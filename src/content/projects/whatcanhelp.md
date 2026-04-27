@@ -7,66 +7,54 @@ started: 2026-03-01
 updated: 2026-04-26
 ---
 
-I run an assistive technology lending library at a nonprofit in Duluth. When someone comes to us needing help - a family member losing their vision, a kid who needs a communication device, an older adult who can't use a standard keyboard anymore - the first step is always the same: figure out what exists that might actually work for them.
+Jason is the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what's out there and what works. WhatCanHelp grew out of a question he kept coming back to: what would it look like if the AT industry had better tools for leveraging AI?
 
-That process is broken. I've watched professionals spend hours digging through vendor catalogs, relying on conference demos and word-of-mouth. Families Google their way into a maze of products they can't evaluate. And even when someone finds the right device, getting it funded means writing a justification letter with specific product recommendations - which means more research. WhatCanHelp is my attempt to fix that pipeline.
+The result is a free discovery tool that combines a browsable product catalog with AI-powered intake matching and plain-language product descriptions. It's still in development, but the core is working: answer a few questions about who needs help and what the challenges are, and the system matches you with relevant products and explains why each one fits.
 
-## The landing page
+## The interface
 
 ![WhatCanHelp landing page showing the warm paper-like aesthetic and three-step workflow](/images/whatcanhelp/landing.png)
 
-The first thing you see is "Find what actually helps" - no feature list, no sign-up wall. I wanted the design to feel warm and editorial: cream backgrounds, serif headings, generous whitespace. More reference book than web app.
-
-That was deliberate. The people I work with have been burned by flashy health-tech products that over-promise. Half the AT apps I've evaluated have slick landing pages and terrible usability. The design needed to say "trustworthy reference" before a single word got read. A three-step explainer shows the whole workflow up front: answer questions, get personalized results, download a PDF report.
-
-## Guided intake
+The landing page opens with "Find what actually helps" and a three-step overview of the workflow. The visual design leans warm and editorial - cream backgrounds, serif typography, generous spacing. It reads more like a reference document than a tech product.
 
 ![The guided intake wizard showing step one with progress dots and option pills](/images/whatcanhelp/intake.png)
 
-The intake is a four-step conversational wizard, not a form dump. Step one asks who this is for - myself, my child, a parent, a student, a client. Step two presents challenge areas as a grid of checkbox cards: motor, speech, vision, hearing, cognition, learning, daily tasks, computer access.
-
-I went with cards instead of a checklist because checkboxes in a vertical list feel clinical. Cards with clear labels and generous tap targets feel like choosing, not filling out paperwork. Step three refines with optional dropdowns for age group, budget, and platform - all skippable, because sometimes people don't know yet. Step four is a free-text area for context that doesn't fit neat categories.
-
-Progress dots with connecting lines run across the top. You can see where you are, how much is left, and that the process is finite. I've watched enough people abandon intake forms to know that "how long is this going to take" anxiety kills completion rates.
-
-## Browse catalog
+The guided intake walks through four steps. First: who is this for - myself, my child, a parent, a student, a client. Then challenge areas presented as a grid of cards rather than a clinical checklist. Optional refinements for age group, budget, and platform. And a free-text field for anything that doesn't fit the structured questions. Progress dots across the top show where you are in the process.
 
 ![The browsable product catalog with sidebar filters, complexity badges, and a highlights carousel](/images/whatcanhelp/catalog.png)
 
-The catalog has two views - a card grid and a dense table - with a sidebar of faceted filters. Products show a thumbnail, name, manufacturer, price range, and a color-coded complexity badge.
+The catalog has two views - a card grid and a dense table - with faceted filters along the side. Each product shows a thumbnail, name, manufacturer, price range, and a color-coded complexity badge.
 
-The complexity badges might be the most important design decision in the whole app. Every product gets rated on a four-tier scale: self-serve (green), guided setup (yellow), professional recommended (orange), and professional required (red). These badges appear everywhere - catalog, detail pages, PDF reports.
+## Complexity ratings
 
-I added them because one of the biggest failure modes in AT is recommending a product someone can't actually set up or maintain. I've seen it happen: a $200 AAC app that's perfect on paper, worthless when nobody in the household can configure it. The complexity rating makes that risk visible at a glance, before anyone commits time or funding.
+Every product is rated on a four-tier scale: self-serve (green), guided setup (yellow), professional recommended (orange), and professional required (red). The badges show up everywhere - catalog, detail pages, reports.
 
-## Product detail
+The idea is that finding the right product isn't just about matching needs. It's also about whether someone - or their support network - can realistically get the device set up and keep it working. A product that addresses the right need but requires professional configuration to use is a different recommendation than one someone can unbox and start using.
+
+## Product detail and AI descriptions
 
 ![A product detail page showing the AI-generated description, complexity rating, and setup guidance](/images/whatcanhelp/detail.png)
 
-Each product page has a plain-language description, specifications, supported platforms, pricing with vendor links, and related products. The descriptions are generated by Claude and stored after review - not generated on the fly - so they stay consistent and I can edit them.
+Each product page has a plain-language description generated by Claude, reviewed and stored rather than generated on the fly. Specifications, supported platforms, pricing with vendor links, funding eligibility, and related products.
 
-The detail page also surfaces funding eligibility: which products qualify for Medicaid, vocational rehabilitation, school district budgets, or other common funding paths. For professionals writing justification letters, having this in one place saves hours of research per recommendation.
+The descriptions are written to be understandable without AT industry jargon - useful for families and clients who are researching on their own, not just professionals who already know the landscape.
 
 ## PDF reports
 
-The PDF export is the whole point. After intake, WhatCanHelp generates a report with the person's profile, matched products with explanations of why each one fits, complexity warnings, and guidance notes. The PDF uses the same color system as the web interface - terracotta accents, complexity-tier badges - so it reads as a cohesive document, not a browser print dump.
-
-I built this because the gap between "found a good product" and "got it funded" is where most AT recommendations die. The report is formatted for the people who approve purchases: case managers, IEP teams, vocational rehab counselors. It gives them what they need to say yes.
+The tool can generate PDF reports after intake - a summary of the person's profile, matched products with explanations, complexity warnings, and guidance notes. The reports use the same visual language as the web interface so they feel like a cohesive document.
 
 ## Accessibility controls
 
 ![The header accessibility dropdown with theme toggle and text size controls](/images/whatcanhelp/accessibility.png)
 
-A dropdown in the header offers a theme toggle (auto/light/dark) and three font size levels. These aren't decorative - they're load-bearing for this audience. The font sizing uses relative units throughout, so bumping to the largest size scales everything proportionally without breaking layouts.
-
-The color system targets WCAG AA contrast ratios across all three themes and all four complexity-tier colors. Dark mode was designed alongside light mode, with the warm palette adapted rather than just inverted.
+A dropdown in the header offers theme switching (auto, light, dark) and text size adjustment across three levels. The sizing uses relative units throughout, so scaling up doesn't break layouts. The color system targets WCAG AA contrast ratios across all themes and all four complexity-tier colors.
 
 ## How it's built
 
-Node.js and Express on the backend, SQLite for all data, vanilla JavaScript on the frontend. The Anthropic API powers product descriptions, intake matching, and classification. A pluggable scraper framework pulls product data from manufacturer sites - AbleNet, Freedom Scientific, HumanWare, and others - with content hashing for change detection.
+Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic API powers product descriptions, intake matching, and classification. A pluggable scraper framework pulls product data from manufacturer sites - AbleNet, Freedom Scientific, HumanWare, and others - with content hashing for change detection.
 
-The taxonomy is tag-based across seven dimensions: need, solution type, platform, complexity, price band, funding eligibility, and age range. This avoids the rigid category trees that make most AT databases frustrating to search - a product can be tagged across multiple needs without being duplicated.
+The taxonomy is tag-based across seven dimensions: need, solution type, platform, complexity, price band, funding eligibility, and age range. Products can be tagged across multiple needs without being duplicated, which avoids the rigid category structures that limit most product databases.
 
-## What's next
+## Status
 
-The catalog currently has about 100 products from a handful of vendors. The scraper framework is built to scale - adding a new vendor is mostly writing a parser adapter - but coverage is the bottleneck. I'm also working on a professional tier with saved searches, client profiles, and batch report generation for AT specialists who do this work all day.
+WhatCanHelp is in active development. Jason is currently focused on cleaning up the data - normalizing product records and testing the matching pipeline. The plan is to publish it once the catalog is solid enough to be genuinely useful.
