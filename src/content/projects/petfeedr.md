@@ -8,13 +8,15 @@ started: 2025-06-01
 updated: 2026-03-22
 ---
 
-PetFeedr is an automated pet feeder powered by a Raspberry Pi. It dispenses food on a configurable schedule throughout the day, controlled through a polished web interface that works on any device.
+I have two cats who believe they're starving at all times. Commercial smart feeders exist, but the ones I looked at either required a cloud account, had flimsy dispensing mechanisms, or cost more than the Raspberry Pi I already had sitting in a drawer.
+
+PetFeedr dispenses food on a configurable schedule throughout the day, controlled through a web interface that works on any device. Set up feeding times with portion sizes — small, medium, or large — and it handles the rest.
 
 ## What it does
 
-Set up feeding times with portion sizes — small, medium, or large — and PetFeedr handles the rest. An optional randomization mode shifts each feeding by up to 30 minutes daily so your pet doesn't learn to expect food at the exact same time.
+An optional randomization mode shifts each feeding by up to 30 minutes daily so the cats don't learn to expect food at the exact same time (they were starting to stage protests at the feeder five minutes early).
 
-The web interface shows a visual timeline of today's schedule, a 14-day activity log, and weekly stats with portion tracking. There's a manual feed button for on-demand use. The whole thing installs as a PWA, so it feels like a native app on your phone.
+The web interface shows a visual timeline of today's schedule, a 14-day activity log, and weekly stats with portion tracking. There's a manual feed button for on-demand use. The whole thing installs as a PWA, so it feels like a native app on my phone.
 
 ## How it's built
 
@@ -22,8 +24,8 @@ Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DR
 
 The scheduling engine runs as a systemd service that auto-restarts on failure. A deploy script handles SSH-based updates with automatic backups. The whole thing runs headless on the local network.
 
-A simulation mode lets you develop and test without hardware — it auto-detects missing GPIO and mocks it, so the web interface works on any machine.
+A simulation mode auto-detects missing GPIO and mocks it, so the web interface works on any machine during development. I built most of the UI on my laptop without the Pi connected.
 
-## Who it's for
+## What's next
 
-Pet owners who want reliable automated feeding with more control than a gravity feeder and less cost than a commercial smart feeder. Also a solid Raspberry Pi project if you like building things.
+I want to add a weight sensor under the bowl to track actual consumption — right now I know how much was dispensed but not how much was eaten. That data would catch early signs of appetite changes, which matters for pet health.
