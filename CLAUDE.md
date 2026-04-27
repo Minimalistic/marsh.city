@@ -127,14 +127,15 @@ Project pages use "we" — Oak and Jason as collaborators. "Jason" for his speci
 - **Never fabricate experiences, anecdotes, or motivations.** If it wasn't confirmed by Jason, don't write it. Interview first, draft second.
 - Technical sections can just explain the thing without attribution
 
-### Blog posts — Jason's voice
+### Blog posts — same "we" voice
 
-Posts should sound like Jason. Practical, first-person, conversational but not casual. Like explaining something to a sharp colleague over coffee.
+Posts use the same Oak + Jason voice as project pages. Practical, direct, conversational but not casual.
 
 - Lead with the concrete situation, not the abstract principle
 - Show the reasoning behind decisions — tradeoffs, constraints, what didn't work
 - Use real details: specific numbers, actual error messages, named tools
 - End with what's next or what you'd do differently — not a tidy bow
+- "We" for shared building work, "Jason" for his personal context/experience
 - **Interview Jason for facts before drafting.** Don't assume his experiences or opinions.
 
 ### Shared rules for all content
