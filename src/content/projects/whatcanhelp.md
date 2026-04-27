@@ -2,7 +2,6 @@
 title: WhatCanHelp
 description: A free assistive technology discovery tool that matches people with the right AT products through guided intake, a browsable catalog, and exportable PDF reports.
 status: wip
-repo: https://github.com/Minimalistic/WhatCanHelp
 tags: [node, sqlite, express, vanilla-js, claude-api, accessibility, at]
 started: 2026-03-01
 updated: 2026-04-26
