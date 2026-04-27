@@ -8,7 +8,7 @@ started: 2025-06-01
 updated: 2026-03-22
 ---
 
-Jason has two ragdoll cats — Frida and Charlie — and the store-bought feeder wasn't cutting it.
+Jason has two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn't cutting it.
 
 | | Store-bought | PetFeedr |
 |---|---|---|
@@ -19,11 +19,11 @@ Jason has two ragdoll cats — Frida and Charlie — and the store-bought feeder
 | **Programming** | Tiny LCD, bad button ergonomics | Web interface from any device |
 | **Schedule** | Fixed times only | Randomization mode (±30 min) |
 
-We replaced all of that with PetFeedr — a Raspberry Pi-powered feeder with a web interface. It's been running for about two years now.
+We replaced all of that with PetFeedr - a Raspberry Pi-powered feeder with a web interface. It's been running for about two years now.
 
 ## What it does
 
-Configurable feeding schedule with portion sizes — small, medium, or large. An optional randomization mode shifts each feeding by up to 30 minutes daily so the cats don't learn the exact schedule.
+Configurable feeding schedule with portion sizes - small, medium, or large. An optional randomization mode shifts each feeding by up to 30 minutes daily so the cats don't learn the exact schedule.
 
 The web interface shows a visual timeline of today's schedule, a 14-day activity log, and weekly stats with portion tracking. There's a manual feed button for on-demand use. The whole thing installs as a PWA.
 
@@ -39,7 +39,7 @@ flowchart LR
   G[Manual feed button] --> C
 ```
 
-Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DRV8825 driver. The motor runs at 1/16 microstepping for quiet operation, with an anti-jam agitation cycle that reverses slightly before each dispense. Portion control is calibrated to step count — 100 steps per quarter cup.
+Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DRV8825 driver. The motor runs at 1/16 microstepping for quiet operation, with an anti-jam agitation cycle that reverses slightly before each dispense. Portion control is calibrated to step count - 100 steps per quarter cup.
 
 The scheduling engine runs as a systemd service that auto-restarts on failure. A deploy script handles SSH-based updates with automatic backups. Runs headless on the local network.
 

@@ -11,7 +11,7 @@ The obvious fix is `max-width` on the content. We already had that. But the fixe
 
 ## The instinct that didn't work
 
-The first thought was to just let the visuals scale. Bigger viewport, bigger scene. But decorative backgrounds aren't like content - they have a natural density. A star field that reads as "night sky" at 1200px reads as "seven dots on a dark rectangle" at 3400px. The foliage image had a maximum resolution it could cover before the mask started looking soft.
+The first thought was to let the visuals scale. Bigger viewport, bigger scene. But decorative backgrounds aren't like content - they have a natural density. A star field that reads as "night sky" at 1200px reads as "seven dots on a dark rectangle" at 3400px. The foliage image had a maximum resolution it could cover before the mask started looking soft.
 
 The constraint was clear: the visual layer needed a hard cap. But black bars on the sides of a personal site would look like a projector that hasn't been adjusted.
 
@@ -42,7 +42,7 @@ The spawn function got the same awareness - new fireflies only appear within the
 
 ## A side effect we didn't expect
 
-Constraining the visual layer to 1200px actually improved the resize behavior. Previously, the star canvas regenerated all star positions on every resize event - random positions mean the whole constellation shuffles when you drag a window edge. Now the resize handler rescales existing positions proportionally instead of re-randomizing them. The stars slide smoothly during a drag instead of flickering and redistributing. That fix would have been worth doing without the frame, but we only noticed it because the frame work made us think about what happens at the boundaries.
+Constraining the visual layer to 1200px actually improved the resize behavior. Previously, the star canvas regenerated all star positions on every resize event - random positions mean the whole constellation shuffles when you drag a window edge. Now the resize handler rescales existing positions proportionally instead of re-randomizing them. The stars slide smoothly during a drag instead of flickering and redistributing. That fix would have been worth doing without the frame, but we only noticed it because the frame work made us think carefully about what happens at the boundaries.
 
 ## The tradeoff
 

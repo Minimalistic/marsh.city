@@ -36,7 +36,7 @@ Every product is rated on a four-tier scale:
 | **Professional recommended** | Works best with professional guidance |
 | **Professional required** | Needs professional assessment and configuration |
 
-The badges show up everywhere - catalog, detail pages, reports. The idea is that finding the right product isn't just about matching needs. It's also about whether someone - or their support network - can realistically get the device set up and keep it working. A product that addresses the right need but requires professional configuration to use is a different recommendation than one someone can unbox and start using.
+The badges show up everywhere - catalog, detail pages, reports. Finding the right product isn't just about matching needs. It's also about whether someone - or their support network - can realistically get the device set up and keep it working. A product that addresses the right need but requires professional configuration is a different recommendation than one someone can unbox and start using.
 
 ## Product detail and AI descriptions
 
@@ -48,7 +48,7 @@ We wrote the descriptions to be understandable without AT industry jargon - usef
 
 ## PDF reports
 
-The tool can generate PDF reports after intake - a summary of the person's profile, matched products with explanations, complexity warnings, and guidance notes. The reports use the same visual language as the web interface so they feel like a cohesive document.
+After intake, the tool can generate a PDF report - a summary of the person's profile, matched products with explanations, complexity warnings, and guidance notes. The reports use the same visual language as the web interface so they feel like a cohesive document.
 
 ## Accessibility controls
 
