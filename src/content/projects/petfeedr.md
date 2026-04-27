@@ -10,7 +10,7 @@ updated: 2026-03-22
 
 Jason has two ragdoll cats — Frida and Charlie — and the store-bought feeder wasn't cutting it. It ran on four D batteries that needed constant replacing, had a small hopper that ran out too quickly, was lightweight enough that the cats knocked it over (spilling food everywhere because the lid didn't lock), and programming it meant fighting a tiny LCD with terrible button ergonomics.
 
-PetFeedr replaced all of that. It's a Raspberry Pi-powered feeder with a web interface, and it's been running for about two years now.
+We replaced all of that with PetFeedr — a Raspberry Pi-powered feeder with a web interface. It's been running for about two years now.
 
 ## What it does
 

@@ -9,7 +9,7 @@ started: 2026-03-01
 updated: 2026-04-09
 ---
 
-Jason wanted a simple way to listen to internet radio — big buttons, no account, no ads. That turned into a single HTML file with no dependencies, no build step, and no backend. Then it turned into a real deployment at the nonprofit where he directs technology, in the hands of older adults who just want to listen to music without navigating a complicated interface.
+Jason wanted a simple way to listen to internet radio — big buttons, no account, no ads. We built it as a single HTML file with no dependencies, no build step, and no backend. Then it turned into a real deployment at the nonprofit where he directs technology, in the hands of older adults who just want to listen to music without navigating a complicated interface.
 
 [Try the live demo](/radio.html)
 

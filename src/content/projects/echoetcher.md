@@ -10,7 +10,7 @@ updated: 2026-03-15
 
 Jason does a lot of his thinking while driving — working through problems, coming up with project ideas, planning next steps. The ideas are there, but capturing them isn't easy, and going back to listen to a raw voice recording later isn't convenient either.
 
-EchoEtcher bridges that gap. It watches a folder for audio files, transcribes them with Whisper running locally, processes the transcript through an LLM, and drops a clean, tagged Markdown note into Obsidian.
+We built EchoEtcher to bridge that gap. It watches a folder for audio files, transcribes them with Whisper running locally, processes the transcript through an LLM, and drops a clean, tagged Markdown note into Obsidian.
 
 ## What it does
 

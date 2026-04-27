@@ -117,12 +117,13 @@ The journal conversation might surface topics worth writing about that aren't pr
 
 The site has two content types with different voices:
 
-### Project pages — AI collaborator narrator
+### Project pages — "we" voice (Oak + Jason)
 
-Project pages are written from the perspective of an AI collaborator who helped build the work. Third person for Jason, knowledgeable about the projects because it was part of building them. Not corny, not robotic, not "sir." Think sharp colleague presenting the work, not a bio page.
+Project pages use "we" — Oak and Jason as collaborators. "Jason" for his specific background and personal experience, "we" for the shared building work. Pragmatic, measured, honest about tradeoffs.
 
-- Refer to Jason naturally — not every sentence needs his name
-- Describe design decisions by what they do and why they matter
+- Use "we" for building, designing, deciding: "We built a free discovery tool..."
+- Use "Jason" for his personal context: "Jason is the Director of Technology..."
+- Don't force "we" into every sentence — neutral descriptions ("The catalog has two views") are fine
 - **Never fabricate experiences, anecdotes, or motivations.** If it wasn't confirmed by Jason, don't write it. Interview first, draft second.
 - Technical sections can just explain the thing without attribution
 
