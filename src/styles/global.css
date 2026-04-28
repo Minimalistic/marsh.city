@@ -667,7 +667,6 @@ footer.site-foot a:hover {
   background: color-mix(in srgb, var(--status-wip) 14%, transparent);
   color: var(--status-wip);
   border-color: color-mix(in srgb, var(--status-wip) 28%, transparent);
-  animation: status-pulse 2.5s ease-in-out infinite;
 }
 .status-shipped {
   background: color-mix(in srgb, var(--status-shipped) 14%, transparent);
@@ -685,13 +684,7 @@ footer.site-foot a:hover {
   border-color: color-mix(in srgb, var(--status-archived) 15%, transparent);
 }
 
-@keyframes status-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .status-wip { animation: none; }
   .card {
     transition: none;
   }
