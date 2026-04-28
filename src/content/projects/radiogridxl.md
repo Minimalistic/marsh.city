@@ -6,30 +6,48 @@ repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio.html
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-04-09
+updated: 2026-04-28
 ---
 
 Jason wanted a simple way to listen to internet radio - big buttons, no account, no ads. We built it as a single HTML file with no dependencies, no build step, and no backend. It ended up deployed at the nonprofit where Jason directs technology, in the hands of older adults who just want to listen to music without navigating a complicated interface.
 
 [Try the live demo](/radio.html)
 
-## What it does
+## The interface
 
-Big buttons, one per station. Tap to play, tap again to pause. That's the whole interaction model. Behind that simplicity is a lot of careful engineering:
+![RadioGridXL default view showing two large station buttons filling the screen](/images/radiogridxl/grid-dark.png)
 
-**Adaptive layout** - the app measures available viewport space and calculates button sizing dynamically. One station fills the screen. Eight stations arrange into a responsive grid. It handles portrait, landscape, phone, tablet, and desktop without a single media query breakpoint.
+Big buttons, one per station. Tap to play, tap again to pause. That's the whole interaction model. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there's one station or eight.
 
-**Hands-free playback** - Wake Lock keeps the screen on while audio plays. Auto-retry handles dropped connections with up to four attempts before showing an error. A sleep timer can shut off playback after 15 minutes to 4 hours.
+![Six stations arranged in a responsive grid with distinct emoji icons and color palettes](/images/radiogridxl/grid-full.png)
 
-**Technician settings** - a hidden PIN-protected panel (five taps on the logo) lets a technician configure stations, themes, volume caps, and accessibility options without exposing that complexity to the end user. Lockout escalates after failed PIN attempts.
+Add more stations and the layout shifts to a responsive grid - two columns here on mobile, scaling up to four on desktop. Each station gets its own color from eight palettes. No media query breakpoints - the grid math is pure viewport calculation.
 
-**Stream browser** - search the Radio Browser API by name, country, or genre. Preview a station before adding it. Pick an emoji icon and color theme per station.
+## Playback and controls
+
+![Active playback state with advanced transport controls, connection indicator, and sleep timer](/images/radiogridxl/now-playing.png)
+
+When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. There are two control modes: Simple (just a stop button) and Advanced, which adds skip controls and a sleep timer. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
+
+## Technician settings
+
+![The settings panel showing theme selection, text size, desktop view, volume cap, and control mode options](/images/radiogridxl/settings.png)
+
+Five taps on the logo opens a PIN-protected settings panel. A technician can configure everything without exposing that complexity to the end user - theme, text size, volume cap, control mode, accessibility features, and the station list itself. Lockout escalates after failed PIN attempts.
+
+## Stream browser
+
+![The stream browser overlay with search field, country and genre filters](/images/radiogridxl/stream-browser.png)
+
+The stream browser searches the Radio Browser API by name, country, or genre. Preview a station before adding it. Pick an emoji icon and color theme per station.
 
 ## Accessibility
 
+![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.png)
+
 We designed for older adults and people with disabilities from the start - accessibility shaped the architecture, not the other way around:
 
-- WCAG AA verified contrast across all eight color palettes plus high-contrast monochrome modes
+- WCAG AA verified contrast across all eight color palettes plus high-contrast monochrome modes (shown above)
 - Full screen reader support - ARIA roles, labels, and live regions throughout
 - Optional text-to-speech that announces playback actions via the Web Speech API
 - Audio chimes on play/pause using Web Audio API oscillators
