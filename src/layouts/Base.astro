@@ -1161,6 +1161,22 @@ const paletteItems = [
         document.addEventListener('click', function(e) {
           var vid = e.target.closest('.prose video');
           if (vid) { openVideoLightbox(vid.src, vid.getAttribute('alt') || ''); return; }
+          var merm = e.target.closest('.prose .mermaid');
+          if (merm) {
+            var svg = merm.querySelector('svg');
+            if (svg) {
+              var clone = svg.cloneNode(true);
+              clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+              // inline computed styles for background visibility in lightbox
+              clone.style.background = '#fff';
+              clone.style.padding = '2rem';
+              clone.style.borderRadius = '12px';
+              var blob = new Blob([clone.outerHTML], { type: 'image/svg+xml' });
+              var url = URL.createObjectURL(blob);
+              openLightbox(url, 'Diagram');
+            }
+            return;
+          }
           var img = e.target.closest('.prose img');
           if (img) openLightbox(img.src, img.alt);
         });
