@@ -1167,9 +1167,21 @@ const paletteItems = [
             if (svg) {
               var clone = svg.cloneNode(true);
               clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-              // inline computed styles for background visibility in lightbox
+              // ensure the SVG renders at its full intrinsic size
+              clone.removeAttribute('style');
+              clone.removeAttribute('width');
+              clone.removeAttribute('height');
+              // get the viewBox to calculate proper dimensions
+              var vb = clone.getAttribute('viewBox');
+              if (vb) {
+                var parts = vb.split(/[\s,]+/);
+                var vbW = parseFloat(parts[2]) || 800;
+                var vbH = parseFloat(parts[3]) || 600;
+                // add padding inside the viewBox
+                var pad = 32;
+                clone.setAttribute('viewBox', (parseFloat(parts[0]) - pad) + ' ' + (parseFloat(parts[1]) - pad) + ' ' + (vbW + pad * 2) + ' ' + (vbH + pad * 2));
+              }
               clone.style.background = '#fff';
-              clone.style.padding = '2rem';
               clone.style.borderRadius = '12px';
               var blob = new Blob([clone.outerHTML], { type: 'image/svg+xml' });
               var url = URL.createObjectURL(blob);
