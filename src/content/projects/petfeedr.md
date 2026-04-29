@@ -21,7 +21,7 @@ Jason has two ragdoll cats - Frida and Charlie - and the store-bought feeder was
 
 We built a Raspberry Pi-powered feeder with a web interface, microstepping motor control, and a deploy pipeline - admittedly a lot of engineering for two cats, but it's been running reliably for about two years now.
 
-![PetFeedr main dashboard showing feeding schedule timeline and manual feed button](/images/petfeedr/dashboard-light.png)
+<video src="/images/petfeedr/petfeedr-demo.webm" autoplay loop muted playsinline width="390" alt="PetFeedr demo showing dashboard, manual feeding, settings panel, and dark mode toggle"></video>
 
 ## What it does
 
