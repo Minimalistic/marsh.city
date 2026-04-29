@@ -7,6 +7,8 @@ tags: [css, design, building]
 
 This site has a fixed background scene - foliage, animated stars, fireflies drifting through a forest palette. It looks good on a laptop. On a 3440px ultrawide monitor, it looked like someone stretched a postcard across a billboard.
 
+![marsh.city at a standard viewport width - the scene fills the screen naturally](/images/posts/frame-normal.png)
+
 The obvious fix is `max-width` on the content. We already had that. But the fixed visual layer - the foliage image, the star canvas, the firefly DOM elements - filled the full viewport. The foliage image scaled up until it was a blurry green smear. The stars spread out thin. The fireflies wandered into dead space on either side of the content column.
 
 ## The instinct that didn't work
@@ -16,6 +18,8 @@ The first thought was to let the visuals scale. Bigger viewport, bigger scene. B
 The constraint was clear: the visual layer needed a hard cap. But black bars on the sides of a personal site would look like a projector that hasn't been adjusted.
 
 ## A picture frame, not a letterbox
+
+![On an ultrawide monitor, the decorative frame contains the scene - dark green with hatched texture and an inward shadow](/images/posts/frame-ultrawide.png)
 
 The solution we landed on: treat the capped visual layer as a literal framed scene. Beyond 1200px, the side margins become a decorative frame - dark green surface with a diagonal hatch texture, a bright rim where the frame meets the scene, and an inward-cast shadow selling depth. The whole thing reads as a recessed window into the forest, not a stretched image with awkward margins.
 

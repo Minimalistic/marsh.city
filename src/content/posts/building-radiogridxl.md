@@ -7,6 +7,8 @@ tags: [accessibility, vanilla-js, building]
 
 We built RadioGridXL because Jason wanted a simple way to listen to internet radio streams. Big buttons, no account, no ads, no algorithmic recommendations. Just pick a station and listen.
 
+![RadioGridXL default view - two large station buttons filling the screen](/images/radiogridxl/grid-dark.png)
+
 It started as a single HTML file - and stayed that way. No dependencies, no build step, no backend. Open the file in a browser and it works. That constraint turned out to be the most important design decision we made, because it meant we could deploy it anywhere.
 
 ## From side project to real deployment
@@ -21,11 +23,15 @@ It's now in use with older adults through the organization. The feedback has bee
 
 The accessibility features weren't added after the fact. They shaped the architecture.
 
+![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.png)
+
 **Screen readers drove the HTML structure.** Every interactive element has an ARIA role and label. Live regions announce playback changes. Focus management traps keyboard navigation inside overlays. This isn't decoration - it's how some users experience the app.
 
 **Voice feedback changed the interaction model.** Optional text-to-speech announces "Now playing Jazz FM" or "Paused" through the Web Speech API. Audio chimes give non-visual confirmation of actions. These features exist because Jason watched someone try to use a music app without being able to see the screen.
 
 **The sizing algorithm came from real constraints.** The app measures the viewport and calculates button sizes dynamically - no breakpoints. One station fills the screen. Eight stations arrange into a grid. This matters because the deployment targets range from old Android tablets to modern iPads, and the interface needs to work across all of them without configuration.
+
+![The same interface on a phone - buttons stack vertically to fill the narrow viewport](/images/radiogridxl/grid-mobile.png)
 
 ## The single-file bet
 
