@@ -8,7 +8,7 @@ started: 2025-01-01
 updated: 2026-04-09
 ---
 
-MealDeck started as Jason experimenting with what he could build with AI and grew into something he actually uses. We built a meal planning app for discovering and sharing recipes, planning meals, and generating smart grocery lists - currently in use with friends and family.
+MealDeck started as Jason seeing what he could get AI to do - and then kept growing until it was an actual app people rely on. We built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists - currently in use with friends and family.
 
 ![MealDeck landing page showing the recipe mosaic and waitlist call-to-action](/images/mealdeck/landing.jpg)
 
@@ -35,4 +35,4 @@ Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic A
 ## Updates
 
 ### 2026-04-26
-In active use with friends and family. Continuing to test and explore ways to improve it further.
+In active use with friends and family.

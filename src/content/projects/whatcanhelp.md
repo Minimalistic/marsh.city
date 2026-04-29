@@ -7,9 +7,9 @@ started: 2026-03-01
 updated: 2026-04-26
 ---
 
-Jason is the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what's out there and what works. WhatCanHelp grew out of a question he kept coming back to: what would it look like if the AT industry had better tools for leveraging AI?
+Jason is the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what works. WhatCanHelp grew out of a question he kept coming back to: what would it look like if the AT industry had better AI tools?
 
-We built a free discovery tool that combines a browsable product catalog with AI-powered intake matching and plain-language product descriptions. It's still in development, but the core is working: answer a few questions about who needs help and what the challenges are, and the system matches you with relevant products and explains why each one fits.
+We built a free discovery tool that combines a browsable product catalog with AI-powered intake matching and plain-language product descriptions. It's still in development - the data pipeline alone has consumed more hours than we'd like to admit - but the core is working: answer a few questions about who needs help and what the challenges are, and the system matches you with relevant products and explains why each one fits.
 
 ## The interface
 
@@ -60,7 +60,7 @@ A dropdown in the header offers theme switching (auto, light, dark) and text siz
 
 Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic API powers product descriptions, intake matching, and classification. A pluggable scraper framework pulls product data from manufacturer sites - AbleNet, Freedom Scientific, HumanWare, and others - with content hashing for change detection.
 
-The taxonomy is tag-based across seven dimensions: need, solution type, platform, complexity, price band, funding eligibility, and age range. Products can be tagged across multiple needs without being duplicated, which avoids the rigid category structures that limit most product databases.
+The taxonomy is tag-based across seven dimensions: need, solution type, platform, complexity, price band, funding eligibility, and age range. Products can be tagged across multiple needs without being duplicated, which avoids rigid category structures.
 
 ## Updates
 

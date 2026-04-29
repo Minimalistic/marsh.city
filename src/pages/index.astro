@@ -8,7 +8,7 @@ const projects = (await getCollection('projects'))
   .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf())
   .slice(0, 6);
 ---
-<Base description="Jason Marsh — developer, technologist, builder of AI-integrated tools.">
+<Base description="Jason Marsh — Director of Technology, assistive technology, AI engineering.">
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "Person",
@@ -25,9 +25,9 @@ const projects = (await getCollection('projects'))
   <div class="hero">
     <h1>Jason Marsh</h1>
     <p class="subtitle">
-      <strong>13+ years in IT.</strong> Director of Technology at a nonprofit by day,
-      solo-shipping <strong>AI-integrated tools</strong> by night — accessible apps,
-      IoT hardware, recipe intelligence. I build the whole thing.
+      Director of Technology at a disability services nonprofit.
+      <strong>13+ years in IT</strong> - infrastructure, assistive technology,
+      and <strong>AI-integrated tools</strong> I design and build end to end.
     </p>
   </div>
 

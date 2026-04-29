@@ -19,7 +19,7 @@ Jason has two ragdoll cats - Frida and Charlie - and the store-bought feeder was
 | **Programming** | Tiny LCD, bad button ergonomics | Web interface from any device |
 | **Schedule** | Fixed times only | Randomization mode (±30 min) |
 
-We replaced all of that with PetFeedr - a Raspberry Pi-powered feeder with a web interface. It's been running for about two years now.
+So we built a whole Raspberry Pi-powered feeder with a web interface, microstepping motor control, and a deploy pipeline. For two cats. It's been running for about two years now.
 
 ![PetFeedr main dashboard showing feeding schedule timeline and manual feed button](/images/petfeedr/dashboard-light.png)
 

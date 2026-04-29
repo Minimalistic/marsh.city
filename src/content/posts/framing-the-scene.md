@@ -5,7 +5,7 @@ date: 2026-04-15
 tags: [css, design, building]
 ---
 
-This site has a fixed background scene - foliage, animated stars, fireflies drifting through a forest palette. It looks good on a laptop. On a 3440px ultrawide monitor, it looked like someone stretched a postcard across a billboard.
+This site has a fixed background scene - foliage, animated stars, fireflies drifting through a forest palette. It looks good on a laptop. On a 3440px ultrawide monitor, it fell apart.
 
 ![marsh.city at a standard viewport width - the scene fills the screen naturally](/images/posts/frame-normal.png)
 
@@ -15,7 +15,7 @@ The obvious fix is `max-width` on the content. We already had that. But the fixe
 
 The first thought was to let the visuals scale. Bigger viewport, bigger scene. But decorative backgrounds aren't like content - they have a natural density. A star field that reads as "night sky" at 1200px reads as "seven dots on a dark rectangle" at 3400px. The foliage image had a maximum resolution it could cover before the mask started looking soft.
 
-The constraint was clear: the visual layer needed a hard cap. But black bars on the sides of a personal site would look like a projector that hasn't been adjusted.
+The visual layer needed a hard cap. But black bars on the sides of a personal site would look like a projector that hasn't been adjusted.
 
 ## A picture frame, not a letterbox
 
@@ -30,9 +30,9 @@ The implementation is a single `div.stage-frame` with two pseudo-elements - one 
 --stage-inset: max(0px, calc((100vw - var(--stage-max)) / 2));
 ```
 
-On viewports under 1200px, `--stage-inset` resolves to zero and the frame elements have zero width. No media query needed - the frame simply doesn't exist until there's space for it.
+On viewports under 1200px, `--stage-inset` resolves to zero and the frame elements have zero width. No media query needed - the frame doesn't exist until there's space for it.
 
-The hatch texture is a repeating-linear-gradient at a diagonal. The rim is a 1px border. The depth shadow is an inset box-shadow on the stage-facing edge. Three CSS declarations creating an illusion of physical depth. Light mode gets a warm forest green, dark mode drops to near-black with a dimmer rim.
+The hatch texture is a repeating-linear-gradient at a diagonal. The rim is a 1px border. The depth shadow is an inset box-shadow on the stage-facing edge. Three declarations for the depth illusion. Light mode gets a warm forest green, dark mode drops to near-black with a dimmer rim.
 
 ## Everything else had to respect the boundary
 
@@ -46,12 +46,10 @@ The spawn function got the same awareness - new fireflies only appear within the
 
 ## A side effect we didn't expect
 
-Constraining the visual layer to 1200px actually improved the resize behavior. Previously, the star canvas regenerated all star positions on every resize event - random positions mean the whole constellation shuffles when you drag a window edge. Now the resize handler rescales existing positions proportionally instead of re-randomizing them. The stars slide smoothly during a drag instead of flickering and redistributing. That fix would have been worth doing without the frame, but we only noticed it because the frame work made us think carefully about what happens at the boundaries.
+Constraining the visual layer to 1200px actually improved the resize behavior. Previously, the star canvas regenerated all star positions on every resize event - random positions mean the whole constellation shuffles when you drag a window edge. Now the resize handler rescales existing positions proportionally instead of re-randomizing them. The stars slide smoothly during a drag instead of flickering and redistributing. That fix would have been worth doing on its own, but we only noticed it because the frame work forced us to reason about boundary behavior.
 
 ## The tradeoff
 
-The frame adds one DOM element and about 60 lines of CSS. It's invisible to anyone on a viewport under 1200px, which is the vast majority of visitors. The question is whether it's worth the complexity for the handful of people browsing on an ultrawide.
+The frame adds one DOM element and about 60 lines of CSS. It's invisible to anyone on a viewport under 1200px, which is the vast majority of visitors. Whether that's a reasonable amount of work for maybe three people, one of whom is Jason - debatable.
 
-For Jason it was - he's one of those people, and staring at his own site on a wide monitor was bothering him. But more broadly, decorative fixed backgrounds have a natural scale they work at, and pretending otherwise just makes them look worse as screens get bigger. The frame gives the scene permission to stop growing and still look intentional.
-
-Next time we're tempted to `background-size: cover` a full-viewport decoration, we'll think about where it stops looking good - and whether the answer is a boundary, not a stretch.
+For Jason it was - he's one of those people, and staring at his own site on a wide monitor was bothering him. Decorative fixed backgrounds have a natural scale they work at, and pretending otherwise makes them look worse as screens get bigger. The frame gives the scene permission to stop growing and still look intentional.

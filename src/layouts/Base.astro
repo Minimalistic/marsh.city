@@ -5,7 +5,7 @@ interface Props {
   title?: string;
   description?: string;
 }
-const { title = 'marsh.city', description = "Jason Marsh's corner of the internet" } = Astro.props;
+const { title = 'marsh.city', description = "Jason Marsh — Director of Technology, assistive technology, AI engineering" } = Astro.props;
 const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
 const path = Astro.url.pathname;

@@ -7,7 +7,7 @@ const projects = (await getCollection('projects'))
 <Base title="Projects">
   <div class="page-head">
     <h1>Projects</h1>
-    <p class="tagline">Things I've built, am building, or am still daydreaming about.</p>
+    <p class="tagline">Things I've built, am building, or have on the drawing board.</p>
   </div>
   {projects.map((p) => {
     const ago = p.data.updated ? (() => {

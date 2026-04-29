@@ -17,7 +17,7 @@ Jason wanted a simple way to listen to internet radio - big buttons, no account,
 
 ![RadioGridXL default view showing two large station buttons filling the screen](/images/radiogridxl/grid-dark.png)
 
-Big buttons, one per station. Tap to play, tap again to pause. That's the whole interaction model. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there's one station or eight.
+Big buttons, one per station. Tap to play, tap again to pause. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there's one station or eight.
 
 ![Six stations arranged in a responsive grid with distinct emoji icons and color palettes](/images/radiogridxl/grid-full.png)
 
@@ -47,7 +47,7 @@ The stream browser searches the Radio Browser API by name, country, or genre. Pr
 
 ![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.png)
 
-We designed for older adults and people with disabilities from the start - accessibility shaped the architecture, not the other way around:
+We designed for older adults and people with disabilities from the start - accessibility shaped the architecture:
 
 - WCAG AA verified contrast across all eight color palettes plus high-contrast monochrome modes (shown above)
 - Full screen reader support - ARIA roles, labels, and live regions throughout
@@ -60,11 +60,11 @@ We designed for older adults and people with disabilities from the start - acces
 
 ## How it's built
 
-One HTML file. Around 3,800 lines of vanilla HTML, CSS, and JavaScript. Zero external dependencies - no frameworks, no CDN links, no package manager. Copy the file to a device, open it in a browser, it works.
+One HTML file. Around 3,800 lines of vanilla HTML, CSS, and JavaScript - which is an absurd way to build an app, but here we are. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
 
 A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
 
 ## Updates
 
 ### 2026-04-26
-Shipped and deployed. Next areas to explore: better stream discovery, offline caching via Service Worker for unreliable networks, and a web-based profile editor so other organizations can create branded deployments without touching code.
+Shipped and deployed. The profile system needs a web-based editor so other organizations can create branded deployments without touching code. Also looking at Service Worker caching for unreliable networks.
