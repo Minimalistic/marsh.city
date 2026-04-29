@@ -36,12 +36,13 @@ The web interface shows a visual timeline of today's schedule, a 14-day activity
 ## How it works
 
 ```mermaid
-flowchart LR
+flowchart TD
   A[Schedule engine] --> B{Feed time?}
   B -->|Yes| C[Anti-jam agitation]
+  B -->|No| F[Sleep until next check]
+  F --> A
   C --> D[Stepper motor dispense]
   D --> E[Log portion + timestamp]
-  B -->|No| F[Sleep until next check]
   G[Manual feed button] --> C
 ```
 
