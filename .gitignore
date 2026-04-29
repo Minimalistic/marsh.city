@@ -25,3 +25,8 @@ pnpm-debug.log*
 
 # journal session state (not content, regenerated per session)
 .journal-state.json
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
