@@ -21,11 +21,17 @@ Jason has two ragdoll cats - Frida and Charlie - and the store-bought feeder was
 
 We replaced all of that with PetFeedr - a Raspberry Pi-powered feeder with a web interface. It's been running for about two years now.
 
+![PetFeedr main dashboard showing feeding schedule timeline and manual feed button](/images/petfeedr/dashboard-light.png)
+
 ## What it does
 
 Configurable feeding schedule with portion sizes - small, medium, or large. An optional randomization mode shifts each feeding by up to 30 minutes daily so the cats don't learn the exact schedule.
 
 The web interface shows a visual timeline of today's schedule, a 14-day activity log, and weekly stats with portion tracking. There's a manual feed button for on-demand use. The whole thing installs as a PWA.
+
+![PetFeedr dashboard in dark mode](/images/petfeedr/dashboard-dark.png)
+
+![PetFeedr settings sidebar showing feeding time configuration with portion sizes and randomization toggle](/images/petfeedr/settings.png)
 
 ## How it works
 
