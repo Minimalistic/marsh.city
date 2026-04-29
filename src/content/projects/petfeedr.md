@@ -37,14 +37,13 @@ The web interface shows a visual timeline of today's schedule, a 14-day activity
 
 ```mermaid
 flowchart TD
-  G[Manual feed button] -.-> C
   A[Schedule engine] --> B{Feed time?}
   B -->|Yes| C[Anti-jam agitation]
   B -->|No| F[Sleep until next check]
   F --> A
   C --> D[Stepper motor dispense]
   D --> E[Log portion + timestamp]
-  E --> A
+  G[Manual feed button] -.-> C
 ```
 
 Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DRV8825 driver. The motor runs at 1/16 microstepping for quiet operation, with an anti-jam agitation cycle that reverses slightly before each dispense. Portion control is calibrated to step count - 100 steps per quarter cup.
