@@ -1122,7 +1122,44 @@ const paletteItems = [
           });
         }
 
+        function openVideoLightbox(src, alt) {
+          if (overlay) closeLightbox();
+          overlay = document.createElement('div');
+          overlay.className = 'lightbox';
+          overlay.setAttribute('role', 'dialog');
+          overlay.setAttribute('aria-modal', 'true');
+          overlay.setAttribute('aria-label', alt || 'Video preview');
+
+          var closeBtn = document.createElement('button');
+          closeBtn.className = 'lightbox-close';
+          closeBtn.setAttribute('aria-label', 'Close video preview');
+          closeBtn.innerHTML = '&#x2715;';
+          closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
+
+          var vid = document.createElement('video');
+          vid.src = src;
+          vid.autoplay = true;
+          vid.loop = true;
+          vid.muted = true;
+          vid.playsInline = true;
+          vid.draggable = false;
+
+          overlay.appendChild(closeBtn);
+          overlay.appendChild(vid);
+          document.body.appendChild(overlay);
+          document.body.style.overflow = 'hidden';
+
+          resetTransform();
+          requestAnimationFrame(function() { if (overlay) overlay.classList.add('open'); });
+
+          overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) closeLightbox();
+          });
+        }
+
         document.addEventListener('click', function(e) {
+          var vid = e.target.closest('.prose video');
+          if (vid) { openVideoLightbox(vid.src, vid.getAttribute('alt') || ''); return; }
           var img = e.target.closest('.prose img');
           if (img) openLightbox(img.src, img.alt);
         });

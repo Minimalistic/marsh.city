@@ -963,10 +963,42 @@ nav.site-nav .links a[aria-current="page"]::after {
 .prose ul, .prose ol { padding-left: 1.25rem; }
 .prose li { margin-bottom: 0.35rem; }
 .prose li::marker { color: var(--leaf); }
-.prose img {
+.prose img,
+.prose video {
   max-width: 100%;
   border-radius: var(--radius);
   cursor: zoom-in;
+}
+/* thumbnail sizing on mobile */
+@media (max-width: 767px) {
+  .prose img,
+  .prose video {
+    max-width: 60%;
+    display: block;
+    margin-inline: auto;
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+}
+.prose .media-thumb {
+  position: relative;
+  display: inline-block;
+}
+.prose .media-thumb::after {
+  content: 'Tap to enlarge';
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--bg);
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  padding: 0.2rem 0.6rem;
+  border-radius: 1rem;
+  pointer-events: none;
+  opacity: 0.8;
+}
+@media (min-width: 768px) {
+  .prose .media-thumb::after { content: 'Click to enlarge'; }
 }
 
 /* Wide prose: project pages get a wider container so images can breathe
@@ -992,13 +1024,17 @@ nav.site-nav .links a[aria-current="page"]::after {
     max-width: 100%;
     text-align: center;
   }
-  .prose-wide > p > img:only-child {
+  .prose-wide > p > img:only-child,
+  .prose-wide > video,
+  .prose-wide > .media-thumb > video {
     max-width: 70%;
     max-height: 480px;
     box-shadow: 0 2px 12px color-mix(in srgb, var(--ink) 8%, transparent);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .prose-wide > p > img:only-child:hover {
+  .prose-wide > p > img:only-child:hover,
+  .prose-wide > video:hover,
+  .prose-wide > .media-thumb > video:hover {
     transform: scale(1.02);
     box-shadow: 0 4px 24px color-mix(in srgb, var(--ink) 14%, transparent);
   }
@@ -1020,7 +1056,8 @@ nav.site-nav .links a[aria-current="page"]::after {
   overflow: hidden;
 }
 .lightbox.open { opacity: 1; }
-.lightbox img {
+.lightbox img,
+.lightbox video {
   max-width: 95vw;
   max-height: 92vh;
   object-fit: contain;
