@@ -35,7 +35,7 @@ When a station is playing, the interface shifts - the active button highlights, 
 
 ![The settings panel showing theme selection, text size, desktop view, volume cap, and control mode options](/images/radiogridxl/settings.png)
 
-Five taps on the logo opens a PIN-protected settings panel. A technician can configure everything without exposing that complexity to the end user - theme, text size, volume cap, control mode, accessibility features, and the station list itself. Lockout escalates after failed PIN attempts.
+Five taps on the logo opens a PIN-protected settings panel - hidden enough that no one's found it by accident yet. A technician can configure everything without exposing that complexity to the end user - theme, text size, volume cap, control mode, accessibility features, and the station list itself. Lockout escalates after failed PIN attempts.
 
 ## Stream browser
 
@@ -60,7 +60,7 @@ We designed for older adults and people with disabilities from the start - acces
 
 ## How it's built
 
-One HTML file. Around 3,800 lines of vanilla HTML, CSS, and JavaScript - which is an absurd way to build an app, but here we are. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
+One HTML file. Around 3,800 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
 
 A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
 

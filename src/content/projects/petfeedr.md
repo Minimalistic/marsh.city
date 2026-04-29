@@ -19,13 +19,13 @@ Jason has two ragdoll cats - Frida and Charlie - and the store-bought feeder was
 | **Programming** | Tiny LCD, bad button ergonomics | Web interface from any device |
 | **Schedule** | Fixed times only | Randomization mode (±30 min) |
 
-So we built a whole Raspberry Pi-powered feeder with a web interface, microstepping motor control, and a deploy pipeline. For two cats. It's been running for about two years now.
+We built a Raspberry Pi-powered feeder with a web interface, microstepping motor control, and a deploy pipeline - admittedly a lot of engineering for two cats, but it's been running reliably for about two years now.
 
 ![PetFeedr main dashboard showing feeding schedule timeline and manual feed button](/images/petfeedr/dashboard-light.png)
 
 ## What it does
 
-Configurable feeding schedule with portion sizes - small, medium, or large. An optional randomization mode shifts each feeding by up to 30 minutes daily so the cats don't learn the exact schedule.
+Configurable feeding schedule with portion sizes - small, medium, or large. An optional randomization mode shifts each feeding by up to 30 minutes daily so the cats don't learn the exact schedule. (They figured out the general window anyway.)
 
 The web interface shows a visual timeline of today's schedule, a 14-day activity log, and weekly stats with portion tracking. There's a manual feed button for on-demand use. The whole thing installs as a PWA.
 

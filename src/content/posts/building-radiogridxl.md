@@ -13,7 +13,7 @@ It started as a single HTML file - and stayed that way. No dependencies, no buil
 
 ## From side project to real deployment
 
-Jason is the Director of Technology at a nonprofit that serves older adults and people with disabilities. A recurring problem he sees: mainstream apps assume a level of technical comfort that many clients don't have. Spotify is overwhelming. Even a basic podcast app has too many screens, too many options, too much text.
+Jason is the Director of Technology at a nonprofit that serves older adults and people with disabilities. A recurring problem he sees: mainstream apps assume a level of technical comfort that many clients don't have. Spotify is overwhelming if you just want to hear jazz. Even a basic podcast app has too many screens, too many options, too much text.
 
 When we realized RadioGridXL could address that problem, we built a profile system - a way to brand and pre-configure the app for different deployments. The version deployed to their clients has curated stations, a locked-down settings panel behind a technician PIN, and large touch targets sized for users who may have limited dexterity or vision.
 
@@ -37,7 +37,7 @@ The accessibility features weren't added after the fact. They shaped the archite
 
 Keeping everything in one HTML file sounds like a limitation, but it eliminated an entire class of deployment problems. There's no server to maintain, no dependency to update, no CDN to go down. The app can run from a local file, a Docker container, or a USB drive. For a kiosk deployment in a nonprofit with limited IT resources, that reliability matters more than architectural elegance.
 
-The tradeoff is real: 3,800 lines in one file is not how anyone would teach you to write software. It's kind of embarrassing to say out loud. But we've never had a dependency conflict take it down, never needed a security patch for someone else's package, and anyone can understand the whole thing by reading one file.
+The tradeoff is real: 3,800 lines in one file is not how anyone would recommend writing software. But we've never had a dependency conflict take it down, never needed a security patch for someone else's package, and anyone can understand the whole thing by reading one file.
 
 ## What's next
 
