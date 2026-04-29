@@ -10,7 +10,7 @@ export async function getStaticPaths() {
 const { project } = Astro.props;
 const { Content } = await render(project);
 ---
-<Post title={project.data.title} description={project.data.description}>
+<Post title={project.data.title} description={project.data.description} wide>
   <div class="project-meta">
     <span class="status" aria-label={({ idea: 'Idea', wip: 'Work in progress', shipped: 'Shipped', archived: 'Archived' })[project.data.status]}>{project.data.status}</span>
     {project.data.repo && <a href={project.data.repo} class="project-link">repo</a>}

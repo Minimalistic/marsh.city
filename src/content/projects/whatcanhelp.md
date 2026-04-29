@@ -21,7 +21,7 @@ The landing page opens with "Find what actually helps" and a three-step overview
 
 The guided intake walks through four steps. First: who is this for - myself, my child, a parent, a student, a client. Then challenge areas presented as a grid of cards rather than a clinical checklist. Optional refinements for age group, budget, and platform. And a free-text field for anything that doesn't fit the structured questions. Progress dots across the top show where you are in the process.
 
-![The browsable product catalog with sidebar filters, complexity badges, and a highlights carousel](/images/whatcanhelp/catalog.png)
+![The browsable product catalog with sidebar filters, complexity badges, and a highlights carousel](/images/whatcanhelp/catalog.jpg)
 
 The catalog has two views - a card grid and a dense table - with faceted filters along the side. Each product shows a thumbnail, name, manufacturer, price range, and a color-coded complexity badge.
 

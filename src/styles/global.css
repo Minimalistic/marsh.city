@@ -969,6 +969,41 @@ nav.site-nav .links a[aria-current="page"]::after {
   cursor: zoom-in;
 }
 
+/* Wide prose: project pages get a wider container so images can breathe
+   while text stays at a readable 65ch. */
+@media (min-width: 768px) {
+  .layout:has(.prose-wide) { max-width: 900px; }
+  .prose-wide { max-width: 900px; }
+  /* constrain text elements to reading width, centered */
+  .prose-wide > p,
+  .prose-wide > h2,
+  .prose-wide > h3,
+  .prose-wide > h4,
+  .prose-wide > ul,
+  .prose-wide > ol,
+  .prose-wide > blockquote,
+  .prose-wide > table,
+  .prose-wide > .expressive-code {
+    max-width: 65ch;
+    margin-inline: auto;
+  }
+  /* image paragraphs break out to the full container */
+  .prose-wide > p:has(> img:only-child) {
+    max-width: 100%;
+    text-align: center;
+  }
+  .prose-wide > p > img:only-child {
+    max-width: 70%;
+    max-height: 480px;
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--ink) 8%, transparent);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .prose-wide > p > img:only-child:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 24px color-mix(in srgb, var(--ink) 14%, transparent);
+  }
+}
+
 /* lightbox */
 .lightbox {
   position: fixed;

@@ -23,6 +23,8 @@ Big buttons, one per station. Tap to play, tap again to pause. That's the whole 
 
 Add more stations and the layout shifts to a responsive grid - two columns here on mobile, scaling up to four on desktop. Each station gets its own color from eight palettes. No media query breakpoints - the grid math is pure viewport calculation.
 
+![RadioGridXL on a phone screen - the same interface adapts to fill a narrow viewport with stacked buttons](/images/radiogridxl/grid-mobile.png)
+
 ## Playback and controls
 
 ![Active playback state with advanced transport controls, connection indicator, and sleep timer](/images/radiogridxl/now-playing.png)

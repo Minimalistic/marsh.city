@@ -4,8 +4,9 @@ interface Props {
   title: string;
   description?: string;
   date?: Date;
+  wide?: boolean;
 }
-const { title, description, date } = Astro.props;
+const { title, description, date, wide } = Astro.props;
 ---
 <Base title={title} description={description}>
   {date && <script type="application/ld+json" set:html={JSON.stringify({
@@ -23,7 +24,7 @@ const { title, description, date } = Astro.props;
     {date && <p class="meta" style="color: var(--fg-soft); font-size: 0.9rem;">
       {date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
     </p>}
-    <div class="prose">
+    <div class={`prose${wide ? ' prose-wide' : ''}`}>
       <slot />
     </div>
   </article>
