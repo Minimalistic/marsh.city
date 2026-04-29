@@ -928,7 +928,8 @@ const paletteItems = [
     <script is:inline>
       // mermaid — only loads the library if the page has mermaid blocks
       (() => {
-        const blocks = document.querySelectorAll('pre > code.language-mermaid');
+        // match both raw markdown (code.language-mermaid) and Shiki-highlighted (pre[data-language="mermaid"])
+        const blocks = document.querySelectorAll('pre > code.language-mermaid, pre[data-language="mermaid"] > code');
         if (!blocks.length) return;
         blocks.forEach(code => {
           const pre = code.parentElement;
