@@ -1321,6 +1321,31 @@ nav.site-nav .links a[aria-current="page"]::after {
 }
 .nav-menu-panel[hidden] { display: none; }
 
+/* nav links inside hamburger — styled like theme-toggle/cmdk items */
+.nav-menu-link {
+  display: none;  /* hidden on desktop; shown on mobile via media query */
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.nav-menu-link::after { display: none; }
+.nav-menu-link:hover {
+  background: color-mix(in srgb, var(--leaf) 15%, transparent);
+  color: var(--fg);
+}
+.nav-menu-link[aria-current="page"] {
+  color: var(--leaf);
+}
+
 .nav-menu-item-icon {
   display: inline-flex;
   align-items: center;
@@ -1620,7 +1645,7 @@ html.theme-animating *::after {
 
 /* Nav stacks into rows earlier than the rest of the layout — at ≤720px
    there isn't horizontal room for brand + 5 links + search + hamburger
-   in one row, so the brand goes on top and the rest wrap underneath. */
+   in one row. Playground + about move into the hamburger on mobile. */
 @media (max-width: 720px) {
   nav.site-nav {
     top: 0.5rem;
@@ -1635,7 +1660,8 @@ html.theme-animating *::after {
     margin-bottom: 0;
     line-height: 1.15;
   }
-  /* mobile keeps the 44px link tap target from the base rule */
+  nav.site-nav .links .nav-hide-mobile { display: none; }
+  .nav-menu-link { display: inline-flex; }
   nav.site-nav .links {
     gap: 0.25rem 0.6rem;
     font-size: 0.85rem;
@@ -1657,10 +1683,6 @@ html.theme-animating *::after {
   .nav-menu-panel .cmdk-trigger { display: none; }
 }
 @media (max-width: 600px) {
-  nav.site-nav .links {
-    gap: 0.2rem 0.4rem;
-    font-size: 0.8rem;
-  }
   .layout {
     padding: 5.5rem 1rem 4rem;
   }
