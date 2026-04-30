@@ -1,25 +1,34 @@
 ---
 title: The Machine
-description: A generative systems architecture diagram - different every time you load the page.
+description: Real-world system architectures, animated and explained - a different system every time you hit shuffle.
 ---
 
-Every time you load this page, a different data infrastructure assembles itself from the same building blocks - sensors, queues, databases, dashboards. Same components, different architecture each time.
+Every time you load this page, a different real-world system reveals how it works under the hood - from DNS resolution to video streaming to how your credit card actually processes. Hit shuffle to explore another.
+
+<h2 id="machine-title" class="machine-title"></h2>
 
 <div class="machine-controls">
-  <button id="machine-shuffle" type="button" aria-label="Generate a new random diagram">Shuffle</button>
-  <p id="machine-description" class="meta" aria-live="polite"></p>
+  <button id="machine-shuffle" type="button" aria-label="Show a different system">Shuffle</button>
+  <span id="machine-counter" class="meta"></span>
 </div>
 
 <div class="mermaid-animated" id="machine-wrapper">
   <div class="mermaid" id="machine-diagram"></div>
 </div>
 
+<p id="machine-description" class="machine-desc" aria-live="polite"></p>
+
 <style>{`
+  .machine-title {
+    margin: 1.5rem 0 0.5rem;
+    font-size: 1.3rem;
+    min-height: 1.6em;
+  }
   .machine-controls {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin: 1.5rem 0;
+    margin: 0 0 1.5rem;
     flex-wrap: wrap;
   }
   #machine-shuffle {
@@ -42,230 +51,511 @@ Every time you load this page, a different data infrastructure assembles itself 
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
-  #machine-description {
-    margin: 0;
-    font-size: 0.82rem;
+  #machine-counter {
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+  }
+  .machine-desc {
+    font-size: 0.9rem;
+    line-height: 1.6;
     color: var(--fg-soft);
-    flex: 1;
-    min-width: 200px;
+    margin-top: 1rem;
+    max-width: 65ch;
   }
 `}</style>
 
 <script is:inline>{`
 (function() {
-  var layers = [
+  var S = [
     {
-      name: 'Data Sources',
-      shape: ['([', '])'],
-      pool: [
-        { id: 'US', label: 'User Sessions' },
-        { id: 'WH', label: 'Webhooks' },
-        { id: 'SN', label: 'Sensor Array' },
-        { id: 'AP', label: 'REST API' },
-        { id: 'LG', label: 'Log Stream' },
-        { id: 'CS', label: 'Change Feed' },
-        { id: 'MF', label: 'Media Upload' },
-        { id: 'CR', label: 'CRON Jobs' }
+      title: 'How a Web Page Loads',
+      desc: 'Your browser checks its cache, resolves the domain through DNS, and requests content from a CDN or origin server. The server queries a database, templates the response, compresses it, and ships it back. The browser parses the HTML into a DOM tree, then calculates layout and paints pixels. Fast sites optimize every hop in this chain.',
+      layers: [
+        { name: 'Client', nodes: [
+          { id: 'BR', label: 'Browser', s: ['([','])'] },
+          { id: 'CA', label: 'Browser Cache', s: ['([','])'] }
+        ]},
+        { name: 'Resolution', nodes: [
+          { id: 'DNS', label: 'DNS Resolver', s: ['[/','/]'] },
+          { id: 'CDN', label: 'CDN Edge', s: ['[/','/]'] }
+        ]},
+        { name: 'Server', nodes: [
+          { id: 'LB', label: 'Load Balancer', s: ['[/','/]'] },
+          { id: 'APP', label: 'App Server', s: ['[',']'] },
+          { id: 'DB', label: 'Database', s: ['[(',')]'] }
+        ]},
+        { name: 'Assembly', nodes: [
+          { id: 'TPL', label: 'Template Engine', s: ['[',']'] },
+          { id: 'GZ', label: 'Compression', s: ['[',']'] }
+        ]},
+        { name: 'Render', nodes: [
+          { id: 'DOM', label: 'DOM Parser', s: ['[[',']]'] },
+          { id: 'PT', label: 'Layout & Paint', s: ['[[',']]'] }
+        ]}
       ],
-      pick: [2, 4]
+      edges: [
+        { f: 'BR', t: 'CA', l: 'check cache' },
+        { f: 'CA', t: 'DNS', l: 'cache miss' },
+        { f: 'BR', t: 'DNS', l: 'URL lookup' },
+        { f: 'DNS', t: 'CDN', l: 'IP address' },
+        { f: 'CDN', t: 'GZ', l: 'cache hit' },
+        { f: 'CDN', t: 'LB', l: 'cache miss' },
+        { f: 'LB', t: 'APP', l: 'route' },
+        { f: 'APP', t: 'DB', l: 'query' },
+        { f: 'DB', t: 'APP', l: 'result set' },
+        { f: 'APP', t: 'TPL', l: 'data' },
+        { f: 'TPL', t: 'GZ', l: 'HTML' },
+        { f: 'GZ', t: 'DOM', l: 'gzip stream' },
+        { f: 'DOM', t: 'PT', l: 'render tree' },
+        { f: 'CA', t: 'DOM', l: 'cache hit' }
+      ]
     },
     {
-      name: 'Ingestion',
-      shape: ['[/', '/]'],
-      pool: [
-        { id: 'LB', label: 'Load Balancer' },
-        { id: 'MQ', label: 'Message Queue' },
-        { id: 'EB', label: 'Event Bus' },
-        { id: 'GW', label: 'API Gateway' },
-        { id: 'SP', label: 'Stream Processor' },
-        { id: 'RL', label: 'Rate Limiter' }
+      title: 'How Online Payments Process',
+      desc: 'Your card number is tokenized at the payment gateway - the merchant never sees the real number. The gateway runs fraud detection, then routes an authorization request through the card network to your issuing bank. The bank checks your balance and approves or denies. Settlement happens later in batch through the acquiring bank.',
+      layers: [
+        { name: 'Checkout', nodes: [
+          { id: 'CART', label: 'Shopping Cart', s: ['([','])'] },
+          { id: 'PAY', label: 'Payment Form', s: ['([','])'] }
+        ]},
+        { name: 'Validation', nodes: [
+          { id: 'GW', label: 'Payment Gateway', s: ['[/','/]'] },
+          { id: 'FRAUD', label: 'Fraud Detection', s: ['[/','/]'] }
+        ]},
+        { name: 'Network', nodes: [
+          { id: 'NET', label: 'Card Network', s: ['[',']'] },
+          { id: 'ISS', label: 'Issuing Bank', s: ['[(',')]'] }
+        ]},
+        { name: 'Authorization', nodes: [
+          { id: 'AUTH', label: 'Auth Decision', s: ['[',']'] },
+          { id: 'ACQ', label: 'Acquiring Bank', s: ['[(',')]'] }
+        ]},
+        { name: 'Settlement', nodes: [
+          { id: 'MERCH', label: 'Merchant Account', s: ['[[',']]'] },
+          { id: 'REC', label: 'Receipt', s: ['[[',']]'] }
+        ]}
       ],
-      pick: [2, 3]
+      edges: [
+        { f: 'CART', t: 'PAY', l: 'order total' },
+        { f: 'PAY', t: 'GW', l: 'card details' },
+        { f: 'GW', t: 'FRAUD', l: 'tokenized' },
+        { f: 'FRAUD', t: 'GW', l: 'risk score' },
+        { f: 'GW', t: 'NET', l: 'auth request' },
+        { f: 'NET', t: 'ISS', l: 'verify funds' },
+        { f: 'ISS', t: 'AUTH', l: 'approve or deny' },
+        { f: 'AUTH', t: 'NET', l: 'response code' },
+        { f: 'NET', t: 'ACQ', l: 'auth code' },
+        { f: 'ACQ', t: 'MERCH', l: 'settlement' },
+        { f: 'GW', t: 'REC', l: 'confirmation' },
+        { f: 'FRAUD', t: 'AUTH', l: 'flagged' }
+      ]
     },
     {
-      name: 'Processing',
-      shape: ['[', ']'],
-      pool: [
-        { id: 'VL', label: 'Validator' },
-        { id: 'EN', label: 'Enricher' },
-        { id: 'AG', label: 'Aggregator' },
-        { id: 'DD', label: 'Deduplicator' },
-        { id: 'TF', label: 'Transformer' },
-        { id: 'CL', label: 'Classifier' },
-        { id: 'NM', label: 'Normalizer' },
-        { id: 'FI', label: 'Filter' }
+      title: 'How Email Delivers',
+      desc: 'Your mail client hands the message to an SMTP server, which looks up the recipient\\'s mail server via DNS MX records. The sending mail transfer agent forwards through relay servers. The receiving end checks SPF and DKIM records to verify the sender, runs spam filtering, then delivers to the mailbox. Your recipient\\'s IMAP client fetches it.',
+      layers: [
+        { name: 'Compose', nodes: [
+          { id: 'CLI', label: 'Mail Client', s: ['([','])'] },
+          { id: 'ADDR', label: 'Address Book', s: ['([','])'] }
+        ]},
+        { name: 'Send', nodes: [
+          { id: 'SMTP', label: 'SMTP Client', s: ['[/','/]'] },
+          { id: 'MXL', label: 'DNS MX Lookup', s: ['[/','/]'] }
+        ]},
+        { name: 'Route', nodes: [
+          { id: 'MTA', label: 'Sending MTA', s: ['[',']'] },
+          { id: 'RELAY', label: 'Relay Server', s: ['[',']'] }
+        ]},
+        { name: 'Filter', nodes: [
+          { id: 'SPF', label: 'SPF/DKIM Check', s: ['[',']'] },
+          { id: 'SPAM', label: 'Spam Filter', s: ['[',']'] }
+        ]},
+        { name: 'Deliver', nodes: [
+          { id: 'MBOX', label: 'Mailbox Store', s: ['[(',')]'] },
+          { id: 'IMAP', label: 'IMAP Server', s: ['[[',']]'] },
+          { id: 'INBOX', label: 'Inbox', s: ['[[',']]'] }
+        ]}
       ],
-      pick: [3, 4]
+      edges: [
+        { f: 'CLI', t: 'ADDR', l: 'lookup' },
+        { f: 'ADDR', t: 'SMTP', l: 'recipients' },
+        { f: 'CLI', t: 'SMTP', l: 'send' },
+        { f: 'SMTP', t: 'MXL', l: 'lookup MX' },
+        { f: 'MXL', t: 'MTA', l: 'mail server IP' },
+        { f: 'MTA', t: 'RELAY', l: 'forward' },
+        { f: 'RELAY', t: 'SPF', l: 'envelope' },
+        { f: 'SPF', t: 'SPAM', l: 'verified' },
+        { f: 'SPAM', t: 'MBOX', l: 'clean' },
+        { f: 'MBOX', t: 'IMAP', l: 'fetch' },
+        { f: 'IMAP', t: 'INBOX', l: 'messages' },
+        { f: 'RELAY', t: 'CLI', l: 'bounce' }
+      ]
     },
     {
-      name: 'Storage',
-      shape: ['[(', ')]'],
-      pool: [
-        { id: 'TS', label: 'Time-Series DB' },
-        { id: 'DC', label: 'Document Store' },
-        { id: 'GD', label: 'Graph DB' },
-        { id: 'CH', label: 'Cache Layer' },
-        { id: 'IX', label: 'Search Index' },
-        { id: 'DL', label: 'Data Lake' },
-        { id: 'KV', label: 'Key-Value Store' }
+      title: 'How Video Streaming Works',
+      desc: 'Raw video is transcoded into multiple quality levels and split into small segments for adaptive bitrate streaming. A manifest file tells the player which quality to request based on current bandwidth. The CDN serves segments from the nearest edge server. The player buffers ahead, decodes frames, and adjusts quality on the fly.',
+      layers: [
+        { name: 'Source', nodes: [
+          { id: 'CAM', label: 'Camera / Upload', s: ['([','])'] },
+          { id: 'LIB', label: 'Media Library', s: ['([','])'] }
+        ]},
+        { name: 'Processing', nodes: [
+          { id: 'TRANS', label: 'Transcoder', s: ['[/','/]'] },
+          { id: 'ABR', label: 'Adaptive Bitrate', s: ['[/','/]'] }
+        ]},
+        { name: 'Storage', nodes: [
+          { id: 'ORIG', label: 'Origin Storage', s: ['[(',')]'] },
+          { id: 'META', label: 'Metadata DB', s: ['[(',')]'] }
+        ]},
+        { name: 'Distribution', nodes: [
+          { id: 'CDNE', label: 'CDN Edge', s: ['[',']'] },
+          { id: 'MANF', label: 'Manifest Server', s: ['[',']'] }
+        ]},
+        { name: 'Playback', nodes: [
+          { id: 'BUF', label: 'Player Buffer', s: ['[[',']]'] },
+          { id: 'DEC', label: 'Decoder', s: ['[[',']]'] },
+          { id: 'DISP', label: 'Display', s: ['[[',']]'] }
+        ]}
       ],
-      pick: [2, 3]
+      edges: [
+        { f: 'CAM', t: 'TRANS', l: 'raw video' },
+        { f: 'LIB', t: 'TRANS', l: 'source file' },
+        { f: 'TRANS', t: 'ABR', l: 'multiple qualities' },
+        { f: 'ABR', t: 'ORIG', l: 'HLS segments' },
+        { f: 'TRANS', t: 'META', l: 'metadata' },
+        { f: 'ORIG', t: 'CDNE', l: 'replicate' },
+        { f: 'META', t: 'MANF', l: 'playlist' },
+        { f: 'MANF', t: 'BUF', l: 'manifest' },
+        { f: 'CDNE', t: 'BUF', l: 'segments' },
+        { f: 'BUF', t: 'DEC', l: 'frames' },
+        { f: 'DEC', t: 'DISP', l: 'pixels' },
+        { f: 'BUF', t: 'MANF', l: 'bandwidth signal' }
+      ]
     },
     {
-      name: 'Output',
-      shape: ['[[', ']]'],
-      pool: [
-        { id: 'DB', label: 'Dashboard' },
-        { id: 'AL', label: 'Alert Engine' },
-        { id: 'RA', label: 'API Response' },
-        { id: 'RP', label: 'Report Gen' },
-        { id: 'ML', label: 'ML Pipeline' },
-        { id: 'NT', label: 'Notifications' },
-        { id: 'EX', label: 'Data Export' }
+      title: 'How DNS Resolution Works',
+      desc: 'A simple hostname lookup cascades through multiple cache layers - browser, OS, then the recursive resolver. On a full miss, the resolver walks the DNS hierarchy: root servers point to TLD servers, which point to the authoritative nameserver that holds the actual record. The answer is cached at each level according to TTL.',
+      layers: [
+        { name: 'Query', nodes: [
+          { id: 'APPL', label: 'Application', s: ['([','])'] },
+          { id: 'STUB', label: 'Stub Resolver', s: ['([','])'] }
+        ]},
+        { name: 'Cache', nodes: [
+          { id: 'LCSH', label: 'Browser Cache', s: ['[/','/]'] },
+          { id: 'OCSH', label: 'OS Cache', s: ['[/','/]'] }
+        ]},
+        { name: 'Recursive', nodes: [
+          { id: 'RECR', label: 'Recursive Resolver', s: ['[',']'] },
+          { id: 'RCSH', label: 'Resolver Cache', s: ['[(',')]'] }
+        ]},
+        { name: 'Authority', nodes: [
+          { id: 'ROOT', label: 'Root Server', s: ['[',']'] },
+          { id: 'TLD', label: 'TLD Server', s: ['[',']'] },
+          { id: 'ANSR', label: 'Authoritative NS', s: ['[',']'] }
+        ]},
+        { name: 'Response', nodes: [
+          { id: 'RESP', label: 'IP Address', s: ['[[',']]'] },
+          { id: 'TTLC', label: 'Cache Update', s: ['[[',']]'] }
+        ]}
       ],
-      pick: [2, 3]
+      edges: [
+        { f: 'APPL', t: 'STUB', l: 'hostname' },
+        { f: 'STUB', t: 'LCSH', l: 'check' },
+        { f: 'LCSH', t: 'OCSH', l: 'miss' },
+        { f: 'OCSH', t: 'RECR', l: 'miss' },
+        { f: 'RECR', t: 'RCSH', l: 'check' },
+        { f: 'RCSH', t: 'ROOT', l: 'miss' },
+        { f: 'ROOT', t: 'TLD', l: 'referral' },
+        { f: 'TLD', t: 'ANSR', l: 'referral' },
+        { f: 'ANSR', t: 'RECR', l: 'A record' },
+        { f: 'RECR', t: 'RCSH', l: 'store' },
+        { f: 'RECR', t: 'RESP', l: 'IP' },
+        { f: 'RESP', t: 'TTLC', l: 'update caches' },
+        { f: 'LCSH', t: 'RESP', l: 'hit' },
+        { f: 'OCSH', t: 'RESP', l: 'hit' }
+      ]
+    },
+    {
+      title: 'How a Search Engine Works',
+      desc: 'A web crawler follows links to discover pages, feeding discovered URLs back into a frontier queue for future crawling. Pages are fetched, parsed for text and links, then content is extracted and indexed into an inverted index. PageRank scores the link graph. At query time, the parser tokenizes your search, the engine looks up candidates in the index, ranks them, and generates result snippets.',
+      layers: [
+        { name: 'Discover', nodes: [
+          { id: 'CRWL', label: 'Web Crawler', s: ['([','])'] },
+          { id: 'FRON', label: 'URL Frontier', s: ['([','])'] }
+        ]},
+        { name: 'Fetch', nodes: [
+          { id: 'HTTP', label: 'HTTP Fetch', s: ['[/','/]'] },
+          { id: 'PARS', label: 'HTML Parser', s: ['[/','/]'] }
+        ]},
+        { name: 'Index', nodes: [
+          { id: 'EXTR', label: 'Content Extractor', s: ['[',']'] },
+          { id: 'PRNK', label: 'PageRank', s: ['[',']'] },
+          { id: 'IIDX', label: 'Inverted Index', s: ['[(',')]'] }
+        ]},
+        { name: 'Query', nodes: [
+          { id: 'QPRS', label: 'Query Parser', s: ['[',']'] },
+          { id: 'RANK', label: 'Ranking Engine', s: ['[',']'] }
+        ]},
+        { name: 'Results', nodes: [
+          { id: 'SERP', label: 'Results Page', s: ['[[',']]'] },
+          { id: 'SNIP', label: 'Snippet Gen', s: ['[[',']]'] }
+        ]}
+      ],
+      edges: [
+        { f: 'FRON', t: 'CRWL', l: 'next URL' },
+        { f: 'CRWL', t: 'FRON', l: 'discovered URLs' },
+        { f: 'CRWL', t: 'HTTP', l: 'fetch' },
+        { f: 'HTTP', t: 'PARS', l: 'document' },
+        { f: 'PARS', t: 'FRON', l: 'links' },
+        { f: 'PARS', t: 'EXTR', l: 'text' },
+        { f: 'EXTR', t: 'IIDX', l: 'terms' },
+        { f: 'EXTR', t: 'PRNK', l: 'link graph' },
+        { f: 'PRNK', t: 'IIDX', l: 'scores' },
+        { f: 'QPRS', t: 'RANK', l: 'tokens' },
+        { f: 'RANK', t: 'IIDX', l: 'lookup' },
+        { f: 'IIDX', t: 'RANK', l: 'candidates' },
+        { f: 'RANK', t: 'SERP', l: 'ranked' },
+        { f: 'SERP', t: 'SNIP', l: 'context' }
+      ]
+    },
+    {
+      title: 'How CI/CD Deploys Code',
+      desc: 'A git push fires a webhook that triggers a build runner. Dependencies are installed, then unit tests and linting run in parallel. Passing builds go through integration tests, produce artifacts stored in a container registry, and deploy first to staging for smoke tests. Only after staging passes does the pipeline promote to production, where a health check confirms the deploy.',
+      layers: [
+        { name: 'Trigger', nodes: [
+          { id: 'PUSH', label: 'Git Push', s: ['([','])'] },
+          { id: 'HOOK', label: 'Webhook', s: ['([','])'] }
+        ]},
+        { name: 'Build', nodes: [
+          { id: 'RUNR', label: 'Build Runner', s: ['[/','/]'] },
+          { id: 'DEPS', label: 'Dependencies', s: ['[/','/]'] }
+        ]},
+        { name: 'Test', nodes: [
+          { id: 'UNIT', label: 'Unit Tests', s: ['[',']'] },
+          { id: 'LINT', label: 'Lint & Security', s: ['[',']'] },
+          { id: 'INTG', label: 'Integration Tests', s: ['[',']'] }
+        ]},
+        { name: 'Artifact', nodes: [
+          { id: 'ARTS', label: 'Artifact Store', s: ['[(',')]'] },
+          { id: 'CREG', label: 'Container Registry', s: ['[(',')]'] }
+        ]},
+        { name: 'Deploy', nodes: [
+          { id: 'STAG', label: 'Staging', s: ['[[',']]'] },
+          { id: 'PROD', label: 'Production', s: ['[[',']]'] },
+          { id: 'HLTH', label: 'Health Check', s: ['[[',']]'] }
+        ]}
+      ],
+      edges: [
+        { f: 'PUSH', t: 'HOOK', l: 'commit' },
+        { f: 'HOOK', t: 'RUNR', l: 'trigger' },
+        { f: 'RUNR', t: 'DEPS', l: 'install' },
+        { f: 'DEPS', t: 'UNIT', l: 'ready' },
+        { f: 'DEPS', t: 'LINT', l: 'ready' },
+        { f: 'UNIT', t: 'INTG', l: 'pass' },
+        { f: 'LINT', t: 'INTG', l: 'pass' },
+        { f: 'INTG', t: 'ARTS', l: 'pass' },
+        { f: 'ARTS', t: 'CREG', l: 'image' },
+        { f: 'CREG', t: 'STAG', l: 'pull' },
+        { f: 'STAG', t: 'PROD', l: 'smoke tests pass' },
+        { f: 'PROD', t: 'HLTH', l: 'verify' },
+        { f: 'HLTH', t: 'RUNR', l: 'fail' }
+      ]
+    },
+    {
+      title: 'How Real-Time Chat Works',
+      desc: 'Messages travel over WebSocket connections to an API server, which authenticates the sender. A message broker handles persistence and fan-out - online users get direct WebSocket delivery, offline users get push notifications. Read receipts flow back upstream through the same broker. The presence service tracks who is online to decide the delivery path.',
+      layers: [
+        { name: 'Send', nodes: [
+          { id: 'COMP', label: 'Compose', s: ['([','])'] },
+          { id: 'WS1', label: 'WebSocket', s: ['([','])'] }
+        ]},
+        { name: 'Transport', nodes: [
+          { id: 'APIG', label: 'API Server', s: ['[/','/]'] },
+          { id: 'AUTG', label: 'Auth Check', s: ['[/','/]'] }
+        ]},
+        { name: 'Process', nodes: [
+          { id: 'BRKR', label: 'Message Broker', s: ['[',']'] },
+          { id: 'PERS', label: 'Message Store', s: ['[(',')]'] },
+          { id: 'PRES', label: 'Presence Service', s: ['[',']'] }
+        ]},
+        { name: 'Deliver', nodes: [
+          { id: 'FANO', label: 'Fan-Out Worker', s: ['[',']'] },
+          { id: 'PNOT', label: 'Push Notification', s: ['[',']'] }
+        ]},
+        { name: 'Receive', nodes: [
+          { id: 'WS2', label: 'Recipient Socket', s: ['[[',']]'] },
+          { id: 'RNDR', label: 'Message Render', s: ['[[',']]'] }
+        ]}
+      ],
+      edges: [
+        { f: 'COMP', t: 'WS1', l: 'message' },
+        { f: 'WS1', t: 'APIG', l: 'frame' },
+        { f: 'APIG', t: 'AUTG', l: 'verify' },
+        { f: 'AUTG', t: 'BRKR', l: 'valid' },
+        { f: 'BRKR', t: 'PERS', l: 'store' },
+        { f: 'BRKR', t: 'PRES', l: 'check' },
+        { f: 'PRES', t: 'FANO', l: 'online users' },
+        { f: 'PRES', t: 'PNOT', l: 'offline users' },
+        { f: 'FANO', t: 'WS2', l: 'broadcast' },
+        { f: 'PNOT', t: 'WS2', l: 'notification' },
+        { f: 'WS2', t: 'RNDR', l: 'data' },
+        { f: 'BRKR', t: 'WS1', l: 'read receipt' },
+        { f: 'FANO', t: 'PERS', l: 'delivery ack' }
+      ]
+    },
+    {
+      title: 'How OAuth Login Works',
+      desc: 'Your app redirects the user to the authorization server, which displays a consent screen. On approval, an authorization code returns to your app\\'s callback URL. Your server exchanges that short-lived code for access and refresh tokens at the token endpoint. The access token lets you call the user info endpoint to get profile data, which creates a session.',
+      layers: [
+        { name: 'Start', nodes: [
+          { id: 'UAPP', label: 'Your App', s: ['([','])'] },
+          { id: 'LBTN', label: 'Login Button', s: ['([','])'] }
+        ]},
+        { name: 'Redirect', nodes: [
+          { id: 'ASVR', label: 'Auth Server', s: ['[/','/]'] },
+          { id: 'CNST', label: 'Consent Screen', s: ['[/','/]'] }
+        ]},
+        { name: 'Exchange', nodes: [
+          { id: 'CODE', label: 'Auth Code', s: ['[',']'] },
+          { id: 'TOKN', label: 'Token Endpoint', s: ['[',']'] }
+        ]},
+        { name: 'Verify', nodes: [
+          { id: 'VALD', label: 'Token Validation', s: ['[',']'] },
+          { id: 'UINF', label: 'User Info Endpoint', s: ['[',']'] }
+        ]},
+        { name: 'Session', nodes: [
+          { id: 'SESS', label: 'Session Store', s: ['[(',')]'] },
+          { id: 'DASH', label: 'Dashboard', s: ['[[',']]'] },
+          { id: 'PROF', label: 'User Profile', s: ['[[',']]'] }
+        ]}
+      ],
+      edges: [
+        { f: 'UAPP', t: 'LBTN', l: 'click' },
+        { f: 'LBTN', t: 'ASVR', l: 'redirect' },
+        { f: 'ASVR', t: 'CNST', l: 'display' },
+        { f: 'CNST', t: 'CODE', l: 'approve' },
+        { f: 'CODE', t: 'UAPP', l: 'callback' },
+        { f: 'UAPP', t: 'TOKN', l: 'exchange code' },
+        { f: 'TOKN', t: 'VALD', l: 'access token' },
+        { f: 'VALD', t: 'UINF', l: 'verify scope' },
+        { f: 'UINF', t: 'SESS', l: 'user data' },
+        { f: 'SESS', t: 'DASH', l: 'session cookie' },
+        { f: 'SESS', t: 'PROF', l: 'profile data' },
+        { f: 'CNST', t: 'UAPP', l: 'deny' },
+        { f: 'TOKN', t: 'SESS', l: 'refresh token' }
+      ]
+    },
+    {
+      title: 'How a Database Query Executes',
+      desc: 'The SQL parser builds an abstract syntax tree from your query text. The planner checks the plan cache for a match - on a miss, the optimizer consults table statistics to choose the cheapest execution strategy. The executor reads data pages through the buffer pool, which caches hot pages in memory and falls back to disk on misses. Results are serialized and returned to the client.',
+      layers: [
+        { name: 'Query', nodes: [
+          { id: 'CLNT', label: 'Client App', s: ['([','])'] },
+          { id: 'CONN', label: 'Connection Pool', s: ['([','])'] }
+        ]},
+        { name: 'Parse', nodes: [
+          { id: 'SQPR', label: 'SQL Parser', s: ['[/','/]'] },
+          { id: 'PLAN', label: 'Query Planner', s: ['[/','/]'] }
+        ]},
+        { name: 'Optimize', nodes: [
+          { id: 'STAT', label: 'Table Statistics', s: ['[(',')]'] },
+          { id: 'OPTM', label: 'Optimizer', s: ['[',']'] },
+          { id: 'PCSH', label: 'Plan Cache', s: ['[(',')]'] }
+        ]},
+        { name: 'Execute', nodes: [
+          { id: 'EXEC', label: 'Executor', s: ['[',']'] },
+          { id: 'BFPL', label: 'Buffer Pool', s: ['[(',')]'] },
+          { id: 'DISK', label: 'Disk Storage', s: ['[(',')]'] }
+        ]},
+        { name: 'Return', nodes: [
+          { id: 'SRLZ', label: 'Serializer', s: ['[[',']]'] },
+          { id: 'RSLT', label: 'Result Set', s: ['[[',']]'] }
+        ]}
+      ],
+      edges: [
+        { f: 'CLNT', t: 'CONN', l: 'SQL' },
+        { f: 'CONN', t: 'SQPR', l: 'session' },
+        { f: 'SQPR', t: 'PLAN', l: 'AST' },
+        { f: 'PLAN', t: 'PCSH', l: 'check' },
+        { f: 'PCSH', t: 'OPTM', l: 'miss' },
+        { f: 'OPTM', t: 'STAT', l: 'consult' },
+        { f: 'OPTM', t: 'EXEC', l: 'best plan' },
+        { f: 'PCSH', t: 'EXEC', l: 'hit' },
+        { f: 'EXEC', t: 'BFPL', l: 'page read' },
+        { f: 'BFPL', t: 'DISK', l: 'miss' },
+        { f: 'DISK', t: 'BFPL', l: 'pages' },
+        { f: 'BFPL', t: 'EXEC', l: 'rows' },
+        { f: 'EXEC', t: 'SRLZ', l: 'tuples' },
+        { f: 'SRLZ', t: 'RSLT', l: 'format' },
+        { f: 'RSLT', t: 'CLNT', l: 'response' }
+      ]
     }
   ];
 
-  var edgeLabelPool = [
-    'raw events', 'JSON payload', 'binary stream', 'validated',
-    'enriched', 'filtered', 'aggregated', 'normalized', 'compressed',
-    'indexed', 'cached', 'transformed', 'scored', 'classified',
-    'batched', 'deduped', 'encrypted', 'parsed', 'serialized',
-    'streamed', 'buffered', 'partitioned', 'replicated', 'sampled',
-    'tagged', 'routed', 'throttled', 'merged', 'split'
+  // layer colors — muted tones that distinguish layers without clashing
+  var lightColors = [
+    { fill: '#f5e6d8', stroke: '#c49470', color: '#3a2a1a' },
+    { fill: '#f0eacc', stroke: '#b8a44a', color: '#3a3420' },
+    { fill: '#d8e8d8', stroke: '#5a8a5a', color: '#1a3a1a' },
+    { fill: '#d4dce8', stroke: '#5a6a8a', color: '#1a2a3a' },
+    { fill: '#e4d8e8', stroke: '#7a5a8a', color: '#2a1a3a' }
+  ];
+  var darkColors = [
+    { fill: '#3a2820', stroke: '#c49470', color: '#f0e0d0' },
+    { fill: '#32301a', stroke: '#b8a44a', color: '#f0eacc' },
+    { fill: '#1a3020', stroke: '#5a8a5a', color: '#d8e8d8' },
+    { fill: '#1a2230', stroke: '#5a6a8a', color: '#d4dce8' },
+    { fill: '#281a30', stroke: '#7a5a8a', color: '#e4d8e8' }
   ];
 
-  function shuffle(arr) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
-    }
-    return a;
-  }
+  function buildSyntax(system) {
+    var isDark = document.documentElement.dataset.theme === 'dark';
+    var cl = isDark ? darkColors : lightColors;
+    var lines = ['flowchart TD'];
 
-  function pickN(arr, min, max) {
-    var count = min + Math.floor(Math.random() * (max - min + 1));
-    return shuffle(arr).slice(0, count);
-  }
-
-  function buildDiagram() {
-    var selected = layers.map(function(layer) {
-      return {
-        name: layer.name,
-        shape: layer.shape,
-        nodes: pickN(layer.pool, layer.pick[0], layer.pick[1])
-      };
+    // color classes
+    cl.forEach(function(c, i) {
+      lines.push('  classDef layer' + i + ' fill:' + c.fill + ',stroke:' + c.stroke + ',color:' + c.color);
     });
 
-    var edges = [];
-    var usedLabels = {};
-
-    function getLabel() {
-      var available = edgeLabelPool.filter(function(l) { return !usedLabels[l]; });
-      if (!available.length) available = edgeLabelPool;
-      var label = available[Math.floor(Math.random() * available.length)];
-      usedLabels[label] = true;
-      return label;
-    }
-
-    function addEdge(from, to) {
-      var key = from + '->' + to;
-      if (edges.some(function(e) { return e.from === from && e.to === to; })) return;
-      edges.push({ from: from, to: to, label: getLabel() });
-    }
-
-    // forward connections: each node connects to 1-2 in next layer
-    for (var i = 0; i < selected.length - 1; i++) {
-      var current = selected[i].nodes;
-      var next = selected[i + 1].nodes;
-      current.forEach(function(node) {
-        var targets = pickN(next, 1, Math.min(2, next.length));
-        targets.forEach(function(t) { addEdge(node.id, t.id); });
+    // subgraphs + nodes
+    system.layers.forEach(function(layer, li) {
+      lines.push('  subgraph sg' + li + '[\\"' + layer.name + '\\"]');
+      layer.nodes.forEach(function(n) {
+        lines.push('    ' + n.id + n.s[0] + n.label + n.s[1]);
       });
-    }
-
-    // ensure every node has at least one incoming edge
-    for (var i = 1; i < selected.length; i++) {
-      selected[i].nodes.forEach(function(node) {
-        var hasIncoming = edges.some(function(e) { return e.to === node.id; });
-        if (!hasIncoming) {
-          var source = selected[i - 1].nodes[Math.floor(Math.random() * selected[i - 1].nodes.length)];
-          addEdge(source.id, node.id);
-        }
-      });
-    }
-
-    // skip connections (2-3 edges that jump a layer)
-    var skipCount = 2 + Math.floor(Math.random() * 2);
-    for (var s = 0; s < skipCount; s++) {
-      var fromLayer = Math.floor(Math.random() * (selected.length - 2));
-      var toLayer = fromLayer + 2;
-      if (toLayer >= selected.length) continue;
-      var fromNode = selected[fromLayer].nodes[Math.floor(Math.random() * selected[fromLayer].nodes.length)];
-      var toNode = selected[toLayer].nodes[Math.floor(Math.random() * selected[toLayer].nodes.length)];
-      addEdge(fromNode.id, toNode.id);
-    }
-
-    // feedback loop (70% chance)
-    if (Math.random() > 0.3) {
-      var fl = 3 + Math.floor(Math.random() * Math.min(2, selected.length - 3));
-      var tl = 1 + Math.floor(Math.random() * 2);
-      if (fl < selected.length && tl < selected.length) {
-        var fn = selected[fl].nodes[Math.floor(Math.random() * selected[fl].nodes.length)];
-        var tn = selected[tl].nodes[Math.floor(Math.random() * selected[tl].nodes.length)];
-        addEdge(fn.id, tn.id);
-      }
-    }
-
-    // build mermaid syntax
-    var syntax = 'flowchart TD\\n';
-    selected.forEach(function(layer, idx) {
-      syntax += '  subgraph sg' + idx + '[\\"' + layer.name + '\\"]\\n';
-      layer.nodes.forEach(function(node) {
-        syntax += '    ' + node.id + layer.shape[0] + node.label + layer.shape[1] + '\\n';
-      });
-      syntax += '  end\\n';
-    });
-    edges.forEach(function(edge) {
-      syntax += '  ' + edge.from + ' -->|' + edge.label + '| ' + edge.to + '\\n';
+      lines.push('  end');
     });
 
-    // animation order: layer by layer
-    var order = [];
-    selected.forEach(function(layer) {
-      layer.nodes.forEach(function(n) { order.push(n.id); });
+    // edges
+    system.edges.forEach(function(e) {
+      lines.push('  ' + e.f + ' -->|' + e.l + '| ' + e.t);
     });
 
-    // description
-    var sourceNames = selected[0].nodes.map(function(n) { return n.label.toLowerCase(); });
-    var outputNames = selected[selected.length - 1].nodes.map(function(n) { return n.label.toLowerCase(); });
-    var totalNodes = selected.reduce(function(sum, l) { return sum + l.nodes.length; }, 0);
-    var desc = totalNodes + ' nodes, ' + edges.length + ' connections. ';
-    desc += 'Ingests from ' + sourceNames.join(' + ') + '. ';
-    desc += 'Delivers to ' + outputNames.join(' + ') + '.';
+    // class assignments per layer
+    system.layers.forEach(function(layer, li) {
+      var ci = li % cl.length;
+      var ids = layer.nodes.map(function(n) { return n.id; }).join(',');
+      lines.push('  class ' + ids + ' layer' + ci);
+    });
 
-    return { syntax: syntax, order: order, description: desc };
+    return lines.join('\\n');
   }
 
   function setupAnimation(wrapper, order) {
     var svg = wrapper.querySelector('svg');
     if (!svg) return;
-
-    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducedMotion) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       wrapper.classList.add('mermaid--visible');
       return;
     }
 
-    var edges = svg.querySelectorAll('.edgePaths > path[data-id]');
+    var edgePaths = svg.querySelectorAll('.edgePaths > path[data-id]');
     var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
     var delay = 0;
 
-    // hide everything initially
     svg.querySelectorAll('.node').forEach(function(n) { n.style.animationDelay = '99s'; });
-    edges.forEach(function(e) {
+    edgePaths.forEach(function(e) {
       var len = e.getTotalLength();
       e.style.strokeDasharray = len;
       e.style.strokeDashoffset = len;
@@ -273,16 +563,14 @@ Every time you load this page, a different data infrastructure assembles itself 
     });
     edgeLabels.forEach(function(l) { l.style.animationDelay = '99s'; });
 
-    // semantic order: node fades in, then its outgoing edges draw
     order.forEach(function(name) {
       var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
       if (node) {
         node.style.animationDelay = delay + 's';
         delay += 0.15;
       }
-      edges.forEach(function(edge, i) {
-        var dataId = edge.getAttribute('data-id') || '';
-        var parts = dataId.split('_');
+      edgePaths.forEach(function(edge, i) {
+        var parts = (edge.getAttribute('data-id') || '').split('_');
         if (parts.length >= 3 && parts[1] === name) {
           edge.style.animationDelay = delay + 's';
           delay += 0.12;
@@ -294,15 +582,13 @@ Every time you load this page, a different data infrastructure assembles itself 
     });
 
     var totalDuration = (delay + 0.8) * 1000;
-
-    // use IntersectionObserver for first view
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
           wrapper.classList.add('mermaid--visible');
           observer.unobserve(wrapper);
           setTimeout(function() {
-            edges.forEach(function(e) {
+            edgePaths.forEach(function(e) {
               e.style.strokeDasharray = '';
               e.style.strokeDashoffset = '';
             });
@@ -313,35 +599,53 @@ Every time you load this page, a different data infrastructure assembles itself 
     observer.observe(wrapper);
   }
 
-  // --- init ---
+  // --- state ---
   var container = document.getElementById('machine-diagram');
   var wrapper = document.getElementById('machine-wrapper');
+  var titleEl = document.getElementById('machine-title');
   var descEl = document.getElementById('machine-description');
+  var counterEl = document.getElementById('machine-counter');
   var shuffleBtn = document.getElementById('machine-shuffle');
   if (!container || !wrapper) return;
 
+  var shown = [];
   var mermaidReady = false;
 
-  function renderMachine(animate) {
-    var diagram = buildDiagram();
-    descEl.textContent = diagram.description;
+  function pickSystem() {
+    if (shown.length >= S.length) shown = [];
+    var available = [];
+    for (var i = 0; i < S.length; i++) {
+      if (shown.indexOf(i) === -1) available.push(i);
+    }
+    var idx = available[Math.floor(Math.random() * available.length)];
+    shown.push(idx);
+    return { system: S[idx], num: shown.length };
+  }
 
-    if (!mermaidReady) return diagram;
+  function render(immediate) {
+    var pick = pickSystem();
+    var sys = pick.system;
+
+    titleEl.textContent = sys.title;
+    descEl.textContent = sys.desc;
+    counterEl.textContent = pick.num + ' of ' + S.length;
+
+    if (!mermaidReady) return;
 
     wrapper.classList.remove('mermaid--visible');
-
-    window.mermaid.render('machine' + Date.now(), diagram.syntax).then(function(result) {
-      container.innerHTML = result.svg;
-      if (animate) {
-        setupAnimation(wrapper, diagram.order);
-        // for shuffle, trigger immediately since user is looking at it
-        if (!animate.observe) {
-          wrapper.classList.add('mermaid--visible');
-        }
-      }
+    var syntax = buildSyntax(sys);
+    var order = [];
+    sys.layers.forEach(function(layer) {
+      layer.nodes.forEach(function(n) { order.push(n.id); });
     });
 
-    return diagram;
+    window.mermaid.render('machine' + Date.now(), syntax).then(function(result) {
+      container.innerHTML = result.svg;
+      setupAnimation(wrapper, order);
+      if (immediate) {
+        wrapper.classList.add('mermaid--visible');
+      }
+    });
   }
 
   // load mermaid
@@ -357,12 +661,12 @@ Every time you load this page, a different data infrastructure assembles itself 
         : { primaryColor: '#e8e0d4', primaryTextColor: '#2c2c2c', lineColor: '#5a7a6a' }
     });
     mermaidReady = true;
-    renderMachine({ observe: true });
+    render(false);
   };
   document.head.appendChild(s);
 
   shuffleBtn.addEventListener('click', function() {
-    renderMachine(true);
+    render(true);
   });
 })();
 `}</script>
