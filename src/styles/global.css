@@ -1619,7 +1619,7 @@ html.theme-animating *::after {
 /* --- responsive --- */
 
 /* Nav stacks into rows earlier than the rest of the layout — at ≤720px
-   there isn't horizontal room for brand + 4 links + search + hamburger
+   there isn't horizontal room for brand + 5 links + search + hamburger
    in one row, so the brand goes on top and the rest wrap underneath. */
 @media (max-width: 720px) {
   nav.site-nav {
@@ -1637,7 +1637,7 @@ html.theme-animating *::after {
   }
   /* mobile keeps the 44px link tap target from the base rule */
   nav.site-nav .links {
-    gap: 0.25rem 0.9rem;
+    gap: 0.25rem 0.6rem;
     font-size: 0.85rem;
     flex-wrap: wrap;
     justify-content: center;
@@ -1657,6 +1657,10 @@ html.theme-animating *::after {
   .nav-menu-panel .cmdk-trigger { display: none; }
 }
 @media (max-width: 600px) {
+  nav.site-nav .links {
+    gap: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+  }
   .layout {
     padding: 5.5rem 1rem 4rem;
   }
