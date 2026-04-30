@@ -1083,8 +1083,9 @@ const paletteItems = [
                   step.el.style.transformOrigin = 'center center';
                   step.el.style.transition = 'opacity 0.35s ease-out';
                   step.el.style.opacity = '1';
-                  // animate scale via the inner rect/polygon — safer than touching the group transform
-                  var shape = step.el.querySelector('rect, polygon, circle, .label');
+                  // animate scale on the inner shape — skip polygons (diamonds)
+                  // because fill-box transforms distort their rotation
+                  var shape = step.el.querySelector('rect, circle');
                   if (shape) {
                     shape.style.transformOrigin = 'center center';
                     shape.style.transformBox = 'fill-box';
