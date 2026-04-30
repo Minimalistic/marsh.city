@@ -580,10 +580,10 @@ Every time you load this page, a different real-world system reveals how it work
     });
 
     // timing constants
-    var NODE_BASE = 0.22;       // base pause after each node appears
-    var NODE_PER_CONN = 0.07;   // extra pause per connection (hub nodes breathe longer)
-    var LAYER_PAUSE = 0.45;     // gap between layer transitions
-    var EDGE_BASE = 0.18;       // base time for a normal forward edge
+    var NODE_BASE = 0.29;       // base pause after each node appears
+    var NODE_PER_CONN = 0.09;   // extra pause per connection (hub nodes breathe longer)
+    var LAYER_PAUSE = 0.6;      // gap between layer transitions
+    var EDGE_BASE = 0.24;       // base time for a normal forward edge
     var EDGE_SKIP = 1.7;        // multiplier for skip connections and feedback loops
 
     var edgePaths = svg.querySelectorAll('.edgePaths > path[data-id]');

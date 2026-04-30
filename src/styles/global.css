@@ -1161,14 +1161,14 @@ nav.site-nav .links a[aria-current="page"]::after {
 
 .mermaid-animated.mermaid--visible .mermaid svg .node {
   opacity: 0;
-  animation: mermaid-fade-in 0.8s ease-out forwards;
+  animation: mermaid-fade-in 1.05s ease-out forwards;
 }
 .mermaid-animated.mermaid--visible .mermaid svg .edgePaths path {
-  animation: mermaid-edge-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: mermaid-edge-draw 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 .mermaid-animated.mermaid--visible .mermaid svg .edgeLabels .edgeLabel {
   opacity: 0;
-  animation: mermaid-fade-in 0.6s ease-out forwards;
+  animation: mermaid-fade-in 0.8s ease-out forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

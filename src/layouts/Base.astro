@@ -990,7 +990,7 @@ const paletteItems = [
                   var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
                   if (node) {
                     node.style.animationDelay = delay + 's';
-                    delay += 0.4;
+                    delay += 0.53;
                   }
                   // find edges where source matches this node
                   edges.forEach(function(edge, i) {
@@ -999,10 +999,10 @@ const paletteItems = [
                     var parts = dataId.split('_');
                     if (parts.length >= 3 && parts[1] === name) {
                       edge.style.animationDelay = delay + 's';
-                      delay += 0.4;
+                      delay += 0.53;
                       // matching label at same index
                       if (edgeLabels[i]) {
-                        edgeLabels[i].style.animationDelay = (delay - 0.2) + 's';
+                        edgeLabels[i].style.animationDelay = (delay - 0.27) + 's';
                       }
                     }
                   });
