@@ -1,5 +1,8 @@
 # build output
 dist/
+
+# generated LQIP placeholders (rebuilt by prebuild script)
+public/_lqip/
 # generated types
 .astro/
 
