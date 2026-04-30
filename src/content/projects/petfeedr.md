@@ -35,7 +35,7 @@ The web interface shows a visual timeline of today's schedule, a 14-day activity
 
 ## How it works
 
-<div id="petfeedr-diagram" class="mermaid-animated">
+<div id="petfeedr-diagram" class="mermaid-animated" data-animate-order="A,B,C,F,D,E">
 
 ```mermaid
 flowchart TD
