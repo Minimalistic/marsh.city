@@ -35,6 +35,8 @@ The web interface shows a visual timeline of today's schedule, a 14-day activity
 
 ## How it works
 
+<div id="petfeedr-diagram" class="mermaid-animated">
+
 ```mermaid
 flowchart TD
   A[Schedule engine] --> B{Feed time?}
@@ -44,6 +46,8 @@ flowchart TD
   C --> D[Stepper motor dispense]
   D --> E[Log portion + timestamp]
 ```
+
+</div>
 
 Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DRV8825 driver. The motor runs at 1/16 microstepping for quiet operation, with an anti-jam agitation cycle that reverses slightly before each dispense. Portion control is calibrated to step count - 100 steps per quarter cup.
 

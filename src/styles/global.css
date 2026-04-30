@@ -1146,6 +1146,42 @@ nav.site-nav .links a[aria-current="page"]::after {
   height: auto;
 }
 
+/* opt-in mermaid entrance animation — wrap diagram in .mermaid-animated */
+@keyframes mermaid-node-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mermaid-edge-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.mermaid-animated .mermaid svg { visibility: hidden; }
+.mermaid-animated.mermaid--visible .mermaid svg { visibility: visible; }
+
+.mermaid-animated.mermaid--visible .mermaid svg .node {
+  opacity: 0;
+  animation: mermaid-node-in 0.35s ease-out forwards;
+}
+.mermaid-animated.mermaid--visible .mermaid svg .edgePaths path {
+  opacity: 0;
+  animation: mermaid-edge-draw 0.4s ease-out forwards;
+}
+.mermaid-animated.mermaid--visible .mermaid svg .edgeLabels .edgeLabel {
+  opacity: 0;
+  animation: mermaid-node-in 0.3s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mermaid-animated .mermaid svg { visibility: visible; }
+  .mermaid-animated.mermaid--visible .mermaid svg .node,
+  .mermaid-animated.mermaid--visible .mermaid svg .edgePaths path,
+  .mermaid-animated.mermaid--visible .mermaid svg .edgeLabels .edgeLabel {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* --- decorative leaf --- */
 
 .layout::before {
