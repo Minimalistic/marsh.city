@@ -1187,6 +1187,7 @@ const paletteItems = [
           closeBtn.setAttribute('aria-label', 'Close image preview');
           closeBtn.innerHTML = '&#x2715;';
           closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
+          closeBtn.addEventListener('touchend', function(e) { e.stopPropagation(); e.preventDefault(); closeLightbox(); });
 
           lbImg = document.createElement('img');
           lbImg.src = src;
@@ -1246,6 +1247,7 @@ const paletteItems = [
           closeBtn.setAttribute('aria-label', 'Close video preview');
           closeBtn.innerHTML = '&#x2715;';
           closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
+          closeBtn.addEventListener('touchend', function(e) { e.stopPropagation(); e.preventDefault(); closeLightbox(); });
 
           var vid = document.createElement('video');
           vid.src = src;
