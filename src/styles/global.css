@@ -1070,18 +1070,23 @@ nav.site-nav .links a[aria-current="page"]::after {
 }
 .lightbox-close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1;
-  background: none;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.5);
   border: none;
+  border-radius: 50%;
   color: #fff;
   font-size: 1.5rem;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.85;
   transition: opacity 0.15s;
   line-height: 1;
-  padding: 0.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .lightbox-close:hover,
 .lightbox-close:focus-visible { opacity: 1; }
