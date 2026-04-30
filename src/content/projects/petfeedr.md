@@ -31,7 +31,7 @@ Configurable feeding schedule with portion sizes - small, medium, or large. An o
 
 The web interface shows a visual timeline of today's schedule, a 14-day activity log, and weekly stats with portion tracking. There's a manual feed button for on-demand use. The whole thing installs as a PWA.
 
-![PetFeedr dashboard in dark mode](/images/petfeedr/dashboard-dark.png)
+![PetFeedr dashboard in dark mode](/images/petfeedr/dashboard-dark.webp)
 
 ## How it works
 
@@ -51,7 +51,7 @@ flowchart TD
 
 Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DRV8825 driver. The motor runs at 1/16 microstepping for quiet operation, with an anti-jam agitation cycle that reverses slightly before each dispense. Portion control is calibrated to step count - 100 steps per quarter cup.
 
-![PetFeedr settings sidebar showing feeding time configuration with portion sizes and randomization toggle](/images/petfeedr/settings.png)
+![PetFeedr settings sidebar showing feeding time configuration with portion sizes and randomization toggle](/images/petfeedr/settings.webp)
 
 The scheduling engine runs as a systemd service that auto-restarts on failure. A deploy script handles SSH-based updates with automatic backups. Runs headless on the local network.
 

@@ -7,7 +7,7 @@ tags: [accessibility, vanilla-js, building]
 
 We built RadioGridXL because Jason wanted a simple way to listen to internet radio streams. Big buttons, no account, no ads. Pick a station and listen.
 
-![RadioGridXL default view - two large station buttons filling the screen](/images/radiogridxl/grid-dark.png)
+![RadioGridXL default view - two large station buttons filling the screen](/images/radiogridxl/grid-dark.webp)
 
 It started as a single HTML file - and stayed that way. No dependencies, no build step, no backend. Open the file in a browser and it works. That constraint shaped everything that followed, because it meant we could deploy it anywhere.
 
@@ -23,7 +23,7 @@ It's now in use with older adults at Lighthouse Center. The feedback has been si
 
 The accessibility features weren't added after the fact. They shaped the architecture.
 
-![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.png)
+![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.webp)
 
 **Screen readers drove the HTML structure.** Every interactive element has an ARIA role and label. Live regions announce playback changes. Focus management traps keyboard navigation inside overlays. For some users, this is the only way they experience the app.
 
@@ -31,7 +31,7 @@ The accessibility features weren't added after the fact. They shaped the archite
 
 **The sizing algorithm came from real constraints.** The app measures the viewport and calculates button sizes dynamically - no breakpoints. One station fills the screen. Eight stations arrange into a grid. This matters because the deployment targets range from old Android tablets to modern iPads, and the interface needs to work across all of them without configuration.
 
-![The same interface on a phone - buttons stack vertically to fill the narrow viewport](/images/radiogridxl/grid-mobile.png)
+![The same interface on a phone - buttons stack vertically to fill the narrow viewport](/images/radiogridxl/grid-mobile.webp)
 
 ## The single-file bet
 
