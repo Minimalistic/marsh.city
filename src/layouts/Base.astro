@@ -68,6 +68,50 @@ const paletteItems = [
       rel="stylesheet"
     />
     <script is:inline>
+      // progressive image loading — LQIP blur-up
+      // build generates /_lqip/map.json with {src: tinyDataURI} entries
+      (() => {
+        document.addEventListener('DOMContentLoaded', function() {
+          var imgs = document.querySelectorAll('.prose img');
+          if (!imgs.length) return;
+
+          fetch('/_lqip/map.json').then(function(r) { return r.json(); }).then(function(map) {
+            imgs.forEach(function(img) {
+              var lqip = map[img.getAttribute('src')];
+              if (!lqip) return;
+
+              img.style.backgroundImage = 'url(' + lqip + ')';
+              img.classList.add('has-lqip');
+
+              // wrap image and add dancing dots overlay
+              var wrap = document.createElement('span');
+              wrap.className = 'lqip-wrap';
+              img.parentNode.insertBefore(wrap, img);
+              wrap.appendChild(img);
+
+              var dots = document.createElement('span');
+              dots.className = 'lqip-dots';
+              dots.innerHTML = '<span></span><span></span><span></span>';
+              wrap.appendChild(dots);
+
+              function onLoaded() {
+                img.classList.add('img-loaded');
+                dots.remove();
+              }
+              if (img.complete && img.naturalWidth) onLoaded();
+              else img.addEventListener('load', onLoaded);
+            });
+          }).catch(function() {
+            // no LQIP map — just do simple fade-in
+            imgs.forEach(function(img) {
+              if (img.complete && img.naturalWidth) img.classList.add('img-loaded');
+              else img.addEventListener('load', function() { img.classList.add('img-loaded'); });
+            });
+          });
+        });
+      })();
+    </script>
+    <script is:inline>
       // set data-theme before CSS paints to avoid a flash.
       // stored pref wins; 'auto' (default) follows system.
       (() => {
@@ -982,67 +1026,98 @@ const paletteItems = [
           });
           window.mermaid.run().then(function() {
             // animated mermaid diagrams — opt-in via .mermaid-animated wrapper
-            // data-animate-order="A,B,C,F,D,E" controls semantic sequence:
-            // each node fades in, then its outgoing edges draw, then next node
+            // truly sequential: node spawns → edge draws into void → edge
+            // arrives → next node spawns at destination. Arrowhead markers
+            // hidden until their edge finishes drawing.
             document.querySelectorAll('.mermaid-animated').forEach(function(wrapper) {
               var svg = wrapper.querySelector('.mermaid svg');
               if (!svg) return;
               var order = (wrapper.dataset.animateOrder || '').split(',').map(function(s) { return s.trim(); });
-              // mermaid v11: edges are <path> with data-id="L_A_B_0" (L_{source}_{target}_{idx})
-              // labels are <g class="edgeLabel"> in .edgeLabels, matched by index to edge order
+              if (!order.length || !order[0]) return;
+
               var edges = svg.querySelectorAll('.edgePaths > path[data-id]');
               var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
-              var delay = 0;
 
-              // hide everything initially
-              svg.querySelectorAll('.node').forEach(function(n) { n.style.animationDelay = '99s'; });
+              // hide all nodes and edge labels
+              svg.querySelectorAll('.node').forEach(function(n) { n.style.opacity = '0'; });
+              edgeLabels.forEach(function(l) { l.style.opacity = '0'; });
+
+              // prep edges: dash-hide the stroke, save and remove arrowhead markers
               edges.forEach(function(e) {
                 var len = e.getTotalLength();
                 e.style.strokeDasharray = len;
                 e.style.strokeDashoffset = len;
-                e.style.animationDelay = '99s';
+                e._savedMarker = e.getAttribute('marker-end');
+                e.removeAttribute('marker-end');
               });
-              edgeLabels.forEach(function(l) { l.style.animationDelay = '99s'; });
 
-              if (order.length && order[0]) {
-                // semantic: node fades in, then its outgoing edges draw, repeat
-                order.forEach(function(name) {
-                  // node IDs: mermaid-{ts}-flowchart-{name}-{idx}
-                  var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
-                  if (node) {
-                    node.style.animationDelay = delay + 's';
-                    delay += 0.53;
+              // build sequential step list: [{type:'node',el}, {type:'edges',items:[{el,label}]}]
+              var steps = [];
+              order.forEach(function(name) {
+                var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
+                if (node) steps.push({ type: 'node', el: node });
+                var nodeEdges = [];
+                edges.forEach(function(edge, i) {
+                  var parts = (edge.getAttribute('data-id') || '').split('_');
+                  if (parts.length >= 3 && parts[1] === name) {
+                    nodeEdges.push({ el: edge, label: edgeLabels[i] || null });
                   }
-                  // find edges where source matches this node
-                  edges.forEach(function(edge, i) {
-                    var dataId = edge.getAttribute('data-id') || '';
-                    // data-id format: L_{source}_{target}_{idx}
-                    var parts = dataId.split('_');
-                    if (parts.length >= 3 && parts[1] === name) {
-                      edge.style.animationDelay = delay + 's';
-                      delay += 0.53;
-                      // matching label at same index
-                      if (edgeLabels[i]) {
-                        edgeLabels[i].style.animationDelay = (delay - 0.27) + 's';
-                      }
-                    }
-                  });
                 });
+                if (nodeEdges.length) steps.push({ type: 'edges', items: nodeEdges });
+              });
+
+              function runStep(i) {
+                if (i >= steps.length) {
+                  // cleanup inline styles so lightbox clone looks right
+                  edges.forEach(function(e) {
+                    e.style.strokeDasharray = '';
+                    e.style.strokeDashoffset = '';
+                    e.style.transition = '';
+                  });
+                  return;
+                }
+                var step = steps[i];
+                if (step.type === 'node') {
+                  // preserve mermaid's translate positioning, layer scale on top
+                  var baseTransform = step.el.getAttribute('transform') || '';
+                  step.el.style.transformOrigin = 'center center';
+                  step.el.style.transition = 'opacity 0.35s ease-out';
+                  step.el.style.opacity = '1';
+                  // animate scale via the inner rect/polygon — safer than touching the group transform
+                  var shape = step.el.querySelector('rect, polygon, circle, .label');
+                  if (shape) {
+                    shape.style.transformOrigin = 'center center';
+                    shape.style.transformBox = 'fill-box';
+                    shape.style.transform = 'scale(1.18)';
+                    shape.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    setTimeout(function() { shape.style.transform = 'scale(1)'; }, 50);
+                  }
+                  setTimeout(function() { runStep(i + 1); }, 450);
+                } else if (step.type === 'edges') {
+                  step.items.forEach(function(e) {
+                    e.el.style.transition = 'stroke-dashoffset 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
+                    e.el.style.strokeDashoffset = '0';
+                  });
+                  setTimeout(function() {
+                    // restore arrowheads and fade in labels
+                    step.items.forEach(function(e) {
+                      if (e.el._savedMarker) e.el.setAttribute('marker-end', e.el._savedMarker);
+                      if (e.label) {
+                        e.label.style.transition = 'opacity 0.3s ease-out';
+                        e.label.style.opacity = '1';
+                      }
+                    });
+                    runStep(i + 1);
+                  }, 650);
+                }
               }
 
-              var totalDuration = (delay + 0.8) * 1000;
               var observer = new IntersectionObserver(function(entries) {
                 entries.forEach(function(entry) {
                   if (entry.isIntersecting) {
                     wrapper.classList.add('mermaid--visible');
                     observer.unobserve(wrapper);
-                    // clean up inline dash styles so lightbox clone shows edges
-                    setTimeout(function() {
-                      edges.forEach(function(e) {
-                        e.style.strokeDasharray = '';
-                        e.style.strokeDashoffset = '';
-                      });
-                    }, totalDuration);
+                    runStep(0);
                   }
                 });
               }, { threshold: 0.3 });

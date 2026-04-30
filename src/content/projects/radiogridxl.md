@@ -15,37 +15,37 @@ Jason wanted a simple way to listen to internet radio - big buttons, no account,
 
 ## The interface
 
-![RadioGridXL default view showing two large station buttons filling the screen](/images/radiogridxl/grid-dark.png)
+![RadioGridXL default view showing two large station buttons filling the screen](/images/radiogridxl/grid-dark.webp)
 
 Big buttons, one per station. Tap to play, tap again to pause. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there's one station or eight.
 
-![Six stations arranged in a responsive grid with distinct emoji icons and color palettes](/images/radiogridxl/grid-full.png)
+![Six stations arranged in a responsive grid with distinct emoji icons and color palettes](/images/radiogridxl/grid-full.webp)
 
 Add more stations and the layout shifts to a responsive grid - two columns here on mobile, scaling up to four on desktop. Each station gets its own color from eight palettes. No media query breakpoints - the grid math is pure viewport calculation.
 
-![RadioGridXL on a phone screen - the same interface adapts to fill a narrow viewport with stacked buttons](/images/radiogridxl/grid-mobile.png)
+![RadioGridXL on a phone screen - the same interface adapts to fill a narrow viewport with stacked buttons](/images/radiogridxl/grid-mobile.webp)
 
 ## Playback and controls
 
-![Active playback state with advanced transport controls, connection indicator, and sleep timer](/images/radiogridxl/now-playing.png)
+![Active playback state with advanced transport controls, connection indicator, and sleep timer](/images/radiogridxl/now-playing.webp)
 
 When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. There are two control modes: Simple (just a stop button) and Advanced, which adds skip controls and a sleep timer. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
 
 ## Technician settings
 
-![The settings panel showing theme selection, text size, desktop view, volume cap, and control mode options](/images/radiogridxl/settings.png)
+![The settings panel showing theme selection, text size, desktop view, volume cap, and control mode options](/images/radiogridxl/settings.webp)
 
 Five taps on the logo opens a PIN-protected settings panel - hidden enough that no one's found it by accident yet. A technician can configure everything without exposing that complexity to the end user - theme, text size, volume cap, control mode, accessibility features, and the station list itself. Lockout escalates after failed PIN attempts.
 
 ## Stream browser
 
-![The stream browser overlay with search field, country and genre filters](/images/radiogridxl/stream-browser.png)
+![The stream browser overlay with search field, country and genre filters](/images/radiogridxl/stream-browser.webp)
 
 The stream browser searches the Radio Browser API by name, country, or genre. Preview a station before adding it. Pick an emoji icon and color theme per station.
 
 ## Accessibility
 
-![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.png)
+![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.webp)
 
 We designed for older adults and people with disabilities from the start - accessibility shaped the architecture:
 
@@ -63,6 +63,20 @@ We designed for older adults and people with disabilities from the start - acces
 One HTML file. Around 3,800 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
 
 A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
+
+<div id="radiogrid-deploy" class="mermaid-animated" data-animate-order="A,B,C,D,E,F,G" aria-label="RadioGridXL deployment pipeline: a single HTML source file and a profile config feed into a build script, producing a branded HTML file that deploys to Docker, Android APK, or as a local file.">
+
+```mermaid
+flowchart TD
+  A[radio.html · single source] --> C[Build script]
+  B[Profile config · stations · logo · PIN] --> C
+  C --> D[Branded HTML]
+  D --> E[Docker container]
+  D --> F[Android APK]
+  D --> G[Local file]
+```
+
+</div>
 
 ## Updates
 
