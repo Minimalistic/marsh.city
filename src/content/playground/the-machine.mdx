@@ -69,7 +69,7 @@ Every time you load this page, a different real-world system reveals how it work
   var S = [
     {
       title: 'How a Web Page Loads',
-      desc: 'Your browser checks its cache, resolves the domain through DNS, and requests content from a CDN or origin server. The server queries a database, templates the response, compresses it, and ships it back. The browser parses the HTML into a DOM tree, then calculates layout and paints pixels. Fast sites optimize every hop in this chain.',
+      desc: 'Your browser checks its cache, resolves the domain through DNS, then negotiates a TLS handshake to establish an encrypted connection. The request hits a CDN edge or falls through to the origin server behind a load balancer. The app server queries a database, templates the response, compresses it, and ships it back. The browser parses HTML into a DOM tree, calculates layout, and paints pixels.',
       layers: [
         { name: 'Client', nodes: [
           { id: 'BR', label: 'Browser', s: ['([','])'] },
@@ -77,6 +77,7 @@ Every time you load this page, a different real-world system reveals how it work
         ]},
         { name: 'Resolution', nodes: [
           { id: 'DNS', label: 'DNS Resolver', s: ['[/','/]'] },
+          { id: 'TLS', label: 'TLS Handshake', s: ['[/','/]'] },
           { id: 'CDN', label: 'CDN Edge', s: ['[/','/]'] }
         ]},
         { name: 'Server', nodes: [
@@ -97,7 +98,8 @@ Every time you load this page, a different real-world system reveals how it work
         { f: 'BR', t: 'CA', l: 'check cache' },
         { f: 'CA', t: 'DNS', l: 'cache miss' },
         { f: 'BR', t: 'DNS', l: 'URL lookup' },
-        { f: 'DNS', t: 'CDN', l: 'IP address' },
+        { f: 'DNS', t: 'TLS', l: 'IP address' },
+        { f: 'TLS', t: 'CDN', l: 'secure channel' },
         { f: 'CDN', t: 'GZ', l: 'cache hit' },
         { f: 'CDN', t: 'LB', l: 'cache miss' },
         { f: 'LB', t: 'APP', l: 'route' },
@@ -112,7 +114,7 @@ Every time you load this page, a different real-world system reveals how it work
     },
     {
       title: 'How Online Payments Process',
-      desc: 'Your card number is tokenized at the payment gateway - the merchant never sees the real number. The gateway runs fraud detection, then routes an authorization request through the card network to your issuing bank. The bank checks your balance and approves or denies. Settlement happens later in batch through the acquiring bank.',
+      desc: 'Your card number is tokenized at the payment gateway - the merchant never sees the real number. The gateway runs fraud detection and may trigger 3D Secure verification (the "Verify your purchase" popup from your bank). Authorization routes through the card network to your issuing bank to check funds. Settlement happens later in batch through the acquiring bank, separate from the real-time auth.',
       layers: [
         { name: 'Checkout', nodes: [
           { id: 'CART', label: 'Shopping Cart', s: ['([','])'] },
@@ -120,7 +122,8 @@ Every time you load this page, a different real-world system reveals how it work
         ]},
         { name: 'Validation', nodes: [
           { id: 'GW', label: 'Payment Gateway', s: ['[/','/]'] },
-          { id: 'FRAUD', label: 'Fraud Detection', s: ['[/','/]'] }
+          { id: 'FRAUD', label: 'Fraud Detection', s: ['[/','/]'] },
+          { id: 'V3DS', label: '3D Secure', s: ['[/','/]'] }
         ]},
         { name: 'Network', nodes: [
           { id: 'NET', label: 'Card Network', s: ['[',']'] },
@@ -140,6 +143,8 @@ Every time you load this page, a different real-world system reveals how it work
         { f: 'PAY', t: 'GW', l: 'card details' },
         { f: 'GW', t: 'FRAUD', l: 'tokenized' },
         { f: 'FRAUD', t: 'GW', l: 'risk score' },
+        { f: 'FRAUD', t: 'V3DS', l: 'challenge required' },
+        { f: 'V3DS', t: 'GW', l: 'verified' },
         { f: 'GW', t: 'NET', l: 'auth request' },
         { f: 'NET', t: 'ISS', l: 'verify funds' },
         { f: 'ISS', t: 'AUTH', l: 'approve or deny' },
@@ -152,7 +157,7 @@ Every time you load this page, a different real-world system reveals how it work
     },
     {
       title: 'How Email Delivers',
-      desc: 'Your mail client hands the message to an SMTP server, which looks up the recipient\\'s mail server via DNS MX records. The sending mail transfer agent forwards through relay servers. The receiving end checks SPF and DKIM records to verify the sender, runs spam filtering, then delivers to the mailbox. Your recipient\\'s IMAP client fetches it.',
+      desc: 'Your mail client hands the message to an SMTP server, which looks up the recipient\\'s mail server via DNS MX records. The sending MTA forwards through relay servers. The receiving end checks SPF and DKIM records to verify the sender, then DMARC policy decides what to do with failures. Messages passing all checks go through spam filtering before delivery to the mailbox.',
       layers: [
         { name: 'Compose', nodes: [
           { id: 'CLI', label: 'Mail Client', s: ['([','])'] },
@@ -168,6 +173,7 @@ Every time you load this page, a different real-world system reveals how it work
         ]},
         { name: 'Filter', nodes: [
           { id: 'SPF', label: 'SPF/DKIM Check', s: ['[',']'] },
+          { id: 'DMARC', label: 'DMARC Policy', s: ['[',']'] },
           { id: 'SPAM', label: 'Spam Filter', s: ['[',']'] }
         ]},
         { name: 'Deliver', nodes: [
@@ -184,7 +190,9 @@ Every time you load this page, a different real-world system reveals how it work
         { f: 'MXL', t: 'MTA', l: 'mail server IP' },
         { f: 'MTA', t: 'RELAY', l: 'forward' },
         { f: 'RELAY', t: 'SPF', l: 'envelope' },
-        { f: 'SPF', t: 'SPAM', l: 'verified' },
+        { f: 'SPF', t: 'DMARC', l: 'auth result' },
+        { f: 'DMARC', t: 'SPAM', l: 'policy pass' },
+        { f: 'DMARC', t: 'CLI', l: 'reject/quarantine' },
         { f: 'SPAM', t: 'MBOX', l: 'clean' },
         { f: 'MBOX', t: 'IMAP', l: 'fetch' },
         { f: 'IMAP', t: 'INBOX', l: 'messages' },
@@ -193,7 +201,7 @@ Every time you load this page, a different real-world system reveals how it work
     },
     {
       title: 'How Video Streaming Works',
-      desc: 'Raw video is transcoded into multiple quality levels and split into small segments for adaptive bitrate streaming. A manifest file tells the player which quality to request based on current bandwidth. The CDN serves segments from the nearest edge server. The player buffers ahead, decodes frames, and adjusts quality on the fly.',
+      desc: 'Raw video is transcoded into multiple quality levels and split into small segments for adaptive bitrate streaming. A manifest file tells the player which quality to request based on current bandwidth. For protected content, the player must acquire a DRM license to decrypt segments. The CDN serves encrypted segments from the nearest edge, and the player buffers ahead, decodes frames, and adjusts quality on the fly.',
       layers: [
         { name: 'Source', nodes: [
           { id: 'CAM', label: 'Camera / Upload', s: ['([','])'] },
@@ -209,7 +217,8 @@ Every time you load this page, a different real-world system reveals how it work
         ]},
         { name: 'Distribution', nodes: [
           { id: 'CDNE', label: 'CDN Edge', s: ['[',']'] },
-          { id: 'MANF', label: 'Manifest Server', s: ['[',']'] }
+          { id: 'MANF', label: 'Manifest Server', s: ['[',']'] },
+          { id: 'DRM', label: 'DRM License', s: ['[',']'] }
         ]},
         { name: 'Playback', nodes: [
           { id: 'BUF', label: 'Player Buffer', s: ['[[',']]'] },
@@ -226,7 +235,9 @@ Every time you load this page, a different real-world system reveals how it work
         { f: 'ORIG', t: 'CDNE', l: 'replicate' },
         { f: 'META', t: 'MANF', l: 'playlist' },
         { f: 'MANF', t: 'BUF', l: 'manifest' },
-        { f: 'CDNE', t: 'BUF', l: 'segments' },
+        { f: 'MANF', t: 'DRM', l: 'license request' },
+        { f: 'DRM', t: 'DEC', l: 'decrypt key' },
+        { f: 'CDNE', t: 'BUF', l: 'encrypted segments' },
         { f: 'BUF', t: 'DEC', l: 'frames' },
         { f: 'DEC', t: 'DISP', l: 'pixels' },
         { f: 'BUF', t: 'MANF', l: 'bandwidth signal' }
@@ -277,7 +288,7 @@ Every time you load this page, a different real-world system reveals how it work
     },
     {
       title: 'How a Search Engine Works',
-      desc: 'A web crawler follows links to discover pages, feeding discovered URLs back into a frontier queue for future crawling. Pages are fetched, parsed for text and links, then content is extracted and indexed into an inverted index. PageRank scores the link graph. At query time, the parser tokenizes your search, the engine looks up candidates in the index, ranks them, and generates result snippets.',
+      desc: 'A web crawler follows links to discover pages, feeding discovered URLs back into a frontier queue. Pages are fetched, parsed for text and links, then content is extracted and indexed into an inverted index. PageRank scores the link graph. At query time, the parser tokenizes your search, the ranking engine retrieves candidates from the index, then an ML reranker applies learned signals - click-through rates, freshness, user context - before generating result snippets.',
       layers: [
         { name: 'Discover', nodes: [
           { id: 'CRWL', label: 'Web Crawler', s: ['([','])'] },
@@ -294,7 +305,8 @@ Every time you load this page, a different real-world system reveals how it work
         ]},
         { name: 'Query', nodes: [
           { id: 'QPRS', label: 'Query Parser', s: ['[',']'] },
-          { id: 'RANK', label: 'Ranking Engine', s: ['[',']'] }
+          { id: 'RANK', label: 'Ranking Engine', s: ['[',']'] },
+          { id: 'MLRK', label: 'ML Reranker', s: ['[',']'] }
         ]},
         { name: 'Results', nodes: [
           { id: 'SERP', label: 'Results Page', s: ['[[',']]'] },
@@ -314,7 +326,8 @@ Every time you load this page, a different real-world system reveals how it work
         { f: 'QPRS', t: 'RANK', l: 'tokens' },
         { f: 'RANK', t: 'IIDX', l: 'lookup' },
         { f: 'IIDX', t: 'RANK', l: 'candidates' },
-        { f: 'RANK', t: 'SERP', l: 'ranked' },
+        { f: 'RANK', t: 'MLRK', l: 'features' },
+        { f: 'MLRK', t: 'SERP', l: 'reranked' },
         { f: 'SERP', t: 'SNIP', l: 'context' }
       ]
     },
@@ -363,7 +376,7 @@ Every time you load this page, a different real-world system reveals how it work
     },
     {
       title: 'How Real-Time Chat Works',
-      desc: 'Messages travel over WebSocket connections to an API server, which authenticates the sender. A message broker handles persistence and fan-out - online users get direct WebSocket delivery, offline users get push notifications. Read receipts flow back upstream through the same broker. The presence service tracks who is online to decide the delivery path.',
+      desc: 'Messages travel over WebSocket connections to an API server, which authenticates the sender. A message broker assigns a global sequence number for ordering consistency, then persists the message. The presence service checks who is online - online users get direct WebSocket delivery through fan-out workers, offline users get push notifications. Read receipts flow back upstream through the broker.',
       layers: [
         { name: 'Send', nodes: [
           { id: 'COMP', label: 'Compose', s: ['([','])'] },
@@ -375,6 +388,7 @@ Every time you load this page, a different real-world system reveals how it work
         ]},
         { name: 'Process', nodes: [
           { id: 'BRKR', label: 'Message Broker', s: ['[',']'] },
+          { id: 'SEQR', label: 'Sequencer', s: ['[',']'] },
           { id: 'PERS', label: 'Message Store', s: ['[(',')]'] },
           { id: 'PRES', label: 'Presence Service', s: ['[',']'] }
         ]},
@@ -392,7 +406,8 @@ Every time you load this page, a different real-world system reveals how it work
         { f: 'WS1', t: 'APIG', l: 'frame' },
         { f: 'APIG', t: 'AUTG', l: 'verify' },
         { f: 'AUTG', t: 'BRKR', l: 'valid' },
-        { f: 'BRKR', t: 'PERS', l: 'store' },
+        { f: 'BRKR', t: 'SEQR', l: 'assign order' },
+        { f: 'SEQR', t: 'PERS', l: 'ordered write' },
         { f: 'BRKR', t: 'PRES', l: 'check' },
         { f: 'PRES', t: 'FANO', l: 'online users' },
         { f: 'PRES', t: 'PNOT', l: 'offline users' },
@@ -447,7 +462,7 @@ Every time you load this page, a different real-world system reveals how it work
     },
     {
       title: 'How a Database Query Executes',
-      desc: 'The SQL parser builds an abstract syntax tree from your query text. The planner checks the plan cache for a match - on a miss, the optimizer consults table statistics to choose the cheapest execution strategy. The executor reads data pages through the buffer pool, which caches hot pages in memory and falls back to disk on misses. Results are serialized and returned to the client.',
+      desc: 'The SQL parser builds an abstract syntax tree from your query text. The planner checks the plan cache for a match - on a miss, the optimizer consults table statistics to choose the cheapest execution strategy. The executor reads data pages through the buffer pool, which caches hot pages in memory and falls back to disk. For writes, changes are first recorded to a write-ahead log (WAL) before modifying pages - this guarantees durability even if the server crashes mid-write.',
       layers: [
         { name: 'Query', nodes: [
           { id: 'CLNT', label: 'Client App', s: ['([','])'] },
@@ -464,6 +479,7 @@ Every time you load this page, a different real-world system reveals how it work
         ]},
         { name: 'Execute', nodes: [
           { id: 'EXEC', label: 'Executor', s: ['[',']'] },
+          { id: 'WAL', label: 'Write-Ahead Log', s: ['[(',')]'] },
           { id: 'BFPL', label: 'Buffer Pool', s: ['[(',')]'] },
           { id: 'DISK', label: 'Disk Storage', s: ['[(',')]'] }
         ]},
@@ -481,6 +497,8 @@ Every time you load this page, a different real-world system reveals how it work
         { f: 'OPTM', t: 'STAT', l: 'consult' },
         { f: 'OPTM', t: 'EXEC', l: 'best plan' },
         { f: 'PCSH', t: 'EXEC', l: 'hit' },
+        { f: 'EXEC', t: 'WAL', l: 'log write' },
+        { f: 'WAL', t: 'DISK', l: 'flush' },
         { f: 'EXEC', t: 'BFPL', l: 'page read' },
         { f: 'BFPL', t: 'DISK', l: 'miss' },
         { f: 'DISK', t: 'BFPL', l: 'pages' },
@@ -542,7 +560,7 @@ Every time you load this page, a different real-world system reveals how it work
     return lines.join('\\n');
   }
 
-  function setupAnimation(wrapper, order) {
+  function setupAnimation(wrapper, order, sys) {
     var svg = wrapper.querySelector('svg');
     if (!svg) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -550,10 +568,30 @@ Every time you load this page, a different real-world system reveals how it work
       return;
     }
 
+    // build structural metadata for variable timing
+    var connCount = {};  // how many edges touch each node
+    var layerOf = {};    // which layer index each node belongs to
+    sys.layers.forEach(function(layer, li) {
+      layer.nodes.forEach(function(n) { layerOf[n.id] = li; });
+    });
+    sys.edges.forEach(function(e) {
+      connCount[e.f] = (connCount[e.f] || 0) + 1;
+      connCount[e.t] = (connCount[e.t] || 0) + 1;
+    });
+
+    // timing constants
+    var NODE_BASE = 0.22;       // base pause after each node appears
+    var NODE_PER_CONN = 0.07;   // extra pause per connection (hub nodes breathe longer)
+    var LAYER_PAUSE = 0.45;     // gap between layer transitions
+    var EDGE_BASE = 0.18;       // base time for a normal forward edge
+    var EDGE_SKIP = 1.7;        // multiplier for skip connections and feedback loops
+
     var edgePaths = svg.querySelectorAll('.edgePaths > path[data-id]');
     var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
     var delay = 0;
+    var prevLayer = -1;
 
+    // hide everything initially
     svg.querySelectorAll('.node').forEach(function(n) { n.style.animationDelay = '99s'; });
     edgePaths.forEach(function(e) {
       var len = e.getTotalLength();
@@ -564,24 +602,41 @@ Every time you load this page, a different real-world system reveals how it work
     edgeLabels.forEach(function(l) { l.style.animationDelay = '99s'; });
 
     order.forEach(function(name) {
+      // pause between layers — let the viewer absorb each stage
+      var li = layerOf[name];
+      if (li !== undefined && li !== prevLayer) {
+        if (prevLayer !== -1) delay += LAYER_PAUSE;
+        prevLayer = li;
+      }
+
       var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
       if (node) {
         node.style.animationDelay = delay + 's';
-        delay += 0.3;
+        // hub nodes (more connections) get more breathing room
+        var conns = Math.min(connCount[name] || 1, 5);
+        delay += NODE_BASE + (conns - 1) * NODE_PER_CONN;
       }
+
       edgePaths.forEach(function(edge, i) {
         var parts = (edge.getAttribute('data-id') || '').split('_');
         if (parts.length >= 3 && parts[1] === name) {
+          var targetLi = layerOf[parts[2]];
+          var sourceLi = layerOf[name];
+          // skip connections cross >1 layer; feedback goes backward — both draw slower
+          var isComplex = (targetLi !== undefined && sourceLi !== undefined) &&
+                          (Math.abs(targetLi - sourceLi) > 1 || targetLi < sourceLi);
+          var edgeTime = isComplex ? EDGE_BASE * EDGE_SKIP : EDGE_BASE;
+
           edge.style.animationDelay = delay + 's';
-          delay += 0.24;
+          delay += edgeTime;
           if (edgeLabels[i]) {
-            edgeLabels[i].style.animationDelay = (delay - 0.12) + 's';
+            edgeLabels[i].style.animationDelay = (delay - edgeTime * 0.4) + 's';
           }
         }
       });
     });
 
-    var totalDuration = (delay + 0.8) * 1000;
+    var totalDuration = (delay + 1.2) * 1000;
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
@@ -641,7 +696,7 @@ Every time you load this page, a different real-world system reveals how it work
 
     window.mermaid.render('machine' + Date.now(), syntax).then(function(result) {
       container.innerHTML = result.svg;
-      setupAnimation(wrapper, order);
+      setupAnimation(wrapper, order, sys);
       if (immediate) {
         wrapper.classList.add('mermaid--visible');
       }
