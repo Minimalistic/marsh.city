@@ -958,63 +958,57 @@ const paletteItems = [
               var svg = wrapper.querySelector('.mermaid svg');
               if (!svg) return;
               var order = (wrapper.dataset.animateOrder || '').split(',').map(function(s) { return s.trim(); });
-              var allEdgePaths = svg.querySelectorAll('.edgePaths path');
-              var allEdgeContainers = svg.querySelectorAll('.edgePath');
-              var allEdgeLabels = svg.querySelectorAll('.edgeLabel');
+              // mermaid v11: edges are <path> with data-id="L_A_B_0" (L_{source}_{target}_{idx})
+              // labels are <g class="edgeLabel"> in .edgeLabels, matched by index to edge order
+              var edges = svg.querySelectorAll('.edgePaths > path[data-id]');
+              var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
               var delay = 0;
-              var animatedEdgePaths = [];
 
               // hide everything initially
               svg.querySelectorAll('.node').forEach(function(n) { n.style.animationDelay = '99s'; });
-              allEdgePaths.forEach(function(e) {
+              edges.forEach(function(e) {
                 var len = e.getTotalLength();
                 e.style.strokeDasharray = len;
                 e.style.strokeDashoffset = len;
                 e.style.animationDelay = '99s';
-                animatedEdgePaths.push(e);
               });
-              allEdgeLabels.forEach(function(l) { l.style.animationDelay = '99s'; });
+              edgeLabels.forEach(function(l) { l.style.animationDelay = '99s'; });
 
-              if (order.length) {
-                // semantic order: node, then its outgoing edges, repeat
+              if (order.length && order[0]) {
+                // semantic: node fades in, then its outgoing edges draw, repeat
                 order.forEach(function(name) {
-                  // find node — mermaid uses id like "flowchart-A-0" or similar
-                  var node = svg.querySelector('.node[id*="-' + name + '-"]');
+                  // node IDs: mermaid-{ts}-flowchart-{name}-{idx}
+                  var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
                   if (node) {
                     node.style.animationDelay = delay + 's';
-                    delay += 0.25;
+                    delay += 0.2;
                   }
-                  // find outgoing edges — edgePath id format: "L-A-B-0" or "L_A_B_0"
-                  allEdgeContainers.forEach(function(container, i) {
-                    var id = container.id || '';
-                    // match source node: L-{source}-{target}-{idx} or L_{source}_{target}_{idx}
-                    var pattern = new RegExp('[L_-]' + name + '[_-]');
-                    // check if this edge starts from our node (source is right after L separator)
-                    var parts = id.replace(/^L[-_]/, '').split(/[-_]/);
-                    if (parts[0] === name) {
-                      var path = container.querySelector('path');
-                      if (path) {
-                        path.style.animationDelay = delay + 's';
-                        delay += 0.15;
-                      }
-                      // find matching label — same index position
-                      if (allEdgeLabels[i]) {
-                        allEdgeLabels[i].style.animationDelay = delay + 's';
-                        delay += 0.1;
+                  // find edges where source matches this node
+                  edges.forEach(function(edge, i) {
+                    var dataId = edge.getAttribute('data-id') || '';
+                    // data-id format: L_{source}_{target}_{idx}
+                    var parts = dataId.split('_');
+                    if (parts.length >= 3 && parts[1] === name) {
+                      edge.style.animationDelay = delay + 's';
+                      delay += 0.2;
+                      // matching label at same index
+                      if (edgeLabels[i]) {
+                        edgeLabels[i].style.animationDelay = (delay - 0.1) + 's';
                       }
                     }
                   });
                 });
               }
 
-              var totalDuration = (delay + 0.6) * 1000;
+              var totalDuration = (delay + 0.8) * 1000;
               var observer = new IntersectionObserver(function(entries) {
                 entries.forEach(function(entry) {
                   if (entry.isIntersecting) {
                     wrapper.classList.add('mermaid--visible');
                     observer.unobserve(wrapper);
+                    // clean up inline dash styles so lightbox clone shows edges
                     setTimeout(function() {
-                      animatedEdgePaths.forEach(function(e) {
+                      edges.forEach(function(e) {
                         e.style.strokeDasharray = '';
                         e.style.strokeDashoffset = '';
                       });
