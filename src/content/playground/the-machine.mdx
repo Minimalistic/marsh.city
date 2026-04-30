@@ -567,15 +567,15 @@ Every time you load this page, a different real-world system reveals how it work
       var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
       if (node) {
         node.style.animationDelay = delay + 's';
-        delay += 0.15;
+        delay += 0.3;
       }
       edgePaths.forEach(function(edge, i) {
         var parts = (edge.getAttribute('data-id') || '').split('_');
         if (parts.length >= 3 && parts[1] === name) {
           edge.style.animationDelay = delay + 's';
-          delay += 0.12;
+          delay += 0.24;
           if (edgeLabels[i]) {
-            edgeLabels[i].style.animationDelay = (delay - 0.06) + 's';
+            edgeLabels[i].style.animationDelay = (delay - 0.12) + 's';
           }
         }
       });
