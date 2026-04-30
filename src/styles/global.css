@@ -1663,10 +1663,11 @@ html.theme-animating *::after {
   nav.site-nav .links .nav-hide-mobile { display: none; }
   .nav-menu-link { display: inline-flex; }
   nav.site-nav .links {
-    gap: 0.25rem 0.6rem;
+    gap: 0.25rem 1rem;
     font-size: 0.85rem;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-evenly;
+    width: 100%;
   }
   .nav-search { display: none; }
   main, h1, h2, h3, h4, [id] {
