@@ -62,6 +62,21 @@ Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic A
 
 The taxonomy is tag-based across seven dimensions: need, solution type, platform, complexity, price band, funding eligibility, and age range. Products can be tagged across multiple needs without being duplicated, which avoids rigid category structures.
 
+<div id="whatcanhelp-pipeline" class="mermaid-animated" data-animate-order="A,B,C,D,E,F,G" aria-label="WhatCanHelp data pipeline: scrapers feed product data into SQLite, Claude generates descriptions and classifications, then the intake wizard uses AI matching to produce results and PDF reports.">
+
+```mermaid
+flowchart TD
+  A[Scraper framework] --> B[Product database]
+  B --> C[Claude API]
+  C --> D[Descriptions + classification]
+  D --> B
+  B --> E[Intake wizard]
+  E --> F[AI matching]
+  F --> G[Results + PDF report]
+```
+
+</div>
+
 ## Updates
 
 ### 2026-04-26
