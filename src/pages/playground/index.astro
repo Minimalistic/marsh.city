@@ -1,0 +1,17 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+const items = await getCollection('playground');
+---
+<Base title="Playground" description="Experiments, toys, and things that don't fit anywhere else.">
+  <div class="page-head">
+    <h1>Playground</h1>
+    <p class="meta">Experiments, toys, and things that don't fit anywhere else.</p>
+  </div>
+  {items.map((item) => (
+    <a class="card" href={`/playground/${item.id}/`}>
+      <h3>{item.data.title}</h3>
+      <p class="meta">{item.data.description}</p>
+    </a>
+  ))}
+</Base>

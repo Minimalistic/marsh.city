@@ -26,4 +26,13 @@ const posts = defineCollection({
   }),
 });
 
-export const collections = { projects, posts };
+const playground = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/playground' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    url: z.string().url().optional(),
+  }),
+});
+
+export const collections = { projects, posts, playground };

@@ -1,0 +1,368 @@
+---
+title: The Machine
+description: A generative systems architecture diagram - different every time you load the page.
+---
+
+Every time you load this page, a different data infrastructure assembles itself from the same building blocks - sensors, queues, databases, dashboards. Same components, different architecture each time.
+
+<div class="machine-controls">
+  <button id="machine-shuffle" type="button" aria-label="Generate a new random diagram">Shuffle</button>
+  <p id="machine-description" class="meta" aria-live="polite"></p>
+</div>
+
+<div class="mermaid-animated" id="machine-wrapper">
+  <div class="mermaid" id="machine-diagram"></div>
+</div>
+
+<style>{`
+  .machine-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+  #machine-shuffle {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--fg);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+  #machine-shuffle:hover {
+    border-color: var(--accent);
+    background: var(--bg-elev2);
+  }
+  #machine-shuffle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  #machine-description {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--fg-soft);
+    flex: 1;
+    min-width: 200px;
+  }
+`}</style>
+
+<script is:inline>{`
+(function() {
+  var layers = [
+    {
+      name: 'Data Sources',
+      shape: ['([', '])'],
+      pool: [
+        { id: 'US', label: 'User Sessions' },
+        { id: 'WH', label: 'Webhooks' },
+        { id: 'SN', label: 'Sensor Array' },
+        { id: 'AP', label: 'REST API' },
+        { id: 'LG', label: 'Log Stream' },
+        { id: 'CS', label: 'Change Feed' },
+        { id: 'MF', label: 'Media Upload' },
+        { id: 'CR', label: 'CRON Jobs' }
+      ],
+      pick: [2, 4]
+    },
+    {
+      name: 'Ingestion',
+      shape: ['[/', '/]'],
+      pool: [
+        { id: 'LB', label: 'Load Balancer' },
+        { id: 'MQ', label: 'Message Queue' },
+        { id: 'EB', label: 'Event Bus' },
+        { id: 'GW', label: 'API Gateway' },
+        { id: 'SP', label: 'Stream Processor' },
+        { id: 'RL', label: 'Rate Limiter' }
+      ],
+      pick: [2, 3]
+    },
+    {
+      name: 'Processing',
+      shape: ['[', ']'],
+      pool: [
+        { id: 'VL', label: 'Validator' },
+        { id: 'EN', label: 'Enricher' },
+        { id: 'AG', label: 'Aggregator' },
+        { id: 'DD', label: 'Deduplicator' },
+        { id: 'TF', label: 'Transformer' },
+        { id: 'CL', label: 'Classifier' },
+        { id: 'NM', label: 'Normalizer' },
+        { id: 'FI', label: 'Filter' }
+      ],
+      pick: [3, 4]
+    },
+    {
+      name: 'Storage',
+      shape: ['[(', ')]'],
+      pool: [
+        { id: 'TS', label: 'Time-Series DB' },
+        { id: 'DC', label: 'Document Store' },
+        { id: 'GD', label: 'Graph DB' },
+        { id: 'CH', label: 'Cache Layer' },
+        { id: 'IX', label: 'Search Index' },
+        { id: 'DL', label: 'Data Lake' },
+        { id: 'KV', label: 'Key-Value Store' }
+      ],
+      pick: [2, 3]
+    },
+    {
+      name: 'Output',
+      shape: ['[[', ']]'],
+      pool: [
+        { id: 'DB', label: 'Dashboard' },
+        { id: 'AL', label: 'Alert Engine' },
+        { id: 'RA', label: 'API Response' },
+        { id: 'RP', label: 'Report Gen' },
+        { id: 'ML', label: 'ML Pipeline' },
+        { id: 'NT', label: 'Notifications' },
+        { id: 'EX', label: 'Data Export' }
+      ],
+      pick: [2, 3]
+    }
+  ];
+
+  var edgeLabelPool = [
+    'raw events', 'JSON payload', 'binary stream', 'validated',
+    'enriched', 'filtered', 'aggregated', 'normalized', 'compressed',
+    'indexed', 'cached', 'transformed', 'scored', 'classified',
+    'batched', 'deduped', 'encrypted', 'parsed', 'serialized',
+    'streamed', 'buffered', 'partitioned', 'replicated', 'sampled',
+    'tagged', 'routed', 'throttled', 'merged', 'split'
+  ];
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function pickN(arr, min, max) {
+    var count = min + Math.floor(Math.random() * (max - min + 1));
+    return shuffle(arr).slice(0, count);
+  }
+
+  function buildDiagram() {
+    var selected = layers.map(function(layer) {
+      return {
+        name: layer.name,
+        shape: layer.shape,
+        nodes: pickN(layer.pool, layer.pick[0], layer.pick[1])
+      };
+    });
+
+    var edges = [];
+    var usedLabels = {};
+
+    function getLabel() {
+      var available = edgeLabelPool.filter(function(l) { return !usedLabels[l]; });
+      if (!available.length) available = edgeLabelPool;
+      var label = available[Math.floor(Math.random() * available.length)];
+      usedLabels[label] = true;
+      return label;
+    }
+
+    function addEdge(from, to) {
+      var key = from + '->' + to;
+      if (edges.some(function(e) { return e.from === from && e.to === to; })) return;
+      edges.push({ from: from, to: to, label: getLabel() });
+    }
+
+    // forward connections: each node connects to 1-2 in next layer
+    for (var i = 0; i < selected.length - 1; i++) {
+      var current = selected[i].nodes;
+      var next = selected[i + 1].nodes;
+      current.forEach(function(node) {
+        var targets = pickN(next, 1, Math.min(2, next.length));
+        targets.forEach(function(t) { addEdge(node.id, t.id); });
+      });
+    }
+
+    // ensure every node has at least one incoming edge
+    for (var i = 1; i < selected.length; i++) {
+      selected[i].nodes.forEach(function(node) {
+        var hasIncoming = edges.some(function(e) { return e.to === node.id; });
+        if (!hasIncoming) {
+          var source = selected[i - 1].nodes[Math.floor(Math.random() * selected[i - 1].nodes.length)];
+          addEdge(source.id, node.id);
+        }
+      });
+    }
+
+    // skip connections (2-3 edges that jump a layer)
+    var skipCount = 2 + Math.floor(Math.random() * 2);
+    for (var s = 0; s < skipCount; s++) {
+      var fromLayer = Math.floor(Math.random() * (selected.length - 2));
+      var toLayer = fromLayer + 2;
+      if (toLayer >= selected.length) continue;
+      var fromNode = selected[fromLayer].nodes[Math.floor(Math.random() * selected[fromLayer].nodes.length)];
+      var toNode = selected[toLayer].nodes[Math.floor(Math.random() * selected[toLayer].nodes.length)];
+      addEdge(fromNode.id, toNode.id);
+    }
+
+    // feedback loop (70% chance)
+    if (Math.random() > 0.3) {
+      var fl = 3 + Math.floor(Math.random() * Math.min(2, selected.length - 3));
+      var tl = 1 + Math.floor(Math.random() * 2);
+      if (fl < selected.length && tl < selected.length) {
+        var fn = selected[fl].nodes[Math.floor(Math.random() * selected[fl].nodes.length)];
+        var tn = selected[tl].nodes[Math.floor(Math.random() * selected[tl].nodes.length)];
+        addEdge(fn.id, tn.id);
+      }
+    }
+
+    // build mermaid syntax
+    var syntax = 'flowchart TD\\n';
+    selected.forEach(function(layer, idx) {
+      syntax += '  subgraph sg' + idx + '[\\"' + layer.name + '\\"]\\n';
+      layer.nodes.forEach(function(node) {
+        syntax += '    ' + node.id + layer.shape[0] + node.label + layer.shape[1] + '\\n';
+      });
+      syntax += '  end\\n';
+    });
+    edges.forEach(function(edge) {
+      syntax += '  ' + edge.from + ' -->|' + edge.label + '| ' + edge.to + '\\n';
+    });
+
+    // animation order: layer by layer
+    var order = [];
+    selected.forEach(function(layer) {
+      layer.nodes.forEach(function(n) { order.push(n.id); });
+    });
+
+    // description
+    var sourceNames = selected[0].nodes.map(function(n) { return n.label.toLowerCase(); });
+    var outputNames = selected[selected.length - 1].nodes.map(function(n) { return n.label.toLowerCase(); });
+    var totalNodes = selected.reduce(function(sum, l) { return sum + l.nodes.length; }, 0);
+    var desc = totalNodes + ' nodes, ' + edges.length + ' connections. ';
+    desc += 'Ingests from ' + sourceNames.join(' + ') + '. ';
+    desc += 'Delivers to ' + outputNames.join(' + ') + '.';
+
+    return { syntax: syntax, order: order, description: desc };
+  }
+
+  function setupAnimation(wrapper, order) {
+    var svg = wrapper.querySelector('svg');
+    if (!svg) return;
+
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) {
+      wrapper.classList.add('mermaid--visible');
+      return;
+    }
+
+    var edges = svg.querySelectorAll('.edgePaths > path[data-id]');
+    var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
+    var delay = 0;
+
+    // hide everything initially
+    svg.querySelectorAll('.node').forEach(function(n) { n.style.animationDelay = '99s'; });
+    edges.forEach(function(e) {
+      var len = e.getTotalLength();
+      e.style.strokeDasharray = len;
+      e.style.strokeDashoffset = len;
+      e.style.animationDelay = '99s';
+    });
+    edgeLabels.forEach(function(l) { l.style.animationDelay = '99s'; });
+
+    // semantic order: node fades in, then its outgoing edges draw
+    order.forEach(function(name) {
+      var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
+      if (node) {
+        node.style.animationDelay = delay + 's';
+        delay += 0.15;
+      }
+      edges.forEach(function(edge, i) {
+        var dataId = edge.getAttribute('data-id') || '';
+        var parts = dataId.split('_');
+        if (parts.length >= 3 && parts[1] === name) {
+          edge.style.animationDelay = delay + 's';
+          delay += 0.12;
+          if (edgeLabels[i]) {
+            edgeLabels[i].style.animationDelay = (delay - 0.06) + 's';
+          }
+        }
+      });
+    });
+
+    var totalDuration = (delay + 0.8) * 1000;
+
+    // use IntersectionObserver for first view
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          wrapper.classList.add('mermaid--visible');
+          observer.unobserve(wrapper);
+          setTimeout(function() {
+            edges.forEach(function(e) {
+              e.style.strokeDasharray = '';
+              e.style.strokeDashoffset = '';
+            });
+          }, totalDuration);
+        }
+      });
+    }, { threshold: 0.2 });
+    observer.observe(wrapper);
+  }
+
+  // --- init ---
+  var container = document.getElementById('machine-diagram');
+  var wrapper = document.getElementById('machine-wrapper');
+  var descEl = document.getElementById('machine-description');
+  var shuffleBtn = document.getElementById('machine-shuffle');
+  if (!container || !wrapper) return;
+
+  var mermaidReady = false;
+
+  function renderMachine(animate) {
+    var diagram = buildDiagram();
+    descEl.textContent = diagram.description;
+
+    if (!mermaidReady) return diagram;
+
+    wrapper.classList.remove('mermaid--visible');
+
+    window.mermaid.render('machine' + Date.now(), diagram.syntax).then(function(result) {
+      container.innerHTML = result.svg;
+      if (animate) {
+        setupAnimation(wrapper, diagram.order);
+        // for shuffle, trigger immediately since user is looking at it
+        if (!animate.observe) {
+          wrapper.classList.add('mermaid--visible');
+        }
+      }
+    });
+
+    return diagram;
+  }
+
+  // load mermaid
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.onload = function() {
+    var isDark = document.documentElement.dataset.theme === 'dark';
+    window.mermaid.initialize({
+      startOnLoad: false,
+      theme: isDark ? 'dark' : 'default',
+      themeVariables: isDark
+        ? { primaryColor: '#2d4a3e', primaryTextColor: '#e8e0d4', lineColor: '#5a7a6a' }
+        : { primaryColor: '#e8e0d4', primaryTextColor: '#2c2c2c', lineColor: '#5a7a6a' }
+    });
+    mermaidReady = true;
+    renderMachine({ observe: true });
+  };
+  document.head.appendChild(s);
+
+  shuffleBtn.addEventListener('click', function() {
+    renderMachine(true);
+  });
+})();
+`}</script>
