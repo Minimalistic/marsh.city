@@ -35,15 +35,16 @@ The web interface shows a visual timeline of today's schedule, a 14-day activity
 
 ## How it works
 
-<div id="petfeedr-diagram" class="mermaid-animated" data-animate-order="A,B,C,D,E">
+<div id="petfeedr-diagram" class="mermaid-animated" data-animate-order="A,B,C,D,E,F">
 
 ```mermaid
 flowchart TD
-  A[Schedule check] --> B[Anti-jam agitation]
-  B --> C[Stepper motor dispense]
-  C --> D[Log portion + timestamp]
-  D -.-> E[Sleep until next feed]
-  E -.-> A
+  A[Schedule engine] --> B{Feed?}
+  B -->|No| F[Sleep + retry]
+  F -.-> A
+  B -->|Yes| C[Anti-jam agitation]
+  C --> D[Stepper motor dispense]
+  D --> E[Log portion + timestamp]
 ```
 
 </div>
