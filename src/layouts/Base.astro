@@ -1138,11 +1138,21 @@ const paletteItems = [
           if (scale < 1.05) resetTransform();
         }
 
-        // Safari gesture events (no per-finger info, zoom from center)
-        function onGestureStart(e) { e.preventDefault(); startScale = scale; }
+        // Safari gesture events — zoom anchored to image center
+        function onGestureStart(e) {
+          e.preventDefault();
+          startScale = scale;
+          startTx = tx;
+          startTy = ty;
+        }
         function onGestureChange(e) {
           e.preventDefault();
-          scale = Math.min(5, Math.max(1, startScale * e.scale));
+          var newScale = Math.min(5, Math.max(1, startScale * e.scale));
+          // scale tx/ty proportionally so zoom anchors to image center
+          var ratio = newScale / startScale;
+          tx = startTx * ratio;
+          ty = startTy * ratio;
+          scale = newScale;
           applyTransform();
         }
         function onGestureEnd(e) { e.preventDefault(); if (scale < 1.05) resetTransform(); }
@@ -1267,6 +1277,19 @@ const paletteItems = [
             if (svg) {
               var clone = svg.cloneNode(true);
               clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+              // strip animation inline styles so mid-animation clicks show the complete diagram
+              // (the blob SVG won't have page CSS, so just clearing JS-set styles is enough)
+              clone.querySelectorAll('.node').forEach(function(n) {
+                n.style.animationDelay = '';
+              });
+              clone.querySelectorAll('.edgePaths > path[data-id]').forEach(function(e) {
+                e.style.strokeDasharray = '';
+                e.style.strokeDashoffset = '';
+                e.style.animationDelay = '';
+              });
+              clone.querySelectorAll('.edgeLabels > .edgeLabel').forEach(function(l) {
+                l.style.animationDelay = '';
+              });
               // ensure the SVG renders at its full intrinsic size
               clone.removeAttribute('style');
               clone.removeAttribute('width');
