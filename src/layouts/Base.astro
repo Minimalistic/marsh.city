@@ -969,12 +969,21 @@ const paletteItems = [
                 delay += 0.1;
               });
               labels.forEach(function(l) { l.style.animationDelay = delay + 's'; delay += 0.08; });
+              // total animation duration — clean up inline styles after so lightbox clone works
+              var totalDuration = (delay + 0.5) * 1000;
               // observe scroll
               var observer = new IntersectionObserver(function(entries) {
                 entries.forEach(function(entry) {
                   if (entry.isIntersecting) {
                     wrapper.classList.add('mermaid--visible');
                     observer.unobserve(wrapper);
+                    // remove dash styles after animation so lightbox clone has clean edges
+                    setTimeout(function() {
+                      edges.forEach(function(e) {
+                        e.style.strokeDasharray = '';
+                        e.style.strokeDashoffset = '';
+                      });
+                    }, totalDuration);
                   }
                 });
               }, { threshold: 0.3 });
