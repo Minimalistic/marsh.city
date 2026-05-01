@@ -909,9 +909,9 @@ class Fish {
       // Target: exactly one segment length behind previous joint
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
-      // Very stiff - tidepool fish have rigid bodies, not eel-like
+      // Very stiff - short, tight bends only, snaps straight quickly
       const t = j / this._jointCount;
-      const stiffness = 0.97 - t * 0.05; // 0.97 at head, 0.92 at tail
+      const stiffness = 0.988 - t * 0.02; // 0.988 at head, 0.968 at tail
       curr.x += (tx - curr.x) * stiffness;
       curr.y += (ty - curr.y) * stiffness;
       // Hard constraint: enforce exact segment length so body never stretches
