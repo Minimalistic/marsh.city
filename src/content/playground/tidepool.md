@@ -770,10 +770,12 @@ class Fish {
     this.depth = Math.random() * 0.5; // 0 = surface, 0.5 = deepest
     const mobileScale = w < 500 ? 0.75 : 1;
     const depthScale = 1 - this.depth * 0.35; // deeper fish are smaller
-    this.scale = mobileScale * depthScale;
+    // Scale up to 50% bigger on large viewports so they're not tiny
+    const vpSizeBoost = 1 + Math.min(0.5, (viewScale - 1) * 0.5);
+    this.scale = mobileScale * depthScale * vpSizeBoost;
     this.depthAlpha = 1 - this.depth * 0.5; // deeper fish are dimmer
 
-    // Size - consistent across viewports, with ~30% variation between fish
+    // Size - scales with viewport, with ~30% variation between fish
     const sizeVar = 0.7 + Math.random() * 0.6; // 0.7 to 1.3 range
     this.len = (10 + Math.random() * 5) * this.scale * sizeVar;
     this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
