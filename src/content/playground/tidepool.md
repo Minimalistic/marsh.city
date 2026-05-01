@@ -551,8 +551,8 @@ class Fish {
     this.scale = mobileScale * depthScale;
     this.depthAlpha = 1 - this.depth * 0.5; // deeper fish are dimmer
 
-    // Size - large enough for visible articulation from top-down
-    this.len = (14 + Math.random() * 8) * this.scale;
+    // Size - visible articulation but not too long
+    this.len = (10 + Math.random() * 6) * this.scale;
     this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
 
     // Color assigned per school (set after construction)
@@ -889,23 +889,30 @@ class Fish {
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
     // Update chain: head leads, each joint trails behind the one ahead
-    // Front-mid body has slight damping for fluid motion, rear is looser
+    // Damping controls lateral lag (bendiness), then hard distance constraint
+    // keeps the body length fixed - no stretching or compressing
     this._joints[0].x = this.x;
     this._joints[0].y = this.y;
     for (let j = 1; j <= this._jointCount; j++) {
       const prev = this._joints[j - 1];
       const curr = this._joints[j];
-      const dx = curr.x - prev.x;
-      const dy = curr.y - prev.y;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      // Target position: exactly one segment length behind the previous joint
+      let dx = curr.x - prev.x;
+      let dy = curr.y - prev.y;
+      let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      // Target: exactly one segment length behind previous joint
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
-      // Front body has inertia/damping so it doesn't whip around
+      // Lateral damping gives bendiness - front stiffer, rear looser
       const t = j / this._jointCount;
-      const stiffness = t < 0.4 ? 0.6 + t * 0.5 : 0.85 + t * 0.15; // 0.6 at head, ~0.8 mid, 1.0 at tail
+      const stiffness = t < 0.4 ? 0.6 + t * 0.5 : 0.85 + t * 0.15;
       curr.x += (tx - curr.x) * stiffness;
       curr.y += (ty - curr.y) * stiffness;
+      // Hard constraint: enforce exact segment length so body never stretches
+      dx = curr.x - prev.x;
+      dy = curr.y - prev.y;
+      dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      curr.x = prev.x + (dx / dist) * this._segLen;
+      curr.y = prev.y + (dy / dist) * this._segLen;
     }
     this.speed = currentSpeed;
   }
