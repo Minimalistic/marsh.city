@@ -524,8 +524,8 @@ class Tadpole {
 
     // Back legs - emerge from back base, splay ~25deg out, knee bends backward
     if (this.hasLegs) {
-      const legSeg = segs[4];
-      const legPrev = segs[3];
+      const legSeg = segs[3];
+      const legPrev = segs[2];
       // tailward direction (backward from body)
       const tailDir = Math.atan2(legSeg.y - legPrev.y, legSeg.x - legPrev.x);
       // Kick: subtle knee flex when swimming
