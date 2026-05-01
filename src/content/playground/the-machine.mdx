@@ -368,6 +368,21 @@ mermaid.render(id, syntax);`}</code></pre>
     font-size: inherit;
     border: none;
   }
+
+  /* mobile: tighten padding, drop diagram wrapper border */
+  @media (max-width: 600px) {
+    .terminal-body {
+      padding: 0.75rem 0.75rem;
+    }
+    #machine-wrapper {
+      padding: 0.25rem;
+      border: none;
+      border-radius: 0;
+    }
+    .machine-terminal {
+      margin: 1rem 0;
+    }
+  }
 `}</style>
 
 <script is:inline>{`
