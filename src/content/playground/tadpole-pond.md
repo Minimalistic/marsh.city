@@ -688,21 +688,18 @@ class Frond {
   }
 
   update(dt, time) {
-    // Very slow underwater drift
-    const sway = Math.sin(time * 0.0003 + this.phase) * 0.2;
+    // No spring-back to rest. Just gentle ambient current + drag.
+    const currentX = Math.sin(time * 0.0002 + this.phase) * 0.03;
+    const currentY = Math.cos(time * 0.00015 + this.phase * 1.3) * 0.02;
     for (let i = 1; i < this.segs.length; i++) {
       const s = this.segs[i];
       const t = i / this.segCount;
-      // Gentle pull toward rest - underwater plants barely spring back
-      const restAngle = this.growAngle + sway * t;
-      s.restX = this.x + Math.cos(restAngle) * t * this.len;
-      s.restY = this.y + Math.sin(restAngle) * t * this.len;
-      const stiffness = 0.006 * (1 - t * 0.5);
-      s.vx += (s.restX - s.x) * stiffness;
-      s.vy += (s.restY - s.y) * stiffness;
-      // Heavy water drag - kills momentum quickly, no oscillation
-      s.vx *= 0.88;
-      s.vy *= 0.88;
+      // Ambient water current pushes tips more than base
+      s.vx += currentX * t;
+      s.vy += currentY * t;
+      // Heavy water drag
+      s.vx *= 0.9;
+      s.vy *= 0.9;
       s.x += s.vx;
       s.y += s.vy;
       // Rigid chain constraint - maintain exact segment distance
