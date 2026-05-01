@@ -699,8 +699,8 @@ class Fish {
       }
     }
 
-    // Mouse avoidance - dart away, not blast away
-    if (mouse.active) {
+    // Mouse avoidance - skip when dropping food (fish should approach, not flee)
+    if (mouse.active && activeTool !== 'food') {
       const mdx = this.x - mouse.x;
       const mdy = this.y - mouse.y;
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);

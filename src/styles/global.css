@@ -1378,6 +1378,7 @@ nav.site-nav .links a[aria-current="page"]::after {
   transition: color 0.15s ease, background 0.15s ease;
 }
 .nav-menu-link::after { display: none; }
+.nav-menu-link.nav-show-mobile { display: none; }
 .nav-menu-link:hover {
   background: color-mix(in srgb, var(--leaf) 15%, transparent);
   color: var(--fg);
@@ -1702,6 +1703,7 @@ html.theme-animating *::after {
   }
   nav.site-nav .links .nav-hide-mobile { display: none; }
   .nav-menu-link { display: inline-flex; }
+  .nav-menu-link.nav-show-mobile { display: inline-flex; }
   nav.site-nav .links {
     gap: 0.25rem 1rem;
     font-size: 0.85rem;
