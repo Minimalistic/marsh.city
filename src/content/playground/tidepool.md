@@ -266,16 +266,17 @@ const washWaves = [];
 let washTimer = 5 + Math.random() * 8;
 
 function spawnWash() {
-  const angle = waveBaseAngle + (Math.random() - 0.5) * 0.5;
-  // Start from outside the viewport on the wave's incoming side
+  const angle = waveBaseAngle + (Math.random() - 0.5) * 0.6;
   const startX = w / 2 - Math.cos(angle) * w * 0.7;
   const startY = h / 2 - Math.sin(angle) * h * 0.7;
+  // Highly varied intensity - some are strong and fast, some barely there
+  const intensity = Math.pow(Math.random(), 0.7); // skewed toward weaker
   washWaves.push({
     x: startX, y: startY,
     angle,
-    speed: 1.5 + Math.random() * 1,
-    width: 30 + Math.random() * 20,
-    strength: 0.4 + Math.random() * 0.3,
+    speed: 0.8 + intensity * 2,
+    width: 15 + intensity * 40,
+    strength: 0.1 + intensity * 0.6,
     life: 1,
     traveled: 0,
     maxTravel: Math.max(w, h) * 1.4,
@@ -786,12 +787,14 @@ function draw(time) {
   lastTime = time;
   if (settleTime > 0) settleTime -= dt;
 
-  // Wave current - oscillates like water washing in and pulling back
+  // Wave current - irregular oscillation, not perfectly sinusoidal
   waveTime += dt;
-  const waveCycle = Math.sin(waveTime * 0.4); // main wave ~15s full cycle
-  const secondaryWave = Math.sin(waveTime * 0.17) * 0.3; // slower undulation
+  const waveCycle = Math.sin(waveTime * 0.4) * 0.6
+                  + Math.sin(waveTime * 0.23) * 0.25
+                  + Math.sin(waveTime * 0.71) * 0.15; // layered irregular rhythm
+  const secondaryWave = Math.sin(waveTime * 0.11) * 0.3 + Math.sin(waveTime * 0.31) * 0.15;
   tide.angle = waveBaseAngle + secondaryWave;
-  tide.strength = 0.3 + waveCycle * 0.35; // swings from -0.05 to 0.65
+  tide.strength = 0.25 + waveCycle * 0.35;
 
   updateOceanSound();
 
@@ -812,8 +815,14 @@ function draw(time) {
   // Spawn wash waves occasionally
   washTimer -= dt;
   if (washTimer <= 0) {
-    spawnWash();
-    washTimer = 8 + Math.random() * 12;
+    // Sometimes skip a wave entirely
+    if (Math.random() < 0.15) {
+      washTimer = 3 + Math.random() * 5; // short gap, try again soon
+    } else {
+      spawnWash();
+      // Very irregular timing - sometimes rapid sets, sometimes long lulls
+      washTimer = 5 + Math.random() * 20 + (Math.random() < 0.3 ? 15 : 0);
+    }
   }
 
   // Update wash waves - push fish and debris as they pass
@@ -970,18 +979,25 @@ function draw(time) {
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Update and draw blobs - they stay in world space, fade out
+    // Update and draw blobs - drift with current and turbulence, fade out
     for (let i = ww.blobs.length - 1; i >= 0; i--) {
       const b = ww.blobs[i];
       b.age += dt;
       if (b.age > b.maxAge) { ww.blobs.splice(i, 1); continue; }
-      const fade = 1 - b.age / b.maxAge;
+      // Move with current and local turbulence
+      const flow = sampleFlow(b.x, b.y, time);
+      b.x += Math.cos(tide.angle) * tide.strength * 0.3 + flow.fx * 0.4;
+      b.y += Math.sin(tide.angle) * tide.strength * 0.3 + flow.fy * 0.4;
+      b.rot += flow.fx * 0.02; // spin slightly from turbulence
+      // Shrink as they dissipate
+      const life = 1 - b.age / b.maxAge;
+      const shrink = 0.5 + life * 0.5;
       ctx.save();
-      ctx.globalAlpha = fade * 0.18;
+      ctx.globalAlpha = life * 0.2;
       ctx.translate(b.x, b.y);
       ctx.rotate(b.rot);
       ctx.beginPath();
-      ctx.ellipse(0, 0, b.size * b.elongX, b.size * b.elongY, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, b.size * b.elongX * shrink, b.size * b.elongY * shrink, 0, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(210, 230, 240, 1)';
       ctx.fill();
       ctx.restore();
