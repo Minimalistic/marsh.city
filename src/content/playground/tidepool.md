@@ -24,6 +24,7 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 <button id="fs-close-btn" class="pool-tool pool-fs-close" title="Exit fullscreen" aria-label="Exit fullscreen" hidden>
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
+<div id="sound-hint" class="pool-hint" hidden>No audio? Check your phone's silent mode switch</div>
 </div>
 <style>
 .pool-tool {
@@ -47,6 +48,15 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 .pool-sound-wrap.vol-open .pool-volume,
 .pool-volume:hover,
 .pool-volume:active { height: 60px; opacity: 1; }
+.pool-hint {
+  position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  color: rgba(255,255,255,0.85); font-size: 12px; padding: 6px 12px;
+  border-radius: 6px; white-space: nowrap; z-index: 10;
+  opacity: 0; transition: opacity 0.3s;
+  pointer-events: none;
+}
+.pool-hint.show { opacity: 1; }
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
 .pool-fs-close { position: absolute; top: 8px; left: 8px; z-index: 10; }
 #toolbar.hidden, .pool-fs-btn.hidden, .pool-fs-close.hidden { opacity: 0; pointer-events: none; }
@@ -175,6 +185,9 @@ const soundBtn = document.getElementById('sound-toggle');
 const soundWrap = document.querySelector('.pool-sound-wrap');
 const volSlider = document.getElementById('volume-slider');
 
+const soundHint = document.getElementById('sound-hint');
+let hintTimer = null;
+
 let lastSoundTap = 0;
 function handleSoundTap(e) {
   e.stopPropagation();
@@ -184,7 +197,22 @@ function handleSoundTap(e) {
   if (now - lastSoundTap < 300) return;
   lastSoundTap = now;
   toggleSound();
-  if ('ontouchstart' in window) soundWrap.classList.toggle('vol-open', soundEnabled);
+  if ('ontouchstart' in window) {
+    soundWrap.classList.toggle('vol-open', soundEnabled);
+    // Brief reminder about silent mode when enabling sound on mobile
+    if (soundEnabled) {
+      soundHint.hidden = false;
+      soundHint.classList.add('show');
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(() => {
+        soundHint.classList.remove('show');
+        setTimeout(() => { soundHint.hidden = true; }, 300);
+      }, 3000);
+    } else {
+      soundHint.classList.remove('show');
+      soundHint.hidden = true;
+    }
+  }
 }
 soundBtn.addEventListener('click', handleSoundTap);
 soundBtn.addEventListener('touchend', handleSoundTap);
