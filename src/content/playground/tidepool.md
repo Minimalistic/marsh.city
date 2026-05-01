@@ -740,12 +740,24 @@ function draw(time) {
       // Distance from wave front line (perpendicular)
       const rel = (f.x - ww.x) * cosA + (f.y - ww.y) * sinA;
       if (rel > -5 && rel < ww.width) {
-        f.vx += cosA * pushForce * 0.06;
-        f.vy += sinA * pushForce * 0.06;
+        // Wave pushes fish, but they resist ~60% by swimming against it
+        const netPush = pushForce * 0.03;
+        f.vx += cosA * netPush;
+        f.vy += sinA * netPush;
+        // Fish actively correct - swim slightly against wave direction
+        f.vx -= cosA * netPush * 0.6;
+        f.vy -= sinA * netPush * 0.6;
         // Lateral scatter in the wake
-        const lateral = (Math.random() - 0.5) * pushForce * 0.03;
+        const lateral = (Math.random() - 0.5) * pushForce * 0.015;
         f.vx += -sinA * lateral;
         f.vy += cosA * lateral;
+        // Brief speed boost to fight the current
+        const spd = Math.sqrt(f.vx * f.vx + f.vy * f.vy);
+        if (spd > 0.01) {
+          const boost = 1 + pushForce * 0.15;
+          f.vx *= boost;
+          f.vy *= boost;
+        }
       }
     }
     for (const d of debris) {
