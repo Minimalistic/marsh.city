@@ -68,6 +68,7 @@ canvas.addEventListener('mouseenter', e => {
   mouse.active = true;
   mouse.speed = 0;
 });
+let foodDragTimer = 0;
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   mouse.prevX = mouse.x;
@@ -77,6 +78,13 @@ canvas.addEventListener('mousemove', e => {
   if (!mouse.active) { mouse.prevX = mouse.x; mouse.prevY = mouse.y; }
   mouse.active = true;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
+  // Drag to sprinkle food
+  if (mouse.down && activeTool === 'food' && mouse.speed > 2) {
+    foodDragTimer++;
+    if (foodDragTimer % 5 === 0) {
+      foodPellets.push({ x: mouse.x, y: mouse.y, size: 1.5 + Math.random(), bites: 5 + Math.floor(Math.random() * 5), vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 });
+    }
+  }
 });
 canvas.addEventListener('mouseleave', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
 canvas.addEventListener('mousedown', e => {
@@ -86,7 +94,7 @@ canvas.addEventListener('mousedown', e => {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   if (activeTool === 'food') {
-    foodPellets.push({ x: mx, y: my, size: 2, life: 1, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    foodPellets.push({ x: mx, y: my, size: 3, bites: 15 + Math.floor(Math.random() * 6), vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
     ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else if (activeTool === 'rock') {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 150, opacity: 0.7 });
@@ -110,7 +118,7 @@ canvas.addEventListener('touchstart', e => {
   mouse.down = true;
   mouse.speed = 0;
   if (activeTool === 'food') {
-    foodPellets.push({ x: mouse.x, y: mouse.y, size: 2, life: 1, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: 15 + Math.floor(Math.random() * 6), vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
     ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else if (activeTool === 'rock') {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 150, opacity: 0.7 });
@@ -128,6 +136,12 @@ canvas.addEventListener('touchmove', e => {
   mouse.x = t.clientX - rect.left;
   mouse.y = t.clientY - rect.top;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
+  if (activeTool === 'food' && mouse.speed > 2) {
+    foodDragTimer++;
+    if (foodDragTimer % 5 === 0) {
+      foodPellets.push({ x: mouse.x, y: mouse.y, size: 1.5 + Math.random(), bites: 5 + Math.floor(Math.random() * 5), vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 });
+    }
+  }
 }, { passive: false });
 canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
 
@@ -235,7 +249,7 @@ class Fish {
     let closestFood = null;
     let closestFoodDist = 120;
     for (const fp of foodPellets) {
-      if (fp.life <= 0) continue;
+      if (fp.bites <= 0) continue;
       const fdx = fp.x - this.x;
       const fdy = fp.y - this.y;
       const fd = Math.sqrt(fdx * fdx + fdy * fdy);
@@ -254,9 +268,23 @@ class Fish {
       this.vx += (desiredVx - this.vx) * steerStrength;
       this.vy += (desiredVy - this.vy) * steerStrength;
       if (this.idle) { this.idle = false; this.idleTimer = 2; }
-      // Eat it when close enough
+      // Bite it when close enough - fragments fly off
       if (closestFoodDist < 6) {
-        closestFood.life = 0;
+        closestFood.bites--;
+        closestFood.size *= 0.97;
+        // Spawn a small fragment that drifts away
+        if (Math.random() < 0.5) {
+          const fragAngle = Math.random() * Math.PI * 2;
+          foodPellets.push({
+            x: closestFood.x + Math.cos(fragAngle) * 4,
+            y: closestFood.y + Math.sin(fragAngle) * 4,
+            size: 0.8 + Math.random() * 0.6,
+            bites: 1 + Math.floor(Math.random() * 3),
+            vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.3),
+            vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.3),
+          });
+        }
+        if (closestFood.bites <= 0) closestFood.size = 0;
       }
     }
 
@@ -625,17 +653,16 @@ function draw(time) {
   // Update and draw food pellets
   for (let i = foodPellets.length - 1; i >= 0; i--) {
     const fp = foodPellets[i];
-    fp.life -= dt * 0.08;
     fp.vx *= 0.98;
     fp.vy *= 0.98;
     fp.vx += Math.cos(tide.angle) * tide.strength * 0.003;
     fp.vy += Math.sin(tide.angle) * tide.strength * 0.003;
     fp.x += fp.vx;
     fp.y += fp.vy;
-    if (fp.life <= 0) { foodPellets.splice(i, 1); continue; }
+    if (fp.bites <= 0 || fp.size < 0.3) { foodPellets.splice(i, 1); continue; }
     ctx.beginPath();
-    ctx.arc(fp.x, fp.y, fp.size * fp.life, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(180, 130, 60, ${0.7 * fp.life})`;
+    ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180, 130, 60, ${Math.min(0.8, 0.3 + fp.size * 0.2)})`;
     ctx.fill();
   }
 
