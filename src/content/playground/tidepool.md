@@ -1019,22 +1019,30 @@ class Fish {
       }
     }
 
-    // Predator avoidance - scatter when a hunting predator is near
+    // Predator avoidance — much stronger when being actively chased
     for (const pred of predators) {
       if (!pred.hunting) continue;
       const pdx = this.x - pred.x;
       const pdy = this.y - pred.y;
       const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
-      const fleeRange = 120 + (pred.hunger - 0.5) * 80;
+      const beingChased = pred.target === this;
+      const fleeRange = beingChased ? 200 * viewScale : 120 + (pred.hunger - 0.5) * 80;
       if (pDist < fleeRange && pDist > 0.1) {
-        const force = 0.2 * (1 - pDist / fleeRange);
-        this.vx += (pdx / pDist) * force;
-        this.vy += (pdy / pDist) * force;
+        const proximity = 1 - pDist / fleeRange;
+        // Fish being chased flee at near-max speed, others just scatter
+        const force = beingChased ? 0.5 * proximity + 0.15 : 0.2 * proximity;
+        this.vx += (pdx / pDist) * force * viewScale;
+        this.vy += (pdy / pDist) * force * viewScale;
         this.fleeing = true;
-        this.fleeTimer = 0.6;
-        // Break school cohesion when fleeing predator
+        this.fleeTimer = beingChased ? 1.0 : 0.6;
         this.distracted = true;
         this.distractTimer = 1.5 + Math.random() * 2;
+        // Chased fish get a speed boost — adrenaline
+        if (beingChased && pDist < fleeRange * 0.5) {
+          const escapeAngle = Math.atan2(pdy, pdx);
+          this.vx += Math.cos(escapeAngle) * scaledSpeed * 0.3;
+          this.vy += Math.sin(escapeAngle) * scaledSpeed * 0.3;
+        }
       }
     }
 
@@ -1049,8 +1057,14 @@ class Fish {
     }
 
     // Speed management - tidepool fish dart and zip, quick speed changes
+    // Check if actively being chased by a predator
+    let beingHunted = false;
+    for (const pred of predators) {
+      if (pred.target === this) { beingHunted = true; break; }
+    }
     let targetSpeed;
-    if (this.fleeing) targetSpeed = scaledSpeed * 1.6;
+    if (beingHunted) targetSpeed = scaledSpeed * 2.2; // panic sprint
+    else if (this.fleeing) targetSpeed = scaledSpeed * 1.6;
     else if (this.idle) targetSpeed = scaledSpeed * 0.7;
     else targetSpeed = scaledSpeed * 1.0;
 
@@ -1551,84 +1565,84 @@ class Predator {
       const mouthX = this.x + Math.cos(this.angle) * this.len * 0.45;
       const mouthY = this.y + Math.sin(this.angle) * this.len * 0.45;
       const cosA = Math.cos(this.angle), sinA = Math.sin(this.angle);
+      const urgency = Math.min(1, (this.hunger - 0.4) * 1.67);
 
-      // Phase 1: cruise toward the nearest cluster of fish (school center of mass)
-      // Find average position of nearby fish - swim toward the crowd
+      // Find nearest school cluster to cruise toward
       let crowdX = 0, crowdY = 0, crowdN = 0;
-      for (const f of smallFish) {
+      for (const f of getNeighbors(this.x, this.y)) {
         const dx = f.x - this.x, dy = f.y - this.y;
         const d2 = dx * dx + dy * dy;
-        if (d2 < 250 * 250) { crowdX += f.x; crowdY += f.y; crowdN++; }
+        if (d2 < 300 * 300) { crowdX += f.x; crowdY += f.y; crowdN++; }
       }
 
-      // Phase 2: only lock a target when close and it's a straggler or right in front
-      // Drop current target frequently so predator doesn't heat-seek
+      // Target management — once chasing, commit for a while
       if (this.target && !smallFish.includes(this.target)) this.target = null;
-      if (this.target && Math.random() < 0.05) this.target = null; // lose interest often
+      // Only give up on a chase after sustained pursuit (not randomly)
+      if (this.target) {
+        const td = Math.sqrt((this.target.x - this.x) ** 2 + (this.target.y - this.y) ** 2);
+        // Give up if target got too far away (it escaped)
+        if (td > 200 * viewScale) {
+          this.target = null;
+          this.burstTimer = 0; // stop chasing, catch breath
+        }
+      }
 
-      // Pick a new target only from fish very close to mouth and exposed
-      if (!this.target) {
+      // Pick a target: prefer isolated fish ahead of us, not too close (need a chase)
+      if (!this.target && Math.random() < 0.03) { // don't retarget every frame
         let best = null;
         let bestScore = Infinity;
-        for (const f of smallFish) {
-          const dx = f.x - mouthX, dy = f.y - mouthY;
+        for (const f of getNeighbors(this.x, this.y)) {
+          const dx = f.x - this.x, dy = f.y - this.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist > 100) continue; // only consider very nearby fish
-          // How ahead of us is this fish? (dot product with heading)
+          if (dist > 180 * viewScale || dist < 30 * viewScale) continue;
           const ahead = dx * cosA + dy * sinA;
-          if (ahead < 0) continue; // ignore fish behind us
-          // Prefer stragglers: fish far from their school neighbors are easier picks
+          if (ahead < 0) continue;
           let nearbyFriends = 0;
           for (const other of getNeighbors(f.x, f.y)) {
             if (other === f) continue;
             const odx = other.x - f.x, ody = other.y - f.y;
             if (odx * odx + ody * ody < 30 * 30) nearbyFriends++;
           }
-          // Lower score = better target. Isolated fish score low, clustered fish score high
-          const isolationBonus = nearbyFriends < 3 ? -40 : nearbyFriends * 8;
+          const isolationBonus = nearbyFriends < 3 ? -50 : nearbyFriends * 10;
           const score = dist + isolationBonus;
           if (score < bestScore) { bestScore = score; best = f; }
         }
         if (best) this.target = best;
       }
 
-      const urgency = Math.min(1, (this.hunger - 0.4) * 1.67);
-
       if (this.target) {
-        // Short-range pursuit of the specific target
+        // Active chase — committed pursuit, building speed
         const dx = this.target.x - this.x, dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const pursuitAngle = Math.atan2(dy, dx);
-        const steer = 0.03 + urgency * 0.05;
-        this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.0 * viewScale - this.vx) * steer;
-        this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.0 * viewScale - this.vy) * steer;
 
-        if (dist < 60 * viewScale) {
-          this.burstTimer = 0.3;
-          const burstSteer = 0.1 + urgency * 0.06;
-          this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.5 * viewScale - this.vx) * burstSteer;
-          this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.5 * viewScale - this.vy) * burstSteer;
+        // Ramp up: faster the closer we get, like a real lunge
+        const closeness = Math.max(0, 1 - dist / (150 * viewScale));
+        const chaseSpeed = this.baseSpeed * (1.8 + closeness * 1.2) * viewScale;
+        const steer = 0.03 + closeness * 0.08;
+        this.vx += (Math.cos(pursuitAngle) * chaseSpeed - this.vx) * steer;
+        this.vy += (Math.sin(pursuitAngle) * chaseSpeed - this.vy) * steer;
+
+        // Final lunge when very close
+        if (dist < 40 * viewScale) {
+          this.burstTimer = 0.4;
         }
       } else if (crowdN > 0) {
-        // No locked target - cruise toward the school cluster
+        // Cruising toward school — lazy approach, not chasing yet
         const cx = crowdX / crowdN, cy = crowdY / crowdN;
         const toSchoolAngle = Math.atan2(cy - this.y, cx - this.x);
-        const steer = 0.01 + urgency * 0.02;
-        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 1.4 * viewScale - this.vx) * steer;
-        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 1.4 * viewScale - this.vy) * steer;
+        const steer = 0.01 + urgency * 0.015;
+        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 1.2 * viewScale - this.vx) * steer;
+        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 1.2 * viewScale - this.vy) * steer;
       }
 
-      // Catch check - locked target or any fish that wanders into the mouth
+      // Catch — only the locked target, must be very close and predator moving fast
       let prey = null;
       if (this.target) {
         const td = Math.sqrt((this.target.x - mouthX) ** 2 + (this.target.y - mouthY) ** 2);
-        if (td < 18) prey = this.target;
-      }
-      if (!prey) {
-        for (const f of smallFish) {
-          const sd = Math.sqrt((f.x - mouthX) ** 2 + (f.y - mouthY) ** 2);
-          if (sd < 14) { prey = f; break; }
-        }
+        const mySpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // Must be right on top of it AND moving fast (actual lunge, not lazy drift)
+        if (td < 10 && mySpeed > this.baseSpeed * 1.5 * viewScale) prey = this.target;
       }
       if (prey) {
         const idx = smallFish.indexOf(prey);
@@ -2895,17 +2909,38 @@ function draw(time) {
   for (const f of fish) f.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
 
-  // Predator shadow — blurry dark shape on the pool floor beneath the big fish
+  // Predator shadow — draw actual fish shape into temp canvas, blur heavily, composite
   for (const pred of predators) {
+    const shadowPad = 40; // padding for blur bleed
+    const sW = Math.ceil(pred.len * 1.4 + shadowPad * 2);
+    const sH = Math.ceil(pred.len * 0.6 + shadowPad * 2);
+    if (!pred._shadowCanvas) {
+      pred._shadowCanvas = document.createElement('canvas');
+      pred._shadowCtx = pred._shadowCanvas.getContext('2d');
+    }
+    const sc = pred._shadowCanvas, sctx = pred._shadowCtx;
+    sc.width = sW; sc.height = sH;
+    sctx.clearRect(0, 0, sW, sH);
+    // Draw fish shape at center of shadow canvas
+    sctx.save();
+    sctx.translate(sW / 2, sH / 2);
+    sctx.rotate(pred.angle);
+    sctx.translate(-pred.x, -pred.y);
+    // Override color to solid dark for shadow
+    const origColor = pred.color;
+    const origBelly = pred.bellyColor;
+    pred.color = 'rgba(0,0,0,1)';
+    pred.bellyColor = 'rgba(0,0,0,1)';
+    pred.draw(sctx);
+    pred.color = origColor;
+    pred.bellyColor = origBelly;
+    sctx.restore();
+    // Draw blurred shadow onto main canvas
+    const shadowOff = (5 + pred.depth * 12) * viewScale;
     ctx.save();
-    const shadowOff = 4 + pred.depth * 8; // offset increases with depth
-    ctx.translate(pred.x + shadowOff, pred.y + shadowOff);
-    ctx.rotate(pred.angle);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, pred.len * 0.4, pred.bodyWidth * 1.5, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
-    ctx.filter = 'blur(6px)';
-    ctx.fill();
+    ctx.filter = 'blur(12px)';
+    ctx.globalAlpha = 0.18;
+    ctx.drawImage(sc, pred.x - sW / 2 + shadowOff, pred.y - sH / 2 + shadowOff);
     ctx.restore();
   }
 
