@@ -187,7 +187,7 @@ class Fish {
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
       const fleeR = mouse.down ? 80 : 25 + mouse.speed * 4;
       if (mDist < fleeR && mDist > 0.1) {
-        const force = 0.6 * (1 - mDist / fleeR);
+        const force = 0.15 * (1 - mDist / fleeR);
         this.vx += (mdx / mDist) * force;
         this.vy += (mdy / mDist) * force;
         this.fleeing = true;
@@ -201,7 +201,7 @@ class Fish {
       const rdy = this.y - r.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       if (Math.abs(rDist - r.radius) < 20 && r.opacity > 0.1 && rDist > 0.1) {
-        const force = 0.5 * r.opacity;
+        const force = 0.12 * r.opacity;
         this.vx += (rdx / rDist) * force;
         this.vy += (rdy / rDist) * force;
         this.fleeing = true;
@@ -221,7 +221,7 @@ class Fish {
 
     // Speed management - idle fish slow way down, active fish are gentle
     let targetSpeed;
-    if (this.fleeing) targetSpeed = this.baseSpeed * 1.6;
+    if (this.fleeing) targetSpeed = this.baseSpeed * 1.15;
     else if (this.idle) targetSpeed = this.baseSpeed * 0.15;
     else targetSpeed = this.baseSpeed;
 
@@ -354,7 +354,7 @@ class Frond {
     this.x = x;
     this.y = y;
     this.growAngle = growAngle;
-    this.len = 25 + Math.random() * 40;
+    this.len = 40 + Math.random() * 55;
     this.branches = 2 + Math.floor(Math.random() * 3);
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
@@ -460,7 +460,7 @@ class Frond {
 }
 
 const plants = [];
-for (let i = 0; i < 12; i++) {
+for (let i = 0; i < 20; i++) {
   const edge = Math.floor(Math.random() * 4);
   let px, py, growAngle;
   const inset = Math.random() * 5;
