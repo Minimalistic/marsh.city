@@ -475,7 +475,7 @@ function rescaleAll(oldW, oldH) {
   const areaRatio = (w * h) / initialArea;
   const targetFish = Math.min(600, Math.floor(initialFishCount * areaRatio * 0.975));
   const targetDebris = Math.min(1200, Math.floor(initialDebrisCount * areaRatio * 0.75));
-  const targetPlants = Math.min(40, Math.floor(20 * Math.sqrt(areaRatio)));
+  const targetPlants = Math.min(60, Math.floor(30 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
 
   // Add fish if needed - new fish swim in from edges
@@ -515,7 +515,7 @@ function rescaleAll(oldW, oldH) {
     growAngle += (Math.random() - 0.5) * 0.5;
     plants.push(new Frond(px, py, growAngle));
   }
-  while (plants.length > targetPlants && plants.length > 20) plants.pop();
+  while (plants.length > targetPlants && plants.length > 30) plants.pop();
 
   // Add rocks if needed
   while (rocks.length < targetRocks) {
@@ -1895,17 +1895,20 @@ class Frond {
     this.x = x;
     this.y = y;
     this.growAngle = growAngle;
-    this.len = (40 + Math.random() * 55) * viewScale;
-    this.branches = 2 + Math.floor(Math.random() * 3);
+    // Plant scale: 3x base size, proportional to viewport area
+    const plantScale = viewScale * 3;
+    this.len = (40 + Math.random() * 55) * plantScale;
+    this.branches = 3 + Math.floor(Math.random() * 4);
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
+    this._plantScale = plantScale;
     this.branchData = [];
     for (let b = 0; b < this.branches; b++) {
       const t = 0.15 + (b / (this.branches - 1)) * 0.8;
       const taper = Math.pow(1 - t, 0.6);
-      this.branchData.push({ t, lenScale: (0.7 + Math.random() * 0.3) * taper, leaflets: Math.max(1, Math.floor((1 + Math.random() * 2) * taper)) });
+      this.branchData.push({ t, lenScale: (0.7 + Math.random() * 0.3) * taper, leaflets: Math.max(1, Math.floor((2 + Math.random() * 3) * taper)) });
     }
-    this.segCount = 6;
+    this.segCount = 8;
     this.segs = [];
     for (let i = 0; i <= this.segCount; i++) {
       const t = i / this.segCount;
@@ -1957,6 +1960,7 @@ class Frond {
 
   draw(ctx, time) {
     const segs = this.segs;
+    const ps = this._plantScale;
     ctx.lineCap = 'round';
     for (let i = 0; i < segs.length - 1; i++) {
       const t = i / (segs.length - 1);
@@ -1964,7 +1968,7 @@ class Frond {
       ctx.moveTo(segs[i].x, segs[i].y);
       ctx.lineTo(segs[i + 1].x, segs[i + 1].y);
       ctx.strokeStyle = 'rgb(20, 70, 50)';
-      ctx.lineWidth = 1.6 * viewScale * (1 - t * 0.7);
+      ctx.lineWidth = 1.6 * ps * (1 - t * 0.7);
       ctx.stroke();
     }
     for (let b = 0; b < this.branches; b++) {
@@ -1983,7 +1987,7 @@ class Frond {
       ctx.moveTo(base.x, base.y);
       ctx.lineTo(tipX, tipY);
       ctx.strokeStyle = 'rgb(30, 85, 55)';
-      ctx.lineWidth = 0.3 + taper * 0.8;
+      ctx.lineWidth = (0.3 + taper * 0.8) * ps;
       ctx.stroke();
       for (let l = 0; l < bd.leaflets; l++) {
         const lt = 0.3 + (l / bd.leaflets) * 0.6;
@@ -1995,7 +1999,7 @@ class Frond {
         ctx.moveTo(lx, ly);
         ctx.lineTo(lx + Math.cos(leafAngle) * leafLen, ly + Math.sin(leafAngle) * leafLen);
         ctx.strokeStyle = 'rgb(35, 95, 60)';
-        ctx.lineWidth = 0.3 + taper * 0.4;
+        ctx.lineWidth = (0.3 + taper * 0.4) * ps;
         ctx.stroke();
       }
     }
@@ -2003,7 +2007,7 @@ class Frond {
 }
 
 const plants = [];
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 30; i++) {
   const edge = Math.floor(Math.random() * 4);
   let px, py, growAngle;
   const inset = Math.random() * 5;
