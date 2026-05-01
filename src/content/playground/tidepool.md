@@ -68,7 +68,6 @@ canvas.addEventListener('mouseenter', e => {
   mouse.active = true;
   mouse.speed = 0;
 });
-let foodDragTimer = 0;
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   mouse.prevX = mouse.x;
@@ -78,13 +77,6 @@ canvas.addEventListener('mousemove', e => {
   if (!mouse.active) { mouse.prevX = mouse.x; mouse.prevY = mouse.y; }
   mouse.active = true;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
-  // Drag to sprinkle food
-  if (mouse.down && activeTool === 'food' && mouse.speed > 2) {
-    foodDragTimer++;
-    if (foodDragTimer % 5 === 0) {
-      foodPellets.push({ x: mouse.x, y: mouse.y, size: 1.5 + Math.random(), bites: 5 + Math.floor(Math.random() * 5), vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 });
-    }
-  }
 });
 canvas.addEventListener('mouseleave', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
 canvas.addEventListener('mousedown', e => {
@@ -136,12 +128,6 @@ canvas.addEventListener('touchmove', e => {
   mouse.x = t.clientX - rect.left;
   mouse.y = t.clientY - rect.top;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
-  if (activeTool === 'food' && mouse.speed > 2) {
-    foodDragTimer++;
-    if (foodDragTimer % 5 === 0) {
-      foodPellets.push({ x: mouse.x, y: mouse.y, size: 1.5 + Math.random(), bites: 5 + Math.floor(Math.random() * 5), vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 });
-    }
-  }
 }, { passive: false });
 canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
 
@@ -310,16 +296,16 @@ class Fish {
         if (closestFoodDist < 6) {
           closestFood.bites--;
           closestFood.size *= 0.97;
-          // Spawn a fragment
-          if (Math.random() < 0.5) {
+          // Spawn a fragment ~25% of bites
+          if (Math.random() < 0.25) {
             const fragAngle = Math.random() * Math.PI * 2;
             foodPellets.push({
               x: closestFood.x + Math.cos(fragAngle) * 4,
               y: closestFood.y + Math.sin(fragAngle) * 4,
-              size: 0.8 + Math.random() * 0.6,
-              bites: 1 + Math.floor(Math.random() * 3),
-              vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.3),
-              vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.3),
+              size: 0.6 + Math.random() * 0.4,
+              bites: 1,
+              vx: Math.cos(fragAngle) * (0.2 + Math.random() * 0.3),
+              vy: Math.sin(fragAngle) * (0.2 + Math.random() * 0.3),
             });
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
