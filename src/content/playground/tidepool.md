@@ -841,14 +841,20 @@ class Fish {
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
     // Update trailing joint angles - each joint follows the one ahead
-    // Front joints track tighter, rear joints lag more for natural flex
+    // Real fish anatomy: rigid head, flex starts mid-body, most bend at tail
     this._angles[0] = this.angle;
     for (let j = 1; j < this._jointCount; j++) {
       let diff = this._angles[j - 1] - this._angles[j];
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      const followRate = 0.35 - (j / this._jointCount) * 0.15; // 0.35 at head, 0.20 at tail
-      this._angles[j] += diff * followRate;
+      const t = j / this._jointCount;
+      // Faster follow overall for responsive turns
+      const followRate = 0.5 - t * 0.15; // 0.50 near head, 0.35 at tail
+      // Max bend per joint: near-zero at head, full flex from mid-body back
+      // Front 25% is basically rigid (skull + pectoral girdle)
+      const maxBend = t < 0.25 ? t / 0.25 * 0.02 : 0.02 + (t - 0.25) / 0.75 * 0.18;
+      const clamped = Math.max(-maxBend, Math.min(maxBend, diff));
+      this._angles[j] += clamped * followRate;
     }
     this.speed = currentSpeed;
   }
@@ -887,10 +893,10 @@ class Fish {
       while (relAngle > Math.PI) relAngle -= Math.PI * 2;
       while (relAngle < -Math.PI) relAngle += Math.PI * 2;
 
-      // Smooth swim undulation - broad wave, gradual amplitude ramp
-      // Linear onset so the whole body participates, not just the tail tip
-      const onset = Math.max(0, t - 0.05) / 0.95;
-      const undulAmp = onset * 0.10 * (0.3 + si * 0.7);
+      // Swim undulation respects fish anatomy - rigid head, flex from mid-body
+      // Front 25% barely moves, amplitude builds from there
+      const flex = t < 0.25 ? t / 0.25 * 0.1 : 0.1 + (t - 0.25) / 0.75 * 0.9;
+      const undulAmp = flex * 0.10 * (0.3 + si * 0.7);
       const undulation = Math.sin(phase - t * Math.PI * 1.0) * undulAmp;
 
       spineA[i] = relAngle + undulation;
