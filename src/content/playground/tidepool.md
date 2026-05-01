@@ -916,8 +916,8 @@ class Fish {
     this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.015;
     const si = this._swimSmooth;
 
-    // Undulation phase for swimming wave
-    const phase = Date.now() * 0.00048 * (0.6 + si * 0.4) + this._phaseOffset;
+    // Undulation phase for swimming wave - slow and graceful
+    const phase = Date.now() * 0.0003 * (0.5 + si * 0.5) + this._phaseOffset;
 
     // Build spine directly from world-space joint positions
     // Transform joints into local space (relative to head position and heading)
@@ -933,12 +933,14 @@ class Fish {
       let lx = jx * cosH - jy * sinH;
       let ly = jx * sinH + jy * cosH;
 
-      // Add swim undulation as lateral offset (perpendicular to spine direction)
+      // Add swim undulation as lateral offset
+      // Peaks in the mid-body, tapers off at tail (chain already whips the tail)
       if (i > 0) {
         const t = i / segs;
-        const flex = t < 0.15 ? t / 0.15 * 0.15 : 0.15 + (t - 0.15) / 0.85 * 0.85;
-        const undulAmp = flex * this.len * 0.06 * (0.25 + si * 0.75);
-        ly += Math.sin(phase - t * Math.PI * 1.0) * undulAmp;
+        // Bell curve: low at head, peaks ~60% along body, fades at tail tip
+        const flex = Math.sin(t * Math.PI * 0.85) * (t < 0.12 ? t / 0.12 : 1);
+        const undulAmp = flex * this.len * 0.05 * (0.2 + si * 0.8);
+        ly += Math.sin(phase - t * Math.PI * 0.8) * undulAmp;
       }
 
       spineX[i] = lx;
