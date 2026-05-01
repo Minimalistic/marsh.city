@@ -381,9 +381,21 @@ canvas.addEventListener('mousedown', e => {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   if (activeTool === 'food') {
+    // Push food out of reefs so it's always reachable
+    let fx = mx, fy = my;
+    for (const rf of reefs) {
+      const rdx = fx - rf.x, rdy = fy - rf.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      const angle = Math.atan2(rdy, rdx);
+      const edgeR = rf.radiusAt(angle, rf.baseRadii) + 5;
+      if (rDist < edgeR && rDist > 0.1) {
+        fx = rf.x + (rdx / rDist) * edgeR;
+        fy = rf.y + (rdy / rDist) * edgeR;
+      }
+    }
     const b = 25 + Math.floor(Math.random() * 6);
-    foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
-    ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
+    foodPellets.push({ x: fx, y: fy, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    ripples.push({ x: fx, y: fy, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120, opacity: 0.5 });
   }
@@ -403,9 +415,20 @@ canvas.addEventListener('touchstart', e => {
   mouse.down = true;
   mouse.speed = 0;
   if (activeTool === 'food') {
+    let fx = mouse.x, fy = mouse.y;
+    for (const rf of reefs) {
+      const rdx = fx - rf.x, rdy = fy - rf.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      const angle = Math.atan2(rdy, rdx);
+      const edgeR = rf.radiusAt(angle, rf.baseRadii) + 5;
+      if (rDist < edgeR && rDist > 0.1) {
+        fx = rf.x + (rdx / rDist) * edgeR;
+        fy = rf.y + (rdy / rDist) * edgeR;
+      }
+    }
     const b2 = 25 + Math.floor(Math.random() * 6);
-    foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
-    ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
+    foodPellets.push({ x: fx, y: fy, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    ripples.push({ x: fx, y: fy, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 90, opacity: 0.4 });
   }
@@ -837,7 +860,7 @@ class Fish {
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    const maxTurn = 0.08 + currentSpeed * 0.1; // faster fish can turn quicker
+    const maxTurn = 0.15 + currentSpeed * 0.15; // responsive head tracking
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
     // Update trailing joint angles - each joint follows the one ahead
@@ -848,11 +871,10 @@ class Fish {
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
       const t = j / this._jointCount;
-      // Faster follow overall for responsive turns
-      const followRate = 0.5 - t * 0.15; // 0.50 near head, 0.35 at tail
-      // Max bend per joint: near-zero at head, full flex from mid-body back
-      // Front 25% is basically rigid (skull + pectoral girdle)
-      const maxBend = t < 0.25 ? t / 0.25 * 0.02 : 0.02 + (t - 0.25) / 0.75 * 0.18;
+      const followRate = 0.55 - t * 0.15; // 0.55 near head, 0.40 at tail
+      // Max bend per joint: rigid head, increasing flex toward tail
+      // Front 20% is skull - nearly locked. Mid-body starts flexing. Tail is loose.
+      const maxBend = t < 0.20 ? t / 0.20 * 0.03 : 0.03 + (t - 0.20) / 0.80 * 0.25;
       const clamped = Math.max(-maxBend, Math.min(maxBend, diff));
       this._angles[j] += clamped * followRate;
     }
@@ -1553,6 +1575,20 @@ function draw(time) {
     fp.vy += Math.sin(tide.angle) * tide.strength * 0.003;
     fp.x += fp.vx;
     fp.y += fp.vy;
+    // Keep food outside reefs so fish can always reach it
+    for (const rf of reefs) {
+      const rdx = fp.x - rf.x, rdy = fp.y - rf.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      const angle = Math.atan2(rdy, rdx);
+      const edgeR = rf.radiusAt(angle, rf.baseRadii) + 3;
+      if (rDist < edgeR && rDist > 0.1) {
+        fp.x = rf.x + (rdx / rDist) * edgeR;
+        fp.y = rf.y + (rdy / rDist) * edgeR;
+        // Slide along the edge
+        const dot = (fp.vx * rdx + fp.vy * rdy) / (rDist * rDist);
+        if (dot < 0) { fp.vx -= rdx / rDist * dot * rDist; fp.vy -= rdy / rDist * dot * rDist; }
+      }
+    }
     if (fp.bites <= 0 || fp.size < 0.3) { foodPellets.splice(i, 1); continue; }
     ctx.beginPath();
     ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2);
