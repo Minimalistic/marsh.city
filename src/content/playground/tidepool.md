@@ -540,9 +540,9 @@ class Fish {
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
 
-    // Idle behavior - fish sometimes just drift
-    this.idleTimer = Math.random() * 5;
-    this.idle = Math.random() < 0.3;
+    // Idle behavior - rare, brief slow-downs
+    this.idleTimer = 5 + Math.random() * 10;
+    this.idle = false;
 
     // Depth - continuous distribution, fish naturally overlap at different levels
     this.depth = Math.random() * 0.5; // 0 = surface, 0.5 = deepest
@@ -768,18 +768,19 @@ class Fish {
     if (this.fleeTimer > 0) this.fleeTimer -= dt;
     else this.fleeing = false;
 
-    // Idle state - sometimes fish just drift lazily
+    // Idle state - rare and brief, fish almost always actively swimming
     this.idleTimer -= dt;
     if (this.idleTimer <= 0) {
       this.idle = !this.idle;
-      this.idleTimer = this.idle ? 2 + Math.random() * 5 : 3 + Math.random() * 6;
+      this.idleTimer = this.idle ? 1 + Math.random() * 2 : 8 + Math.random() * 15;
     }
 
     // Speed management - fish always keep moving, just slower when relaxed
     let targetSpeed;
     if (this.fleeing) targetSpeed = scaledSpeed * 1.1;
-    else if (this.idle) targetSpeed = scaledSpeed * 0.5; // always visibly moving
-    else targetSpeed = scaledSpeed * 0.75;
+    else if (this.eating) targetSpeed = scaledSpeed * 0.3; // brief pause to nibble
+    else if (this.idle) targetSpeed = scaledSpeed * 0.65;
+    else targetSpeed = scaledSpeed * 0.8;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
