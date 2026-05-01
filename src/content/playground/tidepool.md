@@ -268,7 +268,7 @@ function resize() {
 let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
-const initialFishCount = Math.max(25, Math.floor(initialArea / 8000));
+const initialFishCount = Math.max(50, Math.floor(initialArea / 4000));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -288,7 +288,7 @@ function rescaleAll(oldW, oldH) {
 
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
-  const targetFish = Math.min(80, Math.floor(initialFishCount * areaRatio * 0.975));
+  const targetFish = Math.min(160, Math.floor(initialFishCount * areaRatio * 0.975));
   const targetDebris = Math.min(1200, Math.floor(initialDebrisCount * areaRatio * 0.75));
   const targetPlants = Math.min(40, Math.floor(20 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
@@ -575,10 +575,18 @@ class Fish {
     this._phaseOffset = Math.random() * Math.PI * 20;
     // Smoothed swim intensity for animation - avoids jerky transitions
     this._swimSmooth = 0.5;
-    // Trailing angle history - body follows head through turns
+    // Chain of world-space joint positions - body trails behind head
     const numJoints = 16;
-    this._angles = new Array(numJoints).fill(this.angle);
     this._jointCount = numJoints;
+    this._segLen = this.len / numJoints;
+    this._joints = [];
+    for (let j = 0; j <= numJoints; j++) {
+      // Initialize joints in a line behind the head
+      this._joints.push({
+        x: this.x - Math.cos(this.angle) * j * this._segLen,
+        y: this.y - Math.sin(this.angle) * j * this._segLen,
+      });
+    }
   }
 
   update(dt, fish, time) {
@@ -686,18 +694,22 @@ class Fish {
         this.distracted = false; this.distractTimer = 3;
       }
 
-      const eatDist = 10 * viewScale;
-      const biteDist = 6 * viewScale;
-      if (closestFoodDist < eatDist) {
-        // Close enough to eat - stop and bite
+      // Mouth position is at the tip of the snout
+      const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5 * viewScale;
+      const mouthY = this.y + Math.sin(this.angle) * this.len * 0.5 * viewScale;
+      const mouthDx = closestFood.x - mouthX, mouthDy = closestFood.y - mouthY;
+      const mouthDist = Math.sqrt(mouthDx * mouthDx + mouthDy * mouthDy);
+      const eatDist = 8 * viewScale;
+      const biteDist = 4 * viewScale;
+      // Fish can only eat when mouth is near the food and facing it
+      if (mouthDist < eatDist && angleMismatch < 0.6) {
         this.vx *= 0.8;
         this.vy *= 0.8;
-        if (closestFoodDist < biteDist && !this.eating) {
+        if (mouthDist < biteDist && angleMismatch < 0.4 && !this.eating) {
           closestFood.bites--;
           closestFood.size *= 0.97;
-          const biteAngle = this.angle;
-          closestFood.vx += Math.cos(biteAngle) * 0.3;
-          closestFood.vy += Math.sin(biteAngle) * 0.3;
+          closestFood.vx += Math.cos(this.angle) * 0.3;
+          closestFood.vy += Math.sin(this.angle) * 0.3;
           this.eating = true;
           this.eatTimer = 0.3 + Math.random() * 0.2;
           const bitesTaken = (closestFood.startBites || closestFood.bites + 1) - closestFood.bites;
@@ -714,19 +726,20 @@ class Fish {
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
-      } else if (angleMismatch < 1.6) {
-        // Good approach angle - steer aggressively toward food
-        const proximity = 1 - closestFoodDist / foodRange;
-        const steer = 0.04 + proximity * 0.1;
-        const speedBoost = 1 + proximity * 0.8;
-        const desiredVx = Math.cos(desiredAngle) * this.baseSpeed * viewScale * speedBoost;
-        const desiredVy = Math.sin(desiredAngle) * this.baseSpeed * viewScale * speedBoost;
-        this.vx += (desiredVx - this.vx) * steer;
-        this.vy += (desiredVy - this.vy) * steer;
-      } else if (closestFoodDist < foodRange * 0.4) {
-        // Bad angle but close - turn to come around
-        this.vx += (Math.cos(desiredAngle) - Math.cos(this.angle)) * 0.02;
-        this.vy += (Math.sin(desiredAngle) - Math.sin(this.angle)) * 0.02;
+      } else {
+        // Always steer toward food by turning - never set velocity directly
+        // Fish must swim a forward arc to reach food, like a real approach
+        const turnStr = angleMismatch > 1.2 ? 0.04 : 0.06 + (1 - closestFoodDist / foodRange) * 0.08;
+        const turnDir = headingDiff > 0 ? 1 : -1;
+        // Apply as a gentle heading bias, not a velocity override
+        this.vx += Math.cos(this.angle + turnDir * 0.3) * turnStr;
+        this.vy += Math.sin(this.angle + turnDir * 0.3) * turnStr;
+        // Speed up when mostly aligned
+        if (angleMismatch < 1.0) {
+          const boost = (1 - angleMismatch) * (1 - closestFoodDist / foodRange) * 0.05;
+          this.vx += Math.cos(this.angle) * boost;
+          this.vy += Math.sin(this.angle) * boost;
+        }
       }
     }
 
@@ -876,77 +889,68 @@ class Fish {
     const maxTurn = 0.15 + currentSpeed * 0.15; // responsive head tracking
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
-    // Update trailing joint angles - each joint follows the one ahead
-    // Head region is stiffer (follows faster = less lag = less visible bend)
-    // Rear body is looser (follows slower = more lag = visible flex and whip)
-    this._angles[0] = this.angle;
-    for (let j = 1; j < this._jointCount; j++) {
-      let diff = this._angles[j - 1] - this._angles[j];
-      while (diff > Math.PI) diff -= Math.PI * 2;
-      while (diff < -Math.PI) diff += Math.PI * 2;
-      const t = j / this._jointCount;
-      // Front joints track tightly (stiff), rear joints lag (bendy)
-      // No hard clamp - let the body flex freely, stiffness comes from follow rate
-      const followRate = t < 0.2
-        ? 0.7                          // skull: snaps to heading quickly
-        : 0.7 - (t - 0.2) / 0.8 * 0.5; // 0.7 at 20% → 0.2 at tail
-      this._angles[j] += diff * followRate;
+    // Update chain: head leads, each joint trails behind the one ahead
+    // Like pulling a chain through water - body follows the head's path
+    this._joints[0].x = this.x;
+    this._joints[0].y = this.y;
+    for (let j = 1; j <= this._jointCount; j++) {
+      const prev = this._joints[j - 1];
+      const curr = this._joints[j];
+      const dx = curr.x - prev.x;
+      const dy = curr.y - prev.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      // Constrain to segment length - joint snaps to trail behind previous
+      curr.x = prev.x + (dx / dist) * this._segLen;
+      curr.y = prev.y + (dy / dist) * this._segLen;
     }
     this.speed = currentSpeed;
   }
 
   draw(ctx) {
     const vs = viewScale;
-    const segs = this._jointCount; // one segment per joint
+    const segs = this._jointCount;
     const totalLen = this.len;
-    const segLen = totalLen / segs;
 
-    // Smoothed swim intensity - gradual transitions, never freezes
+    // Smoothed swim intensity
     const rawIntensity = Math.min(1, this.speed * 0.8);
     this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.015;
     const si = this._swimSmooth;
 
-    // Gentle undulation phase - layered on top of physical body curve
+    // Undulation phase for swimming wave
     const phase = Date.now() * 0.00048 * (0.6 + si * 0.4) + this._phaseOffset;
 
-    // Build spine in world space by walking the joint chain backward from head
-    // Each joint's angle comes from the trailing history (physical turning)
-    // plus a subtle sine wave for swimming undulation
+    // Build spine directly from world-space joint positions
+    // Transform joints into local space (relative to head position and heading)
+    const cosH = Math.cos(-this.angle), sinH = Math.sin(-this.angle);
     const spineX = new Array(segs + 1);
     const spineY = new Array(segs + 1);
-    const spineA = new Array(segs + 1); // angle at each joint
     const widths = new Array(segs + 1);
 
-    // Head position is the fish position
-    spineX[0] = 0;
-    spineY[0] = 0;
-    spineA[0] = 0; // relative to fish heading (which is already rotated by ctx)
+    for (let i = 0; i <= segs; i++) {
+      const jx = this._joints[i].x - this.x;
+      const jy = this._joints[i].y - this.y;
+      // Rotate into local space (head-forward = +X)
+      let lx = jx * cosH - jy * sinH;
+      let ly = jx * sinH + jy * cosH;
 
-    for (let i = 1; i <= segs; i++) {
-      const t = i / segs;
-      // Joint angle relative to head: difference between this joint and head
-      let relAngle = this._angles[Math.min(i, this._jointCount - 1)] - this._angles[0];
-      while (relAngle > Math.PI) relAngle -= Math.PI * 2;
-      while (relAngle < -Math.PI) relAngle += Math.PI * 2;
+      // Add swim undulation as lateral offset (perpendicular to spine direction)
+      if (i > 0) {
+        const t = i / segs;
+        const flex = t < 0.15 ? t / 0.15 * 0.15 : 0.15 + (t - 0.15) / 0.85 * 0.85;
+        const undulAmp = flex * this.len * 0.06 * (0.25 + si * 0.75);
+        ly += Math.sin(phase - t * Math.PI * 1.0) * undulAmp;
+      }
 
-      // Swim undulation: stiff head, fluid body
-      const flex = t < 0.15 ? t / 0.15 * 0.15 : 0.15 + (t - 0.15) / 0.85 * 0.85;
-      const undulAmp = flex * 0.18 * (0.25 + si * 0.75);
-      const undulation = Math.sin(phase - t * Math.PI * 1.0) * undulAmp;
-
-      spineA[i] = relAngle + undulation;
-
-      // Walk backward along the chain
-      const chainAngle = Math.PI + spineA[i]; // reverse direction (head to tail)
-      spineX[i] = spineX[i - 1] + Math.cos(chainAngle) * segLen;
-      spineY[i] = spineY[i - 1] + Math.sin(chainAngle) * segLen;
+      spineX[i] = lx;
+      spineY[i] = ly;
 
       // Body width profile - fusiform fish shape
+      const tw = i / segs;
       let hw;
-      if (t < 0.08) hw = t / 0.08 * this.bodyWidth * 0.35;
-      else if (t < 0.25) hw = this.bodyWidth * (0.35 + (t - 0.08) / 0.17 * 0.65);
-      else if (t < 0.6) hw = this.bodyWidth * (1 - (t - 0.25) / 0.35 * 0.25);
-      else hw = this.bodyWidth * 0.75 * Math.pow(1 - (t - 0.6) / 0.4, 1.5);
+      if (tw < 0.08) hw = tw / 0.08 * this.bodyWidth * 0.35;
+      else if (tw < 0.25) hw = this.bodyWidth * (0.35 + (tw - 0.08) / 0.17 * 0.65);
+      else if (tw < 0.6) hw = this.bodyWidth * (1 - (tw - 0.25) / 0.35 * 0.25);
+      else hw = this.bodyWidth * 0.75 * Math.pow(1 - (tw - 0.6) / 0.4, 1.5);
       widths[i] = Math.max(hw, 0.15);
     }
     // Head width
@@ -1089,7 +1093,7 @@ const schoolColors = [
   { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
   { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
 ];
-const fishCount = Math.max(25, Math.floor((w * h) / 8000));
+const fishCount = Math.max(50, Math.floor((w * h) / 4000));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
