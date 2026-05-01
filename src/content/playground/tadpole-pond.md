@@ -644,19 +644,18 @@ class Frond {
     this.y = y;
     this.growAngle = growAngle;
     this.len = 30 + Math.random() * 50;
-    this.branches = 4 + Math.floor(Math.random() * 5);
+    this.branches = 8 + Math.floor(Math.random() * 6);
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
-    // Pre-generate branch geometry so it doesn't flicker
-    // Branches span from 0.15 to 0.95, getting smaller toward tip
+    // Pre-generate branch geometry - dense and bushy at base, tapers to a point
     this.branchData = [];
     for (let b = 0; b < this.branches; b++) {
-      const t = 0.15 + (b / (this.branches - 1)) * 0.8;
-      const taper = 1 - t; // branches shrink toward tip
+      const t = 0.1 + (b / (this.branches - 1)) * 0.88;
+      const taper = Math.pow(1 - t, 0.6); // slower taper = stays thick longer
       this.branchData.push({
         t,
-        lenScale: (0.7 + Math.random() * 0.3) * taper,
-        leaflets: Math.max(1, Math.floor((2 + Math.random() * 3) * taper)),
+        lenScale: (0.8 + Math.random() * 0.4) * taper,
+        leaflets: Math.max(1, Math.floor((3 + Math.random() * 4) * taper)),
       });
     }
     // Segment points for physics displacement
@@ -742,32 +741,32 @@ class Frond {
       const stemAngle = Math.atan2(next.y - base.y, next.x - base.x);
       const side = (b % 2 === 0 ? 1 : -1) * this.branchSide;
       const branchAngle = stemAngle + side * (0.4 + Math.sin(time * 0.001 + b + this.phase) * 0.15);
-      const branchLen = this.len * (0.3 - bd.t * 0.2) * bd.lenScale;
+      const branchLen = this.len * (0.45 - bd.t * 0.25) * bd.lenScale;
 
       const tipX = base.x + Math.cos(branchAngle) * branchLen;
       const tipY = base.y + Math.sin(branchAngle) * branchLen;
 
-      const taper = 1 - bd.t;
+      const taper = Math.pow(1 - bd.t, 0.6);
       ctx.beginPath();
       ctx.moveTo(base.x, base.y);
       ctx.lineTo(tipX, tipY);
       ctx.strokeStyle = 'rgb(45, 100, 30)';
-      ctx.lineWidth = 0.4 + taper * 0.6;
+      ctx.lineWidth = 0.3 + taper * 1.0;
       ctx.stroke();
 
-      // Leaflets along sub-branch, progressively smaller toward plant tip
+      // Leaflets along sub-branch, dense at base, sparse at tip
       for (let l = 0; l < bd.leaflets; l++) {
-        const lt = 0.3 + (l / bd.leaflets) * 0.6;
+        const lt = 0.2 + (l / bd.leaflets) * 0.7;
         const lx = base.x + (tipX - base.x) * lt;
         const ly = base.y + (tipY - base.y) * lt;
         const leafSide = (l % 2 === 0 ? 1 : -1);
-        const leafAngle = branchAngle + leafSide * 0.6;
-        const leafLen = branchLen * (0.2 + taper * 0.15);
+        const leafAngle = branchAngle + leafSide * (0.5 + (l * 0.07));
+        const leafLen = branchLen * (0.25 + taper * 0.2);
         ctx.beginPath();
         ctx.moveTo(lx, ly);
         ctx.lineTo(lx + Math.cos(leafAngle) * leafLen, ly + Math.sin(leafAngle) * leafLen);
         ctx.strokeStyle = 'rgb(50, 115, 35)';
-        ctx.lineWidth = 0.3 + taper * 0.3;
+        ctx.lineWidth = 0.3 + taper * 0.5;
         ctx.stroke();
       }
     }
