@@ -293,11 +293,9 @@ function rescaleAll(oldW, oldH) {
   const targetPlants = Math.min(40, Math.floor(20 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
 
-  // Add fish if needed
+  // Add fish if needed - new fish swim in from edges
   while (fish.length < targetFish) {
-    const f = new Fish();
-    f.x = Math.random() * w;
-    f.y = Math.random() * h;
+    const f = new Fish(true);
     const school = fish.length % schoolColors.length;
     f.school = school;
     f.color = schoolColors[school].color;
@@ -498,11 +496,20 @@ for (let i = 0; i < 500; i++) {
 
 // Small fish class - schooling behavior (boids)
 class Fish {
-  constructor() {
-    // Spawn in center 60% of viewport
-    this.x = w * 0.2 + Math.random() * w * 0.6;
-    this.y = h * 0.2 + Math.random() * h * 0.6;
-    this.angle = Math.random() * Math.PI * 2;
+  constructor(fromEdge = false) {
+    if (fromEdge) {
+      // Spawn offscreen and swim inward
+      const edge = Math.floor(Math.random() * 4);
+      const margin = 30;
+      if (edge === 0) { this.x = -margin; this.y = Math.random() * h; this.angle = (Math.random() - 0.5) * 0.8; }
+      else if (edge === 1) { this.x = w + margin; this.y = Math.random() * h; this.angle = Math.PI + (Math.random() - 0.5) * 0.8; }
+      else if (edge === 2) { this.y = -margin; this.x = Math.random() * w; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.8; }
+      else { this.y = h + margin; this.x = Math.random() * w; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.8; }
+    } else {
+      this.x = w * 0.2 + Math.random() * w * 0.6;
+      this.y = h * 0.2 + Math.random() * h * 0.6;
+      this.angle = Math.random() * Math.PI * 2;
+    }
     this.speed = 0.6 + Math.random() * 0.4;
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
@@ -1043,14 +1050,11 @@ const schoolColors = [
 ];
 const fishCount = Math.max(25, Math.floor((w * h) / 8000));
 const fish = [];
-for (let i = 0; i < fishCount; i++) {
-  const f = new Fish();
-  const school = Math.floor(i / (fishCount / schoolColors.length));
-  f.school = school;
-  f.color = schoolColors[school].color;
-  f.bellyColor = schoolColors[school].belly;
-  fish.push(f);
-}
+// Fish swim in from edges over the first ~6 seconds
+let fishToSpawn = fishCount;
+let spawnTimer = 0;
+const spawnDuration = 6; // seconds to trickle all fish in
+let fishSpawned = 0;
 
 // Rocks - scattered across the tidepool floor
 const rocks = [];
@@ -1066,8 +1070,8 @@ for (let i = 0; i < 15; i++) {
 
 // Reef structures - partially submerged obstacles
 // Each reef has an irregular outline generated from noisy radius samples
-function makeReef(x, y) {
-  const baseR = 60 + Math.random() * 90; // underwater footprint radius (large)
+function makeReef(x, y, sizeMultiplier = 1) {
+  const baseR = (60 + Math.random() * 90) * sizeMultiplier * viewScale;
   const crownR = baseR * (0.45 + Math.random() * 0.2); // above-water is smaller
   const crownOffX = (Math.random() - 0.5) * baseR * 0.3; // crown offset from center
   const crownOffY = (Math.random() - 0.5) * baseR * 0.3;
@@ -1125,17 +1129,22 @@ function makeReef(x, y) {
 const reefs = [];
 const reefCount = Math.max(2, Math.floor(Math.sqrt(w * h) / 200));
 for (let i = 0; i < reefCount; i++) {
+  // First reef is the dominant one - much larger than the rest
+  const sizeMult = i === 0 ? 1.8 + Math.random() * 0.5 : 1;
   // Place reefs away from edges and away from each other
+  // Estimate radius for spacing check before creating
+  const estR = (60 + 45) * sizeMult * viewScale;
   let rx, ry, tries = 0;
   do {
-    rx = w * 0.15 + Math.random() * w * 0.7;
-    ry = h * 0.15 + Math.random() * h * 0.7;
+    rx = w * 0.12 + Math.random() * w * 0.76;
+    ry = h * 0.12 + Math.random() * h * 0.76;
     tries++;
-  } while (tries < 20 && reefs.some(r => {
+  } while (tries < 40 && reefs.some(r => {
     const dx = r.x - rx, dy = r.y - ry;
-    return Math.sqrt(dx * dx + dy * dy) < r.baseR + 160;
+    // Both radii matter - no overlapping
+    return Math.sqrt(dx * dx + dy * dy) < r.baseR + estR + 40;
   }));
-  reefs.push(makeReef(rx, ry));
+  reefs.push(makeReef(rx, ry, sizeMult));
 }
 
 // Seaweed fronds around perimeter
@@ -1269,12 +1278,30 @@ for (let i = 0; i < 60; i++) {
 
 let lastTime = 0;
 let waveTime = 0;
-let settleTime = 3; // seconds of gentle centering at start
+let settleTime = 0; // no centering needed - fish swim in from edges
 
 function draw(time) {
   const dt = Math.min((time - lastTime) / 1000, 0.05);
   lastTime = time;
   if (settleTime > 0) settleTime -= dt;
+
+  // Stagger fish spawning from edges over the first few seconds
+  if (fishSpawned < fishToSpawn) {
+    spawnTimer += dt;
+    // Spawn rate: fast burst at start, then tapers
+    const progress = fishSpawned / fishToSpawn;
+    const interval = 0.05 + progress * 0.3; // 50ms between first fish, 350ms for last
+    while (spawnTimer >= interval && fishSpawned < fishToSpawn) {
+      spawnTimer -= interval;
+      const f = new Fish(true);
+      const school = fishSpawned % schoolColors.length;
+      f.school = school;
+      f.color = schoolColors[school].color;
+      f.bellyColor = schoolColors[school].belly;
+      fish.push(f);
+      fishSpawned++;
+    }
+  }
 
   // Wave current - irregular oscillation, not perfectly sinusoidal
   waveTime += dt;
