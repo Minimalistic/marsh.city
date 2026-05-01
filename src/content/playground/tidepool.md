@@ -6,7 +6,7 @@ description: Tiny fish schooling in a shallow tidepool. Watch the current shift.
 A rocky tidepool. Tiny silver fish school together, responding to the shifting current and each other.
 
 <div id="pool-container" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
-<canvas id="pool" style="width:100%;height:100%;display:block;background:#0f1f2a;"></canvas>
+<canvas id="pool" style="width:100%;height:100%;display:block;background:#1a3a4a;"></canvas>
 <div id="toolbar" style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:10;">
   <button id="food-toggle" class="pool-tool" title="Toggle food mode" aria-label="Toggle food mode" aria-pressed="false" role="switch">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="6" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="12" cy="18" r="1"/></svg>
@@ -1571,11 +1571,11 @@ function draw(time) {
     }
   }
 
-  // Clear - dark tidepool water
+  // Clear - bright tropical tidepool water
   const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-  gradient.addColorStop(0, '#142833');
-  gradient.addColorStop(0.6, '#0f1f2a');
-  gradient.addColorStop(1, '#0a1520');
+  gradient.addColorStop(0, '#1e4d5e');
+  gradient.addColorStop(0.6, '#174050');
+  gradient.addColorStop(1, '#0f2e3a');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, w, h);
 
@@ -2033,7 +2033,7 @@ function draw(time) {
   // Vignette
   const vigGrad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.25, w / 2, h / 2, Math.max(w, h) * 0.65);
   vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  vigGrad.addColorStop(1, 'rgba(5, 10, 15, 0.5)');
+  vigGrad.addColorStop(1, 'rgba(5, 15, 20, 0.35)');
   ctx.fillStyle = vigGrad;
   ctx.fillRect(0, 0, w, h);
 
