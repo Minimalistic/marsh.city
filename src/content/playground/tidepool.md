@@ -39,6 +39,8 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
 #toolbar.hidden, .pool-fs-btn.hidden { opacity: 0; pointer-events: none; }
 #toolbar, .pool-fs-btn { transition: opacity 0.5s; }
+#pool-container:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; border-radius: 0; }
+#pool-container:fullscreen canvas { width: 100%; height: 100%; }
 </style>
 
 <script type="module">
@@ -190,8 +192,19 @@ poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
 document.addEventListener('fullscreenchange', () => {
   if (document.fullscreenElement) {
-    // Resize canvas to fill the new fullscreen viewport
-    setTimeout(() => { ({ w, h } = resize()); }, 100);
+    // Wait for layout to settle, then resize and rescale everything
+    setTimeout(() => {
+      const oldW = w, oldH = h;
+      ({ w, h } = resize());
+      const sx = w / oldW, sy = h / oldH;
+      for (const r of rocks) { r.x *= sx; r.y *= sy; r.size *= Math.min(sx, sy); }
+      for (const p of plants) {
+        p.x *= sx; p.y *= sy; p.len *= Math.min(sx, sy);
+        for (const s of p.segs) { s.x *= sx; s.y *= sy; }
+      }
+      for (const d of debris) { d.x *= sx; d.y *= sy; }
+      for (const f of fish) { f.x *= sx; f.y *= sy; }
+    }, 150);
     hideTimer = setTimeout(() => {
       toolbar.classList.add('hidden');
       fsBtn.classList.add('hidden');
@@ -200,7 +213,18 @@ document.addEventListener('fullscreenchange', () => {
     toolbar.classList.remove('hidden');
     fsBtn.classList.remove('hidden');
     clearTimeout(hideTimer);
-    setTimeout(() => { ({ w, h } = resize()); }, 100);
+    setTimeout(() => {
+      const oldW = w, oldH = h;
+      ({ w, h } = resize());
+      const sx = w / oldW, sy = h / oldH;
+      for (const r of rocks) { r.x *= sx; r.y *= sy; r.size *= Math.min(sx, sy); }
+      for (const p of plants) {
+        p.x *= sx; p.y *= sy; p.len *= Math.min(sx, sy);
+        for (const s of p.segs) { s.x *= sx; s.y *= sy; }
+      }
+      for (const d of debris) { d.x *= sx; d.y *= sy; }
+      for (const f of fish) { f.x *= sx; f.y *= sy; }
+    }, 150);
   }
 });
 
