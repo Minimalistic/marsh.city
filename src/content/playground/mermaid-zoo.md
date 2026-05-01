@@ -49,6 +49,8 @@ block-beta
 
 Same fish, documented like enterprise software.
 
+<div class="mermaid-animated" data-animate-order="TF,PF,SC,SB,GL,EY,LL,MO">
+
 ```mermaid
 flowchart LR
     subgraph Propulsion
@@ -78,3 +80,5 @@ flowchart LR
     MO -->|food| GL
     EY -.->|threat detect| TF
 ```
+
+</div>
