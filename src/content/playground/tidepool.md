@@ -976,8 +976,8 @@ function draw(time) {
       b.age += dt;
       if (b.age > b.maxAge) { ww.blobs.splice(i, 1); continue; }
       const fade = 1 - b.age / b.maxAge;
-      ctx.globalAlpha = fade * 0.18;
       ctx.save();
+      ctx.globalAlpha = fade * 0.18;
       ctx.translate(b.x, b.y);
       ctx.rotate(b.rot);
       ctx.beginPath();
@@ -987,6 +987,7 @@ function draw(time) {
       ctx.restore();
     }
   }
+  ctx.globalAlpha = 1;
 
   // Update ripples
   for (let i = ripples.length - 1; i >= 0; i--) {
