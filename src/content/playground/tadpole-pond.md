@@ -235,6 +235,7 @@ class Tadpole {
     if (this.y > h - margin) this.targetAngle = -Math.PI / 2;
 
     // Update body segments - follow the leader with wiggle
+    // Front segments (body) are stiff, flex only in the tail
     this.segments[0] = { x: this.x, y: this.y };
     for (let i = 1; i < this.segCount; i++) {
       const prev = this.segments[i - 1];
@@ -247,8 +248,10 @@ class Tadpole {
         seg.x = prev.x + dx * ratio;
         seg.y = prev.y + dy * ratio;
       }
-      // Lateral wiggle increases toward tail, only when moving
-      const wiggle = Math.sin(this.wigglePhase - i * 0.7) * this.wiggleAmp * (i / this.segCount);
+      // Stiffness: front 40% of body barely flexes, tail gets all the wiggle
+      const t = i / (this.segCount - 1);
+      const flex = t < 0.4 ? t * 0.1 : Math.pow((t - 0.4) / 0.6, 1.5);
+      const wiggle = Math.sin(this.wigglePhase - i * 0.7) * this.wiggleAmp * flex;
       const perpAngle = Math.atan2(dy, dx) + Math.PI / 2;
       seg.x += Math.cos(perpAngle) * wiggle * Math.min(this.speed, 3) * 2;
       seg.y += Math.sin(perpAngle) * wiggle * Math.min(this.speed, 3) * 2;
