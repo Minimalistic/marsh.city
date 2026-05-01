@@ -11,6 +11,7 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
   <button data-tool="observe" class="pool-tool active" title="Observe">👁</button>
   <button data-tool="food" class="pool-tool" title="Drop food">🪱</button>
   <button data-tool="rock" class="pool-tool" title="Drop rock">🪨</button>
+  <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound">🔇</button>
 </div>
 </div>
 <style>
@@ -30,14 +31,103 @@ const ctx = canvas.getContext('2d');
 
 // Tool selection
 let activeTool = 'observe';
-document.querySelectorAll('.pool-tool').forEach(btn => {
+document.querySelectorAll('.pool-tool[data-tool]').forEach(btn => {
   btn.addEventListener('click', e => {
-    document.querySelectorAll('.pool-tool').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pool-tool[data-tool]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeTool = btn.dataset.tool;
     canvas.style.cursor = activeTool === 'observe' ? 'none' : 'crosshair';
   });
 });
+
+// Ocean sound - procedural white noise shaped to sound like waves
+let audioCtx = null;
+let oceanGain = null;
+let oceanFilter = null;
+let oceanLfo = null;
+let oceanLfoGain = null;
+let soundEnabled = false;
+
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // White noise source
+  const bufferSize = audioCtx.sampleRate * 4;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  noise.loop = true;
+
+  // Bandpass filter - shapes white noise into ocean-like band
+  oceanFilter = audioCtx.createBiquadFilter();
+  oceanFilter.type = 'bandpass';
+  oceanFilter.frequency.value = 400;
+  oceanFilter.Q.value = 0.5;
+
+  // Secondary low shelf for body
+  const lowShelf = audioCtx.createBiquadFilter();
+  lowShelf.type = 'lowshelf';
+  lowShelf.frequency.value = 200;
+  lowShelf.gain.value = 6;
+
+  // LFO modulates filter frequency - simulates wave rhythm
+  oceanLfo = audioCtx.createOscillator();
+  oceanLfo.type = 'sine';
+  oceanLfo.frequency.value = 0.07; // very slow ~14s cycle
+  oceanLfoGain = audioCtx.createGain();
+  oceanLfoGain.gain.value = 250;
+  oceanLfo.connect(oceanLfoGain);
+  oceanLfoGain.connect(oceanFilter.frequency);
+  oceanLfo.start();
+
+  // Master volume
+  oceanGain = audioCtx.createGain();
+  oceanGain.gain.value = 0;
+
+  // Connect chain
+  noise.connect(oceanFilter);
+  oceanFilter.connect(lowShelf);
+  lowShelf.connect(oceanGain);
+  oceanGain.connect(audioCtx.destination);
+  noise.start();
+}
+
+function toggleSound() {
+  if (!audioCtx) initAudio();
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-toggle');
+  if (soundEnabled) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    oceanGain.gain.setTargetAtTime(0.15, audioCtx.currentTime, 0.5);
+    btn.textContent = '🔊';
+  } else {
+    oceanGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);
+    btn.textContent = '🔇';
+  }
+}
+
+document.getElementById('sound-toggle').addEventListener('click', e => {
+  e.stopPropagation();
+  toggleSound();
+});
+
+// Update ocean sound to match wave state
+function updateOceanSound() {
+  if (!soundEnabled || !audioCtx) return;
+  // Modulate filter freq and volume with the wave cycle
+  const waveIntensity = Math.abs(tide.strength);
+  // Higher filter = brighter/louder wash when wave is strong
+  oceanFilter.frequency.setTargetAtTime(300 + waveIntensity * 400, audioCtx.currentTime, 0.3);
+  // Volume swells with wave
+  const baseVol = 0.1 + waveIntensity * 0.08;
+  // Extra swell when a wash wave is active
+  const washBoost = washWaves.length > 0 ? washWaves[0].life * 0.06 : 0;
+  oceanGain.gain.setTargetAtTime(baseVol + washBoost, audioCtx.currentTime, 0.2);
+  // LFO speed matches wave cycle roughly
+  oceanLfo.frequency.setTargetAtTime(0.05 + waveIntensity * 0.04, audioCtx.currentTime, 1);
+}
 
 // Food particles that attract fish
 const foodPellets = [];
@@ -702,6 +792,8 @@ function draw(time) {
   const secondaryWave = Math.sin(waveTime * 0.17) * 0.3; // slower undulation
   tide.angle = waveBaseAngle + secondaryWave;
   tide.strength = 0.3 + waveCycle * 0.35; // swings from -0.05 to 0.65
+
+  updateOceanSound();
 
   // Drift vortices slowly around the pool, vary strength over time
   for (const v of vortices) {
