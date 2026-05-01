@@ -887,9 +887,9 @@ class Fish {
       // Target: exactly one segment length behind previous joint
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
-      // Very stiff - short, tight bends only, snaps straight quickly
+      // Near-instant straightening - bends are quick flicks, not held curves
       const t = j / this._jointCount;
-      const stiffness = 0.988 - t * 0.02; // 0.988 at head, 0.968 at tail
+      const stiffness = 0.997 - t * 0.005; // 0.997 at head, 0.992 at tail
       curr.x += (tx - curr.x) * stiffness;
       curr.y += (ty - curr.y) * stiffness;
       // Hard constraint: enforce exact segment length so body never stretches
