@@ -726,26 +726,25 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Gentle steering toward food - no rushing
-        const turnStr = angleMismatch > 1.2 ? 0.02 : 0.03 + (1 - closestFoodDist / foodRange) * 0.03;
-        const turnDir = headingDiff > 0 ? 1 : -1;
-        this.vx += Math.cos(this.angle + turnDir * 0.3) * turnStr;
-        this.vy += Math.sin(this.angle + turnDir * 0.3) * turnStr;
-        // Mild speed increase when aligned - not a sprint
-        if (angleMismatch < 1.0) {
-          const boost = (1 - angleMismatch) * (1 - closestFoodDist / foodRange) * 0.02;
-          this.vx += Math.cos(this.angle) * boost;
-          this.vy += Math.sin(this.angle) * boost;
-        }
+        // Steer toward food - blend current velocity toward the food direction
+        const proximity = 1 - closestFoodDist / foodRange;
+        const steerWeight = 0.02 + proximity * 0.04; // stronger as they get closer
+        const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
+        const desiredVx = Math.cos(foodAngle) * scaledSpeed * 0.8;
+        const desiredVy = Math.sin(foodAngle) * scaledSpeed * 0.8;
+        this.vx += (desiredVx - this.vx) * steerWeight;
+        this.vy += (desiredVy - this.vy) * steerWeight;
       }
     }
 
-    // Mouse avoidance - cursor still spooks fish even in food mode
+    // Mouse avoidance - reduced scare radius in food mode so fish can eat
     if (mouse.active) {
       const mdx = this.x - mouse.x;
       const mdy = this.y - mouse.y;
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-      const fleeR = mouse.down ? 80 : 25 + mouse.speed * 4;
+      const fleeR = activeTool === 'food'
+        ? (mouse.down ? 20 : 10 + mouse.speed * 2) // small scare zone near food
+        : (mouse.down ? 80 : 25 + mouse.speed * 4);
       if (mDist < fleeR && mDist > 0.1) {
         const force = 0.15 * (1 - mDist / fleeR);
         this.vx += (mdx / mDist) * force;
