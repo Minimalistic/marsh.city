@@ -84,6 +84,37 @@ canvas.addEventListener('mousedown', e => {
 });
 canvas.addEventListener('mouseup', () => { mouse.down = false; });
 
+// Touch support - taps create ripples, no persistent hover
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  mouse.x = touch.clientX - rect.left;
+  mouse.y = touch.clientY - rect.top;
+  mouse.prevX = mouse.x;
+  mouse.prevY = mouse.y;
+  mouse.active = true;
+  mouse.down = true;
+  mouse.speed = 0;
+  ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 80, opacity: 0.4, age: 0 });
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  mouse.prevX = mouse.x;
+  mouse.prevY = mouse.y;
+  mouse.x = touch.clientX - rect.left;
+  mouse.y = touch.clientY - rect.top;
+  const dx = mouse.x - mouse.prevX;
+  const dy = mouse.y - mouse.prevY;
+  mouse.speed = Math.sqrt(dx * dx + dy * dy);
+  if (mouse.speed > 1) {
+    ripples.push({ x: mouse.x, y: mouse.y, radius: 5, maxRadius: 40 + mouse.speed * 2, opacity: 0.3, age: 0 });
+  }
+}, { passive: false });
+canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
+
 // Ripple system - expanding rings from taps and drags
 const ripples = [];
 
@@ -387,12 +418,24 @@ class Tadpole {
     this.x += Math.cos(this.angle) * this.speed;
     this.y += Math.sin(this.angle) * this.speed;
 
-    // Soft boundary avoidance
+    // Boundary avoidance - hard clamp + strong turn near edges
     const margin = 30;
-    if (this.x < margin) this.targetAngle = 0;
-    if (this.x > w - margin) this.targetAngle = Math.PI;
-    if (this.y < margin) this.targetAngle = Math.PI / 2;
-    if (this.y > h - margin) this.targetAngle = -Math.PI / 2;
+    const hardMargin = 5;
+    let boundaryUrgency = 0;
+    if (this.x < margin) { this.targetAngle = 0; boundaryUrgency = 1 - this.x / margin; }
+    if (this.x > w - margin) { this.targetAngle = Math.PI; boundaryUrgency = 1 - (w - this.x) / margin; }
+    if (this.y < margin) { this.targetAngle = Math.PI / 2; boundaryUrgency = 1 - this.y / margin; }
+    if (this.y > h - margin) { this.targetAngle = -Math.PI / 2; boundaryUrgency = 1 - (h - this.y) / margin; }
+    // Force fast turning when near boundary
+    if (boundaryUrgency > 0) {
+      let angleDiff2 = this.targetAngle - this.angle;
+      while (angleDiff2 > Math.PI) angleDiff2 -= Math.PI * 2;
+      while (angleDiff2 < -Math.PI) angleDiff2 += Math.PI * 2;
+      this.angle += angleDiff2 * (0.15 + boundaryUrgency * 0.35);
+    }
+    // Hard clamp - never leave the canvas
+    this.x = Math.max(hardMargin, Math.min(w - hardMargin, this.x));
+    this.y = Math.max(hardMargin, Math.min(h - hardMargin, this.y));
 
     // Update body segments - follow the leader with wiggle
     // Front segments (body) are stiff, flex only in the tail
