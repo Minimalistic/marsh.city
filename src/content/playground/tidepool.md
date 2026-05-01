@@ -542,6 +542,8 @@ class Fish {
     // Distraction - sometimes fish wander off from the school
     this.distracted = Math.random() < 0.15;
     this.distractTimer = this.distracted ? 3 + Math.random() * 8 : 5 + Math.random() * 10;
+    // Fixed phase offset for undulation desync (not position-based)
+    this._phaseOffset = Math.random() * Math.PI * 20;
   }
 
   update(dt, fish, time) {
@@ -833,7 +835,8 @@ class Fish {
     // Undulation: gentle body wave, speed drives both rate and amplitude
     // Idle/gliding fish hold a static curve; active fish undulate slowly
     const swimIntensity = Math.min(1, this.speed * 0.8);
-    const phase = Date.now() * 0.0012 * (0.4 + swimIntensity * 0.6) + this.x * 0.05 + this.y * 0.03;
+    // Phase offset uses fish identity (not position) to desync without adding speed
+    const phase = Date.now() * 0.0012 * (0.4 + swimIntensity * 0.6) + this._phaseOffset;
 
     // Build spine in local space (head-forward along +X axis)
     const spineX = new Array(segs + 1);
