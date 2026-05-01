@@ -11,7 +11,10 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
   <button data-tool="observe" class="pool-tool active" title="Observe">👁</button>
   <button data-tool="food" class="pool-tool" title="Drop food">🪱</button>
   <button data-tool="rock" class="pool-tool" title="Drop rock">🪨</button>
-  <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound">🔇</button>
+  <div class="pool-sound-wrap">
+    <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound">🔇</button>
+    <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume">
+  </div>
 </div>
 </div>
 <style>
@@ -23,6 +26,12 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 }
 .pool-tool:hover { border-color: rgba(150,200,220,0.6); }
 .pool-tool.active { border-color: rgba(150,200,220,0.8); background: rgba(30,60,80,0.8); }
+.pool-sound-wrap { display: flex; align-items: center; gap: 4px; }
+.pool-volume {
+  width: 0; opacity: 0; transition: width 0.2s, opacity 0.2s;
+  height: 4px; accent-color: rgba(150,200,220,0.8); cursor: pointer;
+}
+.pool-sound-wrap:hover .pool-volume { width: 60px; opacity: 1; }
 </style>
 
 <script type="module">
@@ -123,7 +132,7 @@ function toggleSound() {
   const btn = document.getElementById('sound-toggle');
   if (soundEnabled) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    oceanGain.gain.setTargetAtTime(0.15, audioCtx.currentTime, 0.5);
+    oceanGain.gain.setTargetAtTime(masterVolume * 0.3, audioCtx.currentTime, 0.5);
     btn.textContent = '🔊';
   } else {
     oceanGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);
@@ -134,6 +143,14 @@ function toggleSound() {
 document.getElementById('sound-toggle').addEventListener('click', e => {
   e.stopPropagation();
   toggleSound();
+});
+
+let masterVolume = 0.5;
+document.getElementById('volume-slider').addEventListener('input', e => {
+  masterVolume = e.target.value / 100;
+  if (soundEnabled && oceanGain) {
+    oceanGain.gain.setTargetAtTime(masterVolume * 0.15, audioCtx.currentTime, 0.1);
+  }
 });
 
 // Update ocean sound to match wave state
@@ -155,9 +172,9 @@ function updateOceanSound() {
 
   // Filter brightens with wave presence
   oceanFilter.frequency.setTargetAtTime(250 + waveIntensity * 200 + washPresence * 500, audioCtx.currentTime, 0.2);
-  // Volume: quiet ambient base, swells with visible wave
+  // Volume: quiet ambient base, swells with visible wave, scaled by master
   const baseVol = 0.06 + waveIntensity * 0.04;
-  oceanGain.gain.setTargetAtTime(baseVol + washPresence * 0.12, audioCtx.currentTime, 0.15);
+  oceanGain.gain.setTargetAtTime((baseVol + washPresence * 0.12) * masterVolume * 2, audioCtx.currentTime, 0.15);
   // LFO faster during active waves
   oceanLfo.frequency.setTargetAtTime(0.04 + washPresence * 0.08, audioCtx.currentTime, 0.5);
 
@@ -168,7 +185,7 @@ function updateOceanSound() {
     // Add randomness so it doesn't perfectly track
     const randomSwell = Math.max(0, Math.sin(waveTime * 0.13) * Math.sin(waveTime * 0.07));
     window._crashGain.gain.setTargetAtTime(
-      crashIntensity * 0.06 + randomSwell * 0.03,
+      (crashIntensity * 0.06 + randomSwell * 0.03) * masterVolume * 2,
       audioCtx.currentTime, 0.8 // slow attack for distant feel
     );
   }
@@ -308,7 +325,7 @@ function sampleFlow(px, py, time) {
 
 // Wash waves - occasional wave fronts that sweep across with turbulence
 const washWaves = [];
-let washTimer = 15 + Math.random() * 15;
+let washTimer = 8 + Math.random() * 10;
 
 function spawnWash() {
   const angle = waveBaseAngle + (Math.random() - 0.5) * 0.15;
@@ -1033,7 +1050,7 @@ function draw(time) {
         const small = (Math.random() - 0.5) * 3;
         const offset = large + medium + small; // forward/back displacement
         const thickness = 1 + Math.pow(Math.random(), 0.5) * 2.5;
-        const opacity = 0.08 + Math.random() * 0.18;
+        const opacity = 0.2 + Math.random() * 0.3;
         // Random gaps
         const gap = Math.random() < 0.08;
         ww.profile.push({ pos, offset, thickness, opacity, gap });
