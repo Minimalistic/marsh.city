@@ -442,7 +442,7 @@ const schoolColors = [
   { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
   { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
 ];
-const fishCount = Math.max(30, Math.floor((w * h) / 5500));
+const fishCount = Math.max(60, Math.floor((w * h) / 2750));
 const fish = [];
 for (let i = 0; i < fishCount; i++) {
   const f = new Fish();
