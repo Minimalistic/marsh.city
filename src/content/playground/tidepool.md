@@ -86,12 +86,35 @@ function initAudio() {
   oceanGain = audioCtx.createGain();
   oceanGain.gain.value = 0;
 
-  // Connect chain
+  // Connect main chain
   noise.connect(oceanFilter);
   oceanFilter.connect(lowShelf);
   lowShelf.connect(oceanGain);
   oceanGain.connect(audioCtx.destination);
   noise.start();
+
+  // Distant crash layer - low frequency rumble that swells irregularly
+  const crashBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const crashData = crashBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) crashData[i] = Math.random() * 2 - 1;
+  const crashNoise = audioCtx.createBufferSource();
+  crashNoise.buffer = crashBuffer;
+  crashNoise.loop = true;
+
+  // Very low bandpass - rumble only
+  const crashFilter = audioCtx.createBiquadFilter();
+  crashFilter.type = 'lowpass';
+  crashFilter.frequency.value = 120;
+  crashFilter.Q.value = 0.7;
+
+  // Gain node we'll modulate for swells
+  window._crashGain = audioCtx.createGain();
+  window._crashGain.gain.value = 0;
+
+  crashNoise.connect(crashFilter);
+  crashFilter.connect(window._crashGain);
+  window._crashGain.connect(audioCtx.destination);
+  crashNoise.start();
 }
 
 function toggleSound() {
@@ -137,6 +160,18 @@ function updateOceanSound() {
   oceanGain.gain.setTargetAtTime(baseVol + washPresence * 0.12, audioCtx.currentTime, 0.15);
   // LFO faster during active waves
   oceanLfo.frequency.setTargetAtTime(0.04 + washPresence * 0.08, audioCtx.currentTime, 0.5);
+
+  // Distant crash rumble - irregular low swells
+  if (window._crashGain) {
+    // Crashes correlate loosely with tide peaks + random timing
+    const crashIntensity = Math.max(0, Math.pow(waveIntensity, 2) * 0.5 + washPresence * 0.4);
+    // Add randomness so it doesn't perfectly track
+    const randomSwell = Math.max(0, Math.sin(waveTime * 0.13) * Math.sin(waveTime * 0.07));
+    window._crashGain.gain.setTargetAtTime(
+      crashIntensity * 0.06 + randomSwell * 0.03,
+      audioCtx.currentTime, 0.8 // slow attack for distant feel
+    );
+  }
 }
 
 // Food particles that attract fish
