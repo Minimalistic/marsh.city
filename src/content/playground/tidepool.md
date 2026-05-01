@@ -83,6 +83,8 @@ let soundEnabled = false;
 
 function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // Mobile browsers require resume inside a user gesture
+  if (audioCtx.state === 'suspended') audioCtx.resume();
 
   // White noise source
   const bufferSize = audioCtx.sampleRate * 4;
