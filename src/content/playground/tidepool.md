@@ -689,19 +689,6 @@ function draw(time) {
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
 
-  // Current indicator - visible directional streaks
-  ctx.globalAlpha = tide.strength * 0.08;
-  for (let i = 0; i < 12; i++) {
-    const sx = (w * 0.08 + i * w * 0.08 + time * tide.strength * 0.03) % w;
-    const sy = (h * 0.08 + i * h * 0.09 + time * tide.strength * 0.02) % h;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + Math.cos(tide.angle) * 20, sy + Math.sin(tide.angle) * 20);
-    ctx.strokeStyle = 'rgba(150, 200, 210, 1)';
-    ctx.lineWidth = 0.5;
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
 
   // DOF haze
   blurCanvas.width = canvas.width;
