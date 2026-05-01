@@ -299,6 +299,12 @@ flowchart TD
     fill: transparent !important;
     stroke: #00ffd533 !important;
   }
+  /* edge label backgrounds — kill mermaid's gray */
+  #machine-diagram .edgeLabel rect,
+  #machine-diagram .edgeLabel .label-container {
+    fill: #0a0e14 !important;
+    stroke: none !important;
+  }
 
   /* --- how it works section --- */
   .machine-howto {
