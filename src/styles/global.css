@@ -1212,6 +1212,7 @@ nav.site-nav .links a[aria-current="page"]::after {
 @media (prefers-reduced-motion: reduce) {
   .mermaid-animated .mermaid svg { visibility: visible; }
   .mermaid-animated .mermaid svg .node,
+  .mermaid-animated .mermaid svg .cluster,
   .mermaid-animated .mermaid svg .edgePaths path,
   .mermaid-animated .mermaid svg .edgeLabels .edgeLabel {
     opacity: 1 !important;

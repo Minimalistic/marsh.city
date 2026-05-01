@@ -1038,8 +1038,9 @@ const paletteItems = [
               var edges = svg.querySelectorAll('.edgePaths > path[data-id]');
               var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
 
-              // hide all nodes and edge labels
+              // hide all nodes, clusters, and edge labels
               svg.querySelectorAll('.node').forEach(function(n) { n.style.opacity = '0'; });
+              svg.querySelectorAll('.cluster').forEach(function(c) { c.style.opacity = '0'; });
               edgeLabels.forEach(function(l) { l.style.opacity = '0'; });
 
               // prep edges: dash-hide the stroke, save and remove arrowhead markers
@@ -1051,11 +1052,17 @@ const paletteItems = [
                 e.removeAttribute('marker-end');
               });
 
-              // build sequential step list: [{type:'node',el}, {type:'edges',items:[{el,label}]}]
+              // build sequential step list: [{type:'node'|'cluster',el}, {type:'edges',items:[{el,label}]}]
               var steps = [];
               order.forEach(function(name) {
                 var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
-                if (node) steps.push({ type: 'node', el: node });
+                if (node) {
+                  steps.push({ type: 'node', el: node });
+                } else {
+                  // try matching a cluster (subgraph) by ID
+                  var cluster = svg.querySelector('.cluster[id*="' + name + '"]');
+                  if (cluster) steps.push({ type: 'cluster', el: cluster });
+                }
                 var nodeEdges = [];
                 edges.forEach(function(edge, i) {
                   var parts = (edge.getAttribute('data-id') || '').split('_');
@@ -1077,7 +1084,11 @@ const paletteItems = [
                   return;
                 }
                 var step = steps[i];
-                if (step.type === 'node') {
+                if (step.type === 'cluster') {
+                  step.el.style.transition = 'opacity 0.4s ease-out';
+                  step.el.style.opacity = '1';
+                  setTimeout(function() { runStep(i + 1); }, 350);
+                } else if (step.type === 'node') {
                   // preserve mermaid's translate positioning, layer scale on top
                   var baseTransform = step.el.getAttribute('transform') || '';
                   step.el.style.transformOrigin = 'center center';

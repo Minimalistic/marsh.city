@@ -49,7 +49,7 @@ block-beta
 
 Same fish, documented like enterprise software.
 
-<div class="mermaid-animated" data-animate-order="TF,PF,SC,SB,GL,EY,LL,MO">
+<div class="mermaid-animated" data-animate-order="Propulsion,TF,PF,CoreSystems,SC,SB,GL,Sensors,EY,LL,IO,MO">
 
 ```mermaid
 flowchart LR
@@ -57,7 +57,7 @@ flowchart LR
         TF["Tail Fin\noscillation engine"]
         PF["Pectoral Fins\nsteering array"]
     end
-    subgraph Core Systems
+    subgraph CoreSystems["Core Systems"]
         SC["Scales\narmor layer"]
         SB["Swim Bladder\nbuoyancy ctrl"]
         GL["Gills\nO2 extraction"]
