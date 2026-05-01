@@ -321,17 +321,17 @@ poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
 // Start the auto-hide timer
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
+let regenerateWorld = null; // set after world init
+
 function handleFSChange() {
   const inFS = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
   fsCloseBtn.hidden = !inFS;
   fsBtn.hidden = inFS;
-  for (const delay of [50, 150, 300]) {
-    setTimeout(() => {
-      const oldW = w, oldH = h;
-      ({ w, h } = resize());
-      if (w !== oldW || h !== oldH) rescaleAll(oldW, oldH);
-    }, delay);
-  }
+  // Regenerate the entire world at new scale after layout settles
+  setTimeout(() => {
+    ({ w, h } = resize());
+    if (regenerateWorld) regenerateWorld();
+  }, 200);
   showUI();
 }
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
@@ -625,6 +625,8 @@ canvas.addEventListener('mousedown', e => {
     if (!onRock) ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
+    // Tap void — temporary avoidance zone
+    tapVoids.push({ x: mx, y: my, radius: 60 * viewScale, life: 1, maxLife: 3 + Math.random() * 2 });
   }
 });
 canvas.addEventListener('mouseup', () => { mouse.down = false; });
@@ -654,6 +656,7 @@ canvas.addEventListener('touchstart', e => {
     if (!onRock2) ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
+    tapVoids.push({ x: mouse.x, y: mouse.y, radius: 60 * viewScale, life: 1, maxLife: 3 + Math.random() * 2 });
   }
 }, { passive: false });
 canvas.addEventListener('touchmove', e => {
@@ -1019,6 +1022,20 @@ class Fish {
         this.vy += (rdy / rDist) * force;
         this.fleeing = true;
         this.fleeTimer = 0.5;
+      }
+    }
+
+    // Tap void avoidance — temporary zones fish steer around like rocks
+    for (const tv of tapVoids) {
+      if (tv.life <= 0) continue;
+      const tvdx = this.x - tv.x, tvdy = this.y - tv.y;
+      const tvDist = Math.sqrt(tvdx * tvdx + tvdy * tvdy);
+      const tvR = tv.radius * tv.life; // shrinks as it fades
+      if (tvDist < tvR && tvDist > 0.1) {
+        const pen = 1 - tvDist / tvR;
+        const push = pen * pen * 0.3 * tv.life * viewScale;
+        this.vx += (tvdx / tvDist) * push;
+        this.vy += (tvdy / tvDist) * push;
       }
     }
 
@@ -1852,10 +1869,10 @@ class Predator {
     const rawIntensity = Math.min(1, this.speed / (this.baseSpeed * viewScale * 2));
     this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.008;
     const si = this._swimSmooth;
-    // Slow, powerful undulation — half the frequency of small fish
-    const phase = Date.now() * 0.00012 * (0.3 + si * 0.7) + this._phaseOffset;
+    // Slow undulation — barracuda glides with long powerful strokes
+    const phase = Date.now() * 0.00004 * (0.2 + si * 0.8) + this._phaseOffset;
 
-    // Head shake when chomping - rapid lateral oscillation that decays
+    // Head shake when chomping
     const chompIntensity = this.chomping ? this.chompTimer / 3.0 : 0;
     const headShake = chompIntensity * Math.sin(this.chompPhase) * this.len * 0.06;
     const jawGape = chompIntensity * Math.max(0, Math.sin(this.chompPhase * 0.8)) * this.bodyWidth * 2.5;
@@ -1867,11 +1884,11 @@ class Predator {
       let lx = jx * cosH - jy * sinH, ly = jx * sinH + jy * cosH;
       if (i > 0) {
         const t = i / segs;
-        // Whole-body S-curve: starts at 25% down the body, not just the tail tip
-        const flex = t < 0.25 ? 0 : (t - 0.25) / 0.75;
-        // Bigger amplitude when swimming fast (propulsive), subtle when drifting
-        const amp = this.len * (0.02 + si * 0.07);
-        ly += Math.sin(phase - t * Math.PI * 1.2) * flex * amp;
+        // Gentle S-curve starting at 30% — long wavelength, no violent tail whip
+        const flex = t < 0.3 ? 0 : (t - 0.3) / 0.7;
+        // Wide range of motion — slow sweeping strokes, not small twitches
+        const amp = this.len * (0.015 + si * 0.065);
+        ly += Math.sin(phase - t * Math.PI * 0.8) * flex * amp;
       }
       // Head shake displaces the front segments laterally
       if (i < segs * 0.3) {
@@ -2330,7 +2347,96 @@ for (let i = 0; i < 60; i++) {
 
 let lastTime = 0;
 let waveTime = 0;
-let settleTime = 0; // no centering needed - fish swim in from edges
+let settleTime = 0;
+
+// Tap voids — temporary zones fish avoid, fading over time
+const tapVoids = [];
+
+// Regenerate the entire world for the current viewport size
+regenerateWorld = function() {
+  viewScale = Math.min(2.5, Math.sqrt((w * h) / initialArea));
+  rebuildGrid();
+
+  // Clear everything
+  fish.length = 0;
+  predators.length = 0;
+  rocks.length = 0;
+  reefs.length = 0;
+  plants.length = 0;
+  debris.length = 0;
+  ripples.length = 0;
+  foodPellets.length = 0;
+  foamBits.length = 0;
+  killFx.length = 0;
+  washWaves.length = 0;
+  tapVoids.length = 0;
+
+  // Rocks
+  const rockCount = Math.max(2, Math.floor(Math.sqrt(w * h) / 200));
+  for (let i = 0; i < 15; i++) {
+    rocks.push({ x: Math.random() * w, y: Math.random() * h, size: 8 + Math.random() * 18,
+      color: `rgb(${40+Math.floor(Math.random()*20)},${45+Math.floor(Math.random()*15)},${50+Math.floor(Math.random()*15)})`,
+      elongation: 0.5 + Math.random() * 0.5, angle: Math.random() * Math.PI });
+  }
+
+  // Reefs
+  const reefCount2 = Math.max(2, Math.floor(Math.sqrt(w * h) / 200));
+  for (let i = 0; i < reefCount2; i++) {
+    const sizeMult = i === 0 ? 1.8 + Math.random() * 0.5 : 1;
+    const estR = (60 + 45) * sizeMult * viewScale;
+    let rx, ry, tries = 0;
+    do { rx = w * 0.12 + Math.random() * w * 0.76; ry = h * 0.12 + Math.random() * h * 0.76; tries++; }
+    while (tries < 40 && reefs.some(r => Math.sqrt((r.x-rx)**2+(r.y-ry)**2) < r.baseR + estR + 40));
+    reefs.push(makeReef(rx, ry, sizeMult));
+  }
+
+  // Debris
+  for (let i = 0; i < 500; i++) {
+    const bright = Math.random() < 0.25;
+    debris.push({ x: Math.random() * w, y: Math.random() * h,
+      size: bright ? (0.8+Math.random()*1.2) : (0.2+Math.random()*0.7), vx: 0, vy: 0,
+      opacity: bright ? (0.2+Math.random()*0.2) : (0.05+Math.random()*0.12) });
+  }
+
+  // Plants
+  for (let i = 0; i < 30; i++) {
+    const edge = Math.floor(Math.random() * 4);
+    let px, py, growAngle;
+    const inset = Math.random() * 5;
+    if (edge === 0) { px = Math.random() * w; py = inset; growAngle = Math.PI / 2; }
+    else if (edge === 1) { px = w - inset; py = Math.random() * h; growAngle = Math.PI; }
+    else if (edge === 2) { px = Math.random() * w; py = h - inset; growAngle = -Math.PI / 2; }
+    else { px = inset; py = Math.random() * h; growAngle = 0; }
+    growAngle += (Math.random() - 0.5) * 0.5;
+    plants.push(new Frond(px, py, growAngle));
+  }
+  for (let i = 0; i < 60; i++) { for (const p of plants) p.update(0.016, i * 16); }
+
+  // Fish — fresh school entries
+  basePop = Math.min(500, Math.max(80, Math.floor((w * h) / 400)));
+  popTarget = basePop * (0.7 + Math.random() * 0.3);
+  const newFishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
+  fishToSpawn = newFishCount;
+  fishSpawned = 0;
+  spawnTimer = 0;
+  for (let i = 0; i < schoolEntries.length; i++) {
+    const edge = i % 4;
+    const margin = 80 + Math.random() * 40;
+    if (edge === 0) { schoolEntries[i] = { x: -margin, y: h*0.2+Math.random()*h*0.6, angle: (Math.random()-0.5)*0.5 }; }
+    else if (edge === 1) { schoolEntries[i] = { x: w+margin, y: h*0.2+Math.random()*h*0.6, angle: Math.PI+(Math.random()-0.5)*0.5 }; }
+    else if (edge === 2) { schoolEntries[i] = { x: w*0.2+Math.random()*w*0.6, y: -margin, angle: Math.PI/2+(Math.random()-0.5)*0.5 }; }
+    else { schoolEntries[i] = { x: w*0.2+Math.random()*w*0.6, y: h+margin, angle: -Math.PI/2+(Math.random()-0.5)*0.5 }; }
+  }
+
+  // Predators
+  const predCount = w * h > 600000 ? 2 : 1;
+  for (let i = 0; i < predCount; i++) predators.push(new Predator());
+
+  // Vortices
+  for (const v of vortices) { v.x = Math.random() * w; v.y = Math.random() * h; }
+
+  settleTime = 0;
+};
 
 function draw(time) {
   const dt = Math.min((time - lastTime) / 1000, 0.05);
@@ -2829,6 +2935,12 @@ function draw(time) {
       ctx.stroke();
     }
     if (r.radius >= r.maxRadius || r.opacity < 0.01) ripples.splice(i, 1);
+  }
+
+  // Decay tap voids
+  for (let i = tapVoids.length - 1; i >= 0; i--) {
+    tapVoids[i].life -= dt / tapVoids[i].maxLife;
+    if (tapVoids[i].life <= 0) tapVoids.splice(i, 1);
   }
 
   // Cursor glow
