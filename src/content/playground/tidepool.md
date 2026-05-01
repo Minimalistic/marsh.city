@@ -5,8 +5,9 @@ description: Tiny fish schooling in a shallow tidepool. Watch the current shift.
 
 A rocky tidepool. Tiny silver fish school together, responding to the shifting current and each other.
 
-<div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
+<div id="pool-container" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
 <canvas id="pool" style="width:100%;height:100%;cursor:none;display:block;background:#0f1f2a;"></canvas>
+<button id="fullscreen-btn" class="pool-tool pool-fs-btn" title="Fullscreen">⛶</button>
 <div id="toolbar" style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:10;">
   <button data-tool="observe" class="pool-tool active" title="Observe">👁</button>
   <button data-tool="food" class="pool-tool" title="Drop food">🪱</button>
@@ -15,7 +16,6 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
     <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound">🔇</button>
     <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume">
   </div>
-  <button id="fullscreen-btn" class="pool-tool" title="Fullscreen">⛶</button>
 </div>
 </div>
 <style>
@@ -36,8 +36,9 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
   appearance: slider-vertical;
 }
 .pool-sound-wrap:hover .pool-volume { height: 60px; opacity: 1; }
-#toolbar.hidden { opacity: 0; pointer-events: none; }
-#toolbar { transition: opacity 0.5s; }
+.pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
+#toolbar.hidden, .pool-fs-btn.hidden { opacity: 0; pointer-events: none; }
+#toolbar, .pool-fs-btn { transition: opacity 0.5s; }
 </style>
 
 <script type="module">
@@ -160,11 +161,12 @@ document.getElementById('volume-slider').addEventListener('input', e => {
 });
 
 // Fullscreen + auto-hide UI
-const poolContainer = canvas.parentElement;
+const poolContainer = document.getElementById('pool-container');
 const toolbar = document.getElementById('toolbar');
+const fsBtn = document.getElementById('fullscreen-btn');
 let hideTimer = null;
 
-document.getElementById('fullscreen-btn').addEventListener('click', e => {
+fsBtn.addEventListener('click', e => {
   e.stopPropagation();
   if (!document.fullscreenElement) {
     poolContainer.requestFullscreen().catch(() => {});
@@ -173,21 +175,32 @@ document.getElementById('fullscreen-btn').addEventListener('click', e => {
   }
 });
 
-function showToolbar() {
+function showUI() {
   toolbar.classList.remove('hidden');
+  fsBtn.classList.remove('hidden');
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
-    if (document.fullscreenElement) toolbar.classList.add('hidden');
+    if (document.fullscreenElement) {
+      toolbar.classList.add('hidden');
+      fsBtn.classList.add('hidden');
+    }
   }, 3000);
 }
-poolContainer.addEventListener('mousemove', showToolbar);
-poolContainer.addEventListener('touchstart', showToolbar);
+poolContainer.addEventListener('mousemove', showUI);
+poolContainer.addEventListener('touchstart', showUI);
 document.addEventListener('fullscreenchange', () => {
   if (document.fullscreenElement) {
-    hideTimer = setTimeout(() => toolbar.classList.add('hidden'), 3000);
+    // Resize canvas to fill the new fullscreen viewport
+    setTimeout(() => { ({ w, h } = resize()); }, 100);
+    hideTimer = setTimeout(() => {
+      toolbar.classList.add('hidden');
+      fsBtn.classList.add('hidden');
+    }, 3000);
   } else {
     toolbar.classList.remove('hidden');
+    fsBtn.classList.remove('hidden');
     clearTimeout(hideTimer);
+    setTimeout(() => { ({ w, h } = resize()); }, 100);
   }
 });
 
@@ -242,7 +255,18 @@ function resize() {
 }
 
 let { w, h } = resize();
-window.addEventListener('resize', () => { ({ w, h } = resize()); });
+window.addEventListener('resize', () => {
+  const oldW = w, oldH = h;
+  ({ w, h } = resize());
+  // Scale perimeter elements to new viewport
+  const sx = w / oldW, sy = h / oldH;
+  for (const r of rocks) { r.x *= sx; r.y *= sy; }
+  for (const p of plants) {
+    p.x *= sx; p.y *= sy;
+    for (const s of p.segs) { s.x *= sx; s.y *= sy; }
+  }
+  for (const d of debris) { d.x *= sx; d.y *= sy; }
+});
 
 const blurCanvas = document.createElement('canvas');
 const blurCtx = blurCanvas.getContext('2d');
