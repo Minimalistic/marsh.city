@@ -97,14 +97,17 @@ let oceanLfoGain = null;
 let soundEnabled = false;
 
 // All audio init must be synchronous within the user gesture call stack.
-// iOS Safari breaks the gesture context across await/then boundaries,
-// so async patterns silently fail to unlock the AudioContext.
+// iOS Safari breaks the gesture context across await/then boundaries.
+let oceanPanner = null;
+let crashPanner = null;
+
 function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  // resume() must be called synchronously in the gesture - fire and forget
   audioCtx.resume();
 
   const bufferSize = audioCtx.sampleRate * 4;
+
+  // --- Ambient ocean layer: filtered white noise ---
   const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = noiseBuffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -133,11 +136,17 @@ function initAudio() {
   oceanGain = audioCtx.createGain();
   oceanGain.gain.value = 0;
 
+  // Stereo panner for wave direction
+  oceanPanner = audioCtx.createStereoPanner();
+  oceanPanner.pan.value = 0;
+
   noise.connect(oceanFilter);
   oceanFilter.connect(lowShelf);
   lowShelf.connect(oceanGain);
-  oceanGain.connect(audioCtx.destination);
+  oceanGain.connect(oceanPanner);
+  oceanPanner.connect(audioCtx.destination);
 
+  // --- Distant crash layer: low frequency rumble ---
   const crashBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const crashData = crashBuffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) crashData[i] = Math.random() * 2 - 1;
@@ -153,11 +162,14 @@ function initAudio() {
   window._crashGain = audioCtx.createGain();
   window._crashGain.gain.value = 0;
 
+  crashPanner = audioCtx.createStereoPanner();
+  crashPanner.pan.value = 0;
+
   crashNoise.connect(crashFilter);
   crashFilter.connect(window._crashGain);
-  window._crashGain.connect(audioCtx.destination);
+  window._crashGain.connect(crashPanner);
+  crashPanner.connect(audioCtx.destination);
 
-  // Start sources synchronously - they queue and play once resume completes
   noise.start();
   oceanLfo.start();
   crashNoise.start();
@@ -313,41 +325,63 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && isFakeFS()) exitFakeFS();
 });
 
-// Update ocean sound to match wave state
+// Update ocean sound - low distant rumble with wave-driven swells and stereo panning
 function updateOceanSound() {
   if (!soundEnabled || !audioCtx) return;
   const waveIntensity = Math.abs(tide.strength);
 
-  // Calculate wash wave audio presence: ramps as it approaches, peaks on-screen, fades out
+  // Track the most prominent visible wave for volume/pan
   let washPresence = 0;
+  let wavePanX = 0; // -1 left, +1 right
+  let strongestWave = 0;
   for (const ww of washWaves) {
-    const progress = ww.traveled / ww.maxTravel; // 0 = just spawned, 1 = done
-    // Bell curve peaking around 0.4-0.6 (on-screen), with lead-in ramp
+    const progress = ww.traveled / ww.maxTravel;
+    // Volume ramps as wave approaches, peaks on-screen, fades leaving
     let presence;
-    if (progress < 0.2) presence = progress / 0.2 * 0.5; // approaching - ramp up
-    else if (progress < 0.7) presence = 0.5 + (1 - Math.abs(progress - 0.45) / 0.25) * 0.5; // on-screen peak
-    else presence = Math.max(0, (1 - progress) / 0.3) * 0.4; // leaving - fade out
-    washPresence = Math.max(washPresence, presence * ww.strength);
+    if (progress < 0.15) presence = progress / 0.15 * 0.3; // distant approach
+    else if (progress < 0.4) presence = 0.3 + (progress - 0.15) / 0.25 * 0.7; // arriving on screen
+    else if (progress < 0.7) presence = 1.0; // fully on screen - peak
+    else presence = Math.max(0, (1 - progress) / 0.3) * 0.5; // receding
+    const str = presence * ww.strength;
+    if (str > strongestWave) {
+      strongestWave = str;
+      // Pan based on where wave is horizontally relative to viewport center
+      const wx = ww.x + Math.cos(ww.angle + Math.PI / 2) * 0; // wave front center
+      wavePanX = Math.max(-1, Math.min(1, (wx / w - 0.5) * 2));
+    }
+    washPresence = Math.max(washPresence, str);
   }
 
-  // Filter brightens with wave presence
-  oceanFilter.frequency.setTargetAtTime(250 + waveIntensity * 200 + washPresence * 500, audioCtx.currentTime, 0.2);
-  // Volume: quiet ambient base, swells with visible wave, scaled by master
-  const baseVol = 0.06 + waveIntensity * 0.04;
-  oceanGain.gain.setTargetAtTime((baseVol + washPresence * 0.12) * masterVolume * 2, audioCtx.currentTime, 0.15);
+  // Filter: muffled rumble at rest, brighter as waves arrive
+  oceanFilter.frequency.setTargetAtTime(
+    180 + waveIntensity * 100 + washPresence * 600,
+    audioCtx.currentTime, 0.2
+  );
+  // Volume: quiet low rumble base, swells dramatically with visible waves
+  const baseVol = 0.03 + waveIntensity * 0.02; // barely audible distant rumble
+  const waveVol = washPresence * 0.25; // waves bring the volume
+  oceanGain.gain.setTargetAtTime(
+    (baseVol + waveVol) * masterVolume * 2,
+    audioCtx.currentTime, 0.1
+  );
+  // Stereo: pan toward the wave's screen position
+  if (oceanPanner) {
+    oceanPanner.pan.setTargetAtTime(wavePanX * 0.6, audioCtx.currentTime, 0.3);
+  }
   // LFO faster during active waves
-  oceanLfo.frequency.setTargetAtTime(0.04 + washPresence * 0.08, audioCtx.currentTime, 0.5);
+  oceanLfo.frequency.setTargetAtTime(0.03 + washPresence * 0.1, audioCtx.currentTime, 0.5);
 
-  // Distant crash rumble - irregular low swells
+  // Distant crash rumble - low swells that pan opposite to main wave
   if (window._crashGain) {
-    // Crashes correlate loosely with tide peaks + random timing
-    const crashIntensity = Math.max(0, Math.pow(waveIntensity, 2) * 0.5 + washPresence * 0.4);
-    // Add randomness so it doesn't perfectly track
+    const crashIntensity = Math.max(0, Math.pow(waveIntensity, 2) * 0.5 + washPresence * 0.3);
     const randomSwell = Math.max(0, Math.sin(waveTime * 0.13) * Math.sin(waveTime * 0.07));
     window._crashGain.gain.setTargetAtTime(
-      (crashIntensity * 0.06 + randomSwell * 0.03) * masterVolume * 2,
-      audioCtx.currentTime, 0.8 // slow attack for distant feel
+      (crashIntensity * 0.08 + randomSwell * 0.04) * masterVolume * 2,
+      audioCtx.currentTime, 0.8
     );
+    if (crashPanner) {
+      crashPanner.pan.setTargetAtTime(-wavePanX * 0.4, audioCtx.currentTime, 0.5);
+    }
   }
 }
 
@@ -1293,9 +1327,10 @@ for (let i = 0; i < 15; i++) {
 // Reef structures - partially submerged obstacles
 // Each reef has an irregular outline generated from noisy radius samples
 function makeReef(x, y, sizeMultiplier = 1) {
-  // Scale aggressively with viewport - reefs should dominate on large screens
-  const vpScale = Math.sqrt(w * h) / 500; // ~1 at 500px equiv, ~4 at 2000px
-  const baseR = (60 + Math.random() * 90) * sizeMultiplier * vpScale;
+  // Scale with viewport - smaller on mobile so they don't dominate
+  const vpScale = Math.sqrt(w * h) / 500;
+  const mobileScale = Math.min(w, h) < 500 ? 0.75 : 1; // 25% smaller on phones
+  const baseR = (60 + Math.random() * 90) * sizeMultiplier * vpScale * mobileScale;
   const crownR = baseR * (0.45 + Math.random() * 0.2); // above-water is smaller
   const crownOffX = (Math.random() - 0.5) * baseR * 0.3; // crown offset from center
   const crownOffY = (Math.random() - 0.5) * baseR * 0.3;
@@ -1798,16 +1833,22 @@ function draw(time) {
         fp.vx *= 0.82;
         fp.vy *= 0.82;
       }
+      // Crown water zone - food just past the crown still blocks fish, push it clear
+      const crownClear = crownEdge * 1.8;
+      if (!stillOnRock && cDist < crownClear && cDist > 0.1) {
+        const pen = 1 - cDist / crownClear;
+        fp.vx += (cdx / cDist) * pen * 0.25;
+        fp.vy += (cdy / cDist) * pen * 0.25;
+      }
       // Base check - food inside the rock boundary pushes out quickly
-      // so it always ends up where fish can reach it
       const bdx = fp.x - rf.x, bdy = fp.y - rf.y;
       const bDist = Math.sqrt(bdx * bdx + bdy * bdy);
       const bAngle = Math.atan2(bdy, bdx);
       const foodBaseEdge = rf.radiusAt(bAngle, rf.baseRadii) * 0.7;
       if (!stillOnRock && bDist < foodBaseEdge && bDist > 0.1) {
         const pen = 1 - bDist / foodBaseEdge;
-        fp.vx += (bdx / bDist) * pen * 0.3;
-        fp.vy += (bdy / bDist) * pen * 0.3;
+        fp.vx += (bdx / bDist) * pen * 0.4;
+        fp.vy += (bdy / bDist) * pen * 0.4;
       }
     }
     // Splash when food rolls off the rock into water
