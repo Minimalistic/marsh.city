@@ -191,40 +191,12 @@ const canRealFS = !!(poolContainer.requestFullscreen || poolContainer.webkitRequ
 function isFakeFS() { return poolContainer.classList.contains('fake-fullscreen'); }
 function enterFakeFS() {
   poolContainer.classList.add('fake-fullscreen');
-  // Hide page chrome - nav, footer, title, everything outside the pool
   document.body.style.overflow = 'hidden';
-  document.querySelectorAll('nav.site-nav, footer, header, .site-footer, main > *:not(#pool-container)')
-    .forEach(el => { if (!poolContainer.contains(el)) el.style.display = 'none'; });
-  // Walk up from pool-container and hide siblings at each level
-  let node = poolContainer;
-  while (node && node !== document.body) {
-    const parent = node.parentElement;
-    if (parent) {
-      for (const sib of parent.children) {
-        if (sib !== node && !sib.matches('script, style, link')) {
-          sib.dataset.fakefsHidden = sib.style.display || '';
-          sib.style.display = 'none';
-        }
-      }
-    }
-    node = parent;
-  }
-  fsCloseBtn.hidden = false;
-  fsBtn.hidden = true;
   handleFSChange();
 }
 function exitFakeFS() {
   poolContainer.classList.remove('fake-fullscreen');
   document.body.style.overflow = '';
-  // Restore everything we hid
-  document.querySelectorAll('[data-fakefs-hidden]').forEach(el => {
-    el.style.display = el.dataset.fakefsHidden;
-    delete el.dataset.fakefsHidden;
-  });
-  document.querySelectorAll('nav.site-nav, footer, header, .site-footer')
-    .forEach(el => { el.style.display = ''; });
-  fsCloseBtn.hidden = true;
-  fsBtn.hidden = false;
   handleFSChange();
 }
 fsBtn.addEventListener('click', e => {
