@@ -306,9 +306,9 @@ class Fish {
 
     // Apply boids - distracted fish mostly ignore schooling
     const schoolWeight = this.distracted ? 0.1 : 1;
-    if (sepCount > 0) { this.vx += sepX * 0.15; this.vy += sepY * 0.15; }
-    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.05 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.05 * schoolWeight; }
-    if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.0008 * schoolWeight; this.vy += (cy - this.y) * 0.0008 * schoolWeight; }
+    if (sepCount > 0) { this.vx += sepX * 0.12; this.vy += sepY * 0.12; }
+    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.04 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.04 * schoolWeight; }
+    if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.0006 * schoolWeight; this.vy += (cy - this.y) * 0.0006 * schoolWeight; }
 
     // Gentle centering during first few seconds
     if (settleTime > 0) {
@@ -442,9 +442,9 @@ class Fish {
       this.vy *= ratio;
     }
 
-    // Gentle drag
-    this.vx *= 0.99;
-    this.vy *= 0.99;
+    // Drag - smooths out micro-jitter
+    this.vx *= 0.985;
+    this.vy *= 0.985;
 
     // Soft return from offscreen - fish can swim 30% beyond viewport
     // but get gently pulled back toward the visible area
