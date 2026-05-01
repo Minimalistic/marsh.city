@@ -3,13 +3,20 @@ title: The Machine
 description: Real-world system architectures, animated and explained - a different system every time you hit shuffle.
 ---
 
-Every time you load this page, a different real-world system reveals how it works under the hood - from DNS resolution to video streaming to how your credit card actually processes. Hit shuffle to explore another.
+<div class="machine-terminal">
+<div class="terminal-header">
+  <span class="terminal-dots"><span></span><span></span><span></span></span>
+  <span class="terminal-title">the-machine v1.0</span>
+</div>
+<div class="terminal-body">
+<p class="terminal-prompt">Every time you load this page, a different real-world system reveals how it works under the hood - from DNS resolution to video streaming to how your credit card actually processes. Hit shuffle to explore another.</p>
 
 <h2 id="machine-title" class="machine-title"></h2>
 
 <div class="machine-controls">
-  <button id="machine-shuffle" type="button" aria-label="Show a different system">Shuffle</button>
+  <button id="machine-shuffle" type="button" aria-label="Show a different system">shuffle</button>
   <span id="machine-counter" class="meta"></span>
+  <span class="machine-style-tag">render: <span id="machine-style"></span></span>
 </div>
 
 <div class="mermaid-animated" id="machine-wrapper">
@@ -17,12 +24,136 @@ Every time you load this page, a different real-world system reveals how it work
 </div>
 
 <p id="machine-description" class="machine-desc" aria-live="polite"></p>
+</div>
+</div>
+
+<div class="machine-terminal machine-howto">
+<div class="terminal-header">
+  <span class="terminal-dots"><span></span><span></span><span></span></span>
+  <span class="terminal-title">how-it-works.md</span>
+</div>
+<div class="terminal-body">
+<h2 class="howto-heading">How it works</h2>
+
+<p>Each system is a data object - nodes grouped into layers, edges defining connections. No hand-drawn SVG, no image files. The diagram is built from structure.</p>
+
+<pre class="machine-code"><code>{`// each system defines its architecture as data
+{
+  title: 'How a Web Page Loads',
+  desc: 'Your browser checks its cache, resolves DNS...',
+
+  // nodes are organized into semantic layers
+  // mermaid renders them as subgraphs
+  layers: [
+    { name: 'Client', nodes: [
+      { id: 'BR',  label: 'Browser' },
+      { id: 'CA',  label: 'Browser Cache' }
+    ]},
+    { name: 'Resolution', nodes: [
+      { id: 'DNS', label: 'DNS Resolver' },
+      { id: 'TLS', label: 'TLS Handshake' }
+    ]},
+    // ...more layers
+  ],
+
+  // edges define data flow between nodes
+  // the animation follows these in order
+  edges: [
+    { f: 'BR',  t: 'CA',  l: 'check cache' },
+    { f: 'CA',  t: 'DNS', l: 'cache miss' },
+    { f: 'DNS', t: 'TLS', l: 'IP address' },
+    // ...more edges
+  ]
+}`}</code></pre>
+
+<p>At render time, this data compiles into <a href="https://mermaid.js.org">Mermaid</a> flowchart syntax - subgraphs for layers, styled nodes, labeled edges. Mermaid handles the layout algorithm and SVG generation.</p>
+
+<pre class="machine-code"><code>{`// compiled output sent to mermaid.render()
+flowchart TD
+  subgraph sg0["Client"]
+    BR(["Browser"])
+    CA(["Browser Cache"])
+  end
+  subgraph sg1["Resolution"]
+    DNS[/"DNS Resolver"/]
+    TLS[/"TLS Handshake"/]
+  end
+  BR -->|check cache| CA
+  CA -->|cache miss| DNS
+  DNS -->|IP address| TLS`}</code></pre>
+
+<p>The animation system walks the SVG after mermaid renders it. Nodes start invisible, then fade in one by one. Edges draw themselves using <code>stroke-dashoffset</code> transitions. Arrowheads are hidden until their edge finishes drawing. The whole sequence chains through <code>setTimeout</code> callbacks - each step triggers the next.</p>
+
+<p>Visual style is randomized per diagram. Some render as clean schematics, others get mermaid's <code>handDrawn</code> mode which uses <a href="https://roughjs.com">rough.js</a> under the hood for a sketched aesthetic. The style is injected as a mermaid directive before compilation.</p>
+
+<pre class="machine-code"><code>{`// 50/50 chance of hand-drawn per diagram
+var style = Math.random() > 0.5 ? 'handDrawn' : 'classic';
+
+// injected as a mermaid config directive
+var directive = style === 'handDrawn'
+  ? '%%{init: {"look": "handDrawn"}}%%\\n'
+  : '';
+
+mermaid.render(id, directive + syntax);`}</code></pre>
+
+<p>10 systems. 2 visual styles. Animated on scroll, instant on shuffle. All generated from ~500 lines of data.</p>
+</div>
+</div>
 
 <style>{`
+  /* --- terminal chrome --- */
+  .machine-terminal {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+  }
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-elev2, var(--bg-elev));
+    border-bottom: 1px solid var(--border);
+  }
+  .terminal-dots {
+    display: flex;
+    gap: 5px;
+  }
+  .terminal-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--fg-muted);
+    opacity: 0.3;
+  }
+  .terminal-dots span:first-child { background: #e06c60; opacity: 0.7; }
+  .terminal-dots span:nth-child(2) { background: #e5bf4a; opacity: 0.7; }
+  .terminal-dots span:last-child { background: #5fc56e; opacity: 0.7; }
+  .terminal-title {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+    letter-spacing: 0.02em;
+  }
+  .terminal-body {
+    padding: 1.25rem 1.5rem;
+  }
+  .terminal-prompt {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--fg-soft);
+    margin: 0 0 0.5rem;
+  }
+
+  /* --- diagram area --- */
   .machine-title {
-    margin: 1.5rem 0 0.5rem;
+    margin: 1rem 0 0.5rem;
     font-size: 1.3rem;
     min-height: 1.6em;
+    font-family: var(--font-mono);
+    letter-spacing: -0.01em;
   }
   .machine-controls {
     display: flex;
@@ -33,27 +164,40 @@ Every time you load this page, a different real-world system reveals how it work
   }
   #machine-shuffle {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
-    padding: 0.4rem 1rem;
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    font-size: 0.78rem;
+    padding: 0.4rem 1.2rem;
+    background: transparent;
+    border: 1px solid var(--fg-muted);
+    border-radius: 2px;
     color: var(--fg);
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
     white-space: nowrap;
+    text-transform: lowercase;
+    letter-spacing: 0.05em;
   }
   #machine-shuffle:hover {
-    border-color: var(--accent);
-    background: var(--bg-elev2);
+    border-color: #5fc56e;
+    color: #5fc56e;
+    box-shadow: 0 0 8px rgba(95, 197, 110, 0.15);
   }
   #machine-shuffle:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid #5fc56e;
     outline-offset: 2px;
   }
   #machine-counter {
-    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
     color: var(--fg-muted);
+  }
+  .machine-style-tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--fg-muted);
+    opacity: 0.7;
+  }
+  #machine-style {
+    color: #5fc56e;
   }
   .machine-desc {
     font-size: 0.9rem;
@@ -61,6 +205,57 @@ Every time you load this page, a different real-world system reveals how it work
     color: var(--fg-soft);
     margin-top: 1rem;
     max-width: 65ch;
+  }
+
+  /* --- how it works section --- */
+  .machine-howto {
+    margin-top: 3rem;
+  }
+  .howto-heading {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    margin: 0 0 1rem;
+    letter-spacing: -0.01em;
+  }
+  .machine-howto p {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--fg-soft);
+    max-width: 65ch;
+    margin: 0.75rem 0;
+  }
+  .machine-howto a {
+    color: #5fc56e;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(95, 197, 110, 0.3);
+  }
+  .machine-howto a:hover {
+    border-bottom-color: #5fc56e;
+  }
+  .machine-howto code {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    background: var(--bg-elev2, rgba(0,0,0,0.1));
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+  }
+  .machine-code {
+    background: #1a1e24;
+    color: #b8c4d0;
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-size: 0.78rem;
+    line-height: 1.65;
+    margin: 1rem 0;
+    border: 1px solid rgba(95, 197, 110, 0.1);
+  }
+  .machine-code code {
+    font-family: var(--font-mono);
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
   }
 `}</style>
 
@@ -698,7 +893,16 @@ Every time you load this page, a different real-world system reveals how it work
     if (!mermaidReady) return;
 
     wrapper.classList.remove('mermaid--visible');
-    var syntax = buildSyntax(sys);
+
+    // randomly pick a visual style per diagram
+    var styles = ['classic', 'handDrawn'];
+    var style = styles[Math.floor(Math.random() * styles.length)];
+    var styleLabel = document.getElementById('machine-style');
+    if (styleLabel) styleLabel.textContent = style === 'handDrawn' ? 'hand-drawn' : 'schematic';
+
+    // inject style as a mermaid directive — avoids re-initializing the library
+    var directive = style === 'handDrawn' ? '%%{init: {"look": "handDrawn"}}%%\\n' : '';
+    var syntax = directive + buildSyntax(sys);
     var order = [];
     sys.layers.forEach(function(layer) {
       layer.nodes.forEach(function(n) { order.push(n.id); });
