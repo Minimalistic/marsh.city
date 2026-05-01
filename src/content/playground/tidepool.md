@@ -984,12 +984,14 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Aggressively steer toward food - fish want it
+        // Steer toward food with some randomness — pass-by approach, not perfect orbit
         const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.05 + proximity * 0.10;
+        const steerWeight = 0.04 + proximity * 0.06;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        const desiredVx = Math.cos(foodAngle) * scaledSpeed;
-        const desiredVy = Math.sin(foodAngle) * scaledSpeed;
+        // Add a random wobble so fish don't all converge on the same arc
+        const wobble = (Math.sin(this._phaseOffset + Date.now() * 0.001) * 0.3);
+        const desiredVx = Math.cos(foodAngle + wobble) * scaledSpeed;
+        const desiredVy = Math.sin(foodAngle + wobble) * scaledSpeed;
         this.vx += (desiredVx - this.vx) * steerWeight;
         this.vy += (desiredVy - this.vy) * steerWeight;
       }
