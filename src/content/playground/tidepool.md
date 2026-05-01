@@ -1286,9 +1286,9 @@ class Fish {
       // Target: exactly one segment length behind previous joint
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
-      // Near-instant straightening - bends are quick flicks, not held curves
+      // Softened trailing — body follows head smoothly, tail lags naturally
       const t = j / this._jointCount;
-      const stiffness = 0.997 - t * 0.005; // 0.997 at head, 0.992 at tail
+      const stiffness = 0.99 - t * 0.008; // 0.99 at head, 0.977 at tail
       curr.x += (tx - curr.x) * stiffness;
       curr.y += (ty - curr.y) * stiffness;
       // Hard constraint: enforce exact segment length so body never stretches
@@ -1320,13 +1320,13 @@ class Fish {
     const segs = this._jointCount;
     const totalLen = this.len;
 
-    // Smoothed swim intensity
-    const rawIntensity = Math.min(1, this.speed * 0.8);
-    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.015;
+    // Smoothed swim intensity — heavily damped to prevent erratic tail
+    const rawIntensity = Math.min(1, this.speed * 0.6);
+    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.008;
     const si = this._swimSmooth;
 
-    // Undulation phase for swimming wave - slow and graceful
-    const phase = Date.now() * 0.0003 * (0.5 + si * 0.5) + this._phaseOffset;
+    // Undulation phase — moderate speed, capped so it can't flicker
+    const phase = Date.now() * 0.0002 * (0.4 + si * 0.4) + this._phaseOffset;
 
     // Build spine directly from world-space joint positions
     // Transform joints into local space (relative to head position and heading)
@@ -2112,10 +2112,10 @@ for (let i = 0; i < 15; i++) {
 // Reef structures - partially submerged obstacles
 // Each reef has an irregular outline generated from noisy radius samples
 function makeReef(x, y, sizeMultiplier = 1) {
-  // Scale with viewport - smaller on mobile so they don't dominate
-  const vpScale = Math.sqrt(w * h) / 500;
-  const mobileScale = Math.min(w, h) < 500 ? 0.75 : 1; // 25% smaller on phones
-  const baseR = (60 + Math.random() * 90) * sizeMultiplier * vpScale * mobileScale;
+  // Scale with viewport — capped so reefs don't dominate large screens
+  const vpScale = Math.min(2.0, Math.sqrt(w * h) / 800);
+  const mobileScale = Math.min(w, h) < 500 ? 0.75 : 1;
+  const baseR = (50 + Math.random() * 60) * sizeMultiplier * vpScale * mobileScale;
   const crownR = baseR * (0.45 + Math.random() * 0.2); // above-water is smaller
   const crownOffX = (Math.random() - 0.5) * baseR * 0.3; // crown offset from center
   const crownOffY = (Math.random() - 0.5) * baseR * 0.3;
@@ -2171,10 +2171,10 @@ function makeReef(x, y, sizeMultiplier = 1) {
 }
 
 const reefs = [];
-const reefCount = Math.max(2, Math.floor(Math.sqrt(w * h) / 200));
+const reefCount = Math.max(2, Math.min(4, Math.floor(Math.sqrt(w * h) / 400)));
 for (let i = 0; i < reefCount; i++) {
   // First reef is the dominant one - much larger than the rest
-  const sizeMult = i === 0 ? 1.8 + Math.random() * 0.5 : 1;
+  const sizeMult = i === 0 ? 1.3 + Math.random() * 0.4 : 0.7 + Math.random() * 0.3;
   // Place reefs away from edges and away from each other
   // Estimate radius for spacing check before creating
   const estR = (60 + 45) * sizeMult * viewScale;
@@ -2379,10 +2379,10 @@ regenerateWorld = function() {
       elongation: 0.5 + Math.random() * 0.5, angle: Math.random() * Math.PI });
   }
 
-  // Reefs
-  const reefCount2 = Math.max(2, Math.floor(Math.sqrt(w * h) / 200));
+  // Reefs — 2-4, not more
+  const reefCount2 = Math.max(2, Math.min(4, Math.floor(Math.sqrt(w * h) / 400)));
   for (let i = 0; i < reefCount2; i++) {
-    const sizeMult = i === 0 ? 1.8 + Math.random() * 0.5 : 1;
+    const sizeMult = i === 0 ? 1.3 + Math.random() * 0.4 : 0.7 + Math.random() * 0.3;
     const estR = (60 + 45) * sizeMult * viewScale;
     let rx, ry, tries = 0;
     do { rx = w * 0.12 + Math.random() * w * 0.76; ry = h * 0.12 + Math.random() * h * 0.76; tries++; }
