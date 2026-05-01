@@ -171,6 +171,27 @@ function sampleFlow(px, py, time) {
   return { fx, fy };
 }
 
+// Wash waves - occasional wave fronts that sweep across with turbulence
+const washWaves = [];
+let washTimer = 5 + Math.random() * 8;
+
+function spawnWash() {
+  const angle = waveBaseAngle + (Math.random() - 0.5) * 0.5;
+  // Start from outside the viewport on the wave's incoming side
+  const startX = w / 2 - Math.cos(angle) * w * 0.7;
+  const startY = h / 2 - Math.sin(angle) * h * 0.7;
+  washWaves.push({
+    x: startX, y: startY,
+    angle,
+    speed: 1.5 + Math.random() * 1,
+    width: 30 + Math.random() * 20,
+    strength: 0.4 + Math.random() * 0.3,
+    life: 1,
+    traveled: 0,
+    maxTravel: Math.max(w, h) * 1.4,
+  });
+}
+
 // Debris particles
 const debris = [];
 for (let i = 0; i < 500; i++) {
@@ -223,9 +244,25 @@ class Fish {
     // Flee state
     this.fleeing = false;
     this.fleeTimer = 0;
+    // Eating pause
+    this.eating = false;
+    this.eatTimer = 0;
   }
 
   update(dt, fish, time) {
+    // Eating pause - fish stops to chew
+    if (this.eating) {
+      this.eatTimer -= dt;
+      this.vx *= 0.7;
+      this.vy *= 0.7;
+      if (this.eatTimer <= 0) this.eating = false;
+      // Still move position but very slowly
+      this.x += this.vx;
+      this.y += this.vy;
+      this.speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+      return;
+    }
+
     // Boids forces
     let sepX = 0, sepY = 0, sepCount = 0;
     let alignX = 0, alignY = 0, alignCount = 0;
@@ -300,12 +337,14 @@ class Fish {
       if (this.idle) { this.idle = false; this.idleTimer = 2; }
 
       if (closestFoodDist < 10) {
-        // Close enough to eat - slow down and nibble
-        this.vx *= 0.85;
-        this.vy *= 0.85;
-        if (closestFoodDist < 6) {
+        // Close enough to eat - stop and bite
+        this.vx *= 0.8;
+        this.vy *= 0.8;
+        if (closestFoodDist < 6 && !this.eating) {
           closestFood.bites--;
           closestFood.size *= 0.97;
+          this.eating = true;
+          this.eatTimer = 0.3 + Math.random() * 0.2; // brief pause to chew
           // Spawn a fragment only after ~5 bites taken, then 25% chance
           const bitesTaken = (closestFood.startBites || closestFood.bites + 1) - closestFood.bites;
           if (bitesTaken > 5 && Math.random() < 0.25) {
@@ -660,6 +699,58 @@ function draw(time) {
     v.strength = (v.strength > 0 ? 1 : -1) * (0.3 + Math.sin(time * 0.0005 + v.phase) * 0.2);
   }
 
+  // Spawn wash waves occasionally
+  washTimer -= dt;
+  if (washTimer <= 0) {
+    spawnWash();
+    washTimer = 8 + Math.random() * 12;
+  }
+
+  // Update wash waves - push fish and debris as they pass
+  for (let i = washWaves.length - 1; i >= 0; i--) {
+    const ww = washWaves[i];
+    ww.x += Math.cos(ww.angle) * ww.speed;
+    ww.y += Math.sin(ww.angle) * ww.speed;
+    ww.traveled += ww.speed;
+    ww.life = 1 - ww.traveled / ww.maxTravel;
+    if (ww.life <= 0) { washWaves.splice(i, 1); continue; }
+    // Push things in the wave's path
+    const pushForce = ww.strength * ww.life;
+    const cosA = Math.cos(ww.angle);
+    const sinA = Math.sin(ww.angle);
+    for (const f of fish) {
+      // Distance from wave front line (perpendicular)
+      const rel = (f.x - ww.x) * cosA + (f.y - ww.y) * sinA;
+      if (rel > -5 && rel < ww.width) {
+        f.vx += cosA * pushForce * 0.06;
+        f.vy += sinA * pushForce * 0.06;
+        // Lateral scatter in the wake
+        const lateral = (Math.random() - 0.5) * pushForce * 0.03;
+        f.vx += -sinA * lateral;
+        f.vy += cosA * lateral;
+      }
+    }
+    for (const d of debris) {
+      const rel = (d.x - ww.x) * cosA + (d.y - ww.y) * sinA;
+      if (rel > -3 && rel < ww.width) {
+        d.vx += cosA * pushForce * 0.08;
+        d.vy += sinA * pushForce * 0.08;
+        d.vx += (Math.random() - 0.5) * pushForce * 0.04;
+        d.vy += (Math.random() - 0.5) * pushForce * 0.04;
+      }
+    }
+    for (const p of plants) {
+      for (let si = 1; si < p.segs.length; si++) {
+        const s = p.segs[si];
+        const rel = (s.x - ww.x) * cosA + (s.y - ww.y) * sinA;
+        if (rel > -3 && rel < ww.width * 0.5) {
+          s.vx += cosA * pushForce * 0.1 * (si / p.segCount);
+          s.vy += sinA * pushForce * 0.1 * (si / p.segCount);
+        }
+      }
+    }
+  }
+
   // Clear - dark tidepool water
   const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
   gradient.addColorStop(0, '#142833');
@@ -727,6 +818,26 @@ function draw(time) {
     ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(180, 130, 60, ${Math.min(0.8, 0.3 + fp.size * 0.2)})`;
     ctx.fill();
+  }
+
+  // Draw wash wave fronts - subtle light line sweeping across
+  for (const ww of washWaves) {
+    if (ww.life <= 0) continue;
+    ctx.save();
+    ctx.translate(ww.x, ww.y);
+    ctx.rotate(ww.angle);
+    ctx.globalAlpha = ww.life * 0.15;
+    ctx.beginPath();
+    ctx.moveTo(0, -w);
+    ctx.lineTo(0, w);
+    ctx.strokeStyle = 'rgba(180, 220, 230, 1)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Foam/froth behind the front
+    ctx.globalAlpha = ww.life * 0.05;
+    ctx.fillStyle = 'rgba(200, 230, 240, 1)';
+    ctx.fillRect(0, -w, ww.width * 0.3, w * 2);
+    ctx.restore();
   }
 
   // Update ripples
