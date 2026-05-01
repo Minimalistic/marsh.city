@@ -476,13 +476,18 @@ function rescaleAll(oldW, oldH) {
 
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
-  const targetFish = Math.min(2000, Math.floor(initialFishCount * areaRatio * 0.975));
+  // Update organic population base for new viewport size
+  const newBasePop = Math.max(80, Math.floor((w * h) / 400));
+  const popRatio = newBasePop / Math.max(1, basePop);
+  popTarget = Math.max(newBasePop * 0.35, Math.min(newBasePop * 1.3, popTarget * popRatio));
+  basePop = newBasePop;
   const targetDebris = Math.min(1200, Math.floor(initialDebrisCount * areaRatio * 0.75));
   const targetPlants = Math.min(60, Math.floor(30 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
 
-  // Add fish if needed - new fish swim in from edges
-  while (fish.length < targetFish) {
+  // Gently adjust fish population toward new target — don't hard-snap
+  const softTarget = Math.floor(popTarget);
+  while (fish.length < softTarget * 0.6) {
     const school = fish.length % schoolColors.length;
     const entry = schoolEntries[school];
     const f = new Fish(entry);
@@ -491,8 +496,7 @@ function rescaleAll(oldW, oldH) {
     f.bellyColor = schoolColors[school].belly;
     fish.push(f);
   }
-  // Remove excess fish
-  while (fish.length > targetFish && fish.length > 120) fish.pop();
+  while (fish.length > softTarget * 1.5 && fish.length > 40) fish.pop();
 
   // Add debris if needed
   while (debris.length < targetDebris) {
@@ -762,6 +766,8 @@ class Fish {
     // Distraction - sometimes fish wander off from the school
     this.distracted = Math.random() < 0.08;
     this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
+    // Leaving — fish that decide to swim away and not come back
+    this.leaving = false;
     // Fixed phase offset for undulation desync (not position-based)
     this._phaseOffset = Math.random() * Math.PI * 20;
     // Smoothed swim intensity for animation - avoids jerky transitions
@@ -1139,26 +1145,27 @@ class Fish {
     this.vx *= 0.99;
     this.vy *= 0.99;
 
-    // Soft return from offscreen - fish can swim 30% beyond viewport
-    const overflow = 0.3;
-    const minX = -w * overflow, maxX = w * (1 + overflow);
-    const minY = -h * overflow, maxY = h * (1 + overflow);
-    // Gentle pull when offscreen, normalized so it's consistent at any viewport size
-    if (this.x < 0) this.vx += (Math.abs(this.x) / w) * 0.3;
-    if (this.x > w) this.vx -= ((this.x - w) / w) * 0.3;
-    if (this.y < 0) this.vy += (Math.abs(this.y) / h) * 0.3;
-    if (this.y > h) this.vy -= ((this.y - h) / h) * 0.3;
-    // Wake from idle if way offscreen
-    if (this.idle && (this.x < -w * 0.15 || this.x > w * 1.15 || this.y < -h * 0.15 || this.y > h * 1.15)) {
-      this.idle = false;
-      this.idleTimer = 3 + Math.random() * 4;
+    // Soft return from offscreen — unless this fish is leaving
+    if (!this.leaving) {
+      if (this.x < 0) this.vx += (Math.abs(this.x) / w) * 0.3;
+      if (this.x > w) this.vx -= ((this.x - w) / w) * 0.3;
+      if (this.y < 0) this.vy += (Math.abs(this.y) / h) * 0.3;
+      if (this.y > h) this.vy -= ((this.y - h) / h) * 0.3;
+      if (this.idle && (this.x < -w * 0.15 || this.x > w * 1.15 || this.y < -h * 0.15 || this.y > h * 1.15)) {
+        this.idle = false;
+        this.idleTimer = 3 + Math.random() * 4;
+      }
     }
 
-    // Move - allowed 30% beyond viewport
+    // Move
     this.x += this.vx;
     this.y += this.vy;
-    this.x = Math.max(minX, Math.min(maxX, this.x));
-    this.y = Math.max(minY, Math.min(maxY, this.y));
+    // Only clamp non-leaving fish
+    if (!this.leaving) {
+      const overflow = 0.3;
+      this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
+      this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
+    }
     // Reef collision - pure gradient, no hard snaps
     for (const rf of reefs) {
       const rdx = this.x - rf.x;
@@ -2010,7 +2017,12 @@ const schoolEntries = schoolColors.map((_, si) => {
 const predators = [];
 const predatorCount = w * h > 600000 ? 2 : 1;
 for (let i = 0; i < predatorCount; i++) predators.push(new Predator());
-let fishRespawnTimer = 0; // replenish eaten fish gradually
+// Organic population — wanders around a midpoint, fish come and go
+let basePop = Math.max(80, Math.floor((w * h) / 400));
+let popTarget = basePop * (0.7 + Math.random() * 0.3); // start a little varied
+let popDriftTimer = 10 + Math.random() * 20; // time until next target shift
+let schoolArrivalTimer = 15 + Math.random() * 30; // next wave of newcomers
+let fishRespawnTimer = 0;
 
 // Rocks - scattered across the tidepool floor
 const rocks = [];
@@ -2771,11 +2783,68 @@ function draw(time) {
     ctx.fill();
   }
 
-  // Respawn eaten fish gradually - maintain population
-  const targetPop = Math.max(120, Math.floor((w * h) / 400));
-  if (fish.length < targetPop) {
+  // Organic population — target wanders, fish come and go naturally
+  popDriftTimer -= dt;
+  if (popDriftTimer <= 0) {
+    // Shift the target: sometimes sparser, sometimes denser
+    const drift = (Math.random() - 0.5) * basePop * 0.4;
+    popTarget = Math.max(basePop * 0.35, Math.min(basePop * 1.3, popTarget + drift));
+    popDriftTimer = 12 + Math.random() * 40;
+  }
+
+  // Occasionally a few fish decide to leave — swim offscreen and don't come back
+  if (fish.length > popTarget * 0.8 && Math.random() < 0.002) {
+    // Pick a random fish that isn't already leaving
+    const candidates = fish.filter(f => !f.leaving && !f.eating);
+    if (candidates.length > 3) {
+      const leaver = candidates[Math.floor(Math.random() * candidates.length)];
+      leaver.leaving = true;
+      leaver.distracted = true; // break from school
+      // Nudge toward nearest edge
+      const toLeft = leaver.x, toRight = w - leaver.x;
+      const toTop = leaver.y, toBottom = h - leaver.y;
+      const minEdge = Math.min(toLeft, toRight, toTop, toBottom);
+      if (minEdge === toLeft) leaver.vx -= 0.5;
+      else if (minEdge === toRight) leaver.vx += 0.5;
+      else if (minEdge === toTop) leaver.vy -= 0.5;
+      else leaver.vy += 0.5;
+    }
+  }
+  // Remove fish that have left the area
+  for (let i = fish.length - 1; i >= 0; i--) {
+    const f = fish[i];
+    if (f.leaving && (f.x < -w * 0.5 || f.x > w * 1.5 || f.y < -h * 0.5 || f.y > h * 1.5)) {
+      fish.splice(i, 1);
+    }
+  }
+
+  // Occasional school arrival — a wave of new fish swims in
+  schoolArrivalTimer -= dt;
+  if (schoolArrivalTimer <= 0) {
+    const waveSize = 3 + Math.floor(Math.random() * 10);
+    const school = Math.floor(Math.random() * schoolColors.length);
+    // Fresh entry point for this wave
+    const edge = Math.floor(Math.random() * 4);
+    const margin = 80 + Math.random() * 40;
+    let ex, ey, ea;
+    if (edge === 0) { ex = -margin; ey = h * 0.2 + Math.random() * h * 0.6; ea = (Math.random() - 0.5) * 0.5; }
+    else if (edge === 1) { ex = w + margin; ey = h * 0.2 + Math.random() * h * 0.6; ea = Math.PI + (Math.random() - 0.5) * 0.5; }
+    else if (edge === 2) { ex = w * 0.2 + Math.random() * w * 0.6; ey = -margin; ea = Math.PI / 2 + (Math.random() - 0.5) * 0.5; }
+    else { ex = w * 0.2 + Math.random() * w * 0.6; ey = h + margin; ea = -Math.PI / 2 + (Math.random() - 0.5) * 0.5; }
+    for (let i = 0; i < waveSize; i++) {
+      const nf = new Fish({ x: ex, y: ey, angle: ea });
+      nf.school = school;
+      nf.color = schoolColors[school].color;
+      nf.bellyColor = schoolColors[school].belly;
+      fish.push(nf);
+    }
+    schoolArrivalTimer = 20 + Math.random() * 60;
+  }
+
+  // Gentle trickle respawn if well below target (predator ate too many)
+  if (fish.length < popTarget * 0.6) {
     fishRespawnTimer += dt;
-    if (fishRespawnTimer > 0.8) {
+    if (fishRespawnTimer > 1.5) {
       fishRespawnTimer = 0;
       const school = Math.floor(Math.random() * schoolColors.length);
       const entry = schoolEntries[school];
@@ -2785,6 +2854,8 @@ function draw(time) {
       f.bellyColor = schoolColors[school].belly;
       fish.push(f);
     }
+  } else {
+    fishRespawnTimer = 0;
   }
 
   // Update and draw fish + predators
