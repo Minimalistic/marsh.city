@@ -341,62 +341,90 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && isFakeFS()) exitFakeFS();
 });
 
-// Update ocean sound - low distant rumble with wave-driven swells and stereo panning
+// Delayed crash tracker - queues a rumble after each wave passes
+let crashQueue = []; // { time, pan, strength }
+
+// Update ocean sound - audible before/after waves, crash echo after
 function updateOceanSound() {
   if (!soundEnabled || !audioCtx) return;
   const waveIntensity = Math.abs(tide.strength);
+  const now = audioCtx.currentTime;
 
-  // Track the most prominent visible wave for volume/pan
+  // Track the most prominent wave - audible throughout its entire life
   let washPresence = 0;
-  let wavePanX = 0; // -1 left, +1 right
+  let wavePanX = 0;
   let strongestWave = 0;
   for (const ww of washWaves) {
     const progress = ww.traveled / ww.maxTravel;
-    // Volume ramps as wave approaches, peaks on-screen, fades leaving
+    // Smooth presence curve - audible before and after visible on screen
+    // 0.0-0.1: growing distant rumble (wave approaching from far away)
+    // 0.1-0.3: building as it enters view
+    // 0.3-0.6: peak, fully on screen
+    // 0.6-0.85: fading as it leaves
+    // 0.85-1.0: distant trailing wash
     let presence;
-    if (progress < 0.15) presence = progress / 0.15 * 0.3; // distant approach
-    else if (progress < 0.4) presence = 0.3 + (progress - 0.15) / 0.25 * 0.7; // arriving on screen
-    else if (progress < 0.7) presence = 1.0; // fully on screen - peak
-    else presence = Math.max(0, (1 - progress) / 0.3) * 0.5; // receding
+    if (progress < 0.1) presence = 0.25 + progress / 0.1 * 0.25; // audible approach
+    else if (progress < 0.3) presence = 0.5 + (progress - 0.1) / 0.2 * 0.5; // building
+    else if (progress < 0.6) presence = 1.0; // peak
+    else if (progress < 0.85) presence = 1.0 - (progress - 0.6) / 0.25 * 0.6; // fading
+    else presence = 0.4 * (1 - (progress - 0.85) / 0.15); // trailing wash
     const str = presence * ww.strength;
     if (str > strongestWave) {
       strongestWave = str;
-      // Pan based on where wave is horizontally relative to viewport center
-      const wx = ww.x + Math.cos(ww.angle + Math.PI / 2) * 0; // wave front center
-      wavePanX = Math.max(-1, Math.min(1, (wx / w - 0.5) * 2));
+      wavePanX = Math.max(-1, Math.min(1, (ww.x / w - 0.5) * 2));
     }
     washPresence = Math.max(washPresence, str);
+    // Queue a crash when wave passes ~70% (just left the screen)
+    if (!ww._crashQueued && progress > 0.7) {
+      ww._crashQueued = true;
+      const delay = 0.8 + Math.random() * 2.5; // 0.8-3.3s after leaving
+      crashQueue.push({ time: now + delay, pan: wavePanX, strength: ww.strength });
+    }
   }
 
-  // Filter: muffled rumble at rest, brighter as waves arrive
+  // Filter: muffled at rest, brighter as waves arrive
   oceanFilter.frequency.setTargetAtTime(
     180 + waveIntensity * 100 + washPresence * 600,
     audioCtx.currentTime, 0.2
   );
-  // Volume: quiet low rumble base, swells dramatically with visible waves
-  const baseVol = 0.03 + waveIntensity * 0.02; // barely audible distant rumble
-  const waveVol = washPresence * 0.25; // waves bring the volume
+  // Volume: always-audible base, swells with wave presence
+  const baseVol = 0.06 + waveIntensity * 0.03; // constant low rumble
+  const waveVol = washPresence * 0.22;
   oceanGain.gain.setTargetAtTime(
     (baseVol + waveVol) * masterVolume * 2,
     audioCtx.currentTime, 0.1
   );
-  // Stereo: pan toward the wave's screen position
   if (oceanPanner) {
     oceanPanner.pan.setTargetAtTime(wavePanX * 0.6, audioCtx.currentTime, 0.3);
   }
-  // LFO faster during active waves
   oceanLfo.frequency.setTargetAtTime(0.03 + washPresence * 0.1, audioCtx.currentTime, 0.5);
 
-  // Distant crash rumble - low swells that pan opposite to main wave
+  // Distant crash rumble - triggered by queued events, not wave presence
   if (window._crashGain) {
-    const crashIntensity = Math.max(0, Math.pow(waveIntensity, 2) * 0.5 + washPresence * 0.3);
-    const randomSwell = Math.max(0, Math.sin(waveTime * 0.13) * Math.sin(waveTime * 0.07));
+    // Process crash queue - fire crashes that are due
+    let crashVol = 0;
+    let crashPan = 0;
+    for (let i = crashQueue.length - 1; i >= 0; i--) {
+      const c = crashQueue[i];
+      const elapsed = now - c.time;
+      if (elapsed < 0) continue; // not yet
+      // Crash envelope: quick attack, slow decay over ~3s
+      const env = elapsed < 0.3 ? elapsed / 0.3 : Math.max(0, 1 - (elapsed - 0.3) / 2.7);
+      if (env <= 0) { crashQueue.splice(i, 1); continue; }
+      const vol = env * c.strength * 0.15;
+      if (vol > crashVol) {
+        crashVol = vol;
+        crashPan = c.pan;
+      }
+    }
+    // Add a subtle random ambient rumble on top
+    const ambientRumble = Math.max(0, Math.sin(waveTime * 0.13) * Math.sin(waveTime * 0.07)) * 0.03;
     window._crashGain.gain.setTargetAtTime(
-      (crashIntensity * 0.08 + randomSwell * 0.04) * masterVolume * 2,
-      audioCtx.currentTime, 0.8
+      (crashVol + ambientRumble) * masterVolume * 2,
+      audioCtx.currentTime, crashVol > 0.01 ? 0.1 : 0.8
     );
     if (crashPanner) {
-      crashPanner.pan.setTargetAtTime(-wavePanX * 0.4, audioCtx.currentTime, 0.5);
+      crashPanner.pan.setTargetAtTime(crashPan * 0.5, audioCtx.currentTime, 0.3);
     }
   }
 }
