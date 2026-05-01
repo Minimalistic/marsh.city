@@ -566,11 +566,12 @@ class Tadpole {
     ctx.fillStyle = this.color;
     ctx.fill();
 
-    // Eyes - slightly larger for bigger heads
+    // Eyes - positioned based on body direction, not steering angle
+    const bodyAngle = Math.atan2(segs[0].y - segs[1].y, segs[0].x - segs[1].x);
     const eyeOffset = this.headSize * 0.45;
     const eyeSize = this.headSize * 0.18;
-    const eyeAngleL = this.angle + 0.7;
-    const eyeAngleR = this.angle - 0.7;
+    const eyeAngleL = bodyAngle + 0.7;
+    const eyeAngleR = bodyAngle - 0.7;
     for (const ea of [eyeAngleL, eyeAngleR]) {
       const ex = this.x + Math.cos(ea) * eyeOffset;
       const ey = this.y + Math.sin(ea) * eyeOffset;
