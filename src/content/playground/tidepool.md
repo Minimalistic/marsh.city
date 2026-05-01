@@ -151,6 +151,38 @@ const ripples = [];
 const tide = { angle: 0, strength: 0 };
 const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
+// Turbulence - drifting vortices that create local flow variation
+const vortices = [];
+for (let i = 0; i < 5; i++) {
+  vortices.push({
+    x: Math.random() * w, y: Math.random() * h,
+    radius: 60 + Math.random() * 80,
+    strength: (Math.random() < 0.5 ? 1 : -1) * (0.3 + Math.random() * 0.4),
+    driftAngle: Math.random() * Math.PI * 2,
+    driftSpeed: 0.1 + Math.random() * 0.15,
+    phase: Math.random() * Math.PI * 2,
+  });
+}
+// Sample turbulence at a point - returns local flow {vx, vy}
+function sampleFlow(px, py, time) {
+  let fx = 0, fy = 0;
+  for (const v of vortices) {
+    const dx = px - v.x;
+    const dy = py - v.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < v.radius && dist > 1) {
+      // Curl force - perpendicular to radius, strongest at ~40% radius
+      const t = dist / v.radius;
+      const falloff = t * Math.pow(1 - t, 0.5) * 4; // peaks in middle ring
+      const strength = v.strength * falloff;
+      // Perpendicular direction (curl)
+      fx += (-dy / dist) * strength;
+      fy += (dx / dist) * strength;
+    }
+  }
+  return { fx, fy };
+}
+
 // Debris particles
 const debris = [];
 for (let i = 0; i < 500; i++) {
@@ -241,9 +273,12 @@ class Fish {
     if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.05; this.vy += (alignY / alignCount - this.vy) * 0.05; }
     if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.0008; this.vy += (cy - this.y) * 0.0008; }
 
-    // Tidal current - gentle drift, not a shove
+    // Tidal current + local turbulence
     this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
+    const flow = sampleFlow(this.x, this.y, time);
+    this.vx += flow.fx * 0.01;
+    this.vy += flow.fy * 0.01;
 
     // Food attraction - realistic approach: only steer if angle is good,
     // otherwise pass by and come around. Some fish pause to eat.
@@ -612,6 +647,20 @@ function draw(time) {
   tide.angle = waveBaseAngle + secondaryWave;
   tide.strength = 0.3 + waveCycle * 0.35; // swings from -0.05 to 0.65
 
+  // Drift vortices slowly around the pool, vary strength over time
+  for (const v of vortices) {
+    v.x += Math.cos(v.driftAngle) * v.driftSpeed;
+    v.y += Math.sin(v.driftAngle) * v.driftSpeed;
+    v.driftAngle += (Math.random() - 0.5) * 0.02;
+    // Wrap around with padding
+    if (v.x < -50) v.x = w + 50;
+    if (v.x > w + 50) v.x = -50;
+    if (v.y < -50) v.y = h + 50;
+    if (v.y > h + 50) v.y = -50;
+    // Pulse strength
+    v.strength = (v.strength > 0 ? 1 : -1) * (0.3 + Math.sin(time * 0.0005 + v.phase) * 0.2);
+  }
+
   // Clear - dark tidepool water
   const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
   gradient.addColorStop(0, '#142833');
@@ -650,6 +699,9 @@ function draw(time) {
   for (const d of debris) {
     d.vx += Math.cos(tide.angle) * tide.strength * 0.008;
     d.vy += Math.sin(tide.angle) * tide.strength * 0.008;
+    const dFlow = sampleFlow(d.x, d.y, time);
+    d.vx += dFlow.fx * 0.015;
+    d.vy += dFlow.fy * 0.015;
     d.vx *= 0.97;
     d.vy *= 0.97;
     d.x += d.vx;
