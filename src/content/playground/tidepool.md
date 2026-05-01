@@ -86,19 +86,13 @@ let oceanLfo = null;
 let oceanLfoGain = null;
 let soundEnabled = false;
 
-let audioReady = false;
-
-async function ensureAudio() {
-  if (audioReady) return;
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  // Must resume in user gesture - await it so sources start after
-  if (audioCtx.state !== 'running') {
-    await audioCtx.resume();
-  }
-  if (audioReady) return; // guard against double-entry
-  audioReady = true;
+// All audio init must be synchronous within the user gesture call stack.
+// iOS Safari breaks the gesture context across await/then boundaries,
+// so async patterns silently fail to unlock the AudioContext.
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // resume() must be called synchronously in the gesture - fire and forget
+  audioCtx.resume();
 
   const bufferSize = audioCtx.sampleRate * 4;
   const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
@@ -153,21 +147,22 @@ async function ensureAudio() {
   crashFilter.connect(window._crashGain);
   window._crashGain.connect(audioCtx.destination);
 
-  // Context is running, start sources now
+  // Start sources synchronously - they queue and play once resume completes
   noise.start();
   oceanLfo.start();
   crashNoise.start();
 }
 
-async function toggleSound() {
-  await ensureAudio();
+function toggleSound() {
+  if (!audioCtx) initAudio();
+  // If context got suspended again (e.g. tab backgrounded), resume in gesture
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   soundEnabled = !soundEnabled;
   const btn = document.getElementById('sound-toggle');
   btn.setAttribute('aria-pressed', soundEnabled);
   if (soundEnabled) {
-    // Context guaranteed running, set gain immediately
     oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    oceanGain.gain.setValueAtTime(masterVolume * 0.3, audioCtx.currentTime);
+    oceanGain.gain.value = masterVolume * 0.3;
     document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>';
   } else {
     oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
