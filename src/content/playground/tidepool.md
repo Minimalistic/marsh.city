@@ -1036,42 +1036,36 @@ function draw(time) {
         });
       }
     }
-    // Draw the wave front - broken irregular segments with gaps and varying width
+    // Draw the wave front - continuously evolving shape
     const perpX = -sinA;
     const perpY = cosA;
-    // Generate irregular wave profile - like a mountain range silhouette
-    if (!ww.profile) {
-      ww.profile = [];
-      const step = 6;
-      for (let pos = -span; pos <= span; pos += step) {
-        // Layered noise for natural irregularity at different scales
-        const large = Math.sin(pos * 0.02 + Math.random() * 0.5) * 8;
-        const medium = Math.sin(pos * 0.07 + Math.random() * 2) * 4;
-        const small = (Math.random() - 0.5) * 3;
-        const offset = large + medium + small; // forward/back displacement
-        const thickness = 1 + Math.pow(Math.random(), 0.5) * 2.5;
-        const opacity = 0.2 + Math.random() * 0.3;
-        // Random gaps
-        const gap = Math.random() < 0.08;
-        ww.profile.push({ pos, offset, thickness, opacity, gap });
-      }
-    }
-    // Draw the wave as a continuous irregular path with breaks
+    // Seed per wave for unique character, but shape morphs over time
+    if (!ww.seed) ww.seed = Math.random() * 100;
+    const t = ww.traveled * 0.02; // time evolution
+    const step = 6;
     let inStroke = false;
-    for (let i = 0; i < ww.profile.length; i++) {
-      const pt = ww.profile[i];
-      if (pt.gap) {
+    for (let pos = -span; pos <= span; pos += step) {
+      // Layered sine noise that evolves with travel distance
+      const large = Math.sin(pos * 0.018 + t * 0.7 + ww.seed) * 9;
+      const medium = Math.sin(pos * 0.06 + t * 1.3 + ww.seed * 2) * 4;
+      const small = Math.sin(pos * 0.15 + t * 2.5 + ww.seed * 3) * 2;
+      const offset = large + medium + small;
+      const thickness = 1.2 + (Math.sin(pos * 0.04 + t * 0.9) * 0.5 + 0.5) * 2;
+      const opacity = 0.2 + (Math.sin(pos * 0.03 + t * 0.6 + 1) * 0.5 + 0.5) * 0.25;
+      // Gaps that shift over time
+      const gapNoise = Math.sin(pos * 0.09 + t * 1.8 + ww.seed * 4);
+      if (gapNoise > 0.85) {
         if (inStroke) { ctx.stroke(); inStroke = false; }
         continue;
       }
-      const px = ww.x + perpX * pt.pos + cosA * pt.offset;
-      const py = ww.y + perpY * pt.pos + sinA * pt.offset;
+      const px = ww.x + perpX * pos + cosA * offset;
+      const py = ww.y + perpY * pos + sinA * offset;
       if (!inStroke) {
         ctx.beginPath();
         ctx.moveTo(px, py);
-        ctx.globalAlpha = ww.life * pt.opacity;
+        ctx.globalAlpha = ww.life * opacity;
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        ctx.lineWidth = pt.thickness;
+        ctx.lineWidth = thickness;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         inStroke = true;
