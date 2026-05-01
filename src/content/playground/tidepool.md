@@ -1817,7 +1817,8 @@ class Predator {
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
       const t = j / this._jointCount;
-      const stiffness = 0.995 - t * 0.005;
+      // Softer stiffness than small fish — body trails and flexes more
+      const stiffness = 0.985 - t * 0.01;
       curr.x += (tx - curr.x) * stiffness;
       curr.y += (ty - curr.y) * stiffness;
       dx = curr.x - prev.x; dy = curr.y - prev.y;
@@ -1831,8 +1832,8 @@ class Predator {
         let bend = currAngle - prevAngle;
         while (bend > Math.PI) bend -= Math.PI * 2;
         while (bend < -Math.PI) bend += Math.PI * 2;
-        if (Math.abs(bend) > 0.1) {
-          const ca = prevAngle + Math.sign(bend) * 0.1;
+        if (Math.abs(bend) > 0.15) {
+          const ca = prevAngle + Math.sign(bend) * 0.15;
           curr.x = prev.x + Math.cos(ca) * this._segLen;
           curr.y = prev.y + Math.sin(ca) * this._segLen;
         }
@@ -1844,15 +1845,16 @@ class Predator {
   draw(ctx) {
     const segs = this._jointCount;
     const totalLen = this.len;
-    const rawIntensity = Math.min(1, this.speed * 0.6);
-    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.012;
+    // Swim intensity — smoothed so the body doesn't jerk
+    const rawIntensity = Math.min(1, this.speed / (this.baseSpeed * viewScale * 2));
+    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.008;
     const si = this._swimSmooth;
-    const phase = Date.now() * 0.00025 * (0.4 + si * 0.6) + this._phaseOffset;
+    // Slow, powerful undulation — half the frequency of small fish
+    const phase = Date.now() * 0.00012 * (0.3 + si * 0.7) + this._phaseOffset;
 
     // Head shake when chomping - rapid lateral oscillation that decays
     const chompIntensity = this.chomping ? this.chompTimer / 3.0 : 0;
     const headShake = chompIntensity * Math.sin(this.chompPhase) * this.len * 0.06;
-    // Jaw gape: opens and snaps shut repeatedly
     const jawGape = chompIntensity * Math.max(0, Math.sin(this.chompPhase * 0.8)) * this.bodyWidth * 2.5;
 
     const cosH = Math.cos(-this.angle), sinH = Math.sin(-this.angle);
@@ -1862,8 +1864,11 @@ class Predator {
       let lx = jx * cosH - jy * sinH, ly = jx * sinH + jy * cosH;
       if (i > 0) {
         const t = i / segs;
-        const flex = t < 0.5 ? 0 : (t - 0.5) / 0.5;
-        ly += Math.sin(phase - t * Math.PI * 0.7) * flex * this.len * 0.035 * (0.2 + si * 0.8);
+        // Whole-body S-curve: starts at 25% down the body, not just the tail tip
+        const flex = t < 0.25 ? 0 : (t - 0.25) / 0.75;
+        // Bigger amplitude when swimming fast (propulsive), subtle when drifting
+        const amp = this.len * (0.02 + si * 0.07);
+        ly += Math.sin(phase - t * Math.PI * 1.2) * flex * amp;
       }
       // Head shake displaces the front segments laterally
       if (i < segs * 0.3) {
