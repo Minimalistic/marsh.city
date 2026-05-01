@@ -245,7 +245,8 @@ class Fish {
     this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
 
-    // Food attraction - steer toward nearest pellet, not orbit it
+    // Food attraction - realistic approach: only steer if angle is good,
+    // otherwise pass by and come around. Some fish pause to eat.
     let closestFood = null;
     let closestFoodDist = 120;
     for (const fp of foodPellets) {
@@ -258,34 +259,45 @@ class Fish {
     if (closestFood) {
       const fdx = closestFood.x - this.x;
       const fdy = closestFood.y - this.y;
-      // Desired velocity points directly at food
       const desiredAngle = Math.atan2(fdy, fdx);
-      const approachSpeed = this.baseSpeed * 1.3;
-      const desiredVx = Math.cos(desiredAngle) * approachSpeed;
-      const desiredVy = Math.sin(desiredAngle) * approachSpeed;
-      // Steer: blend current velocity toward desired (kills orbiting)
-      const steerStrength = closestFoodDist < 30 ? 0.15 : 0.06;
-      this.vx += (desiredVx - this.vx) * steerStrength;
-      this.vy += (desiredVy - this.vy) * steerStrength;
+      // Check angle between current heading and food direction
+      let headingDiff = desiredAngle - this.angle;
+      while (headingDiff > Math.PI) headingDiff -= Math.PI * 2;
+      while (headingDiff < -Math.PI) headingDiff += Math.PI * 2;
+      const angleMismatch = Math.abs(headingDiff);
+
       if (this.idle) { this.idle = false; this.idleTimer = 2; }
-      // Bite it when close enough - fragments fly off
-      if (closestFoodDist < 6) {
-        closestFood.bites--;
-        closestFood.size *= 0.97;
-        // Spawn a small fragment that drifts away
-        if (Math.random() < 0.5) {
-          const fragAngle = Math.random() * Math.PI * 2;
-          foodPellets.push({
-            x: closestFood.x + Math.cos(fragAngle) * 4,
-            y: closestFood.y + Math.sin(fragAngle) * 4,
-            size: 0.8 + Math.random() * 0.6,
-            bites: 1 + Math.floor(Math.random() * 3),
-            vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.3),
-            vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.3),
-          });
+
+      if (closestFoodDist < 10) {
+        // Close enough to eat - slow down and nibble
+        this.vx *= 0.85;
+        this.vy *= 0.85;
+        if (closestFoodDist < 6) {
+          closestFood.bites--;
+          closestFood.size *= 0.97;
+          // Spawn a fragment
+          if (Math.random() < 0.5) {
+            const fragAngle = Math.random() * Math.PI * 2;
+            foodPellets.push({
+              x: closestFood.x + Math.cos(fragAngle) * 4,
+              y: closestFood.y + Math.sin(fragAngle) * 4,
+              size: 0.8 + Math.random() * 0.6,
+              bites: 1 + Math.floor(Math.random() * 3),
+              vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.3),
+              vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.3),
+            });
+          }
+          if (closestFood.bites <= 0) closestFood.size = 0;
         }
-        if (closestFood.bites <= 0) closestFood.size = 0;
+      } else if (angleMismatch < 1.2) {
+        // Good approach angle - gently steer toward food
+        const steer = closestFoodDist < 40 ? 0.04 : 0.02;
+        const desiredVx = Math.cos(desiredAngle) * this.baseSpeed;
+        const desiredVy = Math.sin(desiredAngle) * this.baseSpeed;
+        this.vx += (desiredVx - this.vx) * steer;
+        this.vy += (desiredVy - this.vy) * steer;
       }
+      // Bad angle (>70deg) - don't steer, just swim past and come around naturally
     }
 
     // Mouse avoidance - dart away, not blast away
