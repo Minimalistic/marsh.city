@@ -632,14 +632,14 @@ for (let i = 0; i < 30; i++) {
   });
 }
 
-// Pond plants
+// Pond plants - rooted along the bottom edge
 const plants = [];
-for (let i = 0; i < 8; i++) {
+for (let i = 0; i < 12; i++) {
   plants.push({
     x: Math.random() * w,
-    y: Math.random() * h,
+    y: h - Math.random() * 15,
     blades: 3 + Math.floor(Math.random() * 4),
-    height: 15 + Math.random() * 25,
+    height: 20 + Math.random() * 35,
     phase: Math.random() * Math.PI * 2,
   });
 }
@@ -671,14 +671,14 @@ function drawPond(time) {
     ctx.restore();
   }
 
-  // Plants swaying
+  // Plants swaying - rooted at bottom, growing upward
   for (const p of plants) {
-    const sway = Math.sin(time * 0.001 + p.phase) * 4;
-    ctx.strokeStyle = 'rgba(60, 120, 40, 0.25)';
-    ctx.lineWidth = 1.5;
+    const sway = Math.sin(time * 0.001 + p.phase) * 5;
+    ctx.strokeStyle = 'rgba(50, 110, 35, 0.35)';
+    ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     for (let b = 0; b < p.blades; b++) {
-      const spread = (b - p.blades / 2) * 4;
+      const spread = (b - p.blades / 2) * 5;
       ctx.beginPath();
       ctx.moveTo(p.x + spread, p.y);
       ctx.quadraticCurveTo(
