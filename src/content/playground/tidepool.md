@@ -1614,29 +1614,29 @@ class Predator {
       }
 
       if (this.target) {
-        // Active chase — committed pursuit, building speed
+        // Barracuda strike — explosive acceleration, lock on hard
         const dx = this.target.x - this.x, dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const pursuitAngle = Math.atan2(dy, dx);
 
-        // Ramp up: faster the closer we get, like a real lunge
-        const closeness = Math.max(0, 1 - dist / (150 * viewScale));
-        const chaseSpeed = this.baseSpeed * (1.8 + closeness * 1.2) * viewScale;
-        const steer = 0.03 + closeness * 0.08;
+        // Explosive ramp: slow far out, then rockets in
+        const closeness = Math.max(0, 1 - dist / (180 * viewScale));
+        const chaseSpeed = this.baseSpeed * (2.5 + closeness * 2.0) * viewScale;
+        const steer = 0.05 + closeness * 0.12;
         this.vx += (Math.cos(pursuitAngle) * chaseSpeed - this.vx) * steer;
         this.vy += (Math.sin(pursuitAngle) * chaseSpeed - this.vy) * steer;
 
-        // Final lunge when very close
-        if (dist < 40 * viewScale) {
-          this.burstTimer = 0.4;
+        // Final lunge — burst of raw speed
+        if (dist < 50 * viewScale) {
+          this.burstTimer = 0.6;
         }
       } else if (crowdN > 0) {
-        // Cruising toward school — lazy approach, not chasing yet
+        // Barely drifting in the general direction of fish — not committed
         const cx = crowdX / crowdN, cy = crowdY / crowdN;
         const toSchoolAngle = Math.atan2(cy - this.y, cx - this.x);
-        const steer = 0.01 + urgency * 0.015;
-        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 1.2 * viewScale - this.vx) * steer;
-        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 1.2 * viewScale - this.vy) * steer;
+        const steer = 0.005 + urgency * 0.008;
+        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 0.6 * viewScale - this.vx) * steer;
+        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 0.6 * viewScale - this.vy) * steer;
       }
 
       // Catch — only the locked target, must be very close and predator moving fast
@@ -1644,8 +1644,8 @@ class Predator {
       if (this.target) {
         const td = Math.sqrt((this.target.x - mouthX) ** 2 + (this.target.y - mouthY) ** 2);
         const mySpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        // Must be right on top of it AND moving fast (actual lunge, not lazy drift)
-        if (td < 10 && mySpeed > this.baseSpeed * 1.5 * viewScale) prey = this.target;
+        // Must be right on top of it AND moving fast (barracuda strike speed)
+        if (td < 10 && mySpeed > this.baseSpeed * 2.5 * viewScale) prey = this.target;
       }
       if (prey) {
         const idx = smallFish.indexOf(prey);
@@ -1692,12 +1692,13 @@ class Predator {
     this.vx += flow.fx * 0.003 * viewScale;
     this.vy += flow.fy * 0.003 * viewScale;
 
-    const predScale = viewScale; // speed scales with viewport
+    const predScale = viewScale;
     let targetSpeed;
-    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 2.5 * predScale; this.burstTimer -= dt; }
-    else if (this.hunting) targetSpeed = this.baseSpeed * (1.2 + this.hunger * 0.6) * predScale;
-    // Lazy cruise: barely drifting when full, gradually picks up as hunger builds
-    else targetSpeed = this.baseSpeed * (0.25 + this.hunger * 0.8) * predScale;
+    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 4.0 * predScale; this.burstTimer -= dt; }
+    else if (this.target) targetSpeed = this.baseSpeed * (2.5 + this.hunger * 1.0) * predScale;
+    else if (this.hunting) targetSpeed = this.baseSpeed * (0.5 + this.hunger * 0.4) * predScale;
+    // Hovering — barracuda idles almost motionless, barely drifting
+    else targetSpeed = this.baseSpeed * (0.1 + this.hunger * 0.3) * predScale;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     // Slow to change speed when well-fed, responsive when hungry/hunting
@@ -1767,7 +1768,8 @@ class Predator {
     this.vx -= (-headY) * latSpeed * 0.6;
     this.vy -= headX * latSpeed * 0.6;
     if (fwdSpeed < 0) { this.vx -= headX * fwdSpeed * 0.7; this.vy -= headY * fwdSpeed * 0.7; }
-    const minFwd = this.baseSpeed * 0.3 * viewScale;
+    // Near-zero minimum when not chasing — barracuda can hover
+    const minFwd = this.target ? this.baseSpeed * 0.3 * viewScale : this.baseSpeed * 0.05 * viewScale;
     const fwdNow = this.vx * headX + this.vy * headY;
     if (fwdNow < minFwd) { this.vx += headX * (minFwd - fwdNow) * 0.2; this.vy += headY * (minFwd - fwdNow) * 0.2; }
 
