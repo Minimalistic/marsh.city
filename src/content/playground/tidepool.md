@@ -86,7 +86,7 @@ canvas.addEventListener('mousedown', e => {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   if (activeTool === 'food') {
-    const b = 15 + Math.floor(Math.random() * 6);
+    const b = 25 + Math.floor(Math.random() * 6);
     foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
     ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else if (activeTool === 'rock') {
@@ -111,7 +111,7 @@ canvas.addEventListener('touchstart', e => {
   mouse.down = true;
   mouse.speed = 0;
   if (activeTool === 'food') {
-    const b2 = 15 + Math.floor(Math.random() * 6);
+    const b2 = 25 + Math.floor(Math.random() * 6);
     foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
     ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else if (activeTool === 'rock') {
@@ -324,10 +324,9 @@ class Fish {
     this.vx += flow.fx * 0.01;
     this.vy += flow.fy * 0.01;
 
-    // Food attraction - realistic approach: only steer if angle is good,
-    // otherwise pass by and come around. Some fish pause to eat.
+    // Food attraction - fish are very interested, urgency fades with distance
     let closestFood = null;
-    let closestFoodDist = 120;
+    let closestFoodDist = 200;
     for (const fp of foodPellets) {
       if (fp.bites <= 0) continue;
       const fdx = fp.x - this.x;
@@ -354,6 +353,10 @@ class Fish {
         if (closestFoodDist < 6 && !this.eating) {
           closestFood.bites--;
           closestFood.size *= 0.97;
+          // Jostle the food from the bite impact
+          const biteAngle = this.angle;
+          closestFood.vx += Math.cos(biteAngle) * 0.3;
+          closestFood.vy += Math.sin(biteAngle) * 0.3;
           this.eating = true;
           this.eatTimer = 0.3 + Math.random() * 0.2; // brief pause to chew
           // Spawn a fragment only after ~5 bites taken, then 25% chance
@@ -371,15 +374,19 @@ class Fish {
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
-      } else if (angleMismatch < 1.2) {
-        // Good approach angle - gently steer toward food
-        const steer = closestFoodDist < 40 ? 0.04 : 0.02;
-        const desiredVx = Math.cos(desiredAngle) * this.baseSpeed;
-        const desiredVy = Math.sin(desiredAngle) * this.baseSpeed;
+      } else if (angleMismatch < 1.4) {
+        // Good approach angle - steer toward food, stronger when closer
+        const proximity = 1 - closestFoodDist / 200;
+        const steer = 0.02 + proximity * 0.06;
+        const desiredVx = Math.cos(desiredAngle) * this.baseSpeed * (1 + proximity * 0.5);
+        const desiredVy = Math.sin(desiredAngle) * this.baseSpeed * (1 + proximity * 0.5);
         this.vx += (desiredVx - this.vx) * steer;
         this.vy += (desiredVy - this.vy) * steer;
+      } else if (closestFoodDist < 60) {
+        // Close but bad angle - gentle turn to come around
+        this.vx += (Math.cos(desiredAngle) - Math.cos(this.angle)) * 0.01;
+        this.vy += (Math.sin(desiredAngle) - Math.sin(this.angle)) * 0.01;
       }
-      // Bad angle (>70deg) - don't steer, just swim past and come around naturally
     }
 
     // Mouse avoidance - dart away, not blast away
