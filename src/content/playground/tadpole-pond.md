@@ -449,15 +449,36 @@ class Tadpole {
     for (let i = 1; i < this.segCount; i++) {
       const prev = this.segments[i - 1];
       const seg = this.segments[i];
-      const dx = seg.x - prev.x;
-      const dy = seg.y - prev.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      let dx = seg.x - prev.x;
+      let dy = seg.y - prev.y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > this.segLen) {
         const ratio = this.segLen / dist;
         seg.x = prev.x + dx * ratio;
         seg.y = prev.y + dy * ratio;
       }
-      // Stiffness: front 40% of body barely flexes, tail gets all the wiggle
+
+      // Angular constraint: limit bend between consecutive segments
+      // Front body (t < 0.4) allows max ~25deg, tail allows up to ~70deg
+      if (i >= 2) {
+        const prevPrev = this.segments[i - 2];
+        const parentAngle = Math.atan2(prev.y - prevPrev.y, prev.x - prevPrev.x);
+        const segAngle = Math.atan2(seg.y - prev.y, seg.x - prev.x);
+        let bend = segAngle - parentAngle;
+        while (bend > Math.PI) bend -= Math.PI * 2;
+        while (bend < -Math.PI) bend += Math.PI * 2;
+        const t = i / (this.segCount - 1);
+        const maxBend = t < 0.4 ? (25 * Math.PI / 180) : (25 + 45 * ((t - 0.4) / 0.6)) * Math.PI / 180;
+        if (Math.abs(bend) > maxBend) {
+          const clamped = parentAngle + Math.sign(bend) * maxBend;
+          seg.x = prev.x + Math.cos(clamped) * this.segLen;
+          seg.y = prev.y + Math.sin(clamped) * this.segLen;
+        }
+      }
+
+      // Wiggle: tail flexes, body stays rigid
+      dx = seg.x - prev.x;
+      dy = seg.y - prev.y;
       const t = i / (this.segCount - 1);
       const flex = t < 0.4 ? t * 0.1 : Math.pow((t - 0.4) / 0.6, 1.5);
       const wiggle = Math.sin(this.wigglePhase - i * 0.7) * this.wiggleAmp * flex;
