@@ -5,7 +5,7 @@ status: wip
 repo: https://github.com/Minimalistic/PetFeedr
 tags: [python, raspberry-pi, iot, flask, pwa]
 started: 2025-06-01
-updated: 2026-03-22
+updated: 2026-04-30
 ---
 
 Jason has two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn't cutting it.

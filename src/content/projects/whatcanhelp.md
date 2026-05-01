@@ -4,7 +4,7 @@ description: A free assistive technology discovery tool that matches people with
 status: wip
 tags: [node, sqlite, express, vanilla-js, claude-api, accessibility, at]
 started: 2026-03-01
-updated: 2026-04-26
+updated: 2026-04-30
 ---
 
 Jason is the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what works. WhatCanHelp grew out of a question he kept coming back to: what would it look like if the AT industry had better AI tools?

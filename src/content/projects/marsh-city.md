@@ -6,7 +6,7 @@ repo: https://github.com/Minimalistic/marsh.city
 url: https://marsh.city
 tags: [astro, markdown, github-actions, pwa]
 started: 2026-03-01
-updated: 2026-04-29
+updated: 2026-04-30
 ---
 
 Jason needed a central place to point people - a resume that stays current, project pages that show what he's actually building, and posts when something's worth writing about. The problem with most personal sites is maintenance. They launch polished and rot within months because updating them feels like work on top of work.
