@@ -268,7 +268,7 @@ function resize() {
 let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
-const initialFishCount = Math.max(60, Math.floor(initialArea / 2750));
+const initialFishCount = Math.max(25, Math.floor(initialArea / 8000));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -278,6 +278,7 @@ function rescaleAll(oldW, oldH) {
   // Update view scale - sqrt of area ratio, capped
   viewScale = Math.min(2.5, Math.sqrt((w * h) / initialArea));
   for (const r of rocks) { r.x *= sx; r.y *= sy; }
+  for (const rf of reefs) { rf.x *= sx; rf.y *= sy; }
   for (const p of plants) {
     p.x *= sx; p.y *= sy;
     for (const s of p.segs) { s.x *= sx; s.y *= sy; }
@@ -287,7 +288,7 @@ function rescaleAll(oldW, oldH) {
 
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
-  const targetFish = Math.min(200, Math.floor(initialFishCount * areaRatio * 0.975));
+  const targetFish = Math.min(80, Math.floor(initialFishCount * areaRatio * 0.975));
   const targetDebris = Math.min(1200, Math.floor(initialDebrisCount * areaRatio * 0.75));
   const targetPlants = Math.min(40, Math.floor(20 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
@@ -518,19 +519,19 @@ class Fish {
     const depthScale = this.depth > 0 ? (1 - this.depth * 0.3) : 1;
     this.scale = mobileScale * depthScale;
 
-    // Size - small and slender for top-down view
-    this.len = (5 + Math.random() * 2.5) * this.scale;
-    this.bodyWidth = this.len * 0.15;
+    // Size - large enough for visible articulation from top-down
+    this.len = (14 + Math.random() * 8) * this.scale;
+    this.bodyWidth = this.len * (0.18 + Math.random() * 0.05);
 
     // Color assigned per school (set after construction)
     this.school = 0;
     this.color = 'rgb(140, 150, 160)';
     this.bellyColor = 'rgb(170, 180, 190)';
 
-    // Schooling parameters
-    this.separationDist = 15 * this.scale;
-    this.alignDist = 50 * this.scale;
-    this.cohesionDist = 80 * this.scale;
+    // Schooling parameters - scaled up for larger fish
+    this.separationDist = 30 * this.scale;
+    this.alignDist = 80 * this.scale;
+    this.cohesionDist = 140 * this.scale;
 
     // Flee state
     this.fleeing = false;
@@ -692,8 +693,8 @@ class Fish {
       }
     }
 
-    // Mouse avoidance - skip when dropping food (fish should approach, not flee)
-    if (mouse.active && activeTool !== 'food') {
+    // Mouse avoidance - cursor still spooks fish even in food mode
+    if (mouse.active) {
       const mdx = this.x - mouse.x;
       const mdy = this.y - mouse.y;
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
@@ -746,6 +747,30 @@ class Fish {
       this.vy *= ratio;
     }
 
+    // Reef avoidance - steer around submerged obstacles
+    for (const rf of reefs) {
+      const rdx = this.x - rf.x;
+      const rdy = this.y - rf.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      const avoid = rf.avoidR * viewScale + this.len * 0.5;
+      if (rDist < avoid * 1.8 && rDist > 0.1) {
+        // Outer zone: gentle steering tangent to the reef surface
+        const penetration = 1 - rDist / (avoid * 1.8);
+        // Push outward
+        const pushStr = penetration * 0.12;
+        this.vx += (rdx / rDist) * pushStr;
+        this.vy += (rdy / rDist) * pushStr;
+        // Also steer tangentially so fish flow around, not just bounce off
+        // Cross product of (velocity, reef direction) picks the natural turn side
+        const cross = this.vx * rdy - this.vy * rdx;
+        const tangentSign = cross >= 0 ? 1 : -1;
+        const tx = -rdy / rDist * tangentSign;
+        const ty = rdx / rDist * tangentSign;
+        this.vx += tx * penetration * 0.06;
+        this.vy += ty * penetration * 0.06;
+      }
+    }
+
     // Drag - smooths out micro-jitter
     this.vx *= 0.985;
     this.vy *= 0.985;
@@ -770,6 +795,25 @@ class Fish {
     this.y += this.vy;
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));
+    // Hard reef collision - push fish out if they ended up inside
+    for (const rf of reefs) {
+      const rdx = this.x - rf.x;
+      const rdy = this.y - rf.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      const solidR = rf.avoidR * viewScale * 0.7;
+      if (rDist < solidR && rDist > 0.1) {
+        // Push to the edge
+        this.x = rf.x + (rdx / rDist) * solidR;
+        this.y = rf.y + (rdy / rDist) * solidR;
+        // Deflect velocity tangentially
+        const dot = (this.vx * rdx + this.vy * rdy) / (rDist * rDist);
+        if (dot < 0) { // only if moving inward
+          this.vx -= rdx / rDist * dot * rDist * 1.5;
+          this.vy -= rdy / rDist * dot * rDist * 1.5;
+        }
+      }
+    }
+
     // Angle tracks velocity direction but with turn rate limit
     // Fish must move forward to turn - can't pivot in place
     const targetAngle = Math.atan2(this.vy, this.vx);
@@ -782,46 +826,165 @@ class Fish {
   }
 
   draw(ctx) {
-    const cos = Math.cos(this.angle);
-    const sin = Math.sin(this.angle);
     const vs = viewScale;
+    const segs = 10; // more segments = smoother curves
+    const totalLen = this.len;
 
-    // Elliptical body - scaled by viewScale
+    // Undulation: traveling sine wave, speed-dependent
+    const wiggleSpeed = this.speed * 2.5 + 0.8;
+    const phase = Date.now() * 0.008 * wiggleSpeed + this.x * 0.05 + this.y * 0.03;
+
+    // Build spine in local space (head-forward along +X axis)
+    const spineX = new Array(segs + 1);
+    const spineY = new Array(segs + 1);
+    const widths = new Array(segs + 1);
+
+    for (let i = 0; i <= segs; i++) {
+      const t = i / segs; // 0=nose, 1=tail
+      spineX[i] = (0.5 - t) * totalLen;
+
+      // Undulation: head nearly still, grows toward tail (cubic ramp)
+      const amp = t * t * t * totalLen * 0.18;
+      spineY[i] = Math.sin(phase - t * Math.PI * 2.5) * amp;
+
+      // Body width profile - fusiform fish shape
+      let hw;
+      if (t < 0.08) hw = t / 0.08 * this.bodyWidth * 0.35;       // snout
+      else if (t < 0.25) hw = this.bodyWidth * (0.35 + (t - 0.08) / 0.17 * 0.65); // widen to max
+      else if (t < 0.6) hw = this.bodyWidth * (1 - (t - 0.25) / 0.35 * 0.25);     // gentle taper
+      else hw = this.bodyWidth * 0.75 * Math.pow(1 - (t - 0.6) / 0.4, 1.5);       // tail taper
+      widths[i] = Math.max(hw, 0.15);
+    }
+
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
     ctx.scale(vs, vs);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, this.len * 0.45, this.bodyWidth, 0, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
 
-    // Belly highlight
-    ctx.beginPath();
-    ctx.ellipse(this.len * 0.05, this.bodyWidth * 0.15, this.len * 0.25, this.bodyWidth * 0.5, 0, 0, Math.PI * 2);
-    ctx.fillStyle = this.bellyColor;
-    ctx.globalAlpha = 0.3;
-    ctx.fill();
-    ctx.globalAlpha = 1;
+    // Compute perpendiculars and outline points
+    const rightX = new Array(segs + 1), rightY = new Array(segs + 1);
+    const leftX = new Array(segs + 1), leftY = new Array(segs + 1);
+    for (let i = 0; i <= segs; i++) {
+      let nx, ny;
+      if (i === 0) { nx = -(spineY[1] - spineY[0]); ny = spineX[1] - spineX[0]; }
+      else if (i === segs) { nx = -(spineY[i] - spineY[i-1]); ny = spineX[i] - spineX[i-1]; }
+      else { nx = -(spineY[i+1] - spineY[i-1]); ny = spineX[i+1] - spineX[i-1]; }
+      const nLen = Math.sqrt(nx * nx + ny * ny) || 1;
+      nx /= nLen; ny /= nLen;
+      rightX[i] = spineX[i] + nx * widths[i];
+      rightY[i] = spineY[i] + ny * widths[i];
+      leftX[i] = spineX[i] - nx * widths[i];
+      leftY[i] = spineY[i] - ny * widths[i];
+    }
 
-    // Tail fin - forked
-    const tailWiggle = Math.sin(Date.now() * 0.01 + this.x) * 0.2 * this.speed;
+    // Smooth body outline using quadratic curves through midpoints
     ctx.beginPath();
-    ctx.moveTo(-this.len * 0.4, 0);
-    ctx.lineTo(-this.len * 0.65, (-this.bodyWidth * 0.8 + tailWiggle));
-    ctx.lineTo(-this.len * 0.5, 0);
-    ctx.lineTo(-this.len * 0.65, (this.bodyWidth * 0.8 + tailWiggle));
+    ctx.moveTo(spineX[0], spineY[0]); // nose tip
+    // Right side (head to tail)
+    ctx.lineTo(rightX[0], rightY[0]);
+    for (let i = 0; i < segs; i++) {
+      const mx = (rightX[i] + rightX[i+1]) * 0.5;
+      const my = (rightY[i] + rightY[i+1]) * 0.5;
+      ctx.quadraticCurveTo(rightX[i], rightY[i], mx, my);
+    }
+    ctx.lineTo(rightX[segs], rightY[segs]);
+    ctx.lineTo(spineX[segs], spineY[segs]); // tail tip
+    // Left side (tail back to head)
+    ctx.lineTo(leftX[segs], leftY[segs]);
+    for (let i = segs; i > 0; i--) {
+      const mx = (leftX[i] + leftX[i-1]) * 0.5;
+      const my = (leftY[i] + leftY[i-1]) * 0.5;
+      ctx.quadraticCurveTo(leftX[i], leftY[i], mx, my);
+    }
+    ctx.lineTo(leftX[0], leftY[0]);
     ctx.closePath();
     ctx.fillStyle = this.color;
-    ctx.globalAlpha = 0.7;
+    ctx.fill();
+
+    // Dorsal stripe - lighter ridge down the spine
+    ctx.beginPath();
+    ctx.moveTo(spineX[1], spineY[1]);
+    for (let i = 2; i < segs - 1; i++) {
+      const mx = (spineX[i] + spineX[i+1]) * 0.5;
+      const my = (spineY[i] + spineY[i+1]) * 0.5;
+      ctx.quadraticCurveTo(spineX[i], spineY[i], mx, my);
+    }
+    ctx.strokeStyle = this.bellyColor;
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = this.bodyWidth * 0.35;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Caudal (tail) fin - V-shape that follows the last segment's bend
+    const tsi = segs;
+    const tailDir = Math.atan2(spineY[tsi] - spineY[tsi-1], spineX[tsi] - spineX[tsi-1]);
+    const tailSpread = this.bodyWidth * 1.6;
+    const tailLen = totalLen * 0.2;
+    const tCos = Math.cos(tailDir), tSin = Math.sin(tailDir);
+    const tPx = -tSin, tPy = tCos; // perpendicular
+    ctx.beginPath();
+    ctx.moveTo(spineX[tsi], spineY[tsi]);
+    // Upper lobe
+    ctx.quadraticCurveTo(
+      spineX[tsi] + tCos * tailLen * 0.5 + tPx * tailSpread * 0.5,
+      spineY[tsi] + tSin * tailLen * 0.5 + tPy * tailSpread * 0.5,
+      spineX[tsi] + tCos * tailLen + tPx * tailSpread,
+      spineY[tsi] + tSin * tailLen + tPy * tailSpread
+    );
+    ctx.lineTo(spineX[tsi] + tCos * tailLen * 0.3, spineY[tsi] + tSin * tailLen * 0.3);
+    // Lower lobe
+    ctx.quadraticCurveTo(
+      spineX[tsi] + tCos * tailLen * 0.5 - tPx * tailSpread * 0.5,
+      spineY[tsi] + tSin * tailLen * 0.5 - tPy * tailSpread * 0.5,
+      spineX[tsi] + tCos * tailLen - tPx * tailSpread,
+      spineY[tsi] + tSin * tailLen - tPy * tailSpread
+    );
+    ctx.closePath();
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = 0.55;
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // Eye
-    ctx.beginPath();
-    ctx.arc(this.len * 0.25, -this.bodyWidth * 0.15, this.len * 0.06, 0, Math.PI * 2);
-    ctx.fillStyle = '#111';
-    ctx.fill();
+    // Pectoral fins - angled back from the widest part of the body
+    const pIdx = Math.round(segs * 0.28);
+    const finLen = totalLen * 0.16;
+    for (const side of [-1, 1]) {
+      const bx = side === 1 ? rightX[pIdx] : leftX[pIdx];
+      const by = side === 1 ? rightY[pIdx] : leftY[pIdx];
+      const bodyDir = Math.atan2(spineY[pIdx] - spineY[pIdx+1], spineX[pIdx] - spineX[pIdx+1]);
+      const finDir = bodyDir + side * 0.7;
+      const tipX = bx + Math.cos(finDir) * finLen;
+      const tipY = by + Math.sin(finDir) * finLen;
+      const endX = bx + Math.cos(bodyDir) * finLen * 0.4;
+      const endY = by + Math.sin(bodyDir) * finLen * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.quadraticCurveTo(tipX, tipY, endX, endY);
+      ctx.closePath();
+      ctx.fillStyle = this.color;
+      ctx.globalAlpha = 0.35;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Eyes - two dots near head, each side of the spine
+    const eIdx = Math.round(segs * 0.12);
+    const eyeR = Math.max(totalLen * 0.03, 0.4);
+    const eyeOff = widths[eIdx] * 0.5;
+    for (const side of [-1, 1]) {
+      const enx = -(spineY[eIdx+1] - spineY[eIdx]);
+      const eny = spineX[eIdx+1] - spineX[eIdx];
+      const eLen = Math.sqrt(enx * enx + eny * eny) || 1;
+      ctx.beginPath();
+      ctx.arc(
+        spineX[eIdx] + (enx / eLen) * eyeOff * side,
+        spineY[eIdx] + (eny / eLen) * eyeOff * side,
+        eyeR, 0, Math.PI * 2
+      );
+      ctx.fillStyle = '#222';
+      ctx.fill();
+    }
 
     ctx.restore();
   }
@@ -834,7 +997,7 @@ const schoolColors = [
   { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
   { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
 ];
-const fishCount = Math.max(60, Math.floor((w * h) / 2750));
+const fishCount = Math.max(25, Math.floor((w * h) / 8000));
 const fish = [];
 for (let i = 0; i < fishCount; i++) {
   const f = new Fish();
@@ -855,6 +1018,60 @@ for (let i = 0; i < 15; i++) {
     elongation: 0.5 + Math.random() * 0.5,
     angle: Math.random() * Math.PI,
   });
+}
+
+// Reef structures - partially submerged obstacles
+// Each reef has an irregular outline generated from noisy radius samples
+function makeReef(x, y) {
+  const baseR = 25 + Math.random() * 35; // underwater footprint radius
+  const crownR = baseR * (0.45 + Math.random() * 0.2); // above-water is smaller
+  const crownOffX = (Math.random() - 0.5) * baseR * 0.3; // crown offset from center
+  const crownOffY = (Math.random() - 0.5) * baseR * 0.3;
+  const verts = 10 + Math.floor(Math.random() * 6); // outline complexity
+  const seed = Math.random() * 1000;
+
+  // Generate irregular outline points for base and crown
+  const baseShape = [];
+  const crownShape = [];
+  for (let i = 0; i < verts; i++) {
+    const a = (i / verts) * Math.PI * 2;
+    // Organic noise: two octaves of sine at irrational frequencies
+    const n1 = Math.sin(seed + i * 2.37) * 0.25;
+    const n2 = Math.sin(seed * 1.7 + i * 4.13) * 0.12;
+    const br = baseR * (0.8 + n1 + n2);
+    baseShape.push({ x: Math.cos(a) * br, y: Math.sin(a) * br });
+    const cr = crownR * (0.75 + n1 * 0.8 + n2 * 0.6);
+    crownShape.push({ x: crownOffX + Math.cos(a) * cr, y: crownOffY + Math.sin(a) * cr });
+  }
+
+  // Color palette - dark wet rock tones
+  const g = 30 + Math.floor(Math.random() * 25);
+  const baseColor = `rgb(${g - 5}, ${g}, ${g + 8})`;
+  const crownColor = `rgb(${g + 25}, ${g + 22}, ${g + 15})`;
+  const rimColor = `rgba(${g + 50}, ${g + 45}, ${g + 35}, 0.6)`;
+
+  return {
+    x, y, baseR, crownR, crownOffX, crownOffY,
+    baseShape, crownShape, baseColor, crownColor, rimColor,
+    // Avoidance radius: fish stay outside this circle
+    avoidR: baseR * 0.85,
+  };
+}
+
+const reefs = [];
+const reefCount = Math.max(2, Math.floor(Math.sqrt(w * h) / 200));
+for (let i = 0; i < reefCount; i++) {
+  // Place reefs away from edges and away from each other
+  let rx, ry, tries = 0;
+  do {
+    rx = w * 0.15 + Math.random() * w * 0.7;
+    ry = h * 0.15 + Math.random() * h * 0.7;
+    tries++;
+  } while (tries < 20 && reefs.some(r => {
+    const dx = r.x - rx, dy = r.y - ry;
+    return Math.sqrt(dx * dx + dy * dy) < r.baseR + 80;
+  }));
+  reefs.push(makeReef(rx, ry));
 }
 
 // Seaweed fronds around perimeter
@@ -1095,6 +1312,33 @@ function draw(time) {
     ctx.restore();
   }
 
+  // Reef structures - underwater base (drawn under fish)
+  for (const rf of reefs) {
+    ctx.save();
+    ctx.translate(rf.x, rf.y);
+    // Underwater shadow/glow
+    const shadowGrad = ctx.createRadialGradient(0, 0, rf.baseR * 0.3, 0, 0, rf.baseR * 1.3);
+    shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.15)');
+    shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = shadowGrad;
+    ctx.fillRect(-rf.baseR * 1.5, -rf.baseR * 1.5, rf.baseR * 3, rf.baseR * 3);
+    // Submerged rock base - irregular outline
+    ctx.beginPath();
+    ctx.moveTo(rf.baseShape[0].x, rf.baseShape[0].y);
+    for (let i = 0; i < rf.baseShape.length; i++) {
+      const next = rf.baseShape[(i + 1) % rf.baseShape.length];
+      const mx = (rf.baseShape[i].x + next.x) * 0.5;
+      const my = (rf.baseShape[i].y + next.y) * 0.5;
+      ctx.quadraticCurveTo(rf.baseShape[i].x, rf.baseShape[i].y, mx, my);
+    }
+    ctx.closePath();
+    ctx.fillStyle = rf.baseColor;
+    ctx.globalAlpha = 0.6;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
   // Plants
   for (const p of plants) {
     p.update(dt, time);
@@ -1318,6 +1562,40 @@ function draw(time) {
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
 
+
+  // Reef structures - above-water crown (drawn over fish and water effects)
+  for (const rf of reefs) {
+    ctx.save();
+    ctx.translate(rf.x, rf.y);
+    // Crown shape - the dry rock poking out of the water
+    ctx.beginPath();
+    ctx.moveTo(rf.crownShape[0].x, rf.crownShape[0].y);
+    for (let i = 0; i < rf.crownShape.length; i++) {
+      const next = rf.crownShape[(i + 1) % rf.crownShape.length];
+      const mx = (rf.crownShape[i].x + next.x) * 0.5;
+      const my = (rf.crownShape[i].y + next.y) * 0.5;
+      ctx.quadraticCurveTo(rf.crownShape[i].x, rf.crownShape[i].y, mx, my);
+    }
+    ctx.closePath();
+    ctx.fillStyle = rf.crownColor;
+    ctx.fill();
+    // Rim highlight - wet edge where water meets rock
+    ctx.strokeStyle = rf.rimColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Surface texture - a few speckles for barnacle/roughness feel
+    for (let i = 0; i < rf.crownShape.length; i++) {
+      const p = rf.crownShape[i];
+      const speckR = 1 + Math.sin(i * 7.3 + rf.x) * 0.8;
+      if (speckR > 0.5) {
+        ctx.beginPath();
+        ctx.arc(p.x * 0.6, p.y * 0.6, speckR, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
 
   // DOF haze
   blurCanvas.width = canvas.width;
