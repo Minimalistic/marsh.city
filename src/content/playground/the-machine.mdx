@@ -908,9 +908,10 @@ flowchart TD
     });
     var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
 
-    // hide all nodes and edge labels
+    // hide all nodes, clusters, and edge labels
     var allNodes = svg.querySelectorAll('.node');
     allNodes.forEach(function(n) { n.style.opacity = '0'; });
+    svg.querySelectorAll('.cluster').forEach(function(c) { c.style.opacity = '0'; });
     edgeLabels.forEach(function(l) { l.style.opacity = '0'; });
 
     // prep edges: thicken strokes for visible animation, dash-hide, save arrowheads
@@ -923,11 +924,17 @@ flowchart TD
       e.removeAttribute('marker-end');
     });
 
-    // build sequential step list from node order
+    // build sequential step list from node order (includes cluster names)
     var steps = [];
     order.forEach(function(name) {
       var node = svg.querySelector('.node[id*="flowchart-' + name + '-"]');
-      if (node) steps.push({ type: 'node', el: node });
+      if (node) {
+        steps.push({ type: 'node', el: node });
+      } else {
+        // try matching a cluster (subgraph) by ID
+        var cluster = svg.querySelector('.cluster[id*="' + name + '"]');
+        if (cluster) steps.push({ type: 'cluster', el: cluster });
+      }
       var nodeEdges = [];
       edges.forEach(function(edge, i) {
         var did = edge.getAttribute('data-id') || '';
@@ -947,12 +954,12 @@ flowchart TD
       // match the edge's stroke color for all particles
       var edgeColor = getComputedStyle(pathEl).stroke || '#00ffcc';
 
-      // leading glow dot — travels the full path length
+      // leading glow dot — travels the full path length, CRT phosphor bloom
       var lead = document.createElementNS(ns, 'circle');
-      lead.setAttribute('r', '4');
+      lead.setAttribute('r', '5');
       lead.setAttribute('fill', edgeColor);
       lead.setAttribute('opacity', '1');
-      lead.style.filter = 'drop-shadow(0 0 6px ' + edgeColor + ') drop-shadow(0 0 12px ' + edgeColor + ')';
+      lead.style.filter = 'drop-shadow(0 0 8px ' + edgeColor + ') drop-shadow(0 0 16px ' + edgeColor + ') drop-shadow(0 0 24px ' + edgeColor + ')';
       svgEl.appendChild(lead);
 
       var leadStart = performance.now();
@@ -968,11 +975,13 @@ flowchart TD
         if (t < 1) {
           requestAnimationFrame(moveLead);
         } else {
-          // fade out the leading dot
+          // phosphor fade — bloom larger as it decays
           var fadeStart = performance.now();
           function fadeLead(now2) {
-            var ft = Math.min((now2 - fadeStart) / 200, 1);
-            lead.setAttribute('opacity', String(1 - ft));
+            var ft = Math.min((now2 - fadeStart) / 400, 1);
+            var decay = 1 - Math.pow(1 - ft, 2);
+            lead.setAttribute('opacity', String(1 - decay));
+            lead.setAttribute('r', String(5 + 8 * decay));
             if (ft < 1) requestAnimationFrame(fadeLead);
             else lead.remove();
           }
@@ -981,8 +990,8 @@ flowchart TD
       }
       requestAnimationFrame(moveLead);
 
-      // trail particles — shed from the leading dot at intervals
-      var particleCount = 10;
+      // trail particles — phosphor persistence, blurry glow that lingers
+      var particleCount = 12;
       var interval = duration / particleCount;
       for (var p = 0; p < particleCount; p++) {
         (function(idx) {
@@ -992,26 +1001,27 @@ flowchart TD
             var circle = document.createElementNS(ns, 'circle');
             circle.setAttribute('cx', pt.x);
             circle.setAttribute('cy', pt.y);
-            circle.setAttribute('r', '2');
+            circle.setAttribute('r', '3.5');
             circle.setAttribute('fill', edgeColor);
-            circle.setAttribute('opacity', '0.8');
-            circle.style.filter = 'drop-shadow(0 0 3px ' + edgeColor + ')';
+            circle.setAttribute('opacity', '0.9');
+            circle.style.filter = 'drop-shadow(0 0 6px ' + edgeColor + ') drop-shadow(0 0 14px ' + edgeColor + ')';
             svgEl.appendChild(circle);
 
             var angle = Math.random() * Math.PI * 2;
-            var drift = 6 + Math.random() * 10;
+            var drift = 4 + Math.random() * 6;
             var dx = Math.cos(angle) * drift;
             var dy = Math.sin(angle) * drift;
             var startTime = performance.now();
-            var fadeMs = 350 + Math.random() * 250;
+            var fadeMs = 500 + Math.random() * 400;
 
             function tick(now) {
               var t = Math.min((now - startTime) / fadeMs, 1);
-              var ease = 1 - (1 - t) * (1 - t);
+              // slow ease-out for phosphor decay
+              var ease = 1 - Math.pow(1 - t, 3);
               circle.setAttribute('cx', pt.x + dx * ease);
               circle.setAttribute('cy', pt.y + dy * ease);
-              circle.setAttribute('opacity', String(0.8 * (1 - ease)));
-              circle.setAttribute('r', String(2 * (1 - ease * 0.5)));
+              circle.setAttribute('opacity', String(0.9 * (1 - ease)));
+              circle.setAttribute('r', String(3.5 + 2 * ease));
               if (t < 1) {
                 requestAnimationFrame(tick);
               } else {
@@ -1035,7 +1045,11 @@ flowchart TD
         return;
       }
       var step = steps[i];
-      if (step.type === 'node') {
+      if (step.type === 'cluster') {
+        step.el.style.transition = 'opacity 0.4s ease-out';
+        step.el.style.opacity = '1';
+        setTimeout(function() { runStep(i + 1); }, 350);
+      } else if (step.type === 'node') {
         step.el.style.transition = 'opacity 0.35s ease-out';
         step.el.style.opacity = '1';
         // scale pop on inner shape — skip polygons (diamonds rotate weirdly)
@@ -1140,7 +1154,8 @@ flowchart TD
 
     var syntax = buildSyntax(sys);
     var order = [];
-    sys.layers.forEach(function(layer) {
+    sys.layers.forEach(function(layer, li) {
+      order.push('sg' + li);
       layer.nodes.forEach(function(n) { order.push(n.id); });
     });
 
