@@ -16,7 +16,6 @@ description: Real-world system architectures, animated and explained - a differe
 <div class="machine-controls">
   <button id="machine-shuffle" type="button" aria-label="Show a different system">shuffle</button>
   <span id="machine-counter" class="meta"></span>
-  <span class="machine-style-tag">render: <span id="machine-style"></span></span>
 </div>
 
 <div class="mermaid-animated" id="machine-wrapper">
@@ -84,17 +83,7 @@ flowchart TD
 
 <p>The animation system walks the SVG after mermaid renders it. Nodes start invisible, then fade in one by one. Edges draw themselves using <code>stroke-dashoffset</code> transitions. Arrowheads are hidden until their edge finishes drawing. The whole sequence chains through <code>setTimeout</code> callbacks - each step triggers the next.</p>
 
-<p>Visual style is randomized per diagram. Some render as clean schematics, others get mermaid's <code>handDrawn</code> mode which uses <a href="https://roughjs.com">rough.js</a> under the hood for a sketched aesthetic. The style is injected as a mermaid directive before compilation.</p>
-
-<pre class="machine-code"><code>{`// 50/50 chance of hand-drawn per diagram
-var style = Math.random() > 0.5 ? 'handDrawn' : 'classic';
-
-// re-initialize mermaid with the chosen look
-// handDrawn activates rough.js for a sketchy aesthetic
-mermaid.initialize({ startOnLoad: false, look: style });
-mermaid.render(id, syntax);`}</code></pre>
-
-<p>10 systems. 2 visual styles. Animated on scroll, instant on shuffle. All generated from ~500 lines of data.</p>
+<p>10 systems. Animated on scroll, instant on shuffle. All generated from ~500 lines of data.</p>
 </div>
 </div>
 
@@ -274,16 +263,6 @@ mermaid.render(id, syntax);`}</code></pre>
     font-family: var(--font-mono);
     font-size: 0.75rem;
     color: #5a7a8a;
-  }
-  .machine-style-tag {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: #5a7a8a;
-    opacity: 0.7;
-  }
-  #machine-style {
-    color: #ff0055;
-    text-shadow: 0 0 6px rgba(255, 0, 85, 0.4);
   }
   .machine-desc {
     font-size: 0.9rem;
@@ -902,9 +881,7 @@ mermaid.render(id, syntax);`}</code></pre>
     var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
 
     // hide all nodes and edge labels
-    // use both selectors — .node works in schematic, [id*=flowchart] in hand-drawn
     var allNodes = svg.querySelectorAll('.node');
-    if (allNodes.length === 0) allNodes = svg.querySelectorAll('g[id*="flowchart-"]');
     allNodes.forEach(function(n) { n.style.opacity = '0'; });
     edgeLabels.forEach(function(l) { l.style.opacity = '0'; });
 
@@ -921,8 +898,7 @@ mermaid.render(id, syntax);`}</code></pre>
     // build sequential step list from node order
     var steps = [];
     order.forEach(function(name) {
-      // match node by ID pattern — works in both schematic (.node class) and hand-drawn
-      var node = svg.querySelector('[id*="-flowchart-' + name + '-"]');
+      var node = svg.querySelector('.node[id*="flowchart-' + name + '-"]');
       if (node) steps.push({ type: 'node', el: node });
       var nodeEdges = [];
       edges.forEach(function(edge, i) {
@@ -1119,17 +1095,9 @@ mermaid.render(id, syntax);`}</code></pre>
 
     wrapper.classList.remove('mermaid--visible');
 
-    // randomly pick a visual style per diagram
-    var styles = ['classic', 'handDrawn'];
-    var style = styles[Math.floor(Math.random() * styles.length)];
-    var styleLabel = document.getElementById('machine-style');
-    if (styleLabel) styleLabel.textContent = style === 'handDrawn' ? 'hand-drawn' : 'schematic';
-
-    // re-initialize mermaid with the chosen look — directives don't reliably
-    // activate rough.js, but the look config in initialize() does
     window.mermaid.initialize({
       startOnLoad: false,
-      look: style,
+      look: 'classic',
       theme: 'dark',
       themeVariables: {
         primaryColor: '#0d2b28',
@@ -1160,7 +1128,7 @@ mermaid.render(id, syntax);`}</code></pre>
 
       // strip diagonal hachure fill lines from node shapes in both modes
       if (svgEl) {
-        var allNodes = svgEl.querySelectorAll('.node, g[id*="flowchart-"]');
+        var allNodes = svgEl.querySelectorAll('.node');
         allNodes.forEach(function(node) {
           var innerGroups = node.querySelectorAll('g');
           innerGroups.forEach(function(g) {
