@@ -42,8 +42,10 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
 #toolbar.hidden, .pool-fs-btn.hidden { opacity: 0; pointer-events: none; }
 #toolbar, .pool-fs-btn { transition: opacity 0.5s; }
-#pool-container:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; border-radius: 0; }
-#pool-container:fullscreen canvas { width: 100%; height: 100%; }
+#pool-container:fullscreen,
+#pool-container:-webkit-full-screen { width: 100vw !important; height: 100vh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; }
+#pool-container:fullscreen canvas,
+#pool-container:-webkit-full-screen canvas { width: 100% !important; height: 100% !important; }
 </style>
 
 <script type="module">
@@ -194,20 +196,15 @@ function showUI() {
 poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
 document.addEventListener('fullscreenchange', () => {
-  if (document.fullscreenElement) {
-    // Wait for layout to settle, then resize and rescale everything
+  // Multiple resize attempts to catch layout settling
+  for (const delay of [50, 150, 300]) {
     setTimeout(() => {
       const oldW = w, oldH = h;
       ({ w, h } = resize());
-      const sx = w / oldW, sy = h / oldH;
-      for (const r of rocks) { r.x *= sx; r.y *= sy; r.size *= Math.min(sx, sy); }
-      for (const p of plants) {
-        p.x *= sx; p.y *= sy; p.len *= Math.min(sx, sy);
-        for (const s of p.segs) { s.x *= sx; s.y *= sy; }
-      }
-      for (const d of debris) { d.x *= sx; d.y *= sy; }
-      for (const f of fish) { f.x *= sx; f.y *= sy; }
-    }, 150);
+      if (w !== oldW || h !== oldH) rescaleAll(oldW, oldH);
+    }, delay);
+  }
+  if (document.fullscreenElement) {
     hideTimer = setTimeout(() => {
       toolbar.classList.add('hidden');
       fsBtn.classList.add('hidden');
@@ -216,18 +213,6 @@ document.addEventListener('fullscreenchange', () => {
     toolbar.classList.remove('hidden');
     fsBtn.classList.remove('hidden');
     clearTimeout(hideTimer);
-    setTimeout(() => {
-      const oldW = w, oldH = h;
-      ({ w, h } = resize());
-      const sx = w / oldW, sy = h / oldH;
-      for (const r of rocks) { r.x *= sx; r.y *= sy; r.size *= Math.min(sx, sy); }
-      for (const p of plants) {
-        p.x *= sx; p.y *= sy; p.len *= Math.min(sx, sy);
-        for (const s of p.segs) { s.x *= sx; s.y *= sy; }
-      }
-      for (const d of debris) { d.x *= sx; d.y *= sy; }
-      for (const f of fish) { f.x *= sx; f.y *= sy; }
-    }, 150);
   }
 });
 
@@ -282,10 +267,7 @@ function resize() {
 }
 
 let { w, h } = resize();
-window.addEventListener('resize', () => {
-  const oldW = w, oldH = h;
-  ({ w, h } = resize());
-  // Scale perimeter elements to new viewport
+function rescaleAll(oldW, oldH) {
   const sx = w / oldW, sy = h / oldH;
   for (const r of rocks) { r.x *= sx; r.y *= sy; }
   for (const p of plants) {
@@ -293,6 +275,12 @@ window.addEventListener('resize', () => {
     for (const s of p.segs) { s.x *= sx; s.y *= sy; }
   }
   for (const d of debris) { d.x *= sx; d.y *= sy; }
+  for (const f of fish) { f.x *= sx; f.y *= sy; }
+}
+window.addEventListener('resize', () => {
+  const oldW = w, oldH = h;
+  ({ w, h } = resize());
+  rescaleAll(oldW, oldH);
 });
 
 const blurCanvas = document.createElement('canvas');
