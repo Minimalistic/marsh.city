@@ -59,18 +59,21 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 .pool-hint.show { opacity: 1; }
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
 .pool-fs-close { position: absolute; top: 8px; left: 8px; z-index: 10; }
+.fake-fullscreen #toolbar { top: calc(8px + env(safe-area-inset-top, 0px)) !important; right: calc(8px + env(safe-area-inset-right, 0px)) !important; }
+.fake-fullscreen .pool-fs-close { top: calc(8px + env(safe-area-inset-top, 0px)); left: calc(8px + env(safe-area-inset-left, 0px)); }
+.fake-fullscreen .pool-fs-btn { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); right: calc(8px + env(safe-area-inset-right, 0px)); }
 #toolbar.hidden, .pool-fs-btn.hidden, .pool-fs-close.hidden { opacity: 0; pointer-events: none; }
 #toolbar, .pool-fs-btn, .pool-fs-close { transition: opacity 0.5s; }
 #pool-container:fullscreen,
 #pool-container:-webkit-full-screen,
-#pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; }
+#pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; background: #1a3a4a !important; }
 #pool-container:fullscreen canvas,
 #pool-container:-webkit-full-screen canvas,
 #pool-container.fake-fullscreen canvas { width: 100% !important; height: 100% !important; }
 .fake-fullscreen ~ *, body:has(.fake-fullscreen) > *:not(script):not(style):not(link) { visibility: hidden !important; }
 .fake-fullscreen, .fake-fullscreen * { visibility: visible !important; }
 body:has(.fake-fullscreen) .site-foot-foliage { display: none !important; }
-body:has(.fake-fullscreen) { background: #000 !important; }
+body:has(.fake-fullscreen) { background: #1a3a4a !important; overflow: hidden !important; }
 </style>
 
 <script type="module">
@@ -479,11 +482,16 @@ function rescaleAll(oldW, oldH) {
   }
   while (rocks.length > targetRocks && rocks.length > 15) rocks.pop();
 }
-window.addEventListener('resize', () => {
+function onResize() {
   const oldW = w, oldH = h;
   ({ w, h } = resize());
-  rescaleAll(oldW, oldH);
-});
+  if (w !== oldW || h !== oldH) rescaleAll(oldW, oldH);
+}
+window.addEventListener('resize', onResize);
+// visualViewport fires on iOS when URL bar shows/hides
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', onResize);
+}
 
 const blurCanvas = document.createElement('canvas');
 const blurCtx = blurCanvas.getContext('2d');
