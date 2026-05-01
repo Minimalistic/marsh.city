@@ -1056,10 +1056,32 @@ mermaid.render(id, syntax);`}</code></pre>
       var svgEl = container.querySelector('svg');
       if (svgEl) {
         svgEl.style.background = 'transparent';
-        // also nuke any rect mermaid uses as a background fill
         var bgRect = svgEl.querySelector('rect.er');
         if (bgRect) bgRect.setAttribute('fill', 'transparent');
       }
+
+      // in hand-drawn mode, rough.js fills shapes with diagonal hachure lines.
+      // strip them — keep only the outline path (last path in each shape group)
+      if (style === 'handDrawn' && svgEl) {
+        var nodes = svgEl.querySelectorAll('.node, g[id*="flowchart-"]');
+        nodes.forEach(function(node) {
+          // each node's inner shape group has hachure paths then the outline last
+          var innerGroups = node.querySelectorAll('g');
+          innerGroups.forEach(function(g) {
+            var paths = g.querySelectorAll('path');
+            if (paths.length > 1) {
+              for (var pi = 0; pi < paths.length - 1; pi++) {
+                // hachure fills have fill:none and are before the outline
+                if (paths[pi].getAttribute('fill') === 'none' ||
+                    !paths[pi].getAttribute('fill')) {
+                  paths[pi].style.display = 'none';
+                }
+              }
+            }
+          });
+        });
+      }
+
       setupAnimation(wrapper, order, sys, immediate);
     });
   }
