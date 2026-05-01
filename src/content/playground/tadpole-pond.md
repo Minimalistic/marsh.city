@@ -840,6 +840,24 @@ function drawPond(time) {
   }
   ctx.globalAlpha = 1;
 
+  // Hazy center blur - brighten and soften the middle area
+  ctx.save();
+  ctx.filter = 'blur(1.5px)';
+  const hazeGrad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.min(w, h) * 0.4);
+  hazeGrad.addColorStop(0, 'rgba(180, 200, 160, 0.06)');
+  hazeGrad.addColorStop(1, 'rgba(180, 200, 160, 0)');
+  ctx.fillStyle = hazeGrad;
+  ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+
+  // Vignette - darken edges, brighten center
+  const vigGrad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.2, w / 2, h / 2, Math.max(w, h) * 0.7);
+  vigGrad.addColorStop(0, 'rgba(60, 80, 50, 0.0)');
+  vigGrad.addColorStop(0.5, 'rgba(10, 20, 10, 0.0)');
+  vigGrad.addColorStop(1, 'rgba(5, 10, 5, 0.45)');
+  ctx.fillStyle = vigGrad;
+  ctx.fillRect(0, 0, w, h);
+
   requestAnimationFrame(drawPond);
 }
 
