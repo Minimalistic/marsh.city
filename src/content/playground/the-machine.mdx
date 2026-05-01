@@ -89,12 +89,10 @@ flowchart TD
 <pre class="machine-code"><code>{`// 50/50 chance of hand-drawn per diagram
 var style = Math.random() > 0.5 ? 'handDrawn' : 'classic';
 
-// injected as a mermaid config directive
-var directive = style === 'handDrawn'
-  ? '%%{init: {"look": "handDrawn"}}%%\\n'
-  : '';
-
-mermaid.render(id, directive + syntax);`}</code></pre>
+// re-initialize mermaid with the chosen look
+// handDrawn activates rough.js for a sketchy aesthetic
+mermaid.initialize({ startOnLoad: false, look: style });
+mermaid.render(id, syntax);`}</code></pre>
 
 <p>10 systems. 2 visual styles. Animated on scroll, instant on shuffle. All generated from ~500 lines of data.</p>
 </div>
@@ -766,15 +764,25 @@ mermaid.render(id, directive + syntax);`}</code></pre>
     // same sequential approach as Base.astro: node fades in → edges draw →
     // labels appear → next node. JS-driven transitions, no CSS keyframes.
 
-    var edges = svg.querySelectorAll('.edgePaths > path[data-id]');
+    // select only actual edge paths (not arrowhead markers)
+    var allEdgePaths = svg.querySelectorAll('.edgePaths path');
+    var edges = [];
+    allEdgePaths.forEach(function(p) {
+      if (p.classList.contains('arrowMarkerPath')) return;
+      edges.push(p);
+    });
     var edgeLabels = svg.querySelectorAll('.edgeLabels > .edgeLabel');
 
     // hide all nodes and edge labels
-    svg.querySelectorAll('.node').forEach(function(n) { n.style.opacity = '0'; });
+    // use both selectors — .node works in schematic, [id*=flowchart] in hand-drawn
+    var allNodes = svg.querySelectorAll('.node');
+    if (allNodes.length === 0) allNodes = svg.querySelectorAll('g[id*="flowchart-"]');
+    allNodes.forEach(function(n) { n.style.opacity = '0'; });
     edgeLabels.forEach(function(l) { l.style.opacity = '0'; });
 
-    // prep edges: dash-hide strokes, save and remove arrowhead markers
+    // prep edges: thicken strokes for visible animation, dash-hide, save arrowheads
     edges.forEach(function(e) {
+      e.style.strokeWidth = '2px';
       var len = e.getTotalLength();
       e.style.strokeDasharray = len;
       e.style.strokeDashoffset = len;
@@ -785,12 +793,15 @@ mermaid.render(id, directive + syntax);`}</code></pre>
     // build sequential step list from node order
     var steps = [];
     order.forEach(function(name) {
-      var node = svg.querySelector('.node[id*="-flowchart-' + name + '-"]');
+      // match node by ID pattern — works in both schematic (.node class) and hand-drawn
+      var node = svg.querySelector('[id*="-flowchart-' + name + '-"]');
       if (node) steps.push({ type: 'node', el: node });
       var nodeEdges = [];
       edges.forEach(function(edge, i) {
-        var parts = (edge.getAttribute('data-id') || '').split('_');
-        if (parts.length >= 3 && parts[1] === name) {
+        var did = edge.getAttribute('data-id') || '';
+        // data-id format: L_FROM_TO_0 — match source node after first underscore
+        var match = did.match(/^L_([^_]+)_/);
+        if (match && match[1] === name) {
           nodeEdges.push({ el: edge, label: edgeLabels[i] || null });
         }
       });
@@ -900,9 +911,19 @@ mermaid.render(id, directive + syntax);`}</code></pre>
     var styleLabel = document.getElementById('machine-style');
     if (styleLabel) styleLabel.textContent = style === 'handDrawn' ? 'hand-drawn' : 'schematic';
 
-    // inject style as a mermaid directive — avoids re-initializing the library
-    var directive = style === 'handDrawn' ? '%%{init: {"look": "handDrawn"}}%%\\n' : '';
-    var syntax = directive + buildSyntax(sys);
+    // re-initialize mermaid with the chosen look — directives don't reliably
+    // activate rough.js, but the look config in initialize() does
+    var isDark = document.documentElement.dataset.theme === 'dark';
+    window.mermaid.initialize({
+      startOnLoad: false,
+      look: style,
+      theme: isDark ? 'dark' : 'default',
+      themeVariables: isDark
+        ? { primaryColor: '#2d4a3e', primaryTextColor: '#e8e0d4', lineColor: '#5a7a6a' }
+        : { primaryColor: '#e8e0d4', primaryTextColor: '#2c2c2c', lineColor: '#5a7a6a' }
+    });
+
+    var syntax = buildSyntax(sys);
     var order = [];
     sys.layers.forEach(function(layer) {
       layer.nodes.forEach(function(n) { order.push(n.id); });
@@ -918,14 +939,7 @@ mermaid.render(id, directive + syntax);`}</code></pre>
   var s = document.createElement('script');
   s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
   s.onload = function() {
-    var isDark = document.documentElement.dataset.theme === 'dark';
-    window.mermaid.initialize({
-      startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
-      themeVariables: isDark
-        ? { primaryColor: '#2d4a3e', primaryTextColor: '#e8e0d4', lineColor: '#5a7a6a' }
-        : { primaryColor: '#e8e0d4', primaryTextColor: '#2c2c2c', lineColor: '#5a7a6a' }
-    });
+    window.mermaid.initialize({ startOnLoad: false });
     mermaidReady = true;
     render(false);
   };
