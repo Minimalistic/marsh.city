@@ -3,13 +3,44 @@ title: Tidepool
 description: Tiny fish schooling in a shallow tidepool. Watch the current shift.
 ---
 
-A rocky tidepool. Tiny silver fish school together, responding to the shifting current and each other. Tap to scatter them.
+A rocky tidepool. Tiny silver fish school together, responding to the shifting current and each other.
 
-<canvas id="pool" style="width:100%;aspect-ratio:16/9;border-radius:var(--radius);cursor:none;display:block;background:#0f1f2a;"></canvas>
+<div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
+<canvas id="pool" style="width:100%;height:100%;cursor:none;display:block;background:#0f1f2a;"></canvas>
+<div id="toolbar" style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:10;">
+  <button data-tool="observe" class="pool-tool active" title="Observe">👁</button>
+  <button data-tool="food" class="pool-tool" title="Drop food">🪱</button>
+  <button data-tool="rock" class="pool-tool" title="Drop rock">🪨</button>
+</div>
+</div>
+<style>
+.pool-tool {
+  width: 32px; height: 32px; border-radius: 6px; border: 1px solid rgba(150,180,200,0.3);
+  background: rgba(10,20,30,0.7); backdrop-filter: blur(4px); cursor: pointer;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+.pool-tool:hover { border-color: rgba(150,200,220,0.6); }
+.pool-tool.active { border-color: rgba(150,200,220,0.8); background: rgba(30,60,80,0.8); }
+</style>
 
 <script type="module">
 const canvas = document.getElementById('pool');
 const ctx = canvas.getContext('2d');
+
+// Tool selection
+let activeTool = 'observe';
+document.querySelectorAll('.pool-tool').forEach(btn => {
+  btn.addEventListener('click', e => {
+    document.querySelectorAll('.pool-tool').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTool = btn.dataset.tool;
+    canvas.style.cursor = activeTool === 'observe' ? 'none' : 'crosshair';
+  });
+});
+
+// Food particles that attract fish
+const foodPellets = [];
 
 function resize() {
   const rect = canvas.getBoundingClientRect();
@@ -52,7 +83,17 @@ canvas.addEventListener('mousedown', e => {
   e.preventDefault();
   mouse.down = true;
   const rect = canvas.getBoundingClientRect();
-  ripples.push({ x: e.clientX - rect.left, y: e.clientY - rect.top, radius: 3, maxRadius: 120, opacity: 0.5 });
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  if (activeTool === 'food') {
+    foodPellets.push({ x: mx, y: my, size: 2, life: 1, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
+  } else if (activeTool === 'rock') {
+    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 150, opacity: 0.7 });
+    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 80, opacity: 0.4 });
+  } else {
+    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120, opacity: 0.5 });
+  }
 });
 canvas.addEventListener('mouseup', () => { mouse.down = false; });
 
@@ -68,7 +109,15 @@ canvas.addEventListener('touchstart', e => {
   mouse.active = true;
   mouse.down = true;
   mouse.speed = 0;
-  ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 90, opacity: 0.4 });
+  if (activeTool === 'food') {
+    foodPellets.push({ x: mouse.x, y: mouse.y, size: 2, life: 1, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
+  } else if (activeTool === 'rock') {
+    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 150, opacity: 0.7 });
+    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 80, opacity: 0.4 });
+  } else {
+    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 90, opacity: 0.4 });
+  }
 }, { passive: false });
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
@@ -84,8 +133,9 @@ canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = f
 
 const ripples = [];
 
-// Tidal current - gentle drift that shifts direction
-const tide = { angle: 0, strength: 0.4, targetAngle: Math.random() * Math.PI * 2, targetStrength: 0.3 + Math.random() * 0.4 };
+// Wave current - oscillates back and forth like real tidepool wash
+const tide = { angle: 0, strength: 0 };
+const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
 // Debris particles
 const debris = [];
@@ -179,6 +229,27 @@ class Fish {
     // Tidal current - gentle drift, not a shove
     this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
+
+    // Food attraction - swim toward nearest pellet
+    let closestFood = null;
+    let closestFoodDist = 100;
+    for (const fp of foodPellets) {
+      const fdx = fp.x - this.x;
+      const fdy = fp.y - this.y;
+      const fd = Math.sqrt(fdx * fdx + fdy * fdy);
+      if (fd < closestFoodDist) { closestFood = fp; closestFoodDist = fd; }
+    }
+    if (closestFood) {
+      const fdx = closestFood.x - this.x;
+      const fdy = closestFood.y - this.y;
+      this.vx += (fdx / closestFoodDist) * 0.04;
+      this.vy += (fdy / closestFoodDist) * 0.04;
+      if (this.idle) { this.idle = false; this.idleTimer = 2; }
+      // Eat it when close enough
+      if (closestFoodDist < 6) {
+        closestFood.life = 0;
+      }
+    }
 
     // Mouse avoidance - dart away, not blast away
     if (mouse.active) {
@@ -319,7 +390,7 @@ const schoolColors = [
   { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
   { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
 ];
-const fishCount = Math.max(25, Math.floor((w * h) / 7000));
+const fishCount = Math.max(30, Math.floor((w * h) / 5500));
 const fish = [];
 for (let i = 0; i < fishCount; i++) {
   const f = new Fish();
@@ -476,24 +547,18 @@ for (let i = 0; i < 60; i++) {
 }
 
 let lastTime = 0;
-let tideShiftTimer = 0;
+let waveTime = 0;
 
 function draw(time) {
   const dt = Math.min((time - lastTime) / 1000, 0.05);
   lastTime = time;
 
-  // Update tide - slowly shifts direction
-  tideShiftTimer += dt;
-  if (tideShiftTimer > 8) {
-    tideShiftTimer = 0;
-    tide.targetAngle = Math.random() * Math.PI * 2;
-    tide.targetStrength = 0.3 + Math.random() * 0.4;
-  }
-  let angleDiff = tide.targetAngle - tide.angle;
-  while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-  while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-  tide.angle += angleDiff * 0.015;
-  tide.strength += (tide.targetStrength - tide.strength) * 0.02;
+  // Wave current - oscillates like water washing in and pulling back
+  waveTime += dt;
+  const waveCycle = Math.sin(waveTime * 0.4); // main wave ~15s full cycle
+  const secondaryWave = Math.sin(waveTime * 0.17) * 0.3; // slower undulation
+  tide.angle = waveBaseAngle + secondaryWave;
+  tide.strength = 0.3 + waveCycle * 0.35; // swings from -0.05 to 0.65
 
   // Clear - dark tidepool water
   const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
@@ -542,6 +607,23 @@ function draw(time) {
     ctx.beginPath();
     ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(100, 120, 130, ${d.opacity})`;
+    ctx.fill();
+  }
+
+  // Update and draw food pellets
+  for (let i = foodPellets.length - 1; i >= 0; i--) {
+    const fp = foodPellets[i];
+    fp.life -= dt * 0.08;
+    fp.vx *= 0.98;
+    fp.vy *= 0.98;
+    fp.vx += Math.cos(tide.angle) * tide.strength * 0.003;
+    fp.vy += Math.sin(tide.angle) * tide.strength * 0.003;
+    fp.x += fp.vx;
+    fp.y += fp.vy;
+    if (fp.life <= 0) { foodPellets.splice(i, 1); continue; }
+    ctx.beginPath();
+    ctx.arc(fp.x, fp.y, fp.size * fp.life, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180, 130, 60, ${0.7 * fp.life})`;
     ctx.fill();
   }
 
