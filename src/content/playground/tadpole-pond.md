@@ -637,25 +637,131 @@ for (let i = 0; i < 30; i++) {
   });
 }
 
-// Pond plants - scattered around perimeter, growing inward
+// Pond plants - delicate fractal fronds around the perimeter
+class Frond {
+  constructor(x, y, growAngle) {
+    this.x = x;
+    this.y = y;
+    this.growAngle = growAngle;
+    this.len = 30 + Math.random() * 50;
+    this.branches = 4 + Math.floor(Math.random() * 5);
+    this.phase = Math.random() * Math.PI * 2;
+    this.branchSide = Math.random() < 0.5 ? 1 : -1;
+    // Segment points for physics displacement
+    this.segCount = 6;
+    this.segs = [];
+    for (let i = 0; i <= this.segCount; i++) {
+      const t = i / this.segCount;
+      this.segs.push({
+        x: x + Math.cos(growAngle) * t * this.len,
+        y: y + Math.sin(growAngle) * t * this.len,
+        vx: 0, vy: 0,
+        restX: x + Math.cos(growAngle) * t * this.len,
+        restY: y + Math.sin(growAngle) * t * this.len,
+      });
+    }
+  }
+
+  displace(fx, fy, radius, strength) {
+    for (let i = 1; i < this.segs.length; i++) {
+      const s = this.segs[i];
+      const dx = s.x - fx;
+      const dy = s.y - fy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < radius && dist > 0.1) {
+        const force = strength * (1 - dist / radius) * (i / this.segs.length);
+        s.vx += (dx / dist) * force;
+        s.vy += (dy / dist) * force;
+      }
+    }
+  }
+
+  update(dt, time) {
+    // Gentle sway
+    const sway = Math.sin(time * 0.0008 + this.phase) * 0.3;
+    for (let i = 1; i < this.segs.length; i++) {
+      const s = this.segs[i];
+      const t = i / this.segCount;
+      // Spring back to rest position
+      const restAngle = this.growAngle + sway * t;
+      s.restX = this.x + Math.cos(restAngle) * t * this.len;
+      s.restY = this.y + Math.sin(restAngle) * t * this.len;
+      s.vx += (s.restX - s.x) * 0.08;
+      s.vy += (s.restY - s.y) * 0.08;
+      s.vx *= 0.85;
+      s.vy *= 0.85;
+      s.x += s.vx;
+      s.y += s.vy;
+    }
+  }
+
+  draw(ctx, time) {
+    const segs = this.segs;
+    // Main stem - thin and tapered
+    ctx.beginPath();
+    ctx.moveTo(segs[0].x, segs[0].y);
+    for (let i = 1; i < segs.length; i++) {
+      ctx.lineTo(segs[i].x, segs[i].y);
+    }
+    ctx.strokeStyle = 'rgb(35, 80, 25)';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Sub-branches - alternating sides, getting shorter toward tip
+    for (let b = 0; b < this.branches; b++) {
+      const t = 0.2 + (b / this.branches) * 0.7;
+      const segIdx = Math.min(Math.floor(t * this.segCount), this.segCount - 1);
+      const base = segs[segIdx];
+      const next = segs[Math.min(segIdx + 1, this.segCount)];
+      const stemAngle = Math.atan2(next.y - base.y, next.x - base.x);
+      const side = (b % 2 === 0 ? 1 : -1) * this.branchSide;
+      const branchAngle = stemAngle + side * (0.4 + Math.sin(time * 0.001 + b + this.phase) * 0.15);
+      const branchLen = this.len * (0.3 - t * 0.2) * (0.7 + Math.random() * 0.3);
+
+      // Each sub-branch has tiny leaflets
+      const leaflets = 2 + Math.floor(Math.random() * 3);
+      const tipX = base.x + Math.cos(branchAngle) * branchLen;
+      const tipY = base.y + Math.sin(branchAngle) * branchLen;
+
+      ctx.beginPath();
+      ctx.moveTo(base.x, base.y);
+      ctx.lineTo(tipX, tipY);
+      ctx.strokeStyle = 'rgb(45, 100, 30)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // Tiny leaflets along sub-branch
+      for (let l = 0; l < leaflets; l++) {
+        const lt = 0.3 + (l / leaflets) * 0.6;
+        const lx = base.x + (tipX - base.x) * lt;
+        const ly = base.y + (tipY - base.y) * lt;
+        const leafSide = (l % 2 === 0 ? 1 : -1);
+        const leafAngle = branchAngle + leafSide * 0.6;
+        const leafLen = branchLen * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(lx + Math.cos(leafAngle) * leafLen, ly + Math.sin(leafAngle) * leafLen);
+        ctx.strokeStyle = 'rgb(50, 115, 35)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
 const plants = [];
-for (let i = 0; i < 20; i++) {
-  // Pick a random edge: 0=top, 1=right, 2=bottom, 3=left
+for (let i = 0; i < 16; i++) {
   const edge = Math.floor(Math.random() * 4);
   let px, py, growAngle;
-  const inset = Math.random() * 10;
+  const inset = Math.random() * 5;
   if (edge === 0) { px = Math.random() * w; py = inset; growAngle = Math.PI / 2; }
   else if (edge === 1) { px = w - inset; py = Math.random() * h; growAngle = Math.PI; }
   else if (edge === 2) { px = Math.random() * w; py = h - inset; growAngle = -Math.PI / 2; }
   else { px = inset; py = Math.random() * h; growAngle = 0; }
-  plants.push({
-    x: px,
-    y: py,
-    growAngle,
-    blades: 3 + Math.floor(Math.random() * 4),
-    height: 25 + Math.random() * 40,
-    phase: Math.random() * Math.PI * 2,
-  });
+  // Add some random angle variance so they don't all point perfectly inward
+  growAngle += (Math.random() - 0.5) * 0.5;
+  plants.push(new Frond(px, py, growAngle));
 }
 
 let lastTime = 0;
@@ -685,33 +791,13 @@ function drawPond(time) {
     ctx.restore();
   }
 
-  // Plants swaying - grow inward from perimeter edges
+  // Plants - update physics and draw
   for (const p of plants) {
-    const sway = Math.sin(time * 0.001 + p.phase) * 5;
-    ctx.strokeStyle = 'rgb(40, 90, 30)';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    const cos = Math.cos(p.growAngle);
-    const sin = Math.sin(p.growAngle);
-    for (let b = 0; b < p.blades; b++) {
-      const spread = (b - p.blades / 2) * 5;
-      // Perpendicular spread relative to grow direction
-      const sx = p.x + (-sin) * spread;
-      const sy = p.y + cos * spread;
-      // Tip grows inward with sway
-      const tipX = sx + cos * p.height + (-sin) * (sway + b * 2);
-      const tipY = sy + sin * p.height + cos * (sway + b * 2);
-      // Control point halfway with extra sway
-      const cpX = sx + cos * p.height * 0.6 + (-sin) * (sway * 0.7 + b);
-      const cpY = sy + sin * p.height * 0.6 + cos * (sway * 0.7 + b);
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.quadraticCurveTo(cpX, cpY, tipX, tipY);
-      ctx.stroke();
-    }
+    p.update(dt, time);
+    p.draw(ctx, time);
   }
 
-  // Displace particles near moving tadpole segments
+  // Displace particles and plants near moving tadpole segments
   for (const t of tadpoles) {
     if (t.speed < 0.3) continue; // only disturb when actually moving
     for (const seg of t.segments) {
@@ -737,6 +823,27 @@ function drawPond(time) {
           const force = pushStrength * (1 - dist / pushRadius);
           d.vx += (dx / dist) * force;
           d.vy += (dy / dist) * force;
+        }
+      }
+      // Push plant fronds
+      for (const p of plants) {
+        p.displace(seg.x, seg.y, pushRadius * 1.5, pushStrength * 0.8);
+      }
+    }
+  }
+  // Ripples also displace plants
+  for (const r of ripples) {
+    if (r.opacity < 0.1) continue;
+    for (const p of plants) {
+      for (let i = 1; i < p.segs.length; i++) {
+        const s = p.segs[i];
+        const dx = s.x - r.x;
+        const dy = s.y - r.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (Math.abs(dist - r.radius) < 20 && dist > 0.1) {
+          const force = r.opacity * 0.6 * (i / p.segCount);
+          s.vx += (dx / dist) * force;
+          s.vy += (dy / dist) * force;
         }
       }
     }
