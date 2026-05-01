@@ -1451,19 +1451,20 @@ function draw(time) {
         }
       }
     }
-    // Waves hitting reefs: spawn foam along the actual rock shape
+    // Waves hitting reefs: spawn foam along the crown waterline (where rock meets water)
     for (const rf of reefs) {
       const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
-      if (rel > -rf.baseR && rel < rf.baseR + ww.width) {
+      if (rel > -rf.crownR * 1.5 && rel < rf.crownR * 1.5 + ww.width) {
         const splashCount = Math.ceil(3 * viewScale);
         if (foamBits.length < 200) {
           for (let si = 0; si < splashCount; si++) {
             const edgeAngle = Math.atan2(-sinA, -cosA) + (Math.random() - 0.5) * Math.PI * 0.8;
-            const shapeR = rf.radiusAt(edgeAngle, rf.baseRadii);
-            const spawnR = shapeR * (0.85 + Math.random() * 0.3);
+            // Spawn at the crown edge (waterline), offset by crown position
+            const crownEdgeR = rf.radiusAt(edgeAngle, rf.crownRadii);
+            const spawnR = crownEdgeR * (0.9 + Math.random() * 0.25);
             foamBits.push({
-              x: rf.x + Math.cos(edgeAngle) * spawnR,
-              y: rf.y + Math.sin(edgeAngle) * spawnR,
+              x: rf.x + rf.crownOffX + Math.cos(edgeAngle) * spawnR,
+              y: rf.y + rf.crownOffY + Math.sin(edgeAngle) * spawnR,
               size: (0.5 + Math.random() * 1.5) * viewScale,
               vx: Math.cos(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
               vy: Math.sin(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
