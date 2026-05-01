@@ -544,6 +544,8 @@ class Fish {
     this.distractTimer = this.distracted ? 3 + Math.random() * 8 : 5 + Math.random() * 10;
     // Fixed phase offset for undulation desync (not position-based)
     this._phaseOffset = Math.random() * Math.PI * 20;
+    // Smoothed swim intensity for animation - avoids jerky transitions
+    this._swimSmooth = 0.5;
   }
 
   update(dt, fish, time) {
@@ -832,11 +834,13 @@ class Fish {
     const segs = 10; // more segments = smoother curves
     const totalLen = this.len;
 
-    // Undulation: gentle body wave, speed drives both rate and amplitude
-    // Idle/gliding fish hold a static curve; active fish undulate slowly
-    const swimIntensity = Math.min(1, this.speed * 0.8);
-    // Phase offset uses fish identity (not position) to desync without adding speed
-    const phase = Date.now() * 0.0012 * (0.4 + swimIntensity * 0.6) + this._phaseOffset;
+    // Smoothed swim intensity - gradual transitions, never freezes
+    const rawIntensity = Math.min(1, this.speed * 0.8);
+    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.015; // slow blend
+    const si = this._swimSmooth;
+
+    // Phase always advances at a reasonable rate - relaxed fish just undulate gently
+    const phase = Date.now() * 0.0012 * (0.6 + si * 0.4) + this._phaseOffset;
 
     // Build spine in local space (head-forward along +X axis)
     const spineX = new Array(segs + 1);
@@ -847,10 +851,10 @@ class Fish {
       const t = i / segs; // 0=nose, 1=tail
       spineX[i] = (0.5 - t) * totalLen;
 
-      // Whole-body S-curve: head stable, body bends into steering curves
-      // Amplitude scales with speed - idle fish hold a gentle static bend
+      // Whole-body S-curve: always moving, amplitude varies with effort
+      // Relaxed fish: gentle lazy sway. Active fish: stronger undulation.
       const onset = Math.max(0, t - 0.1) / 0.9;
-      const maxAmp = totalLen * (0.03 + 0.12 * swimIntensity);
+      const maxAmp = totalLen * (0.04 + 0.10 * si);
       const amp = onset * onset * maxAmp;
       spineY[i] = Math.sin(phase - t * Math.PI * 1.6) * amp;
 
