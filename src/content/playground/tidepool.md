@@ -148,6 +148,10 @@ function initAudio() {
     noise.start();
     oceanLfo.start();
     crashNoise.start();
+    // Set gain after sources are running - scheduling before resume is unreliable
+    if (soundEnabled) {
+      oceanGain.gain.setTargetAtTime(masterVolume * 0.3, audioCtx.currentTime, 0.3);
+    }
   }
   if (audioCtx.state === 'running') {
     startSources();
@@ -162,7 +166,9 @@ function toggleSound() {
   const btn = document.getElementById('sound-toggle');
   btn.setAttribute('aria-pressed', soundEnabled);
   if (soundEnabled) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') audioCtx.resume().then(() => {
+      oceanGain.gain.setTargetAtTime(masterVolume * 0.3, audioCtx.currentTime, 0.3);
+    });
     oceanGain.gain.setTargetAtTime(masterVolume * 0.3, audioCtx.currentTime, 0.5);
     document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>';
   } else {
@@ -175,11 +181,15 @@ const soundBtn = document.getElementById('sound-toggle');
 const soundWrap = document.querySelector('.pool-sound-wrap');
 const volSlider = document.getElementById('volume-slider');
 
+let lastSoundTap = 0;
 function handleSoundTap(e) {
   e.stopPropagation();
   e.preventDefault();
+  // Debounce - touchend + click both fire on mobile
+  const now = Date.now();
+  if (now - lastSoundTap < 300) return;
+  lastSoundTap = now;
   toggleSound();
-  // On touch devices, toggle the volume slider open
   if ('ontouchstart' in window) soundWrap.classList.toggle('vol-open', soundEnabled);
 }
 soundBtn.addEventListener('click', handleSoundTap);
