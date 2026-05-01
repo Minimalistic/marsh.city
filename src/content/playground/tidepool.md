@@ -86,7 +86,8 @@ canvas.addEventListener('mousedown', e => {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   if (activeTool === 'food') {
-    foodPellets.push({ x: mx, y: my, size: 3, bites: 15 + Math.floor(Math.random() * 6), vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    const b = 15 + Math.floor(Math.random() * 6);
+    foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
     ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else if (activeTool === 'rock') {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 150, opacity: 0.7 });
@@ -110,7 +111,8 @@ canvas.addEventListener('touchstart', e => {
   mouse.down = true;
   mouse.speed = 0;
   if (activeTool === 'food') {
-    foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: 15 + Math.floor(Math.random() * 6), vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    const b2 = 15 + Math.floor(Math.random() * 6);
+    foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
     ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else if (activeTool === 'rock') {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 150, opacity: 0.7 });
@@ -184,8 +186,9 @@ for (let i = 0; i < 500; i++) {
 // Small fish class - schooling behavior (boids)
 class Fish {
   constructor() {
-    this.x = Math.random() * w;
-    this.y = Math.random() * h;
+    // Spawn in center 60% of viewport
+    this.x = w * 0.2 + Math.random() * w * 0.6;
+    this.y = h * 0.2 + Math.random() * h * 0.6;
     this.angle = Math.random() * Math.PI * 2;
     this.speed = 0.6 + Math.random() * 0.4;
     this.baseSpeed = this.speed;
@@ -259,6 +262,13 @@ class Fish {
     if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.05; this.vy += (alignY / alignCount - this.vy) * 0.05; }
     if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.0008; this.vy += (cy - this.y) * 0.0008; }
 
+    // Gentle centering during first few seconds
+    if (settleTime > 0) {
+      const centerPull = settleTime / 3 * 0.02;
+      this.vx += (w / 2 - this.x) * centerPull * 0.01;
+      this.vy += (h / 2 - this.y) * centerPull * 0.01;
+    }
+
     // Tidal current + local turbulence
     this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
@@ -296,8 +306,9 @@ class Fish {
         if (closestFoodDist < 6) {
           closestFood.bites--;
           closestFood.size *= 0.97;
-          // Spawn a fragment ~25% of bites
-          if (Math.random() < 0.25) {
+          // Spawn a fragment only after ~5 bites taken, then 25% chance
+          const bitesTaken = (closestFood.startBites || closestFood.bites + 1) - closestFood.bites;
+          if (bitesTaken > 5 && Math.random() < 0.25) {
             const fragAngle = Math.random() * Math.PI * 2;
             foodPellets.push({
               x: closestFood.x + Math.cos(fragAngle) * 4,
@@ -621,10 +632,12 @@ for (let i = 0; i < 60; i++) {
 
 let lastTime = 0;
 let waveTime = 0;
+let settleTime = 3; // seconds of gentle centering at start
 
 function draw(time) {
   const dt = Math.min((time - lastTime) / 1000, 0.05);
   lastTime = time;
+  if (settleTime > 0) settleTime -= dt;
 
   // Wave current - oscillates like water washing in and pulling back
   waveTime += dt;
