@@ -810,21 +810,16 @@ flowchart TD
     }
   ];
 
-  // layer colors — neon cyberpunk palette with tinted glowy fills
-  var lightColors = [
-    { fill: '#0d2b28', stroke: '#00ffcc', color: '#00ffcc' },
-    { fill: '#2a0d1a', stroke: '#ff0055', color: '#ff0055' },
-    { fill: '#0d1a2e', stroke: '#00aaff', color: '#00aaff' },
-    { fill: '#2a2510', stroke: '#ffcc00', color: '#ffcc00' },
-    { fill: '#0d2a14', stroke: '#00ff66', color: '#00ff66' }
+  // layer colors — bright neon cyberpunk, Flower terminal style
+  var neonColors = [
+    { fill: '#0a2622', stroke: '#00ffd5', color: '#00ffd5' },
+    { fill: '#2e0a18', stroke: '#ff2a6d', color: '#ff2a6d' },
+    { fill: '#0a1830', stroke: '#05d9e8', color: '#05d9e8' },
+    { fill: '#2e2a0a', stroke: '#f9f002', color: '#f9f002' },
+    { fill: '#0a2e12', stroke: '#39ff14', color: '#39ff14' }
   ];
-  var darkColors = [
-    { fill: '#0d2b28', stroke: '#00ffcc', color: '#00ffcc' },
-    { fill: '#2a0d1a', stroke: '#ff0055', color: '#ff0055' },
-    { fill: '#0d1a2e', stroke: '#00aaff', color: '#00aaff' },
-    { fill: '#2a2510', stroke: '#ffcc00', color: '#ffcc00' },
-    { fill: '#0d2a14', stroke: '#00ff66', color: '#00ff66' }
-  ];
+  var lightColors = neonColors;
+  var darkColors = neonColors;
 
   function buildSyntax(system) {
     var isDark = document.documentElement.dataset.theme === 'dark';
@@ -1100,12 +1095,12 @@ flowchart TD
       look: 'classic',
       theme: 'dark',
       themeVariables: {
-        primaryColor: '#0d2b28',
-        primaryTextColor: '#00ffcc',
-        lineColor: '#00ffcc',
-        secondaryColor: '#2a0d1a',
-        tertiaryColor: '#0d1a2e',
-        primaryBorderColor: '#00ffcc',
+        primaryColor: '#0a2622',
+        primaryTextColor: '#00ffd5',
+        lineColor: '#05d9e8',
+        secondaryColor: '#2e0a18',
+        tertiaryColor: '#0a1830',
+        primaryBorderColor: '#00ffd5',
         background: '#0a0e14'
       }
     });
