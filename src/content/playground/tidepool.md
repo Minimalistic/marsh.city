@@ -21,6 +21,9 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 <button id="fullscreen-btn" class="pool-tool pool-fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
 </button>
+<button id="fs-close-btn" class="pool-tool pool-fs-close" title="Exit fullscreen" aria-label="Exit fullscreen" hidden>
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
 </div>
 <style>
 .pool-tool {
@@ -44,8 +47,9 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 .pool-volume:hover,
 .pool-volume:active { height: 60px; opacity: 1; }
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
-#toolbar.hidden, .pool-fs-btn.hidden { opacity: 0; pointer-events: none; }
-#toolbar, .pool-fs-btn { transition: opacity 0.5s; }
+.pool-fs-close { position: absolute; top: 8px; right: 8px; z-index: 10; }
+#toolbar.hidden, .pool-fs-btn.hidden, .pool-fs-close.hidden { opacity: 0; pointer-events: none; }
+#toolbar, .pool-fs-btn, .pool-fs-close { transition: opacity 0.5s; }
 #pool-container:fullscreen,
 #pool-container:-webkit-full-screen,
 #pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; }
@@ -178,11 +182,47 @@ document.getElementById('volume-slider').addEventListener('input', e => {
 const poolContainer = document.getElementById('pool-container');
 const toolbar = document.getElementById('toolbar');
 const fsBtn = document.getElementById('fullscreen-btn');
+const fsCloseBtn = document.getElementById('fs-close-btn');
 let hideTimer = null;
 
 const canRealFS = !!(poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen);
-function toggleFakeFS() {
-  poolContainer.classList.toggle('fake-fullscreen');
+function isFakeFS() { return poolContainer.classList.contains('fake-fullscreen'); }
+function enterFakeFS() {
+  poolContainer.classList.add('fake-fullscreen');
+  // Hide page chrome - nav, footer, title, everything outside the pool
+  document.body.style.overflow = 'hidden';
+  document.querySelectorAll('nav.site-nav, footer, header, .site-footer, main > *:not(#pool-container)')
+    .forEach(el => { if (!poolContainer.contains(el)) el.style.display = 'none'; });
+  // Walk up from pool-container and hide siblings at each level
+  let node = poolContainer;
+  while (node && node !== document.body) {
+    const parent = node.parentElement;
+    if (parent) {
+      for (const sib of parent.children) {
+        if (sib !== node && !sib.matches('script, style, link')) {
+          sib.dataset.fakefsHidden = sib.style.display || '';
+          sib.style.display = 'none';
+        }
+      }
+    }
+    node = parent;
+  }
+  fsCloseBtn.hidden = false;
+  fsBtn.hidden = true;
+  handleFSChange();
+}
+function exitFakeFS() {
+  poolContainer.classList.remove('fake-fullscreen');
+  document.body.style.overflow = '';
+  // Restore everything we hid
+  document.querySelectorAll('[data-fakefs-hidden]').forEach(el => {
+    el.style.display = el.dataset.fakefsHidden;
+    delete el.dataset.fakefsHidden;
+  });
+  document.querySelectorAll('nav.site-nav, footer, header, .site-footer')
+    .forEach(el => { el.style.display = ''; });
+  fsCloseBtn.hidden = true;
+  fsBtn.hidden = false;
   handleFSChange();
 }
 fsBtn.addEventListener('click', e => {
@@ -191,23 +231,34 @@ fsBtn.addEventListener('click', e => {
     const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
     if (!fsEl) {
       const rfs = poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen;
-      rfs.call(poolContainer).catch(() => toggleFakeFS());
+      rfs.call(poolContainer).catch(() => enterFakeFS());
     } else {
       const efs = document.exitFullscreen || document.webkitExitFullscreen;
       if (efs) efs.call(document);
     }
   } else {
-    toggleFakeFS();
+    enterFakeFS();
+  }
+});
+fsCloseBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  if (isFakeFS()) {
+    exitFakeFS();
+  } else {
+    const efs = document.exitFullscreen || document.webkitExitFullscreen;
+    if (efs) efs.call(document);
   }
 });
 
 function showUI() {
   toolbar.classList.remove('hidden');
-  fsBtn.classList.remove('hidden');
+  if (!fsCloseBtn.hidden) fsCloseBtn.classList.remove('hidden');
+  if (!fsBtn.hidden) fsBtn.classList.remove('hidden');
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
     toolbar.classList.add('hidden');
     fsBtn.classList.add('hidden');
+    fsCloseBtn.classList.add('hidden');
   }, 3000);
 }
 poolContainer.addEventListener('mousemove', showUI);
@@ -228,10 +279,7 @@ const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'w
 document.addEventListener(fsChangeEvent, handleFSChange);
 // Escape exits fake fullscreen
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && poolContainer.classList.contains('fake-fullscreen')) {
-    poolContainer.classList.remove('fake-fullscreen');
-    handleFSChange();
-  }
+  if (e.key === 'Escape' && isFakeFS()) exitFakeFS();
 });
 
 // Update ocean sound to match wave state
@@ -811,61 +859,56 @@ class Fish {
       this.vy = Math.sin(this.angle) * targetSpeed * 0.5;
     }
 
-    // Reef avoidance - fish sense both the underwater base and the above-water crown
+    // Reef avoidance - steers the fish's heading directly so it survives
+    // the lateral-kill step below. Gradient: gentle turns far out, strong close in.
     const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+    const fishLen8 = this.len * 8; // generous sensing distance
+    let reefSteer = 0; // accumulated angle adjustment
     for (const rf of reefs) {
-      // --- Underwater base: gentle outer awareness with irregular boundary ---
+      // --- Underwater base ---
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-      const angle = Math.atan2(rdy, rdx);
-      const bNoise = 0.85 + 0.3 * Math.sin(angle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(angle * 3.1 + rf.y * 0.1);
-      const baseR = rf.radiusAt(angle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
-      const baseSense = baseR * 2.5;
+      const bAngle = Math.atan2(rdy, rdx);
+      const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(bAngle * 3.1 + rf.y * 0.1);
+      const baseR = rf.radiusAt(bAngle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
+      const baseSense = Math.max(baseR * 3, baseR + fishLen8);
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
-        if (approach > -0.2) {
-          const aw = Math.max(0, approach + 0.2);
+        if (approach > -0.3) {
+          const aw = Math.max(0, approach + 0.3);
           const prox = 1 - rDist / baseSense;
-          const urgency = prox * prox * aw;
+          const urgency = prox * prox * prox * aw; // cubic
+          // Steer heading away from rock
           const cross = this.vx * rdy - this.vy * rdx;
-          const ts = cross >= 0 ? 1 : -1;
-          this.vx += (-rdy / rDist * ts) * urgency * 0.10;
-          this.vy += (rdx / rDist * ts) * urgency * 0.10;
-          if (rDist < baseR * 1.5) {
-            const push = (1 - rDist / (baseR * 1.5)) * 0.08;
-            this.vx += (rdx / rDist) * push;
-            this.vy += (rdy / rDist) * push;
-          }
+          reefSteer += (cross >= 0 ? 1 : -1) * urgency * 0.12;
         }
       }
-      // --- Above-water crown: strong avoidance, fish can't swim through this ---
+      // --- Above-water crown: the solid obstacle ---
       const cdx = this.x - (rf.x + rf.crownOffX);
       const cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      const crownSense = crownR * 4; // very wide awareness for the solid obstacle
+      const crownSense = Math.max(crownR * 5, crownR + fishLen8);
       if (cDist < crownSense && cDist > 0.1) {
         const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
-        if (approach > -0.3) {
-          const aw = Math.max(0, approach + 0.3);
+        if (approach > -0.5) {
+          const aw = Math.max(0, approach + 0.5);
           const prox = 1 - cDist / crownSense;
-          // Cubic ramp - gentle far out, very strong close in
+          // Very steep ramp close in - fish MUST turn
           const urgency = prox * prox * prox * aw;
           const cross = this.vx * cdy - this.vy * cdx;
-          const ts = cross >= 0 ? 1 : -1;
-          // Strong tangential steering - fish arc smoothly around the crown
-          this.vx += (-cdy / cDist * ts) * urgency * 0.35;
-          this.vy += (cdx / cDist * ts) * urgency * 0.35;
-          // Radial push ramps up close to the crown edge
-          if (cDist < crownR * 2) {
-            const push = (1 - cDist / (crownR * 2)) * 0.15;
-            this.vx += (cdx / cDist) * push;
-            this.vy += (cdy / cDist) * push;
-          }
+          reefSteer += (cross >= 0 ? 1 : -1) * urgency * 0.25;
         }
       }
+    }
+    // Apply accumulated steering to heading and rebuild velocity along new heading
+    if (Math.abs(reefSteer) > 0.001) {
+      const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer));
+      this.angle += clampedSteer;
+      this.vx = Math.cos(this.angle) * spd;
+      this.vy = Math.sin(this.angle) * spd;
     }
 
     // Fish can only swim forward - kill lateral drift and backward motion
@@ -913,47 +956,34 @@ class Fish {
     this.y += this.vy;
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));
-    // Reef collision - gradient push with irregular boundary
+    // Reef collision - pure gradient, no hard snaps
     for (const rf of reefs) {
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
-      // Irregular base boundary - noisy multiplier varies with angle per-reef
       const noise = 0.85 + 0.3 * Math.sin(angle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(angle * 3.1 + rf.y * 0.1);
       const baseCollR = rf.radiusAt(angle, rf.baseRadii) * 0.35 * noise;
-      // Gradient push zone - increasingly strong as fish approaches the core
-      const pushZone = baseCollR * 1.8;
+      // Wide gradient push - gets very strong close to core
+      const pushZone = baseCollR * 2.5;
       if (rDist < pushZone && rDist > 0.1) {
-        const penetration = 1 - rDist / pushZone;
-        const pushStr = penetration * penetration * 0.25;
+        const pen = 1 - rDist / pushZone;
+        const pushStr = pen * pen * pen * 0.5; // cubic ramp, strong at core
         this.vx += (rdx / rDist) * pushStr;
         this.vy += (rdy / rDist) * pushStr;
-        // Hard stop at the core - can't go past this
-        if (rDist < baseCollR) {
-          this.x = rf.x + (rdx / rDist) * baseCollR;
-          this.y = rf.y + (rdy / rDist) * baseCollR;
-          const dot = (this.vx * rdx + this.vy * rdy) / (rDist * rDist);
-          if (dot < 0) {
-            this.vx -= rdx / rDist * dot * rDist * 1.5;
-            this.vy -= rdy / rDist * dot * rDist * 1.5;
-          }
-        }
       }
-      // Above-water crown - still a hard boundary, fish can't swim through solid rock
+      // Crown - gradient push that gets overwhelming close in
       const cdx = this.x - (rf.x + rf.crownOffX);
       const cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
-      if (cDist < crownCollR && cDist > 0.1) {
-        this.x = rf.x + rf.crownOffX + (cdx / cDist) * crownCollR;
-        this.y = rf.y + rf.crownOffY + (cdy / cDist) * crownCollR;
-        const dot = (this.vx * cdx + this.vy * cdy) / (cDist * cDist);
-        if (dot < 0) {
-          this.vx -= cdx / cDist * dot * cDist * 1.5;
-          this.vy -= cdy / cDist * dot * cDist * 1.5;
-        }
+      const crownPush = crownCollR * 2;
+      if (cDist < crownPush && cDist > 0.1) {
+        const pen = 1 - cDist / crownPush;
+        const pushStr = pen * pen * pen * 0.8;
+        this.vx += (cdx / cDist) * pushStr;
+        this.vy += (cdy / cDist) * pushStr;
       }
     }
 
