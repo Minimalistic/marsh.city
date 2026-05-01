@@ -15,6 +15,7 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
     <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound">🔇</button>
     <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume">
   </div>
+  <button id="fullscreen-btn" class="pool-tool" title="Fullscreen">⛶</button>
 </div>
 </div>
 <style>
@@ -26,12 +27,17 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 }
 .pool-tool:hover { border-color: rgba(150,200,220,0.6); }
 .pool-tool.active { border-color: rgba(150,200,220,0.8); background: rgba(30,60,80,0.8); }
-.pool-sound-wrap { display: flex; align-items: center; gap: 4px; }
+.pool-sound-wrap { position: relative; }
 .pool-volume {
-  width: 0; opacity: 0; transition: width 0.2s, opacity 0.2s;
-  height: 4px; accent-color: rgba(150,200,220,0.8); cursor: pointer;
+  position: absolute; top: 36px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 0; opacity: 0; transition: height 0.2s, opacity 0.2s;
+  accent-color: rgba(150,200,220,0.8); cursor: pointer;
+  writing-mode: vertical-lr; direction: rtl;
+  appearance: slider-vertical;
 }
-.pool-sound-wrap:hover .pool-volume { width: 60px; opacity: 1; }
+.pool-sound-wrap:hover .pool-volume { height: 60px; opacity: 1; }
+#toolbar.hidden { opacity: 0; pointer-events: none; }
+#toolbar { transition: opacity 0.5s; }
 </style>
 
 <script type="module">
@@ -150,6 +156,38 @@ document.getElementById('volume-slider').addEventListener('input', e => {
   masterVolume = e.target.value / 100;
   if (soundEnabled && oceanGain) {
     oceanGain.gain.setTargetAtTime(masterVolume * 0.15, audioCtx.currentTime, 0.1);
+  }
+});
+
+// Fullscreen + auto-hide UI
+const poolContainer = canvas.parentElement;
+const toolbar = document.getElementById('toolbar');
+let hideTimer = null;
+
+document.getElementById('fullscreen-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  if (!document.fullscreenElement) {
+    poolContainer.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+function showToolbar() {
+  toolbar.classList.remove('hidden');
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => {
+    if (document.fullscreenElement) toolbar.classList.add('hidden');
+  }, 3000);
+}
+poolContainer.addEventListener('mousemove', showToolbar);
+poolContainer.addEventListener('touchstart', showToolbar);
+document.addEventListener('fullscreenchange', () => {
+  if (document.fullscreenElement) {
+    hideTimer = setTimeout(() => toolbar.classList.add('hidden'), 3000);
+  } else {
+    toolbar.classList.remove('hidden');
+    clearTimeout(hideTimer);
   }
 });
 
