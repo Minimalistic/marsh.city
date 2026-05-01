@@ -299,11 +299,25 @@ flowchart TD
     fill: transparent !important;
     stroke: #00ffd533 !important;
   }
-  /* edge label backgrounds — kill mermaid's gray */
+  /* edge label backgrounds — nuke every possible mermaid gray */
   #machine-diagram .edgeLabel rect,
   #machine-diagram .edgeLabel .label-container {
     fill: #0a0e14 !important;
     stroke: none !important;
+  }
+  #machine-diagram .edgeLabel span,
+  #machine-diagram .edgeLabel div,
+  #machine-diagram .edgeLabel foreignObject span,
+  #machine-diagram .edgeLabel foreignObject div,
+  #machine-diagram .edgeLabel p {
+    background: #0a0e14 !important;
+    background-color: #0a0e14 !important;
+  }
+  #machine-diagram .node foreignObject span,
+  #machine-diagram .node foreignObject div,
+  #machine-diagram .node foreignObject p {
+    background: transparent !important;
+    background-color: transparent !important;
   }
 
   /* --- how it works section --- */
