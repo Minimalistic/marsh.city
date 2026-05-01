@@ -1526,7 +1526,7 @@ class Predator {
     else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
 
     this.len = (80 + Math.random() * 30) * (w < 500 ? 0.8 : 1);
-    this.bodyWidth = this.len * 0.08;
+    this.bodyWidth = this.len * 0.068;
     this.speed = 0.5 + Math.random() * 0.3;
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
