@@ -830,9 +830,10 @@ class Fish {
     const segs = 10; // more segments = smoother curves
     const totalLen = this.len;
 
-    // Undulation: slow traveling wave, speed-dependent
-    const wiggleSpeed = 0.3 + this.speed * 0.6;
-    const phase = Date.now() * 0.003 * wiggleSpeed + this.x * 0.05 + this.y * 0.03;
+    // Undulation: gentle body wave, speed drives both rate and amplitude
+    // Idle/gliding fish hold a static curve; active fish undulate slowly
+    const swimIntensity = Math.min(1, this.speed * 0.8);
+    const phase = Date.now() * 0.0012 * (0.4 + swimIntensity * 0.6) + this.x * 0.05 + this.y * 0.03;
 
     // Build spine in local space (head-forward along +X axis)
     const spineX = new Array(segs + 1);
@@ -843,11 +844,12 @@ class Fish {
       const t = i / segs; // 0=nose, 1=tail
       spineX[i] = (0.5 - t) * totalLen;
 
-      // Whole-body S-curve: amplitude ramps from ~20% body onward (quadratic)
-      // Head stays nearly still, mid-body bends gently, tail sweeps wide
-      const onset = Math.max(0, t - 0.15) / 0.85; // 0 at head, 1 at tail
-      const amp = onset * onset * totalLen * 0.14;
-      spineY[i] = Math.sin(phase - t * Math.PI * 1.8) * amp;
+      // Whole-body S-curve: head stable, body bends into steering curves
+      // Amplitude scales with speed - idle fish hold a gentle static bend
+      const onset = Math.max(0, t - 0.1) / 0.9;
+      const maxAmp = totalLen * (0.03 + 0.12 * swimIntensity);
+      const amp = onset * onset * maxAmp;
+      spineY[i] = Math.sin(phase - t * Math.PI * 1.6) * amp;
 
       // Body width profile - fusiform fish shape
       let hw;
@@ -1021,7 +1023,7 @@ for (let i = 0; i < 15; i++) {
 // Reef structures - partially submerged obstacles
 // Each reef has an irregular outline generated from noisy radius samples
 function makeReef(x, y) {
-  const baseR = 25 + Math.random() * 35; // underwater footprint radius
+  const baseR = 60 + Math.random() * 90; // underwater footprint radius (large)
   const crownR = baseR * (0.45 + Math.random() * 0.2); // above-water is smaller
   const crownOffX = (Math.random() - 0.5) * baseR * 0.3; // crown offset from center
   const crownOffY = (Math.random() - 0.5) * baseR * 0.3;
@@ -1067,7 +1069,7 @@ for (let i = 0; i < reefCount; i++) {
     tries++;
   } while (tries < 20 && reefs.some(r => {
     const dx = r.x - rx, dy = r.y - ry;
-    return Math.sqrt(dx * dx + dy * dy) < r.baseR + 80;
+    return Math.sqrt(dx * dx + dy * dy) < r.baseR + 160;
   }));
   reefs.push(makeReef(rx, ry));
 }
@@ -1288,6 +1290,30 @@ function draw(time) {
         }
       }
     }
+    // Waves hitting reefs: spawn foam splash at the impact edge
+    for (const rf of reefs) {
+      const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
+      if (rel > -rf.baseR && rel < rf.baseR + ww.width) {
+        // Wave front is near/overlapping this reef
+        const splashCount = Math.ceil(3 * viewScale);
+        if (foamBits.length < 200) {
+          for (let si = 0; si < splashCount; si++) {
+            // Spawn foam at the reef edge facing the wave
+            const edgeAngle = Math.atan2(-sinA, -cosA) + (Math.random() - 0.5) * Math.PI * 0.8;
+            const spawnR = rf.baseR * (0.85 + Math.random() * 0.3);
+            foamBits.push({
+              x: rf.x + Math.cos(edgeAngle) * spawnR,
+              y: rf.y + Math.sin(edgeAngle) * spawnR,
+              size: (0.5 + Math.random() * 1.5) * viewScale,
+              vx: Math.cos(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
+              vy: Math.sin(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
+              life: 1,
+              maxLife: 3 + Math.random() * 5,
+            });
+          }
+        }
+      }
+    }
   }
 
   // Clear - dark tidepool water
@@ -1362,6 +1388,21 @@ function draw(time) {
     d.vy *= 0.97;
     d.x += d.vx;
     d.y += d.vy;
+    // Deflect debris around reefs
+    for (const rf of reefs) {
+      const rdx = d.x - rf.x, rdy = d.y - rf.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      if (rDist < rf.baseR && rDist > 0.1) {
+        // Push out and deflect tangentially
+        d.x = rf.x + (rdx / rDist) * rf.baseR;
+        d.y = rf.y + (rdy / rDist) * rf.baseR;
+        const dot = (d.vx * rdx + d.vy * rdy) / (rDist * rDist);
+        if (dot < 0) {
+          d.vx -= rdx / rDist * dot * rDist;
+          d.vy -= rdy / rDist * dot * rDist;
+        }
+      }
+    }
     if (d.x < 0) d.x = w; if (d.x > w) d.x = 0;
     if (d.y < 0) d.y = h; if (d.y > h) d.y = 0;
     ctx.beginPath();
@@ -1382,6 +1423,20 @@ function draw(time) {
     fb.vy *= 0.96;
     fb.x += fb.vx;
     fb.y += fb.vy;
+    // Foam deflects around reefs and collects at edges
+    for (const rf of reefs) {
+      const rdx = fb.x - rf.x, rdy = fb.y - rf.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      if (rDist < rf.baseR * 0.9 && rDist > 0.1) {
+        fb.x = rf.x + (rdx / rDist) * rf.baseR * 0.9;
+        fb.y = rf.y + (rdy / rDist) * rf.baseR * 0.9;
+        // Tangential slide along the edge
+        const cross = fb.vx * rdy - fb.vy * rdx;
+        const sign = cross >= 0 ? 1 : -1;
+        fb.vx = (-rdy / rDist) * sign * Math.sqrt(fb.vx * fb.vx + fb.vy * fb.vy) * 0.6;
+        fb.vy = (rdx / rDist) * sign * Math.sqrt(fb.vx * fb.vx + fb.vy * fb.vy) * 0.6;
+      }
+    }
     if (fb.x < -20 || fb.x > w + 20 || fb.y < -20 || fb.y > h + 20) { foamBits.splice(i, 1); continue; }
     ctx.beginPath();
     ctx.arc(fb.x, fb.y, fb.size * fb.life, 0, Math.PI * 2);
