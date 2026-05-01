@@ -268,7 +268,7 @@ function resize() {
 let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
-const initialFishCount = Math.max(50, Math.floor(initialArea / 4000));
+const initialFishCount = Math.max(68, Math.floor(initialArea / 3000));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -288,7 +288,7 @@ function rescaleAll(oldW, oldH) {
 
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
-  const targetFish = Math.min(160, Math.floor(initialFishCount * areaRatio * 0.975));
+  const targetFish = Math.min(215, Math.floor(initialFishCount * areaRatio * 0.975));
   const targetDebris = Math.min(1200, Math.floor(initialDebrisCount * areaRatio * 0.75));
   const targetPlants = Math.min(40, Math.floor(20 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
@@ -1115,7 +1115,7 @@ const schoolColors = [
   { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
   { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
 ];
-const fishCount = Math.max(50, Math.floor((w * h) / 4000));
+const fishCount = Math.max(68, Math.floor((w * h) / 3000));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
