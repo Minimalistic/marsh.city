@@ -644,7 +644,7 @@ class Frond {
     this.y = y;
     this.growAngle = growAngle;
     this.len = 30 + Math.random() * 50;
-    this.branches = 8 + Math.floor(Math.random() * 6);
+    this.branches = 3 + Math.floor(Math.random() * 3);
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
     // Pre-generate branch geometry - dense and bushy at base, tapers to a point
@@ -655,7 +655,7 @@ class Frond {
       this.branchData.push({
         t,
         lenScale: (0.8 + Math.random() * 0.4) * taper,
-        leaflets: Math.max(1, Math.floor((3 + Math.random() * 4) * taper)),
+        leaflets: Math.max(1, Math.floor((1 + Math.random() * 2) * taper)),
       });
     }
     // Segment points for physics displacement
