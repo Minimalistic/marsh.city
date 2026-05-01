@@ -267,6 +267,10 @@ function resize() {
 }
 
 let { w, h } = resize();
+const initialArea = w * h;
+const initialFishCount = Math.max(60, Math.floor(initialArea / 2750));
+const initialDebrisCount = 500;
+
 function rescaleAll(oldW, oldH) {
   const sx = w / oldW, sy = h / oldH;
   for (const r of rocks) { r.x *= sx; r.y *= sy; }
@@ -276,6 +280,71 @@ function rescaleAll(oldW, oldH) {
   }
   for (const d of debris) { d.x *= sx; d.y *= sy; }
   for (const f of fish) { f.x *= sx; f.y *= sy; }
+
+  // Scale population to match new viewport area
+  const areaRatio = (w * h) / initialArea;
+  const targetFish = Math.floor(initialFishCount * areaRatio);
+  const targetDebris = Math.floor(initialDebrisCount * areaRatio);
+  const targetPlants = Math.floor(20 * Math.sqrt(areaRatio));
+  const targetRocks = Math.floor(15 * Math.sqrt(areaRatio));
+
+  // Add fish if needed
+  while (fish.length < targetFish) {
+    const f = new Fish();
+    f.x = Math.random() * w;
+    f.y = Math.random() * h;
+    const school = fish.length % schoolColors.length;
+    f.school = school;
+    f.color = schoolColors[school].color;
+    f.bellyColor = schoolColors[school].belly;
+    fish.push(f);
+  }
+  // Remove excess fish
+  while (fish.length > targetFish && fish.length > initialFishCount) fish.pop();
+
+  // Add debris if needed
+  while (debris.length < targetDebris) {
+    const bright = Math.random() < 0.25;
+    debris.push({
+      x: Math.random() * w, y: Math.random() * h,
+      size: bright ? (0.8 + Math.random() * 1.2) : (0.2 + Math.random() * 0.7),
+      vx: 0, vy: 0,
+      opacity: bright ? (0.2 + Math.random() * 0.2) : (0.05 + Math.random() * 0.12),
+    });
+  }
+  while (debris.length > targetDebris && debris.length > initialDebrisCount) debris.pop();
+
+  // Add plants if needed
+  while (plants.length < targetPlants) {
+    const edge = Math.floor(Math.random() * 4);
+    let px, py, growAngle;
+    const inset = Math.random() * 5;
+    if (edge === 0) { px = Math.random() * w; py = inset; growAngle = Math.PI / 2; }
+    else if (edge === 1) { px = w - inset; py = Math.random() * h; growAngle = Math.PI; }
+    else if (edge === 2) { px = Math.random() * w; py = h - inset; growAngle = -Math.PI / 2; }
+    else { px = inset; py = Math.random() * h; growAngle = 0; }
+    growAngle += (Math.random() - 0.5) * 0.5;
+    plants.push(new Frond(px, py, growAngle));
+  }
+  while (plants.length > targetPlants && plants.length > 20) plants.pop();
+
+  // Add rocks if needed
+  while (rocks.length < targetRocks) {
+    const edge = Math.floor(Math.random() * 4);
+    let rx, ry;
+    if (edge === 0) { rx = Math.random() * w; ry = Math.random() * 25; }
+    else if (edge === 1) { rx = w - Math.random() * 25; ry = Math.random() * h; }
+    else if (edge === 2) { rx = Math.random() * w; ry = h - Math.random() * 25; }
+    else { rx = Math.random() * 25; ry = Math.random() * h; }
+    rocks.push({
+      x: rx, y: ry,
+      size: 8 + Math.random() * 18,
+      color: `rgb(${40 + Math.floor(Math.random() * 20)}, ${45 + Math.floor(Math.random() * 15)}, ${50 + Math.floor(Math.random() * 15)})`,
+      elongation: 0.5 + Math.random() * 0.5,
+      angle: Math.random() * Math.PI,
+    });
+  }
+  while (rocks.length > targetRocks && rocks.length > 15) rocks.pop();
 }
 window.addEventListener('resize', () => {
   const oldW = w, oldH = h;
