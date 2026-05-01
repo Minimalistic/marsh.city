@@ -783,10 +783,14 @@ class Fish {
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.02;
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.06;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
       this.vy *= ratio;
+    } else {
+      // Fish stalled - kick forward
+      this.vx = Math.cos(this.angle) * targetSpeed * 0.5;
+      this.vy = Math.sin(this.angle) * targetSpeed * 0.5;
     }
 
     // Reef avoidance - steer around submerged obstacles (shape-aware)
@@ -971,7 +975,9 @@ class Fish {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.scale(vs, vs);
+    // Scale fish size - 30% smaller at larger viewports
+    const fishScale = vs * (1 / (1 + (vs - 1) * 0.3));
+    ctx.scale(fishScale, fishScale);
 
     // Compute perpendiculars and outline points
     const rightX = new Array(segs + 1), rightY = new Array(segs + 1);
