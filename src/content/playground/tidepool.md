@@ -877,19 +877,20 @@ class Fish {
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
     // Update trailing joint angles - each joint follows the one ahead
-    // Real fish anatomy: rigid head, flex starts mid-body, most bend at tail
+    // Head region is stiffer (follows faster = less lag = less visible bend)
+    // Rear body is looser (follows slower = more lag = visible flex and whip)
     this._angles[0] = this.angle;
     for (let j = 1; j < this._jointCount; j++) {
       let diff = this._angles[j - 1] - this._angles[j];
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
       const t = j / this._jointCount;
-      const followRate = 0.55 - t * 0.15; // 0.55 near head, 0.40 at tail
-      // Max bend per joint: rigid head, increasing flex toward tail
-      // Front 20% is skull - nearly locked. Mid-body starts flexing. Tail is loose.
-      const maxBend = t < 0.20 ? t / 0.20 * 0.03 : 0.03 + (t - 0.20) / 0.80 * 0.25;
-      const clamped = Math.max(-maxBend, Math.min(maxBend, diff));
-      this._angles[j] += clamped * followRate;
+      // Front joints track tightly (stiff), rear joints lag (bendy)
+      // No hard clamp - let the body flex freely, stiffness comes from follow rate
+      const followRate = t < 0.2
+        ? 0.7                          // skull: snaps to heading quickly
+        : 0.7 - (t - 0.2) / 0.8 * 0.5; // 0.7 at 20% → 0.2 at tail
+      this._angles[j] += diff * followRate;
     }
     this.speed = currentSpeed;
   }
@@ -928,10 +929,9 @@ class Fish {
       while (relAngle > Math.PI) relAngle -= Math.PI * 2;
       while (relAngle < -Math.PI) relAngle += Math.PI * 2;
 
-      // Swim undulation respects fish anatomy - rigid head, flex from mid-body
-      // Front 25% barely moves, amplitude builds from there
-      const flex = t < 0.25 ? t / 0.25 * 0.1 : 0.1 + (t - 0.25) / 0.75 * 0.9;
-      const undulAmp = flex * 0.10 * (0.3 + si * 0.7);
+      // Swim undulation: stiff head, fluid body
+      const flex = t < 0.15 ? t / 0.15 * 0.15 : 0.15 + (t - 0.15) / 0.85 * 0.85;
+      const undulAmp = flex * 0.18 * (0.25 + si * 0.75);
       const undulation = Math.sin(phase - t * Math.PI * 1.0) * undulAmp;
 
       spineA[i] = relAngle + undulation;
