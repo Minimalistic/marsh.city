@@ -350,34 +350,39 @@ function updateOceanSound() {
   const waveIntensity = Math.abs(tide.strength);
   const now = audioCtx.currentTime;
 
-  // Track the most prominent wave - audible throughout its entire life
+  // Track waves by their actual distance from the viewport, not progress %
   let washPresence = 0;
   let wavePanX = 0;
   let strongestWave = 0;
+  const vpDiag = Math.sqrt(w * w + h * h); // viewport diagonal for distance normalization
   for (const ww of washWaves) {
-    const progress = ww.traveled / ww.maxTravel;
-    // Smooth presence curve - audible before and after visible on screen
-    // 0.0-0.1: growing distant rumble (wave approaching from far away)
-    // 0.1-0.3: building as it enters view
-    // 0.3-0.6: peak, fully on screen
-    // 0.6-0.85: fading as it leaves
-    // 0.85-1.0: distant trailing wash
+    // How far is the wave front from the viewport center?
+    const dx = ww.x - w / 2, dy = ww.y - h / 2;
+    const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+    // Normalize: 0 = at center of screen, 1 = one viewport diagonal away
+    const normDist = distFromCenter / vpDiag;
+    // Presence based on distance: full when on screen, fades with distance
     let presence;
-    if (progress < 0.1) presence = 0.25 + progress / 0.1 * 0.25; // audible approach
-    else if (progress < 0.3) presence = 0.5 + (progress - 0.1) / 0.2 * 0.5; // building
-    else if (progress < 0.6) presence = 1.0; // peak
-    else if (progress < 0.85) presence = 1.0 - (progress - 0.6) / 0.25 * 0.6; // fading
-    else presence = 0.4 * (1 - (progress - 0.85) / 0.15); // trailing wash
+    if (normDist < 0.35) {
+      presence = 1.0; // on screen - full volume
+    } else if (normDist < 0.8) {
+      // Fading but still clearly audible
+      presence = 1.0 - (normDist - 0.35) / 0.45 * 0.6; // 1.0 → 0.4
+    } else {
+      // Distant - low rumble
+      presence = Math.max(0.15, 0.4 - (normDist - 0.8) / 0.5 * 0.25);
+    }
     const str = presence * ww.strength;
     if (str > strongestWave) {
       strongestWave = str;
       wavePanX = Math.max(-1, Math.min(1, (ww.x / w - 0.5) * 2));
     }
     washPresence = Math.max(washPresence, str);
-    // Queue a crash when wave passes ~70% (just left the screen)
+    // Queue a crash when wave has left the screen
+    const progress = ww.traveled / ww.maxTravel;
     if (!ww._crashQueued && progress > 0.7) {
       ww._crashQueued = true;
-      const delay = 0.8 + Math.random() * 2.5; // 0.8-3.3s after leaving
+      const delay = 0.8 + Math.random() * 2.5;
       crashQueue.push({ time: now + delay, pan: wavePanX, strength: ww.strength });
     }
   }
