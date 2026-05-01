@@ -816,20 +816,20 @@ mermaid.render(id, syntax);`}</code></pre>
     }
   ];
 
-  // layer colors — neon cyberpunk palette
+  // layer colors — neon cyberpunk palette with tinted glowy fills
   var lightColors = [
-    { fill: '#0a1a1a', stroke: '#00ffcc', color: '#00ffcc' },
-    { fill: '#1a0a1a', stroke: '#ff0055', color: '#ff0055' },
-    { fill: '#0a0a1a', stroke: '#00aaff', color: '#00aaff' },
-    { fill: '#1a1a0a', stroke: '#ffcc00', color: '#ffcc00' },
-    { fill: '#0a1a0a', stroke: '#00ff66', color: '#00ff66' }
+    { fill: '#0d2b28', stroke: '#00ffcc', color: '#00ffcc' },
+    { fill: '#2a0d1a', stroke: '#ff0055', color: '#ff0055' },
+    { fill: '#0d1a2e', stroke: '#00aaff', color: '#00aaff' },
+    { fill: '#2a2510', stroke: '#ffcc00', color: '#ffcc00' },
+    { fill: '#0d2a14', stroke: '#00ff66', color: '#00ff66' }
   ];
   var darkColors = [
-    { fill: '#0a1a1a', stroke: '#00ffcc', color: '#00ffcc' },
-    { fill: '#1a0a1a', stroke: '#ff0055', color: '#ff0055' },
-    { fill: '#0a0a1a', stroke: '#00aaff', color: '#00aaff' },
-    { fill: '#1a1a0a', stroke: '#ffcc00', color: '#ffcc00' },
-    { fill: '#0a1a0a', stroke: '#00ff66', color: '#00ff66' }
+    { fill: '#0d2b28', stroke: '#00ffcc', color: '#00ffcc' },
+    { fill: '#2a0d1a', stroke: '#ff0055', color: '#ff0055' },
+    { fill: '#0d1a2e', stroke: '#00aaff', color: '#00aaff' },
+    { fill: '#2a2510', stroke: '#ffcc00', color: '#ffcc00' },
+    { fill: '#0d2a14', stroke: '#00ff66', color: '#00ff66' }
   ];
 
   function buildSyntax(system) {
@@ -1117,11 +1117,11 @@ mermaid.render(id, syntax);`}</code></pre>
       look: style,
       theme: 'dark',
       themeVariables: {
-        primaryColor: '#0a1a1a',
+        primaryColor: '#0d2b28',
         primaryTextColor: '#00ffcc',
         lineColor: '#00ffcc',
-        secondaryColor: '#1a0a1a',
-        tertiaryColor: '#0a0a1a',
+        secondaryColor: '#2a0d1a',
+        tertiaryColor: '#0d1a2e',
         primaryBorderColor: '#00ffcc',
         background: '#0a0e14'
       }
@@ -1143,12 +1143,10 @@ mermaid.render(id, syntax);`}</code></pre>
         if (bgRect) bgRect.setAttribute('fill', 'transparent');
       }
 
-      // strip diagonal hachure fill lines from node shapes in both modes.
-      // rough.js (hand-drawn) and mermaid's default renderer can both produce
-      // fill patterns — keep only the outline path (last in each shape group)
+      // strip diagonal hachure fill lines from node shapes in both modes
       if (svgEl) {
-        var nodes = svgEl.querySelectorAll('.node, g[id*="flowchart-"]');
-        nodes.forEach(function(node) {
+        var allNodes = svgEl.querySelectorAll('.node, g[id*="flowchart-"]');
+        allNodes.forEach(function(node) {
           var innerGroups = node.querySelectorAll('g');
           innerGroups.forEach(function(g) {
             var paths = g.querySelectorAll('path');
@@ -1161,6 +1159,38 @@ mermaid.render(id, syntax);`}</code></pre>
               }
             }
           });
+        });
+
+        // phosphor glow — every element glows like a CRT phosphor display
+        allNodes.forEach(function(node) {
+          // detect the node's stroke color from its shape outline
+          var shape = node.querySelector('rect, path, circle, polygon, ellipse');
+          var glowColor = '#00ffcc';
+          if (shape) {
+            var cs = getComputedStyle(shape);
+            if (cs.stroke && cs.stroke !== 'none') glowColor = cs.stroke;
+          }
+          node.style.filter = 'drop-shadow(0 0 4px ' + glowColor + ') drop-shadow(0 0 8px ' + glowColor + ')';
+        });
+
+        // glow on edges
+        var edgePaths = svgEl.querySelectorAll('.edgePaths path:not(.arrowMarkerPath)');
+        edgePaths.forEach(function(ep) {
+          var cs = getComputedStyle(ep);
+          var ec = (cs.stroke && cs.stroke !== 'none') ? cs.stroke : '#00ffcc';
+          ep.style.filter = 'drop-shadow(0 0 3px ' + ec + ')';
+        });
+
+        // glow on edge labels
+        var edgeLbls = svgEl.querySelectorAll('.edgeLabel');
+        edgeLbls.forEach(function(lbl) {
+          lbl.style.filter = 'drop-shadow(0 0 3px #00ffcc)';
+        });
+
+        // glow on subgraph labels
+        var sgLabels = svgEl.querySelectorAll('.cluster-label, .subgraph-label');
+        sgLabels.forEach(function(sg) {
+          sg.style.filter = 'drop-shadow(0 0 4px #00ffcc)';
         });
       }
 
