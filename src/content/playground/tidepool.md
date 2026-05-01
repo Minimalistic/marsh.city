@@ -34,8 +34,11 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
   accent-color: rgba(150,200,220,0.8); cursor: pointer;
   writing-mode: vertical-lr; direction: rtl;
   appearance: slider-vertical;
+  padding: 4px;
 }
-.pool-sound-wrap:hover .pool-volume { height: 60px; opacity: 1; }
+.pool-sound-wrap:hover .pool-volume,
+.pool-volume:hover,
+.pool-volume:active { height: 60px; opacity: 1; }
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
 #toolbar.hidden, .pool-fs-btn.hidden { opacity: 0; pointer-events: none; }
 #toolbar, .pool-fs-btn { transition: opacity 0.5s; }
