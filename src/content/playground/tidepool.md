@@ -1,9 +1,9 @@
 ---
 title: Tidepool
-description: Tiny fish schooling in a shallow tidepool. Watch the current shift.
+description: Schools of tiny fish dodge a lurking predator in a shallow tidepool.
 ---
 
-A rocky tidepool. Tiny silver fish school together, responding to the shifting current and each other.
+A rocky tidepool. Schools of tiny fish dart through the current - but something larger is cruising among them.
 
 <div id="pool-container" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
 <canvas id="pool" style="width:100%;height:100%;display:block;background:#1a3a4a;"></canvas>
@@ -452,7 +452,7 @@ function resize() {
 let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
-const initialFishCount = Math.max(68, Math.floor(initialArea / 3000));
+const initialFishCount = Math.max(120, Math.floor(initialArea / 1000));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -469,10 +469,11 @@ function rescaleAll(oldW, oldH) {
   }
   for (const d of debris) { d.x *= sx; d.y *= sy; }
   for (const f of fish) { f.x *= sx; f.y *= sy; }
+  for (const p of predators) { p.x *= sx; p.y *= sy; }
 
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
-  const targetFish = Math.min(215, Math.floor(initialFishCount * areaRatio * 0.975));
+  const targetFish = Math.min(600, Math.floor(initialFishCount * areaRatio * 0.975));
   const targetDebris = Math.min(1200, Math.floor(initialDebrisCount * areaRatio * 0.75));
   const targetPlants = Math.min(40, Math.floor(20 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
@@ -488,7 +489,7 @@ function rescaleAll(oldW, oldH) {
     fish.push(f);
   }
   // Remove excess fish
-  while (fish.length > targetFish && fish.length > initialFishCount) fish.pop();
+  while (fish.length > targetFish && fish.length > 120) fish.pop();
 
   // Add debris if needed
   while (debris.length < targetDebris) {
@@ -952,6 +953,25 @@ class Fish {
       }
     }
 
+    // Predator avoidance - scatter when a hunting predator is near
+    for (const pred of predators) {
+      if (!pred.hunting) continue;
+      const pdx = this.x - pred.x;
+      const pdy = this.y - pred.y;
+      const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
+      const fleeRange = 120 + (pred.hunger - 0.5) * 80;
+      if (pDist < fleeRange && pDist > 0.1) {
+        const force = 0.2 * (1 - pDist / fleeRange);
+        this.vx += (pdx / pDist) * force;
+        this.vy += (pdy / pDist) * force;
+        this.fleeing = true;
+        this.fleeTimer = 0.6;
+        // Break school cohesion when fleeing predator
+        this.distracted = true;
+        this.distractTimer = 1.5 + Math.random() * 2;
+      }
+    }
+
     if (this.fleeTimer > 0) this.fleeTimer -= dt;
     else this.fleeing = false;
 
@@ -1341,6 +1361,409 @@ class Fish {
   }
 }
 
+// Predator fish - larger, hunts small fish based on hunger
+class Predator {
+  constructor() {
+    const edge = Math.floor(Math.random() * 4);
+    const m = 120 + Math.random() * 60;
+    if (edge === 0) { this.x = -m; this.y = Math.random() * h; this.angle = (Math.random() - 0.5) * 0.4; }
+    else if (edge === 1) { this.x = w + m; this.y = Math.random() * h; this.angle = Math.PI + (Math.random() - 0.5) * 0.4; }
+    else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
+    else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
+
+    this.len = (40 + Math.random() * 15) * (w < 500 ? 0.8 : 1);
+    this.bodyWidth = this.len * 0.08;
+    this.speed = 0.5 + Math.random() * 0.3;
+    this.baseSpeed = this.speed;
+    this.vx = Math.cos(this.angle) * this.speed;
+    this.vy = Math.sin(this.angle) * this.speed;
+
+    this.depth = 0.05 + Math.random() * 0.12;
+    this.depthAlpha = 1 - this.depth * 0.3;
+    this.color = 'rgb(70, 85, 65)';
+    this.bellyColor = 'rgb(110, 120, 100)';
+
+    // Hunger: 0 = full, 1 = starving. Hunting starts at 0.5
+    this.hunger = 0.2 + Math.random() * 0.2;
+    this.hunting = false;
+    this.target = null;
+    this.burstTimer = 0;
+    this.digestTimer = 0;
+
+    const numJoints = 20;
+    this._jointCount = numJoints;
+    this._segLen = this.len / numJoints;
+    this._joints = [];
+    for (let j = 0; j <= numJoints; j++) {
+      this._joints.push({
+        x: this.x - Math.cos(this.angle) * j * this._segLen,
+        y: this.y - Math.sin(this.angle) * j * this._segLen,
+      });
+    }
+    this._phaseOffset = Math.random() * Math.PI * 20;
+    this._swimSmooth = 0.3;
+  }
+
+  update(dt, smallFish, time) {
+    this.hunger = Math.min(1, this.hunger + dt * 0.012);
+
+    if (this.digestTimer > 0) {
+      this.digestTimer -= dt;
+      this.hunting = false;
+      this.target = null;
+    }
+
+    this.hunting = this.hunger > 0.5 && this.digestTimer <= 0;
+
+    if (this.hunting) {
+      if (!this.target || !smallFish.includes(this.target) || Math.random() < 0.008) {
+        let closest = null;
+        let closestScore = Infinity;
+        const mouthX = this.x + Math.cos(this.angle) * this.len * 0.45;
+        const mouthY = this.y + Math.sin(this.angle) * this.len * 0.45;
+        for (const f of smallFish) {
+          const dx = f.x - mouthX, dy = f.y - mouthY;
+          const d2 = dx * dx + dy * dy;
+          // Prefer fish ahead of us
+          const dot = dx * Math.cos(this.angle) + dy * Math.sin(this.angle);
+          const score = d2 - (dot > 0 ? dot * 40 : 0);
+          if (score < closestScore) { closestScore = score; closest = f; }
+        }
+        if (closest) this.target = closest;
+      }
+
+      if (this.target) {
+        const dx = this.target.x - this.x, dy = this.target.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const pursuitAngle = Math.atan2(dy, dx);
+        const urgency = Math.min(1, (this.hunger - 0.4) * 1.67);
+        const steer = 0.02 + urgency * 0.04;
+        this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 1.8 - this.vx) * steer;
+        this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 1.8 - this.vy) * steer;
+
+        if (dist < 80) {
+          this.burstTimer = 0.5;
+          const burstSteer = 0.08 + urgency * 0.06;
+          this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.5 - this.vx) * burstSteer;
+          this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.5 - this.vy) * burstSteer;
+        }
+
+        // Catch check
+        const mouthX = this.x + Math.cos(this.angle) * this.len * 0.45;
+        const mouthY = this.y + Math.sin(this.angle) * this.len * 0.45;
+        const catchDist = Math.sqrt((this.target.x - mouthX) ** 2 + (this.target.y - mouthY) ** 2);
+        if (catchDist < 12) {
+          const idx = smallFish.indexOf(this.target);
+          if (idx >= 0) smallFish.splice(idx, 1);
+          this.hunger = Math.max(0, this.hunger - 0.45);
+          this.digestTimer = 5 + Math.random() * 5;
+          this.target = null;
+          this.hunting = false;
+        }
+      }
+    }
+
+    // Tidal current
+    this.vx += Math.cos(tide.angle) * tide.strength * 0.003;
+    this.vy += Math.sin(tide.angle) * tide.strength * 0.003;
+    const flow = sampleFlow(this.x, this.y, time);
+    this.vx += flow.fx * 0.003;
+    this.vy += flow.fy * 0.003;
+
+    let targetSpeed;
+    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 2.5; this.burstTimer -= dt; }
+    else if (this.hunting) targetSpeed = this.baseSpeed * (1.2 + this.hunger * 0.6);
+    else targetSpeed = this.baseSpeed * 0.7;
+
+    const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    if (currentSpeed > 0.01) {
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.08;
+      this.vx *= desired / currentSpeed;
+      this.vy *= desired / currentSpeed;
+    } else {
+      this.vx = Math.cos(this.angle) * targetSpeed * 0.5;
+      this.vy = Math.sin(this.angle) * targetSpeed * 0.5;
+    }
+
+    // Gentle centering
+    const normX = (this.x - w / 2) / (w / 2);
+    const normY = (this.y - h / 2) / (h / 2);
+    const edgeX = Math.max(0, Math.abs(normX) - 0.7) / 0.3;
+    const edgeY = Math.max(0, Math.abs(normY) - 0.7) / 0.3;
+    this.vx -= Math.sign(normX) * edgeX * 0.02;
+    this.vy -= Math.sign(normY) * edgeY * 0.02;
+
+    // Reef avoidance
+    const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+    let reefSteer = 0;
+    for (const rf of reefs) {
+      const cdx = this.x - (rf.x + rf.crownOffX), cdy = this.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.5;
+      const crownSense = crownR * 3;
+      if (cDist < crownSense && cDist > 0.1) {
+        const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
+        if (approach > -0.3) {
+          const aw = Math.max(0, approach + 0.3);
+          const prox = 1 - cDist / crownSense;
+          const cross = this.vx * cdy - this.vy * cdx;
+          reefSteer += (cross >= 0 ? 1 : -1) * prox * prox * prox * aw * 0.2;
+        }
+      }
+      const rdx = this.x - rf.x, rdy = this.y - rf.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      const bAngle = Math.atan2(rdy, rdx);
+      const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1);
+      const baseR = rf.radiusAt(bAngle, rf.baseRadii) * 0.45 * bNoise + this.len * 0.5;
+      const baseSense = baseR * 2.5;
+      if (rDist < baseSense && rDist > 0.1) {
+        const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
+        if (approach > -0.3) {
+          const aw = Math.max(0, approach + 0.3);
+          const prox = 1 - rDist / baseSense;
+          const cross = this.vx * rdy - this.vy * rdx;
+          reefSteer += (cross >= 0 ? 1 : -1) * prox * prox * prox * aw * 0.15;
+        }
+      }
+    }
+    if (Math.abs(reefSteer) > 0.001) {
+      const clampedSteer = Math.max(-0.12, Math.min(0.12, reefSteer));
+      this.angle += clampedSteer;
+      this.vx = Math.cos(this.angle) * spd;
+      this.vy = Math.sin(this.angle) * spd;
+    }
+
+    // Forward-only constraint
+    const headX = Math.cos(this.angle), headY = Math.sin(this.angle);
+    const fwdSpeed = this.vx * headX + this.vy * headY;
+    const latSpeed = this.vx * (-headY) + this.vy * headX;
+    this.vx -= (-headY) * latSpeed * 0.6;
+    this.vy -= headX * latSpeed * 0.6;
+    if (fwdSpeed < 0) { this.vx -= headX * fwdSpeed * 0.7; this.vy -= headY * fwdSpeed * 0.7; }
+    const minFwd = this.baseSpeed * 0.3;
+    const fwdNow = this.vx * headX + this.vy * headY;
+    if (fwdNow < minFwd) { this.vx += headX * (minFwd - fwdNow) * 0.2; this.vy += headY * (minFwd - fwdNow) * 0.2; }
+
+    this.vx *= 0.99;
+    this.vy *= 0.99;
+
+    if (this.x < 0) this.vx += (Math.abs(this.x) / w) * 0.4;
+    if (this.x > w) this.vx -= ((this.x - w) / w) * 0.4;
+    if (this.y < 0) this.vy += (Math.abs(this.y) / h) * 0.4;
+    if (this.y > h) this.vy -= ((this.y - h) / h) * 0.4;
+
+    this.x += this.vx;
+    this.y += this.vy;
+    const overflow = 0.2;
+    this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
+    this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
+
+    // Reef collision push
+    for (const rf of reefs) {
+      const cdx = this.x - (rf.x + rf.crownOffX), cdy = this.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
+      if (cDist < crownCollR * 1.3 && cDist > 0.1) {
+        const pen = 1 - cDist / (crownCollR * 1.3);
+        this.vx += (cdx / cDist) * pen * pen * 0.6;
+        this.vy += (cdy / cDist) * pen * pen * 0.6;
+      }
+    }
+
+    const targetAngle = Math.atan2(this.vy, this.vx);
+    let angleDiff = targetAngle - this.angle;
+    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+    const maxTurn = 0.08 + currentSpeed * 0.08;
+    this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
+
+    // Joint chain
+    this._joints[0].x = this.x;
+    this._joints[0].y = this.y;
+    for (let j = 1; j <= this._jointCount; j++) {
+      const prev = this._joints[j - 1];
+      const curr = this._joints[j];
+      let dx = curr.x - prev.x, dy = curr.y - prev.y;
+      let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const tx = prev.x + (dx / dist) * this._segLen;
+      const ty = prev.y + (dy / dist) * this._segLen;
+      const t = j / this._jointCount;
+      const stiffness = 0.995 - t * 0.005;
+      curr.x += (tx - curr.x) * stiffness;
+      curr.y += (ty - curr.y) * stiffness;
+      dx = curr.x - prev.x; dy = curr.y - prev.y;
+      dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      curr.x = prev.x + (dx / dist) * this._segLen;
+      curr.y = prev.y + (dy / dist) * this._segLen;
+      if (j >= 2) {
+        const pp = this._joints[j - 2];
+        const prevAngle = Math.atan2(prev.y - pp.y, prev.x - pp.x);
+        const currAngle = Math.atan2(curr.y - prev.y, curr.x - prev.x);
+        let bend = currAngle - prevAngle;
+        while (bend > Math.PI) bend -= Math.PI * 2;
+        while (bend < -Math.PI) bend += Math.PI * 2;
+        if (Math.abs(bend) > 0.1) {
+          const ca = prevAngle + Math.sign(bend) * 0.1;
+          curr.x = prev.x + Math.cos(ca) * this._segLen;
+          curr.y = prev.y + Math.sin(ca) * this._segLen;
+        }
+      }
+    }
+    this.speed = currentSpeed;
+  }
+
+  draw(ctx) {
+    const segs = this._jointCount;
+    const totalLen = this.len;
+    const rawIntensity = Math.min(1, this.speed * 0.6);
+    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.012;
+    const si = this._swimSmooth;
+    const phase = Date.now() * 0.00025 * (0.4 + si * 0.6) + this._phaseOffset;
+
+    const cosH = Math.cos(-this.angle), sinH = Math.sin(-this.angle);
+    const spineX = new Array(segs + 1), spineY = new Array(segs + 1), widths = new Array(segs + 1);
+    for (let i = 0; i <= segs; i++) {
+      const jx = this._joints[i].x - this.x, jy = this._joints[i].y - this.y;
+      let lx = jx * cosH - jy * sinH, ly = jx * sinH + jy * cosH;
+      if (i > 0) {
+        const t = i / segs;
+        const flex = t < 0.5 ? 0 : (t - 0.5) / 0.5;
+        ly += Math.sin(phase - t * Math.PI * 0.7) * flex * this.len * 0.035 * (0.2 + si * 0.8);
+      }
+      spineX[i] = lx; spineY[i] = ly;
+      // Stocky predator body profile
+      const tw = i / segs;
+      let hw;
+      if (tw < 0.06) hw = tw / 0.06 * this.bodyWidth * 0.4;
+      else if (tw < 0.2) hw = this.bodyWidth * (0.4 + (tw - 0.06) / 0.14 * 0.6);
+      else if (tw < 0.55) hw = this.bodyWidth * (1 - (tw - 0.2) / 0.35 * 0.15);
+      else hw = this.bodyWidth * 0.85 * Math.pow(1 - (tw - 0.55) / 0.45, 1.3);
+      widths[i] = Math.max(hw, 0.2);
+    }
+    widths[0] = this.bodyWidth * 0.4;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    const rightX = new Array(segs + 1), rightY = new Array(segs + 1);
+    const leftX = new Array(segs + 1), leftY = new Array(segs + 1);
+    for (let i = 0; i <= segs; i++) {
+      let nx, ny;
+      if (i === 0) { nx = -(spineY[1] - spineY[0]); ny = spineX[1] - spineX[0]; }
+      else if (i === segs) { nx = -(spineY[i] - spineY[i-1]); ny = spineX[i] - spineX[i-1]; }
+      else { nx = -(spineY[i+1] - spineY[i-1]); ny = spineX[i+1] - spineX[i-1]; }
+      const nLen = Math.sqrt(nx * nx + ny * ny) || 1;
+      nx /= nLen; ny /= nLen;
+      rightX[i] = spineX[i] + nx * widths[i]; rightY[i] = spineY[i] + ny * widths[i];
+      leftX[i] = spineX[i] - nx * widths[i]; leftY[i] = spineY[i] - ny * widths[i];
+    }
+
+    // Body - hunger tints redder
+    const ht = this.hunting ? Math.min(1, (this.hunger - 0.5) * 2) : 0;
+    const cr = Math.round(70 + ht * 40), cg = Math.round(85 - ht * 20), cb = Math.round(65 - ht * 15);
+    ctx.beginPath();
+    ctx.moveTo(spineX[0], spineY[0]);
+    ctx.lineTo(rightX[0], rightY[0]);
+    for (let i = 0; i < segs; i++) ctx.quadraticCurveTo(rightX[i], rightY[i], (rightX[i]+rightX[i+1])*0.5, (rightY[i]+rightY[i+1])*0.5);
+    ctx.lineTo(rightX[segs], rightY[segs]);
+    ctx.lineTo(spineX[segs], spineY[segs]);
+    ctx.lineTo(leftX[segs], leftY[segs]);
+    for (let i = segs; i > 0; i--) ctx.quadraticCurveTo(leftX[i], leftY[i], (leftX[i]+leftX[i-1])*0.5, (leftY[i]+leftY[i-1])*0.5);
+    ctx.lineTo(leftX[0], leftY[0]);
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+    ctx.fill();
+
+    // Dorsal stripe
+    ctx.beginPath();
+    ctx.moveTo(spineX[1], spineY[1]);
+    for (let i = 2; i < segs - 1; i++) ctx.quadraticCurveTo(spineX[i], spineY[i], (spineX[i]+spineX[i+1])*0.5, (spineY[i]+spineY[i+1])*0.5);
+    ctx.strokeStyle = this.bellyColor;
+    ctx.globalAlpha = 0.25;
+    ctx.lineWidth = this.bodyWidth * 0.4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Dorsal fin
+    const dStart = Math.round(segs * 0.15), dEnd = Math.round(segs * 0.45);
+    ctx.beginPath();
+    ctx.moveTo(spineX[dStart], spineY[dStart]);
+    for (let i = dStart; i <= dEnd; i++) {
+      const t = (i - dStart) / (dEnd - dStart);
+      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 1.2;
+      const nx2 = -(spineY[Math.min(i+1, segs)] - spineY[Math.max(i-1, 0)]);
+      const ny2 = spineX[Math.min(i+1, segs)] - spineX[Math.max(i-1, 0)];
+      const nL = Math.sqrt(nx2 * nx2 + ny2 * ny2) || 1;
+      ctx.lineTo(spineX[i] + (nx2/nL)*finH, spineY[i] + (ny2/nL)*finH);
+    }
+    ctx.lineTo(spineX[dEnd], spineY[dEnd]);
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${cr-15},${cg-15},${cb-10})`;
+    ctx.globalAlpha = 0.45;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Tail fin
+    const tsi = segs;
+    const tailDir = Math.atan2(spineY[tsi]-spineY[tsi-1], spineX[tsi]-spineX[tsi-1]);
+    const tailSpread = this.bodyWidth * 1.8, tailLen = totalLen * 0.18;
+    const tPx = -Math.sin(tailDir), tPy = Math.cos(tailDir);
+    ctx.beginPath();
+    ctx.moveTo(rightX[tsi], rightY[tsi]);
+    ctx.quadraticCurveTo(spineX[tsi]+Math.cos(tailDir)*tailLen+tPx*tailSpread*0.4, spineY[tsi]+Math.sin(tailDir)*tailLen+tPy*tailSpread*0.4, spineX[tsi]+Math.cos(tailDir)*tailLen, spineY[tsi]+Math.sin(tailDir)*tailLen);
+    ctx.quadraticCurveTo(spineX[tsi]+Math.cos(tailDir)*tailLen-tPx*tailSpread*0.4, spineY[tsi]+Math.sin(tailDir)*tailLen-tPy*tailSpread*0.4, leftX[tsi], leftY[tsi]);
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
+    ctx.globalAlpha = 0.6;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Pectoral fins
+    const pIdx = Math.round(segs * 0.25);
+    const finLen = totalLen * 0.18;
+    for (const side of [-1, 1]) {
+      const bx = side === 1 ? rightX[pIdx] : leftX[pIdx];
+      const by = side === 1 ? rightY[pIdx] : leftY[pIdx];
+      const bodyDir = Math.atan2(spineY[pIdx]-spineY[pIdx+1], spineX[pIdx]-spineX[pIdx+1]);
+      const tipX = bx + Math.cos(bodyDir + side * 0.6) * finLen;
+      const tipY = by + Math.sin(bodyDir + side * 0.6) * finLen;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.quadraticCurveTo(tipX, tipY, bx + Math.cos(bodyDir) * finLen * 0.4, by + Math.sin(bodyDir) * finLen * 0.4);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
+      ctx.globalAlpha = 0.4;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Eyes - larger, with iris
+    const eIdx = Math.round(segs * 0.1);
+    const eyeR = Math.max(totalLen * 0.04, 0.6);
+    const eyeOff = widths[eIdx] * 0.55;
+    for (const side of [-1, 1]) {
+      const enx = -(spineY[eIdx+1]-spineY[eIdx]), eny = spineX[eIdx+1]-spineX[eIdx];
+      const eLen = Math.sqrt(enx*enx+eny*eny) || 1;
+      const ex = spineX[eIdx]+(enx/eLen)*eyeOff*side;
+      const ey = spineY[eIdx]+(eny/eLen)*eyeOff*side;
+      ctx.beginPath();
+      ctx.arc(ex, ey, eyeR * 1.3, 0, Math.PI * 2);
+      ctx.fillStyle = this.hunting ? 'rgb(180,140,60)' : 'rgb(120,130,100)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(ex, ey, eyeR * 0.7, 0, Math.PI * 2);
+      ctx.fillStyle = '#111';
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
 // Create fish in schools with distinct colors
 const schoolColors = [
   { color: 'rgb(130, 155, 170)', belly: 'rgb(160, 185, 200)' },   // blue-silver
@@ -1348,7 +1771,7 @@ const schoolColors = [
   { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
   { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
 ];
-const fishCount = Math.max(68, Math.floor((w * h) / 3000));
+const fishCount = Math.max(120, Math.floor((w * h) / 1000));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
@@ -1365,6 +1788,12 @@ const schoolEntries = schoolColors.map((_, si) => {
   else { x = w * 0.2 + Math.random() * w * 0.6; y = h + margin; angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.5; }
   return { x, y, angle };
 });
+
+// Predator(s) - one per pool, maybe two on large viewports
+const predators = [];
+const predatorCount = w * h > 600000 ? 2 : 1;
+for (let i = 0; i < predatorCount; i++) predators.push(new Predator());
+let fishRespawnTimer = 0; // replenish eaten fish gradually
 
 // Rocks - scattered across the tidepool floor
 const rocks = [];
@@ -1670,12 +2099,17 @@ function draw(time) {
     const cosA = Math.cos(ww.angle);
     const sinA = Math.sin(ww.angle);
     for (const f of fish) {
-      // Distance from wave front line (perpendicular)
       const rel = (f.x - ww.x) * cosA + (f.y - ww.y) * sinA;
       if (rel > -5 && rel < ww.width) {
-        // Noticeable push as wave passes directly over
         f.vx += cosA * pushForce * 0.025;
         f.vy += sinA * pushForce * 0.025;
+      }
+    }
+    for (const pred of predators) {
+      const rel = (pred.x - ww.x) * cosA + (pred.y - ww.y) * sinA;
+      if (rel > -5 && rel < ww.width) {
+        pred.vx += cosA * pushForce * 0.015;
+        pred.vy += sinA * pushForce * 0.015;
       }
     }
     for (const d of debris) {
@@ -1776,11 +2210,16 @@ function draw(time) {
     p.draw(ctx, time);
   }
 
-  // Displace plants from fish
+  // Displace plants from fish and predators
   for (const f of fish) {
     if (f.speed < 0.5) continue;
     for (const p of plants) {
       p.displace(f.x, f.y, 20 * f.scale, f.speed * 0.1);
+    }
+  }
+  for (const pred of predators) {
+    for (const p of plants) {
+      p.displace(pred.x, pred.y, 35, pred.speed * 0.2);
     }
   }
 
@@ -2047,11 +2486,29 @@ function draw(time) {
     ctx.fill();
   }
 
-  // Update and draw fish
-  for (const f of fish) f.update(dt, fish, time);
+  // Respawn eaten fish gradually - maintain population
+  const targetPop = Math.max(120, Math.floor((w * h) / 1000));
+  if (fish.length < targetPop) {
+    fishRespawnTimer += dt;
+    if (fishRespawnTimer > 0.8) {
+      fishRespawnTimer = 0;
+      const school = Math.floor(Math.random() * schoolColors.length);
+      const entry = schoolEntries[school];
+      const f = new Fish(entry);
+      f.school = school;
+      f.color = schoolColors[school].color;
+      f.bellyColor = schoolColors[school].belly;
+      fish.push(f);
+    }
+  }
 
-  // Draw fish sorted by depth - deeper fish first, dimmer and slightly blurred
-  const sortedFish = [...fish].sort((a, b) => b.depth - a.depth);
+  // Update and draw fish + predators
+  for (const f of fish) f.update(dt, fish, time);
+  for (const p of predators) p.update(dt, fish, time);
+
+  // Draw all fish and predators sorted by depth
+  const allSwimmers = [...fish, ...predators];
+  const sortedFish = allSwimmers.sort((a, b) => b.depth - a.depth);
   for (const f of sortedFish) {
     ctx.save();
     ctx.globalAlpha = f.depthAlpha;
