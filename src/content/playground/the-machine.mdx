@@ -560,7 +560,7 @@ Every time you load this page, a different real-world system reveals how it work
     return lines.join('\\n');
   }
 
-  function setupAnimation(wrapper, order, sys) {
+  function setupAnimation(wrapper, order, sys, immediate) {
     var svg = wrapper.querySelector('svg');
     if (!svg) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -645,10 +645,23 @@ Every time you load this page, a different real-world system reveals how it work
       }
     }
 
-    // start animation immediately — The Machine diagrams are already
-    // in view since the user just loaded or shuffled
-    wrapper.classList.add('mermaid--visible');
-    runStep(0);
+    if (immediate) {
+      // shuffle — user is already looking at the diagram
+      wrapper.classList.add('mermaid--visible');
+      runStep(0);
+    } else {
+      // initial load — wait until diagram scrolls into view
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            wrapper.classList.add('mermaid--visible');
+            observer.unobserve(wrapper);
+            runStep(0);
+          }
+        });
+      }, { threshold: 0.3 });
+      observer.observe(wrapper);
+    }
   }
 
   // --- state ---
@@ -693,10 +706,7 @@ Every time you load this page, a different real-world system reveals how it work
 
     window.mermaid.render('machine' + Date.now(), syntax).then(function(result) {
       container.innerHTML = result.svg;
-      setupAnimation(wrapper, order, sys);
-      if (immediate) {
-        wrapper.classList.add('mermaid--visible');
-      }
+      setupAnimation(wrapper, order, sys, immediate);
     });
   }
 
