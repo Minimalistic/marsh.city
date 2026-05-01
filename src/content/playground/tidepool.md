@@ -295,8 +295,9 @@ function rescaleAll(oldW, oldH) {
 
   // Add fish if needed - new fish swim in from edges
   while (fish.length < targetFish) {
-    const f = new Fish(true);
     const school = fish.length % schoolColors.length;
+    const entry = schoolEntries[school];
+    const f = new Fish(entry);
     f.school = school;
     f.color = schoolColors[school].color;
     f.bellyColor = schoolColors[school].belly;
@@ -519,15 +520,13 @@ for (let i = 0; i < 500; i++) {
 
 // Small fish class - schooling behavior (boids)
 class Fish {
-  constructor(fromEdge = false) {
-    if (fromEdge) {
-      // Spawn offscreen and swim inward
-      const edge = Math.floor(Math.random() * 4);
-      const margin = 30;
-      if (edge === 0) { this.x = -margin; this.y = Math.random() * h; this.angle = (Math.random() - 0.5) * 0.8; }
-      else if (edge === 1) { this.x = w + margin; this.y = Math.random() * h; this.angle = Math.PI + (Math.random() - 0.5) * 0.8; }
-      else if (edge === 2) { this.y = -margin; this.x = Math.random() * w; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.8; }
-      else { this.y = h + margin; this.x = Math.random() * w; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.8; }
+  constructor(spawnInfo = null) {
+    if (spawnInfo) {
+      // Spawn as part of a school group at a specific edge point
+      // spawnInfo: { x, y, angle } with slight scatter applied
+      this.x = spawnInfo.x + (Math.random() - 0.5) * 25;
+      this.y = spawnInfo.y + (Math.random() - 0.5) * 25;
+      this.angle = spawnInfo.angle + (Math.random() - 0.5) * 0.3;
     } else {
       this.x = w * 0.2 + Math.random() * w * 0.6;
       this.y = h * 0.2 + Math.random() * h * 0.6;
@@ -811,6 +810,16 @@ class Fish {
       }
     }
 
+    // Fish actively swim forward - velocity aligns toward heading
+    // This prevents sideways sliding from pushes; fish reorient to swim properly
+    const headX = Math.cos(this.angle);
+    const headY = Math.sin(this.angle);
+    const fwdSpeed = this.vx * headX + this.vy * headY; // speed along heading
+    const latSpeed = this.vx * (-headY) + this.vy * headX; // sideways drift
+    // Dampen lateral drift - fish resist being pushed sideways
+    this.vx -= (-headY) * latSpeed * 0.12;
+    this.vy -= headX * latSpeed * 0.12;
+
     // Drag - smooths out micro-jitter
     this.vx *= 0.985;
     this.vy *= 0.985;
@@ -1078,11 +1087,21 @@ const schoolColors = [
 ];
 const fishCount = Math.max(25, Math.floor((w * h) / 8000));
 const fish = [];
-// Fish swim in from edges over the first ~6 seconds
+// Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
-let spawnTimer = 0;
-const spawnDuration = 6; // seconds to trickle all fish in
 let fishSpawned = 0;
+let spawnTimer = 0;
+// Pre-plan school entry points: each school enters from a different edge
+const schoolEntries = schoolColors.map((_, si) => {
+  const edge = si % 4;
+  const margin = 40;
+  let x, y, angle;
+  if (edge === 0) { x = -margin; y = h * 0.2 + Math.random() * h * 0.6; angle = (Math.random() - 0.5) * 0.5; }
+  else if (edge === 1) { x = w + margin; y = h * 0.2 + Math.random() * h * 0.6; angle = Math.PI + (Math.random() - 0.5) * 0.5; }
+  else if (edge === 2) { x = w * 0.2 + Math.random() * w * 0.6; y = -margin; angle = Math.PI / 2 + (Math.random() - 0.5) * 0.5; }
+  else { x = w * 0.2 + Math.random() * w * 0.6; y = h + margin; angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.5; }
+  return { x, y, angle };
+});
 
 // Rocks - scattered across the tidepool floor
 const rocks = [];
@@ -1313,21 +1332,24 @@ function draw(time) {
   lastTime = time;
   if (settleTime > 0) settleTime -= dt;
 
-  // Stagger fish spawning from edges over the first few seconds
+  // Spawn fish as school groups swimming in from edges
   if (fishSpawned < fishToSpawn) {
     spawnTimer += dt;
-    // Spawn rate: fast burst at start, then tapers
-    const progress = fishSpawned / fishToSpawn;
-    const interval = 0.05 + progress * 0.3; // 50ms between first fish, 350ms for last
-    while (spawnTimer >= interval && fishSpawned < fishToSpawn) {
-      spawnTimer -= interval;
-      const f = new Fish(true);
+    // Small batches every ~0.15s so schools arrive as clusters
+    while (spawnTimer >= 0.15 && fishSpawned < fishToSpawn) {
+      spawnTimer -= 0.15;
+      // Spawn 2-4 fish from the same school entry point
+      const batchSize = Math.min(2 + Math.floor(Math.random() * 3), fishToSpawn - fishSpawned);
       const school = fishSpawned % schoolColors.length;
-      f.school = school;
-      f.color = schoolColors[school].color;
-      f.bellyColor = schoolColors[school].belly;
-      fish.push(f);
-      fishSpawned++;
+      const entry = schoolEntries[school];
+      for (let b = 0; b < batchSize; b++) {
+        const f = new Fish(entry);
+        f.school = school;
+        f.color = schoolColors[school].color;
+        f.bellyColor = schoolColors[school].belly;
+        fish.push(f);
+        fishSpawned++;
+      }
     }
   }
 
