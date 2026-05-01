@@ -850,44 +850,28 @@ function draw(time) {
     ctx.fill();
   }
 
-  // Draw wash wave fronts - organic foam, whorls, trailing threads
+  // Draw wash wave fronts - irregular foam patches and clumps
   for (const ww of washWaves) {
     if (ww.life <= 0) continue;
-    // Generate stable detail on first draw
-    if (!ww.foam) {
-      ww.foam = [];
-      ww.whorls = [];
-      ww.threads = [];
+    // Generate foam blobs on first draw - just irregular clumps
+    if (!ww.blobs) {
+      ww.blobs = [];
       const span = Math.max(w, h) * 1.4;
-      // Foam clusters - denser near front, thinning backward
-      for (let i = 0; i < 80; i++) {
-        const depth = Math.pow(Math.random(), 1.8) * ww.width * 2;
-        ww.foam.push({
-          x: depth, y: (Math.random() - 0.5) * span,
-          size: 0.4 + Math.pow(Math.random(), 0.7) * 3,
-          drift: (Math.random() - 0.5) * 0.4,
-        });
-      }
-      // Whorls - spiral curls that peel off the wave
-      for (let i = 0; i < 6; i++) {
-        ww.whorls.push({
-          x: 5 + Math.random() * ww.width * 1.5,
-          y: (Math.random() - 0.5) * span * 0.8,
-          radius: 5 + Math.random() * 12,
-          turns: 0.8 + Math.random() * 1.2,
-          dir: Math.random() < 0.5 ? 1 : -1,
-          drift: 0.1 + Math.random() * 0.2,
-        });
-      }
-      // Trailing threads - thin foam lines that stretch behind
-      for (let i = 0; i < 10; i++) {
-        ww.threads.push({
-          startX: 3 + Math.random() * ww.width * 0.5,
-          y: (Math.random() - 0.5) * span * 0.9,
-          len: 10 + Math.random() * 25,
-          curve: (Math.random() - 0.5) * 8,
-          width: 0.3 + Math.random() * 0.8,
-          drift: 0.05 + Math.random() * 0.1,
+      for (let i = 0; i < 120; i++) {
+        // Clustered distribution - some near front, some trailing
+        const cluster = Math.random();
+        const depth = cluster < 0.5
+          ? Math.random() * 8  // front cluster
+          : 8 + Math.pow(Math.random(), 1.3) * ww.width * 2.5; // trailing
+        ww.blobs.push({
+          x: depth,
+          y: (Math.random() - 0.5) * span,
+          size: 0.3 + Math.pow(Math.random(), 2) * 4, // mostly small, few large
+          elongX: 0.7 + Math.random() * 1.5, // irregular shape
+          elongY: 0.5 + Math.random() * 0.8,
+          rot: Math.random() * Math.PI,
+          drift: 0.05 + Math.random() * 0.3,
+          driftY: (Math.random() - 0.5) * 0.1,
         });
       }
     }
@@ -895,80 +879,25 @@ function draw(time) {
     ctx.save();
     ctx.translate(ww.x, ww.y);
     ctx.rotate(ww.angle);
-    const span = Math.max(w, h) * 1.4;
 
-    // Leading edge - organic broken line
-    ctx.globalAlpha = ww.life * 0.3;
-    ctx.beginPath();
-    ctx.moveTo(0, -span);
-    for (let y = -span; y < span; y += 4) {
-      const jitter = Math.sin(y * 0.12 + ww.traveled * 0.08) * 4
-                   + Math.sin(y * 0.35 + ww.traveled * 0.15) * 2
-                   + Math.sin(y * 0.8) * 0.8;
-      ctx.lineTo(jitter, y);
-    }
-    ctx.strokeStyle = 'rgba(210, 235, 245, 1)';
-    ctx.lineWidth = 1.5 + Math.sin(ww.traveled * 0.2) * 0.5;
-    ctx.stroke();
-
-    // Foam particles - stable positions, drifting outward over time
-    for (const f of ww.foam) {
-      const fx = f.x + ww.traveled * f.drift * 0.3;
-      const fade = Math.max(0, 1 - fx / (ww.width * 3));
+    // Just foam blobs - irregular shapes scattered in the wake
+    for (const b of ww.blobs) {
+      const bx = b.x + ww.traveled * b.drift * 0.2;
+      const by = b.y + ww.traveled * b.driftY;
+      const fade = Math.max(0, 1 - bx / (ww.width * 4));
       if (fade <= 0) continue;
-      ctx.globalAlpha = ww.life * fade * 0.2;
+      // Closer to front = more opaque
+      const frontFade = bx < 10 ? 0.25 : 0.12;
+      ctx.globalAlpha = ww.life * fade * frontFade;
+      ctx.save();
+      ctx.translate(bx, by);
+      ctx.rotate(b.rot);
       ctx.beginPath();
-      ctx.arc(fx, f.y + Math.sin(ww.traveled * 0.1 + f.x) * 2, f.size, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(215, 235, 245, 1)';
+      ctx.ellipse(0, 0, b.size * b.elongX, b.size * b.elongY, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(210, 230, 240, 1)';
       ctx.fill();
+      ctx.restore();
     }
-
-    // Whorls - spiraling curls that expand over time
-    for (const wh of ww.whorls) {
-      const wx = wh.x + ww.traveled * wh.drift;
-      const fade = Math.max(0, 1 - wx / (ww.width * 3));
-      if (fade <= 0) continue;
-      ctx.globalAlpha = ww.life * fade * 0.12;
-      ctx.beginPath();
-      const r = wh.radius + ww.traveled * 0.02;
-      for (let a = 0; a < wh.turns * Math.PI * 2; a += 0.2) {
-        const sr = r * (1 - a / (wh.turns * Math.PI * 2)) * 0.8;
-        const sx = wx + Math.cos(a * wh.dir + ww.traveled * 0.05) * sr;
-        const sy = wh.y + Math.sin(a * wh.dir + ww.traveled * 0.05) * sr;
-        if (a === 0) ctx.moveTo(sx, sy);
-        else ctx.lineTo(sx, sy);
-      }
-      ctx.strokeStyle = 'rgba(190, 220, 235, 1)';
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-    }
-
-    // Trailing threads - thin foam tendrils stretching backward
-    for (const th of ww.threads) {
-      const tx = th.startX + ww.traveled * th.drift;
-      const fade = Math.max(0, 1 - tx / (ww.width * 3));
-      if (fade <= 0) continue;
-      ctx.globalAlpha = ww.life * fade * 0.15;
-      ctx.beginPath();
-      ctx.moveTo(tx, th.y);
-      const endX = tx + th.len + ww.traveled * th.drift * 0.5;
-      ctx.quadraticCurveTo(
-        tx + th.len * 0.5, th.y + th.curve + Math.sin(ww.traveled * 0.08 + th.y) * 3,
-        endX, th.y + th.curve * 1.5
-      );
-      ctx.strokeStyle = 'rgba(200, 225, 240, 1)';
-      ctx.lineWidth = th.width;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-    }
-
-    // Subtle gradient wash
-    ctx.globalAlpha = ww.life * 0.03;
-    const washGrad = ctx.createLinearGradient(0, 0, ww.width * 2, 0);
-    washGrad.addColorStop(0, 'rgba(180, 220, 235, 1)');
-    washGrad.addColorStop(1, 'rgba(180, 220, 235, 0)');
-    ctx.fillStyle = washGrad;
-    ctx.fillRect(0, -span, ww.width * 2, span * 2);
 
     ctx.restore();
   }
