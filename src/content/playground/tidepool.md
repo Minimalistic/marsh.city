@@ -830,9 +830,9 @@ class Fish {
     const segs = 10; // more segments = smoother curves
     const totalLen = this.len;
 
-    // Undulation: traveling sine wave, speed-dependent
-    const wiggleSpeed = this.speed * 2.5 + 0.8;
-    const phase = Date.now() * 0.008 * wiggleSpeed + this.x * 0.05 + this.y * 0.03;
+    // Undulation: slow traveling wave, speed-dependent
+    const wiggleSpeed = 0.3 + this.speed * 0.6;
+    const phase = Date.now() * 0.003 * wiggleSpeed + this.x * 0.05 + this.y * 0.03;
 
     // Build spine in local space (head-forward along +X axis)
     const spineX = new Array(segs + 1);
@@ -843,9 +843,11 @@ class Fish {
       const t = i / segs; // 0=nose, 1=tail
       spineX[i] = (0.5 - t) * totalLen;
 
-      // Undulation: head nearly still, grows toward tail (cubic ramp)
-      const amp = t * t * t * totalLen * 0.18;
-      spineY[i] = Math.sin(phase - t * Math.PI * 2.5) * amp;
+      // Whole-body S-curve: amplitude ramps from ~20% body onward (quadratic)
+      // Head stays nearly still, mid-body bends gently, tail sweeps wide
+      const onset = Math.max(0, t - 0.15) / 0.85; // 0 at head, 1 at tail
+      const amp = onset * onset * totalLen * 0.14;
+      spineY[i] = Math.sin(phase - t * Math.PI * 1.8) * amp;
 
       // Body width profile - fusiform fish shape
       let hw;
@@ -916,29 +918,25 @@ class Fish {
     ctx.stroke();
     ctx.globalAlpha = 1;
 
-    // Caudal (tail) fin - V-shape that follows the last segment's bend
+    // Caudal (tail) fin - simple fan shape following the last segment
     const tsi = segs;
     const tailDir = Math.atan2(spineY[tsi] - spineY[tsi-1], spineX[tsi] - spineX[tsi-1]);
-    const tailSpread = this.bodyWidth * 1.6;
-    const tailLen = totalLen * 0.2;
-    const tCos = Math.cos(tailDir), tSin = Math.sin(tailDir);
-    const tPx = -tSin, tPy = tCos; // perpendicular
+    const tailSpread = this.bodyWidth * 1.4;
+    const tailLen = totalLen * 0.15;
+    const tPx = -Math.sin(tailDir), tPy = Math.cos(tailDir);
     ctx.beginPath();
-    ctx.moveTo(spineX[tsi], spineY[tsi]);
-    // Upper lobe
+    // Fan from the tail tip: base at spine end, spreads perpendicular
+    ctx.moveTo(rightX[tsi], rightY[tsi]);
     ctx.quadraticCurveTo(
-      spineX[tsi] + tCos * tailLen * 0.5 + tPx * tailSpread * 0.5,
-      spineY[tsi] + tSin * tailLen * 0.5 + tPy * tailSpread * 0.5,
-      spineX[tsi] + tCos * tailLen + tPx * tailSpread,
-      spineY[tsi] + tSin * tailLen + tPy * tailSpread
+      spineX[tsi] + Math.cos(tailDir) * tailLen + tPx * tailSpread * 0.4,
+      spineY[tsi] + Math.sin(tailDir) * tailLen + tPy * tailSpread * 0.4,
+      spineX[tsi] + Math.cos(tailDir) * tailLen,
+      spineY[tsi] + Math.sin(tailDir) * tailLen
     );
-    ctx.lineTo(spineX[tsi] + tCos * tailLen * 0.3, spineY[tsi] + tSin * tailLen * 0.3);
-    // Lower lobe
     ctx.quadraticCurveTo(
-      spineX[tsi] + tCos * tailLen * 0.5 - tPx * tailSpread * 0.5,
-      spineY[tsi] + tSin * tailLen * 0.5 - tPy * tailSpread * 0.5,
-      spineX[tsi] + tCos * tailLen - tPx * tailSpread,
-      spineY[tsi] + tSin * tailLen - tPy * tailSpread
+      spineX[tsi] + Math.cos(tailDir) * tailLen - tPx * tailSpread * 0.4,
+      spineY[tsi] + Math.sin(tailDir) * tailLen - tPy * tailSpread * 0.4,
+      leftX[tsi], leftY[tsi]
     );
     ctx.closePath();
     ctx.fillStyle = this.color;
