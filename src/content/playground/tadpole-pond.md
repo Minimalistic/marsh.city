@@ -690,35 +690,48 @@ class Frond {
 
   update(dt, time) {
     // Gentle sway
-    const sway = Math.sin(time * 0.0008 + this.phase) * 0.3;
+    const sway = Math.sin(time * 0.0008 + this.phase) * 0.4;
     for (let i = 1; i < this.segs.length; i++) {
       const s = this.segs[i];
       const t = i / this.segCount;
-      // Spring back to rest position
+      // Weak spring - tips are much looser than base
       const restAngle = this.growAngle + sway * t;
       s.restX = this.x + Math.cos(restAngle) * t * this.len;
       s.restY = this.y + Math.sin(restAngle) * t * this.len;
-      s.vx += (s.restX - s.x) * 0.08;
-      s.vy += (s.restY - s.y) * 0.08;
-      s.vx *= 0.85;
-      s.vy *= 0.85;
+      const stiffness = 0.015 * (1 - t * 0.7); // weaker toward tip
+      s.vx += (s.restX - s.x) * stiffness;
+      s.vy += (s.restY - s.y) * stiffness;
+      s.vx *= 0.96; // less damping = more flowy
+      s.vy *= 0.96;
       s.x += s.vx;
       s.y += s.vy;
+      // Chain constraint - keep segment distance from previous
+      const prev = this.segs[i - 1];
+      const dx = s.x - prev.x;
+      const dy = s.y - prev.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const segLen = this.len / this.segCount;
+      if (dist > segLen * 1.3) {
+        const ratio = segLen * 1.3 / dist;
+        s.x = prev.x + dx * ratio;
+        s.y = prev.y + dy * ratio;
+      }
     }
   }
 
   draw(ctx, time) {
     const segs = this.segs;
-    // Main stem - thin and tapered
-    ctx.beginPath();
-    ctx.moveTo(segs[0].x, segs[0].y);
-    for (let i = 1; i < segs.length; i++) {
-      ctx.lineTo(segs[i].x, segs[i].y);
-    }
-    ctx.strokeStyle = 'rgb(35, 80, 25)';
-    ctx.lineWidth = 1.5;
+    // Main stem - tapered from thick base to thin tip
     ctx.lineCap = 'round';
-    ctx.stroke();
+    for (let i = 0; i < segs.length - 1; i++) {
+      const t = i / (segs.length - 1);
+      ctx.beginPath();
+      ctx.moveTo(segs[i].x, segs[i].y);
+      ctx.lineTo(segs[i + 1].x, segs[i + 1].y);
+      ctx.strokeStyle = 'rgb(35, 80, 25)';
+      ctx.lineWidth = 1.8 * (1 - t * 0.75);
+      ctx.stroke();
+    }
 
     // Sub-branches - alternating sides, getting shorter toward tip
     for (let b = 0; b < this.branches; b++) {
