@@ -2909,41 +2909,6 @@ function draw(time) {
   for (const f of fish) f.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
 
-  // Predator shadow — draw actual fish shape into temp canvas, blur heavily, composite
-  for (const pred of predators) {
-    const shadowPad = 40; // padding for blur bleed
-    const sW = Math.ceil(pred.len * 1.4 + shadowPad * 2);
-    const sH = Math.ceil(pred.len * 0.6 + shadowPad * 2);
-    if (!pred._shadowCanvas) {
-      pred._shadowCanvas = document.createElement('canvas');
-      pred._shadowCtx = pred._shadowCanvas.getContext('2d');
-    }
-    const sc = pred._shadowCanvas, sctx = pred._shadowCtx;
-    sc.width = sW; sc.height = sH;
-    sctx.clearRect(0, 0, sW, sH);
-    // Draw fish shape at center of shadow canvas
-    sctx.save();
-    sctx.translate(sW / 2, sH / 2);
-    sctx.rotate(pred.angle);
-    sctx.translate(-pred.x, -pred.y);
-    // Override color to solid dark for shadow
-    const origColor = pred.color;
-    const origBelly = pred.bellyColor;
-    pred.color = 'rgba(0,0,0,1)';
-    pred.bellyColor = 'rgba(0,0,0,1)';
-    pred.draw(sctx);
-    pred.color = origColor;
-    pred.bellyColor = origBelly;
-    sctx.restore();
-    // Draw blurred shadow onto main canvas
-    const shadowOff = (5 + pred.depth * 12) * viewScale;
-    ctx.save();
-    ctx.filter = 'blur(12px)';
-    ctx.globalAlpha = 0.18;
-    ctx.drawImage(sc, pred.x - sW / 2 + shadowOff, pred.y - sH / 2 + shadowOff);
-    ctx.restore();
-  }
-
   // Draw all fish and predators sorted by depth — opacity only, no per-fish blur
   const allSwimmers = [...fish, ...predators];
   const sortedFish = allSwimmers.sort((a, b) => b.depth - a.depth);
