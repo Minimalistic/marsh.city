@@ -624,7 +624,7 @@ canvas.addEventListener('mousedown', e => {
     foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock });
     if (!onRock) ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
-    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120, opacity: 0.5 });
+    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
   }
 });
 canvas.addEventListener('mouseup', () => { mouse.down = false; });
@@ -653,7 +653,7 @@ canvas.addEventListener('touchstart', e => {
     foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock: onRock2 });
     if (!onRock2) ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
-    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 90, opacity: 0.4 });
+    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
   }
 }, { passive: false });
 canvas.addEventListener('touchmove', e => {
@@ -1007,17 +1007,18 @@ class Fish {
       }
     }
 
-    // Ripple avoidance
+    // Ripple avoidance — startle fish when water is tapped
     for (const r of ripples) {
       const rdx = this.x - r.x;
       const rdy = this.y - r.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-      if (Math.abs(rDist - r.radius) < 20 && r.opacity > 0.1 && rDist > 0.1) {
-        const force = 0.12 * r.opacity;
+      const ringWidth = 30 * viewScale;
+      if (Math.abs(rDist - r.radius) < ringWidth && r.opacity > 0.05 && rDist > 0.1) {
+        const force = 0.25 * r.opacity * viewScale;
         this.vx += (rdx / rDist) * force;
         this.vy += (rdy / rDist) * force;
         this.fleeing = true;
-        this.fleeTimer = 0.3;
+        this.fleeTimer = 0.5;
       }
     }
 
@@ -2020,7 +2021,7 @@ class Predator {
 
     // Eyes - fixed size regardless of body length
     const eIdx = Math.round(segs * 0.1);
-    const eyeR = 2.0; // constant - doesn't scale with body
+    const eyeR = 1.0; // small beady predator eyes
     const eyeOff = widths[eIdx] * 0.55;
     for (const side of [-1, 1]) {
       const enx = -(spineY[eIdx+1]-spineY[eIdx]), eny = spineX[eIdx+1]-spineX[eIdx];
@@ -2029,7 +2030,7 @@ class Predator {
       const ey = spineY[eIdx]+(eny/eLen)*eyeOff*side;
       ctx.beginPath();
       ctx.arc(ex, ey, eyeR * 1.3, 0, Math.PI * 2);
-      ctx.fillStyle = this.hunting ? 'rgb(180,140,60)' : 'rgb(120,130,100)';
+      ctx.fillStyle = 'rgb(100,110,90)';
       ctx.fill();
       ctx.beginPath();
       ctx.arc(ex, ey, eyeR * 0.7, 0, Math.PI * 2);
