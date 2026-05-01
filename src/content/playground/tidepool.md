@@ -47,7 +47,7 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 .pool-volume:hover,
 .pool-volume:active { height: 60px; opacity: 1; }
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
-.pool-fs-close { position: absolute; top: 8px; right: 8px; z-index: 10; }
+.pool-fs-close { position: absolute; top: 8px; left: 8px; z-index: 10; }
 #toolbar.hidden, .pool-fs-btn.hidden, .pool-fs-close.hidden { opacity: 0; pointer-events: none; }
 #toolbar, .pool-fs-btn, .pool-fs-close { transition: opacity 0.5s; }
 #pool-container:fullscreen,
@@ -266,6 +266,9 @@ poolContainer.addEventListener('touchstart', showUI);
 // Start the auto-hide timer
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
 function handleFSChange() {
+  const inFS = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
+  fsCloseBtn.hidden = !inFS;
+  fsBtn.hidden = inFS;
   for (const delay of [50, 150, 300]) {
     setTimeout(() => {
       const oldW = w, oldH = h;
@@ -862,7 +865,7 @@ class Fish {
     // Reef avoidance - steers the fish's heading directly so it survives
     // the lateral-kill step below. Gradient: gentle turns far out, strong close in.
     const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
-    const fishLen8 = this.len * 8; // generous sensing distance
+    const fishLen5 = this.len * 5; // sensing distance in body lengths
     let reefSteer = 0; // accumulated angle adjustment
     for (const rf of reefs) {
       // --- Underwater base ---
@@ -872,7 +875,7 @@ class Fish {
       const bAngle = Math.atan2(rdy, rdx);
       const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(bAngle * 3.1 + rf.y * 0.1);
       const baseR = rf.radiusAt(bAngle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
-      const baseSense = Math.max(baseR * 3, baseR + fishLen8);
+      const baseSense = Math.max(baseR * 2, baseR + fishLen5);
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
         if (approach > -0.3) {
@@ -890,7 +893,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      const crownSense = Math.max(crownR * 5, crownR + fishLen8);
+      const crownSense = Math.max(crownR * 3.5, crownR + fishLen5);
       if (cDist < crownSense && cDist > 0.1) {
         const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
         if (approach > -0.5) {
@@ -965,7 +968,7 @@ class Fish {
       const noise = 0.85 + 0.3 * Math.sin(angle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(angle * 3.1 + rf.y * 0.1);
       const baseCollR = rf.radiusAt(angle, rf.baseRadii) * 0.35 * noise;
       // Wide gradient push - gets very strong close to core
-      const pushZone = baseCollR * 2.5;
+      const pushZone = baseCollR * 1.8;
       if (rDist < pushZone && rDist > 0.1) {
         const pen = 1 - rDist / pushZone;
         const pushStr = pen * pen * pen * 0.5; // cubic ramp, strong at core
@@ -978,7 +981,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
-      const crownPush = crownCollR * 2;
+      const crownPush = crownCollR * 1.5;
       if (cDist < crownPush && cDist > 0.1) {
         const pen = 1 - cDist / crownPush;
         const pushStr = pen * pen * pen * 0.8;
