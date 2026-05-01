@@ -784,8 +784,8 @@ class Fish {
     // Speed management - fish always keep moving, just slower when relaxed
     let targetSpeed;
     if (this.fleeing) targetSpeed = scaledSpeed * 1.1;
-    else if (this.idle) targetSpeed = scaledSpeed * 0.4; // drifting, not stopped
-    else targetSpeed = scaledSpeed * 0.75; // cruising, not rushing
+    else if (this.idle) targetSpeed = scaledSpeed * 0.5; // always visibly moving
+    else targetSpeed = scaledSpeed * 0.75;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
@@ -826,13 +826,13 @@ class Fish {
     const headY = Math.sin(this.angle);
     const fwdSpeed = this.vx * headX + this.vy * headY;
     const latSpeed = this.vx * (-headY) + this.vy * headX;
-    // Heavily dampen sideways drift - fish aren't crabs
-    this.vx -= (-headY) * latSpeed * 0.45;
-    this.vy -= headX * latSpeed * 0.45;
-    // Prevent backward movement entirely - clamp forward component
+    // Kill sideways drift aggressively - tidepool fish dart forward
+    this.vx -= (-headY) * latSpeed * 0.7;
+    this.vy -= headX * latSpeed * 0.7;
+    // Prevent backward movement
     if (fwdSpeed < 0) {
-      this.vx -= headX * fwdSpeed * 0.6;
-      this.vy -= headY * fwdSpeed * 0.6;
+      this.vx -= headX * fwdSpeed * 0.8;
+      this.vy -= headY * fwdSpeed * 0.8;
     }
 
     // Drag - smooths out micro-jitter
@@ -901,9 +901,9 @@ class Fish {
       // Target: exactly one segment length behind previous joint
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
-      // Stiffness: high everywhere so fish stay straight, slightly looser at tail
+      // Very stiff - tidepool fish have rigid bodies, not eel-like
       const t = j / this._jointCount;
-      const stiffness = 0.9 - t * 0.1; // 0.9 at head, 0.8 at tail
+      const stiffness = 0.97 - t * 0.05; // 0.97 at head, 0.92 at tail
       curr.x += (tx - curr.x) * stiffness;
       curr.y += (ty - curr.y) * stiffness;
       // Hard constraint: enforce exact segment length so body never stretches
@@ -943,13 +943,12 @@ class Fish {
       let lx = jx * cosH - jy * sinH;
       let ly = jx * sinH + jy * cosH;
 
-      // Add swim undulation as lateral offset
-      // Peaks in the mid-body, tapers off at tail (chain already whips the tail)
+      // Subtle tail-driven undulation - tidepool fish are rigid-bodied
       if (i > 0) {
         const t = i / segs;
-        // Bell curve: low at head, peaks ~60% along body, fades at tail tip
-        const flex = Math.sin(t * Math.PI * 0.85) * (t < 0.12 ? t / 0.12 : 1);
-        const undulAmp = flex * this.len * 0.05 * (0.2 + si * 0.8);
+        // Only the rear 40% moves appreciably
+        const flex = t < 0.6 ? 0 : (t - 0.6) / 0.4;
+        const undulAmp = flex * this.len * 0.03 * (0.15 + si * 0.85);
         ly += Math.sin(phase - t * Math.PI * 0.8) * undulAmp;
       }
 
