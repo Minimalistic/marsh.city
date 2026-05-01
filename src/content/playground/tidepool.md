@@ -139,12 +139,13 @@ const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
 // Debris particles
 const debris = [];
-for (let i = 0; i < 400; i++) {
+for (let i = 0; i < 500; i++) {
+  const bright = Math.random() < 0.25;
   debris.push({
     x: Math.random() * w, y: Math.random() * h,
-    size: 0.2 + Math.random() * 0.7,
+    size: bright ? (0.8 + Math.random() * 1.2) : (0.2 + Math.random() * 0.7),
     vx: 0, vy: 0,
-    opacity: 0.05 + Math.random() * 0.12,
+    opacity: bright ? (0.2 + Math.random() * 0.2) : (0.05 + Math.random() * 0.12),
   });
 }
 
