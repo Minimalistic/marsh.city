@@ -5,7 +5,26 @@ description: Animals built from flowchart nodes. Charming? Unhinged? You decide.
 
 What happens when you try to draw animals using a diagramming tool designed for software architecture? These are built entirely from [Mermaid](https://mermaid.js.org/) block diagrams - the same tool meant for flowcharts and sequence diagrams. No SVG, no images, just nodes on a grid.
 
-## The Fish
+## The Fish (line drawing)
+
+```mermaid
+flowchart LR
+    TP((" ")) --> TT((" ")) --> BK((" ")) --> HT((" ")) --> NS((" "))
+    TP --> TB((" ")) --> BL((" ")) --> HB((" ")) --> MT((" "))
+    NS --> MT
+    BK --> DF((" "))
+    BL --> VF((" "))
+    HT --> EY(("O"))
+
+    classDef pt fill:#2196F3,stroke:#2196F3,color:#2196F3
+    classDef eye fill:#222,stroke:#555,color:#fff
+    class TP,TT,TB,BK,BL,HT,HB,NS,MT,DF,VF pt
+    class EY eye
+
+    linkStyle default stroke:#2196F3,stroke-width:3px,fill:none
+```
+
+## The Fish (block art)
 
 ```mermaid
 block-beta
