@@ -555,15 +555,6 @@ class Tadpole {
       }
     }
 
-    // Belly/body highlight - lighter underside on the round part
-    ctx.beginPath();
-    const belly = segs[1];
-    ctx.ellipse(belly.x, belly.y, this.bodyWidth * 0.6, this.bodyWidth * 0.45,
-                Math.atan2(segs[2].y - segs[0].y, segs[2].x - segs[0].x), 0, Math.PI * 2);
-    ctx.fillStyle = this.bellyColor;
-    ctx.globalAlpha = 0.2;
-    ctx.fill();
-    ctx.globalAlpha = 1;
 
     // Head (big round blob - the defining tadpole feature)
     ctx.beginPath();
