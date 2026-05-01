@@ -397,8 +397,8 @@ footer.site-foot {
     ),
     repeating-linear-gradient(
       45deg,
-      transparent 0 6px,
-      var(--frame-hatch) 6px 7px
+      transparent 0 8px,
+      var(--frame-hatch) 8px 10px
     );
   box-shadow: 30px 0 60px -10px rgba(0, 0, 0, 0.55);
 }
@@ -414,8 +414,8 @@ footer.site-foot {
     ),
     repeating-linear-gradient(
       -45deg,
-      transparent 0 6px,
-      var(--frame-hatch) 6px 7px
+      transparent 0 8px,
+      var(--frame-hatch) 8px 10px
     );
   box-shadow: -30px 0 60px -10px rgba(0, 0, 0, 0.55);
 }
@@ -1143,6 +1143,7 @@ nav.site-nav .links a[aria-current="page"]::after {
   background-size: cover;
   background-position: center;
   filter: blur(12px);
+  clip-path: inset(0);
   color: transparent;
   opacity: 1;
 }
@@ -1181,6 +1182,7 @@ nav.site-nav .links a[aria-current="page"]::after {
 .lqip-wrap {
   position: relative;
   display: inline-block;
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {

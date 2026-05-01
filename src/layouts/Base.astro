@@ -96,6 +96,7 @@ const paletteItems = [
 
               function onLoaded() {
                 img.classList.add('img-loaded');
+                img.style.backgroundImage = 'none';
                 dots.remove();
               }
               if (img.complete && img.naturalWidth) onLoaded();
