@@ -855,10 +855,10 @@ function drawPond(time) {
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
 
-  // Full viewport haze - blur the entire scene slightly
+  // Full viewport haze - buttery bokeh blur across the scene
   ctx.save();
-  ctx.filter = 'blur(1px)';
-  ctx.globalAlpha = 0.35;
+  ctx.filter = 'blur(3px)';
+  ctx.globalAlpha = 0.4;
   ctx.drawImage(canvas, 0, 0);
   ctx.restore();
 
