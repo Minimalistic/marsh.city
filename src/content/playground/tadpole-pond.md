@@ -648,13 +648,15 @@ class Frond {
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
     // Pre-generate branch geometry so it doesn't flicker
+    // Branches span from 0.15 to 0.95, getting smaller toward tip
     this.branchData = [];
     for (let b = 0; b < this.branches; b++) {
-      const t = 0.2 + (b / this.branches) * 0.7;
+      const t = 0.15 + (b / (this.branches - 1)) * 0.8;
+      const taper = 1 - t; // branches shrink toward tip
       this.branchData.push({
         t,
-        lenScale: 0.7 + Math.random() * 0.3,
-        leaflets: 2 + Math.floor(Math.random() * 3),
+        lenScale: (0.7 + Math.random() * 0.3) * taper,
+        leaflets: Math.max(1, Math.floor((2 + Math.random() * 3) * taper)),
       });
     }
     // Segment points for physics displacement
@@ -732,26 +734,27 @@ class Frond {
       const tipX = base.x + Math.cos(branchAngle) * branchLen;
       const tipY = base.y + Math.sin(branchAngle) * branchLen;
 
+      const taper = 1 - bd.t;
       ctx.beginPath();
       ctx.moveTo(base.x, base.y);
       ctx.lineTo(tipX, tipY);
       ctx.strokeStyle = 'rgb(45, 100, 30)';
-      ctx.lineWidth = 0.8;
+      ctx.lineWidth = 0.4 + taper * 0.6;
       ctx.stroke();
 
-      // Tiny leaflets along sub-branch
+      // Leaflets along sub-branch, progressively smaller toward plant tip
       for (let l = 0; l < bd.leaflets; l++) {
         const lt = 0.3 + (l / bd.leaflets) * 0.6;
         const lx = base.x + (tipX - base.x) * lt;
         const ly = base.y + (tipY - base.y) * lt;
         const leafSide = (l % 2 === 0 ? 1 : -1);
         const leafAngle = branchAngle + leafSide * 0.6;
-        const leafLen = branchLen * 0.25;
+        const leafLen = branchLen * (0.2 + taper * 0.15);
         ctx.beginPath();
         ctx.moveTo(lx, ly);
         ctx.lineTo(lx + Math.cos(leafAngle) * leafLen, ly + Math.sin(leafAngle) * leafLen);
         ctx.strokeStyle = 'rgb(50, 115, 35)';
-        ctx.lineWidth = 0.5;
+        ctx.lineWidth = 0.3 + taper * 0.3;
         ctx.stroke();
       }
     }
