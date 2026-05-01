@@ -1883,38 +1883,15 @@ class Predator {
   draw(ctx) {
     const segs = this._jointCount;
     const totalLen = this.len;
-    // Swim intensity — smoothed so the body doesn't jerk
-    const rawIntensity = Math.min(1, this.speed / (this.baseSpeed * viewScale * 2));
-    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.008;
-    const si = this._swimSmooth;
-    // Slow undulation — barracuda glides with long powerful strokes
-    const phase = Date.now() * 0.00004 * (0.2 + si * 0.8) + this._phaseOffset;
-
-    // Head shake when chomping
+    // Chomp animation
     const chompIntensity = this.chomping ? this.chompTimer / 3.0 : 0;
-    const headShake = chompIntensity * Math.sin(this.chompPhase) * this.len * 0.06;
     const jawGape = chompIntensity * Math.max(0, Math.sin(this.chompPhase * 0.8)) * this.bodyWidth * 2.5;
 
-    const cosH = Math.cos(-this._renderAngle), sinH = Math.sin(-this._renderAngle);
+    // World-space spine — directly from joint positions, no rotation transform
     const spineX = new Array(segs + 1), spineY = new Array(segs + 1), widths = new Array(segs + 1);
     for (let i = 0; i <= segs; i++) {
-      const jx = this._joints[i].x - this.x, jy = this._joints[i].y - this.y;
-      let lx = jx * cosH - jy * sinH, ly = jx * sinH + jy * cosH;
-      if (i > 0) {
-        const t = i / segs;
-        // Minimal sinusoidal overlay — propulsion comes from body inertia, not tail flapping
-        const flex = t < 0.4 ? 0 : (t - 0.4) / 0.6;
-        // Very subtle wave — just shapes the trailing body, doesn't drive it
-        const amp = this.len * (0.005 + si * 0.02);
-        ly += Math.sin(phase - t * Math.PI * 0.6) * flex * amp;
-      }
-      // Head shake displaces the front segments laterally
-      if (i < segs * 0.3) {
-        const shakeFade = 1 - i / (segs * 0.3);
-        ly += headShake * shakeFade;
-      }
-      spineX[i] = lx; spineY[i] = ly;
-      // Stocky predator body profile
+      spineX[i] = this._joints[i].x;
+      spineY[i] = this._joints[i].y;
       const tw = i / segs;
       let hw;
       if (tw < 0.06) hw = tw / 0.06 * this.bodyWidth * 0.4;
@@ -1925,10 +1902,8 @@ class Predator {
     }
     widths[0] = this.bodyWidth * 0.4;
 
+    // Compute perpendiculars and outline in world space
     ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this._renderAngle);
-
     const rightX = new Array(segs + 1), rightY = new Array(segs + 1);
     const leftX = new Array(segs + 1), leftY = new Array(segs + 1);
     for (let i = 0; i <= segs; i++) {
@@ -1942,9 +1917,9 @@ class Predator {
       leftX[i] = spineX[i] - nx * widths[i]; leftY[i] = spineY[i] - ny * widths[i];
     }
 
-    // Body - hunger tints redder
+    // Body color
     const ht = this.hunting ? Math.min(1, (this.hunger - 0.5) * 2) : 0;
-    const cr = Math.round(70 + ht * 40), cg = Math.round(85 - ht * 20), cb = Math.round(65 - ht * 15);
+    const cr = Math.round(70 + ht * 30), cg = Math.round(85 - ht * 15), cb = Math.round(65 - ht * 10);
     ctx.beginPath();
     ctx.moveTo(spineX[0], spineY[0]);
     ctx.lineTo(rightX[0], rightY[0]);
@@ -2022,37 +1997,24 @@ class Predator {
       ctx.globalAlpha = 1;
     }
 
-    // Jaw gape - split the nose open when chomping
+    // Jaw gape when chomping — uses perpendicular direction from spine
     if (jawGape > 0.1) {
-      const jawIdx = 2;
-      const jawNx = -(spineY[jawIdx+1]-spineY[jawIdx-1]);
-      const jawNy = spineX[jawIdx+1]-spineX[jawIdx-1];
-      const jawNL = Math.sqrt(jawNx*jawNx+jawNy*jawNy) || 1;
-      const gx = jawNx/jawNL, gy = jawNy/jawNL;
-      // Upper jaw
+      // Perpendicular at the nose
+      let jnx = -(spineY[1] - spineY[0]), jny = spineX[1] - spineX[0];
+      const jnl = Math.sqrt(jnx*jnx+jny*jny) || 1;
+      jnx /= jnl; jny /= jnl;
       ctx.beginPath();
-      ctx.moveTo(spineX[0], spineY[0] - jawGape * 0.4);
-      ctx.lineTo(rightX[0], rightY[0] - jawGape * 0.3);
+      ctx.moveTo(spineX[0]+jnx*jawGape*0.4, spineY[0]+jny*jawGape*0.4);
       ctx.lineTo(rightX[2], rightY[2]);
       ctx.lineTo(leftX[2], leftY[2]);
-      ctx.lineTo(leftX[0], leftY[0] - jawGape * 0.3);
+      ctx.lineTo(spineX[0]-jnx*jawGape*0.4, spineY[0]-jny*jawGape*0.4);
       ctx.closePath();
-      ctx.fillStyle = `rgb(${cr-5},${cg-5},${cb-5})`;
+      ctx.fillStyle = `rgb(${Math.max(0,cr-10)},${Math.max(0,cg-10)},${Math.max(0,cb-8)})`;
       ctx.fill();
-      // Lower jaw
+      // Dark mouth interior
       ctx.beginPath();
-      ctx.moveTo(spineX[0], spineY[0] + jawGape * 0.5);
-      ctx.lineTo(rightX[0], rightY[0] + jawGape * 0.4);
-      ctx.lineTo(rightX[2], rightY[2]);
-      ctx.lineTo(leftX[2], leftY[2]);
-      ctx.lineTo(leftX[0], leftY[0] + jawGape * 0.4);
-      ctx.closePath();
-      ctx.fillStyle = `rgb(${Math.max(0,cr-15)},${Math.max(0,cg-12)},${Math.max(0,cb-10)})`;
-      ctx.fill();
-      // Mouth interior
-      ctx.beginPath();
-      ctx.ellipse(spineX[1], spineY[1], widths[1] * 0.6, jawGape * 0.3, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgb(60, 25, 30)';
+      ctx.arc(spineX[1], spineY[1], jawGape * 0.25, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgb(40, 20, 25)';
       ctx.fill();
     }
 
