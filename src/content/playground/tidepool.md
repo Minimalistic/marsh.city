@@ -902,9 +902,9 @@ class Fish {
       // Target: exactly one segment length behind previous joint
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
-      // Lateral damping gives bendiness - front stiffer, rear looser
+      // Stiffness: high everywhere so fish stay straight, slightly looser at tail
       const t = j / this._jointCount;
-      const stiffness = t < 0.4 ? 0.6 + t * 0.5 : 0.85 + t * 0.15;
+      const stiffness = 0.9 - t * 0.1; // 0.9 at head, 0.8 at tail
       curr.x += (tx - curr.x) * stiffness;
       curr.y += (ty - curr.y) * stiffness;
       // Hard constraint: enforce exact segment length so body never stretches
