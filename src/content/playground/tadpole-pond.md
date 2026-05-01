@@ -844,25 +844,24 @@ function drawPond(time) {
     if (t.depth === 0) t.draw(ctx);
   }
 
-  // Surface caustics effect (subtle)
-  ctx.globalAlpha = 0.03;
+  // Surface caustics - slow drifting blurred light patches
   for (let i = 0; i < 6; i++) {
-    const cx = w * 0.3 + Math.sin(time * 0.0005 + i) * w * 0.3;
-    const cy = h * 0.3 + Math.cos(time * 0.0007 + i * 1.5) * h * 0.3;
-    const cr = 40 + Math.sin(time * 0.001 + i * 2) * 20;
-    ctx.beginPath();
-    ctx.arc(cx, cy, cr, 0, Math.PI * 2);
-    ctx.fillStyle = '#4a8a3a';
-    ctx.fill();
+    const cx = w * 0.3 + Math.sin(time * 0.00015 + i * 1.1) * w * 0.35;
+    const cy = h * 0.3 + Math.cos(time * 0.0002 + i * 1.7) * h * 0.35;
+    const cr = 50 + Math.sin(time * 0.0003 + i * 2) * 25;
+    const causticGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
+    causticGrad.addColorStop(0, 'rgba(70, 130, 50, 0.04)');
+    causticGrad.addColorStop(0.6, 'rgba(70, 130, 50, 0.02)');
+    causticGrad.addColorStop(1, 'rgba(70, 130, 50, 0)');
+    ctx.fillStyle = causticGrad;
+    ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
-  ctx.globalAlpha = 1;
 
-  // Hazy blur overlay - subtle murky water effect across the whole pond
+  // Full viewport haze - blur the entire scene slightly
   ctx.save();
-  ctx.filter = 'blur(2px)';
-  ctx.globalAlpha = 0.04;
-  ctx.fillStyle = 'rgba(160, 190, 140, 1)';
-  ctx.fillRect(0, 0, w, h);
+  ctx.filter = 'blur(1px)';
+  ctx.globalAlpha = 0.35;
+  ctx.drawImage(canvas, 0, 0);
   ctx.restore();
 
   // Vignette - darken edges, brighten center
