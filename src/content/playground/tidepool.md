@@ -835,47 +835,40 @@ function draw(time) {
     ctx.fill();
   }
 
-  // Draw wash wave fronts - irregular foam patches and clumps
+  // Draw wash wave fronts - foam shed behind the wave, not in front
   for (const ww of washWaves) {
     if (ww.life <= 0) continue;
-    // Generate foam blobs on first draw - just irregular clumps
-    if (!ww.blobs) {
-      ww.blobs = [];
-      const span = Math.max(w, h) * 1.4;
-      for (let i = 0; i < 120; i++) {
-        // Clustered distribution - some near front, some trailing
-        const cluster = Math.random();
-        const depth = cluster < 0.5
-          ? Math.random() * 8  // front cluster
-          : 8 + Math.pow(Math.random(), 1.3) * ww.width * 2.5; // trailing
+    if (!ww.blobs) ww.blobs = [];
+    // Continuously spawn foam at the wave front (in world space)
+    const cosA = Math.cos(ww.angle);
+    const sinA = Math.sin(ww.angle);
+    const span = Math.max(w, h) * 1.2;
+    if (ww.life > 0.1) {
+      for (let i = 0; i < 4; i++) {
+        const lateral = (Math.random() - 0.5) * span;
+        // Spawn slightly behind the front (positive = behind in wave direction)
+        const behind = Math.random() * 5;
         ww.blobs.push({
-          x: depth,
-          y: (Math.random() - 0.5) * span,
-          size: 0.3 + Math.pow(Math.random(), 2) * 4, // mostly small, few large
-          elongX: 0.7 + Math.random() * 1.5, // irregular shape
-          elongY: 0.5 + Math.random() * 0.8,
+          x: ww.x - cosA * behind + (-sinA) * lateral,
+          y: ww.y - sinA * behind + cosA * lateral,
+          size: 0.4 + Math.pow(Math.random(), 2) * 3.5,
+          elongX: 0.7 + Math.random() * 1.3,
+          elongY: 0.5 + Math.random() * 0.7,
           rot: Math.random() * Math.PI,
-          drift: 0.05 + Math.random() * 0.3,
-          driftY: (Math.random() - 0.5) * 0.1,
+          age: 0,
+          maxAge: 2 + Math.random() * 3,
         });
       }
     }
-
-    ctx.save();
-    ctx.translate(ww.x, ww.y);
-    ctx.rotate(ww.angle);
-
-    // Just foam blobs - irregular shapes scattered in the wake
-    for (const b of ww.blobs) {
-      const bx = b.x + ww.traveled * b.drift * 0.2;
-      const by = b.y + ww.traveled * b.driftY;
-      const fade = Math.max(0, 1 - bx / (ww.width * 4));
-      if (fade <= 0) continue;
-      // Closer to front = more opaque
-      const frontFade = bx < 10 ? 0.25 : 0.12;
-      ctx.globalAlpha = ww.life * fade * frontFade;
+    // Update and draw blobs - they stay in world space, fade out
+    for (let i = ww.blobs.length - 1; i >= 0; i--) {
+      const b = ww.blobs[i];
+      b.age += dt;
+      if (b.age > b.maxAge) { ww.blobs.splice(i, 1); continue; }
+      const fade = 1 - b.age / b.maxAge;
+      ctx.globalAlpha = fade * 0.18;
       ctx.save();
-      ctx.translate(bx, by);
+      ctx.translate(b.x, b.y);
       ctx.rotate(b.rot);
       ctx.beginPath();
       ctx.ellipse(0, 0, b.size * b.elongX, b.size * b.elongY, 0, 0, Math.PI * 2);
@@ -883,8 +876,6 @@ function draw(time) {
       ctx.fill();
       ctx.restore();
     }
-
-    ctx.restore();
   }
 
   // Update ripples
