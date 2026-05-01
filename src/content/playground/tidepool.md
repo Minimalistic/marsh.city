@@ -116,17 +116,27 @@ document.getElementById('sound-toggle').addEventListener('click', e => {
 // Update ocean sound to match wave state
 function updateOceanSound() {
   if (!soundEnabled || !audioCtx) return;
-  // Modulate filter freq and volume with the wave cycle
   const waveIntensity = Math.abs(tide.strength);
-  // Higher filter = brighter/louder wash when wave is strong
-  oceanFilter.frequency.setTargetAtTime(300 + waveIntensity * 400, audioCtx.currentTime, 0.3);
-  // Volume swells with wave
-  const baseVol = 0.1 + waveIntensity * 0.08;
-  // Extra swell when a wash wave is active
-  const washBoost = washWaves.length > 0 ? washWaves[0].life * 0.06 : 0;
-  oceanGain.gain.setTargetAtTime(baseVol + washBoost, audioCtx.currentTime, 0.2);
-  // LFO speed matches wave cycle roughly
-  oceanLfo.frequency.setTargetAtTime(0.05 + waveIntensity * 0.04, audioCtx.currentTime, 1);
+
+  // Calculate wash wave audio presence: ramps as it approaches, peaks on-screen, fades out
+  let washPresence = 0;
+  for (const ww of washWaves) {
+    const progress = ww.traveled / ww.maxTravel; // 0 = just spawned, 1 = done
+    // Bell curve peaking around 0.4-0.6 (on-screen), with lead-in ramp
+    let presence;
+    if (progress < 0.2) presence = progress / 0.2 * 0.5; // approaching - ramp up
+    else if (progress < 0.7) presence = 0.5 + (1 - Math.abs(progress - 0.45) / 0.25) * 0.5; // on-screen peak
+    else presence = Math.max(0, (1 - progress) / 0.3) * 0.4; // leaving - fade out
+    washPresence = Math.max(washPresence, presence * ww.strength);
+  }
+
+  // Filter brightens with wave presence
+  oceanFilter.frequency.setTargetAtTime(250 + waveIntensity * 200 + washPresence * 500, audioCtx.currentTime, 0.2);
+  // Volume: quiet ambient base, swells with visible wave
+  const baseVol = 0.06 + waveIntensity * 0.04;
+  oceanGain.gain.setTargetAtTime(baseVol + washPresence * 0.12, audioCtx.currentTime, 0.15);
+  // LFO faster during active waves
+  oceanLfo.frequency.setTargetAtTime(0.04 + washPresence * 0.08, audioCtx.currentTime, 0.5);
 }
 
 // Food particles that attract fish
@@ -263,7 +273,7 @@ function sampleFlow(px, py, time) {
 
 // Wash waves - occasional wave fronts that sweep across with turbulence
 const washWaves = [];
-let washTimer = 5 + Math.random() * 8;
+let washTimer = 15 + Math.random() * 15;
 
 function spawnWash() {
   const angle = waveBaseAngle + (Math.random() - 0.5) * 0.15;
@@ -564,7 +574,14 @@ class Fish {
     this.y += this.vy;
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));
-    this.angle = Math.atan2(this.vy, this.vx);
+    // Angle tracks velocity direction but with turn rate limit
+    // Fish must move forward to turn - can't pivot in place
+    const targetAngle = Math.atan2(this.vy, this.vx);
+    let angleDiff = targetAngle - this.angle;
+    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+    const maxTurn = 0.08 + currentSpeed * 0.1; // faster fish can turn quicker
+    this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
     this.speed = currentSpeed;
   }
 
@@ -823,11 +840,11 @@ function draw(time) {
   if (washTimer <= 0) {
     // Sometimes skip a wave entirely
     if (Math.random() < 0.15) {
-      washTimer = 3 + Math.random() * 5; // short gap, try again soon
+      washTimer = 8 + Math.random() * 10; // short gap, try again soon
     } else {
       spawnWash();
       // Very irregular timing - sometimes rapid sets, sometimes long lulls
-      washTimer = 5 + Math.random() * 20 + (Math.random() < 0.3 ? 15 : 0);
+      washTimer = 15 + Math.random() * 30 + (Math.random() < 0.3 ? 20 : 0);
     }
   }
 
