@@ -1378,7 +1378,7 @@ nav.site-nav .links a[aria-current="page"]::after {
   transition: color 0.15s ease, background 0.15s ease;
 }
 .nav-menu-link::after { display: none; }
-.nav-menu-link.nav-show-mobile { display: none !important; }
+.nav-menu-link.nav-show-mobile { display: none; }
 .nav-menu-link:hover {
   background: color-mix(in srgb, var(--leaf) 15%, transparent);
   color: var(--fg);
