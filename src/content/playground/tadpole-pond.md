@@ -25,12 +25,22 @@ window.addEventListener('resize', () => { ({ w, h } = resize()); });
 
 // Mouse tracking with velocity
 let mouse = { x: -1000, y: -1000, prevX: -1000, prevY: -1000, active: false, speed: 0, down: false };
+canvas.addEventListener('mouseenter', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+  mouse.prevX = mouse.x;
+  mouse.prevY = mouse.y;
+  mouse.active = true;
+  mouse.speed = 0;
+});
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
   mouse.x = e.clientX - rect.left;
   mouse.y = e.clientY - rect.top;
+  if (!mouse.active) { mouse.prevX = mouse.x; mouse.prevY = mouse.y; }
   mouse.active = true;
   const dx = mouse.x - mouse.prevX;
   const dy = mouse.y - mouse.prevY;
