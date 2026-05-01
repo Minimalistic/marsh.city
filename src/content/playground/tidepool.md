@@ -691,8 +691,8 @@ class Fish {
         const proximity = 1 - closestFoodDist / foodRange;
         const steer = 0.04 + proximity * 0.1;
         const speedBoost = 1 + proximity * 0.8;
-        const desiredVx = Math.cos(desiredAngle) * scaledSpeed * speedBoost;
-        const desiredVy = Math.sin(desiredAngle) * scaledSpeed * speedBoost;
+        const desiredVx = Math.cos(desiredAngle) * this.baseSpeed * viewScale * speedBoost;
+        const desiredVy = Math.sin(desiredAngle) * this.baseSpeed * viewScale * speedBoost;
         this.vx += (desiredVx - this.vx) * steer;
         this.vy += (desiredVy - this.vy) * steer;
       } else if (closestFoodDist < foodRange * 0.4) {
