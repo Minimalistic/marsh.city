@@ -984,23 +984,40 @@ function draw(time) {
         });
       }
     }
-    // Draw the wave front itself - a visible line at the current position
-    ctx.globalAlpha = ww.life * 0.2;
-    ctx.beginPath();
+    // Draw the wave front - broken irregular segments with gaps and varying width
     const perpX = -sinA;
     const perpY = cosA;
-    ctx.moveTo(ww.x + perpX * span, ww.y + perpY * span);
-    ctx.lineTo(ww.x - perpX * span, ww.y - perpY * span);
-    ctx.strokeStyle = 'rgba(200, 225, 240, 1)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    // Softer second line slightly behind
-    ctx.globalAlpha = ww.life * 0.08;
-    ctx.beginPath();
-    ctx.moveTo(ww.x - cosA * 6 + perpX * span, ww.y - sinA * 6 + perpY * span);
-    ctx.lineTo(ww.x - cosA * 6 - perpX * span, ww.y - sinA * 6 - perpY * span);
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    // Generate stable randomness per wave if not yet done
+    if (!ww.frontSegs) {
+      ww.frontSegs = [];
+      let pos = -span;
+      while (pos < span) {
+        const segLen = 10 + Math.random() * 40; // varied segment lengths
+        const gap = Math.random() < 0.3; // 30% chance of a gap
+        ww.frontSegs.push({
+          start: pos,
+          len: segLen,
+          gap,
+          offset: (Math.random() - 0.5) * 6, // forward/back wobble
+          thickness: 0.8 + Math.random() * 2.5,
+          opacity: 0.1 + Math.random() * 0.2,
+        });
+        pos += segLen + (gap ? 5 + Math.random() * 15 : 2);
+      }
+    }
+    for (const seg of ww.frontSegs) {
+      if (seg.gap) continue;
+      ctx.globalAlpha = ww.life * seg.opacity;
+      ctx.beginPath();
+      const offsetX = cosA * seg.offset;
+      const offsetY = sinA * seg.offset;
+      ctx.moveTo(ww.x + perpX * seg.start + offsetX, ww.y + perpY * seg.start + offsetY);
+      ctx.lineTo(ww.x + perpX * (seg.start + seg.len) + offsetX, ww.y + perpY * (seg.start + seg.len) + offsetY);
+      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      ctx.lineWidth = seg.thickness;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
 
     // Update and draw blobs - drift with current and turbulence, fade out
     for (let i = ww.blobs.length - 1; i >= 0; i--) {
