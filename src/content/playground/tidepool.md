@@ -669,20 +669,22 @@ class Fish {
     this.vx += flow.fx * 0.005;
     this.vy += flow.fy * 0.005;
 
-    // Food attraction - scales with viewport, aggressive interest
+    // Food attraction - all distances measured from the mouth tip
+    const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5 * viewScale;
+    const mouthY = this.y + Math.sin(this.angle) * this.len * 0.5 * viewScale;
     const foodRange = 400 * viewScale;
     let closestFood = null;
     let closestFoodDist = foodRange;
     for (const fp of foodPellets) {
       if (fp.bites <= 0) continue;
-      const fdx = fp.x - this.x;
-      const fdy = fp.y - this.y;
+      const fdx = fp.x - mouthX;
+      const fdy = fp.y - mouthY;
       const fd = Math.sqrt(fdx * fdx + fdy * fdy);
       if (fd < closestFoodDist) { closestFood = fp; closestFoodDist = fd; }
     }
     if (closestFood) {
-      const fdx = closestFood.x - this.x;
-      const fdy = closestFood.y - this.y;
+      const fdx = closestFood.x - mouthX;
+      const fdy = closestFood.y - mouthY;
       const desiredAngle = Math.atan2(fdy, fdx);
       let headingDiff = desiredAngle - this.angle;
       while (headingDiff > Math.PI) headingDiff -= Math.PI * 2;
@@ -694,18 +696,13 @@ class Fish {
         this.distracted = false; this.distractTimer = 3;
       }
 
-      // Mouth position is at the tip of the snout
-      const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5 * viewScale;
-      const mouthY = this.y + Math.sin(this.angle) * this.len * 0.5 * viewScale;
-      const mouthDx = closestFood.x - mouthX, mouthDy = closestFood.y - mouthY;
-      const mouthDist = Math.sqrt(mouthDx * mouthDx + mouthDy * mouthDy);
-      const eatDist = 8 * viewScale;
-      const biteDist = 4 * viewScale;
-      // Fish can only eat when mouth is near the food and facing it
-      if (mouthDist < eatDist && angleMismatch < 0.6) {
-        this.vx *= 0.8;
-        this.vy *= 0.8;
-        if (mouthDist < biteDist && angleMismatch < 0.4 && !this.eating) {
+      const eatDist = 6 * viewScale;
+      const biteDist = 3 * viewScale;
+      // Fish can only eat when mouth is directly at the food
+      if (closestFoodDist < eatDist && angleMismatch < 0.5) {
+        this.vx *= 0.85;
+        this.vy *= 0.85;
+        if (closestFoodDist < biteDist && angleMismatch < 0.3 && !this.eating) {
           closestFood.bites--;
           closestFood.size *= 0.97;
           closestFood.vx += Math.cos(this.angle) * 0.3;
