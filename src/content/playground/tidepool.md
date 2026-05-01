@@ -408,6 +408,12 @@ class Fish {
       this.vy += (h / 2 - this.y) * centerPull * 0.01;
     }
 
+    // Faint gradient pull toward center - stronger near edges, zero in middle
+    const edgeX = Math.max(0, Math.abs(this.x - w / 2) / (w / 2) - 0.5) * 2; // 0 in center 50%, ramps to 1 at edge
+    const edgeY = Math.max(0, Math.abs(this.y - h / 2) / (h / 2) - 0.5) * 2;
+    this.vx += (w / 2 - this.x) * edgeX * 0.0002;
+    this.vy += (h / 2 - this.y) * edgeY * 0.0002;
+
     // Tidal current + local turbulence
     this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
