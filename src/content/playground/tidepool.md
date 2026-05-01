@@ -1041,29 +1041,33 @@ class Fish {
       }
     }
 
-    // Predator avoidance — much stronger when being actively chased
+    // Predator avoidance — jinking, darting, sharp turns like real baitfish
     for (const pred of predators) {
       if (!pred.hunting) continue;
       const pdx = this.x - pred.x;
       const pdy = this.y - pred.y;
       const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
       const beingChased = pred.target === this;
-      const fleeRange = beingChased ? 200 * viewScale : 120 + (pred.hunger - 0.5) * 80;
+      const fleeRange = beingChased ? 200 * viewScale : 140 * viewScale;
       if (pDist < fleeRange && pDist > 0.1) {
         const proximity = 1 - pDist / fleeRange;
-        // Fish being chased flee at near-max speed, others just scatter
-        const force = beingChased ? 0.5 * proximity + 0.15 : 0.2 * proximity;
-        this.vx += (pdx / pDist) * force * viewScale;
-        this.vy += (pdy / pDist) * force * viewScale;
+        // Base flee direction — away from predator
+        const fleeAngle = Math.atan2(pdy, pdx);
+        // Jink: random sharp lateral dodge, stronger when closer
+        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (1.0 + proximity * 1.5);
+        const force = beingChased ? (0.4 * proximity + 0.2) : (0.15 * proximity + 0.05);
+        this.vx += Math.cos(jinkAngle) * force * viewScale;
+        this.vy += Math.sin(jinkAngle) * force * viewScale;
         this.fleeing = true;
-        this.fleeTimer = beingChased ? 1.0 : 0.6;
+        this.fleeTimer = beingChased ? 1.2 : 0.6;
         this.distracted = true;
         this.distractTimer = 1.5 + Math.random() * 2;
-        // Chased fish get a speed boost — adrenaline
+        // Chased fish dart with sudden speed bursts
         if (beingChased && pDist < fleeRange * 0.5) {
-          const escapeAngle = Math.atan2(pdy, pdx);
-          this.vx += Math.cos(escapeAngle) * scaledSpeed * 0.3;
-          this.vy += Math.sin(escapeAngle) * scaledSpeed * 0.3;
+          // Sharp random direction change — not just straight away
+          const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
+          this.vx += Math.cos(dartAngle) * scaledSpeed * 0.5;
+          this.vy += Math.sin(dartAngle) * scaledSpeed * 0.5;
         }
       }
     }
@@ -1554,6 +1558,7 @@ class Predator {
     }
     this._phaseOffset = Math.random() * Math.PI * 20;
     this._swimSmooth = 0.3;
+    this._renderAngle = this.angle;
   }
 
   update(dt, smallFish, time) {
@@ -1838,26 +1843,40 @@ class Predator {
     const turnMult = 0.4 + this.hunger * 0.6;
     const maxTurn = (0.06 + currentSpeed * 0.06) * turnMult;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
+    // Smooth render angle — heavy mass means body lags behind heading
+    let rDiff = this.angle - this._renderAngle;
+    while (rDiff > Math.PI) rDiff -= Math.PI * 2;
+    while (rDiff < -Math.PI) rDiff += Math.PI * 2;
+    this._renderAngle += rDiff * 0.08;
 
-    // Joint chain
+    // Joint chain — inertia-based, heavy body carries momentum
     this._joints[0].x = this.x;
     this._joints[0].y = this.y;
     for (let j = 1; j <= this._jointCount; j++) {
       const prev = this._joints[j - 1];
       const curr = this._joints[j];
+      // Heavy inertia — barracuda body carries massive momentum
+      if (curr.px === undefined) { curr.px = curr.x; curr.py = curr.y; }
+      const velX = curr.x - curr.px, velY = curr.y - curr.py;
+      curr.px = curr.x; curr.py = curr.y;
+      const t = j / this._jointCount;
+      const inertia = 0.6 + t * 0.25; // 0.6 at head, 0.85 at tail — heavy mass
+      curr.x += velX * inertia;
+      curr.y += velY * inertia;
+      // Gentle pull toward target — body eases into position
       let dx = curr.x - prev.x, dy = curr.y - prev.y;
       let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
-      const t = j / this._jointCount;
-      // Softer stiffness than small fish — body trails and flexes more
-      const stiffness = 0.985 - t * 0.01;
-      curr.x += (tx - curr.x) * stiffness;
-      curr.y += (ty - curr.y) * stiffness;
+      const pull = 0.25 - t * 0.1; // 0.25 at head, 0.15 at tail
+      curr.x += (tx - curr.x) * pull;
+      curr.y += (ty - curr.y) * pull;
+      // Distance constraint
       dx = curr.x - prev.x; dy = curr.y - prev.y;
       dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
       curr.x = prev.x + (dx / dist) * this._segLen;
       curr.y = prev.y + (dy / dist) * this._segLen;
+      // Wide bend limit — big fish curves, doesn't kink
       if (j >= 2) {
         const pp = this._joints[j - 2];
         const prevAngle = Math.atan2(prev.y - pp.y, prev.x - pp.x);
@@ -1865,8 +1884,8 @@ class Predator {
         let bend = currAngle - prevAngle;
         while (bend > Math.PI) bend -= Math.PI * 2;
         while (bend < -Math.PI) bend += Math.PI * 2;
-        if (Math.abs(bend) > 0.15) {
-          const ca = prevAngle + Math.sign(bend) * 0.15;
+        if (Math.abs(bend) > 0.2) {
+          const ca = prevAngle + Math.sign(bend) * 0.2;
           curr.x = prev.x + Math.cos(ca) * this._segLen;
           curr.y = prev.y + Math.sin(ca) * this._segLen;
         }
@@ -1890,18 +1909,18 @@ class Predator {
     const headShake = chompIntensity * Math.sin(this.chompPhase) * this.len * 0.06;
     const jawGape = chompIntensity * Math.max(0, Math.sin(this.chompPhase * 0.8)) * this.bodyWidth * 2.5;
 
-    const cosH = Math.cos(-this.angle), sinH = Math.sin(-this.angle);
+    const cosH = Math.cos(-this._renderAngle), sinH = Math.sin(-this._renderAngle);
     const spineX = new Array(segs + 1), spineY = new Array(segs + 1), widths = new Array(segs + 1);
     for (let i = 0; i <= segs; i++) {
       const jx = this._joints[i].x - this.x, jy = this._joints[i].y - this.y;
       let lx = jx * cosH - jy * sinH, ly = jx * sinH + jy * cosH;
       if (i > 0) {
         const t = i / segs;
-        // Gentle S-curve starting at 30% — long wavelength, no violent tail whip
-        const flex = t < 0.3 ? 0 : (t - 0.3) / 0.7;
-        // Wide range of motion — slow sweeping strokes, not small twitches
-        const amp = this.len * (0.015 + si * 0.065);
-        ly += Math.sin(phase - t * Math.PI * 0.8) * flex * amp;
+        // Minimal sinusoidal overlay — propulsion comes from body inertia, not tail flapping
+        const flex = t < 0.4 ? 0 : (t - 0.4) / 0.6;
+        // Very subtle wave — just shapes the trailing body, doesn't drive it
+        const amp = this.len * (0.005 + si * 0.02);
+        ly += Math.sin(phase - t * Math.PI * 0.6) * flex * amp;
       }
       // Head shake displaces the front segments laterally
       if (i < segs * 0.3) {
@@ -1922,7 +1941,7 @@ class Predator {
 
     ctx.save();
     ctx.translate(this.x, this.y);
-    ctx.rotate(this.angle);
+    ctx.rotate(this._renderAngle);
 
     const rightX = new Array(segs + 1), rightY = new Array(segs + 1);
     const leftX = new Array(segs + 1), leftY = new Array(segs + 1);
