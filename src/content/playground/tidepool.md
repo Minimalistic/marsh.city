@@ -87,10 +87,8 @@ let soundEnabled = false;
 
 function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  // Mobile browsers require resume inside a user gesture
-  if (audioCtx.state === 'suspended') audioCtx.resume();
 
-  // White noise source
+  // Build nodes but don't start sources yet
   const bufferSize = audioCtx.sampleRate * 4;
   const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = noiseBuffer.getChannelData(0);
@@ -99,40 +97,32 @@ function initAudio() {
   noise.buffer = noiseBuffer;
   noise.loop = true;
 
-  // Bandpass filter - shapes white noise into ocean-like band
   oceanFilter = audioCtx.createBiquadFilter();
   oceanFilter.type = 'bandpass';
   oceanFilter.frequency.value = 400;
   oceanFilter.Q.value = 0.5;
 
-  // Secondary low shelf for body
   const lowShelf = audioCtx.createBiquadFilter();
   lowShelf.type = 'lowshelf';
   lowShelf.frequency.value = 200;
   lowShelf.gain.value = 6;
 
-  // LFO modulates filter frequency - simulates wave rhythm
   oceanLfo = audioCtx.createOscillator();
   oceanLfo.type = 'sine';
-  oceanLfo.frequency.value = 0.07; // very slow ~14s cycle
+  oceanLfo.frequency.value = 0.07;
   oceanLfoGain = audioCtx.createGain();
   oceanLfoGain.gain.value = 250;
   oceanLfo.connect(oceanLfoGain);
   oceanLfoGain.connect(oceanFilter.frequency);
-  oceanLfo.start();
 
-  // Master volume
   oceanGain = audioCtx.createGain();
   oceanGain.gain.value = 0;
 
-  // Connect main chain
   noise.connect(oceanFilter);
   oceanFilter.connect(lowShelf);
   lowShelf.connect(oceanGain);
   oceanGain.connect(audioCtx.destination);
-  noise.start();
 
-  // Distant crash layer - low frequency rumble that swells irregularly
   const crashBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const crashData = crashBuffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) crashData[i] = Math.random() * 2 - 1;
@@ -140,20 +130,29 @@ function initAudio() {
   crashNoise.buffer = crashBuffer;
   crashNoise.loop = true;
 
-  // Very low bandpass - rumble only
   const crashFilter = audioCtx.createBiquadFilter();
   crashFilter.type = 'lowpass';
   crashFilter.frequency.value = 120;
   crashFilter.Q.value = 0.7;
 
-  // Gain node we'll modulate for swells
   window._crashGain = audioCtx.createGain();
   window._crashGain.gain.value = 0;
 
   crashNoise.connect(crashFilter);
   crashFilter.connect(window._crashGain);
   window._crashGain.connect(audioCtx.destination);
-  crashNoise.start();
+
+  // Start sources only after context is running - iOS kills sources started while suspended
+  function startSources() {
+    noise.start();
+    oceanLfo.start();
+    crashNoise.start();
+  }
+  if (audioCtx.state === 'running') {
+    startSources();
+  } else {
+    audioCtx.resume().then(startSources);
+  }
 }
 
 function toggleSound() {
