@@ -1534,8 +1534,8 @@ class Predator {
 
     this.depth = 0.05 + Math.random() * 0.12;
     this.depthAlpha = 1 - this.depth * 0.3;
-    this.color = 'rgb(70, 85, 65)';
-    this.bellyColor = 'rgb(110, 120, 100)';
+    this.color = 'rgb(55, 95, 100)';
+    this.bellyColor = 'rgb(140, 170, 165)';
 
     // Hunger: 0 = full, 1 = starving. Hunting starts at 0.5
     this.hunger = 0.2 + Math.random() * 0.2;
@@ -1919,9 +1919,11 @@ class Predator {
       leftX[i] = spineX[i] - nx * widths[i]; leftY[i] = spineY[i] - ny * widths[i];
     }
 
-    // Body color
-    const ht = this.hunting ? Math.min(1, (this.hunger - 0.5) * 2) : 0;
-    const cr = Math.round(70 + ht * 30), cg = Math.round(85 - ht * 15), cb = Math.round(65 - ht * 10);
+    // Barracuda coloring — iridescent blue-green, slight shimmer
+    const shimmer = Math.sin(Date.now() * 0.0008 + this._phaseOffset) * 8;
+    const cr = Math.round(55 + shimmer * 0.3);
+    const cg = Math.round(95 + shimmer);
+    const cb = Math.round(100 + shimmer * 0.7);
     ctx.beginPath();
     ctx.moveTo(spineX[0], spineY[0]);
     ctx.lineTo(rightX[0], rightY[0]);
