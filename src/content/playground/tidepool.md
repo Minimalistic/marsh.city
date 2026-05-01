@@ -593,11 +593,10 @@ class Fish {
   }
 
   update(dt, fish, time) {
-    // Eating nibble - fish slows slightly but keeps swimming
+    // After grabbing food, fish swims away to "chew" before coming back
     if (this.eating) {
       this.eatTimer -= dt;
       if (this.eatTimer <= 0) this.eating = false;
-      // Don't return early - fish keeps moving and updating normally
     }
 
     // Boids forces
@@ -668,13 +667,15 @@ class Fish {
     // Base speed for this fish at current viewport scale
     const scaledSpeed = this.baseSpeed * viewScale;
 
-    // Food attraction - all distances measured from the mouth tip
+    // Food attraction - skip while chewing (fish swims away to digest)
     const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5 * viewScale;
     const mouthY = this.y + Math.sin(this.angle) * this.len * 0.5 * viewScale;
     const foodRange = 400 * viewScale;
     let closestFood = null;
     let closestFoodDist = foodRange;
+    if (this.eating) { closestFood = null; closestFoodDist = Infinity; }
     for (const fp of foodPellets) {
+      if (this.eating) break;
       if (fp.bites <= 0) continue;
       const fdx = fp.x - mouthX;
       const fdy = fp.y - mouthY;
@@ -709,7 +710,7 @@ class Fish {
           closestFood.vx += Math.cos(this.angle) * 0.2;
           closestFood.vy += Math.sin(this.angle) * 0.2;
           this.eating = true;
-          this.eatTimer = 0.15 + Math.random() * 0.15; // quick nibbles
+          this.eatTimer = 1.5 + Math.random() * 2.5; // swim away to chew
           // Scatter fragments frequently - food breaks apart
           if (Math.random() < 0.5 && closestFood.size > 0.8) {
             const fragAngle = Math.random() * Math.PI * 2;
@@ -780,7 +781,6 @@ class Fish {
     // Speed management - fish always keep moving, just slower when relaxed
     let targetSpeed;
     if (this.fleeing) targetSpeed = scaledSpeed * 1.1;
-    else if (this.eating) targetSpeed = scaledSpeed * 0.3; // brief pause to nibble
     else if (this.idle) targetSpeed = scaledSpeed * 0.65;
     else targetSpeed = scaledSpeed * 0.8;
 
