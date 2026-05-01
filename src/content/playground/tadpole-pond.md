@@ -23,15 +23,59 @@ function resize() {
 let { w, h } = resize();
 window.addEventListener('resize', () => { ({ w, h } = resize()); });
 
-// Mouse tracking
-let mouse = { x: -1000, y: -1000, active: false };
+// Mouse tracking with velocity
+let mouse = { x: -1000, y: -1000, prevX: -1000, prevY: -1000, active: false, speed: 0, down: false };
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
+  mouse.prevX = mouse.x;
+  mouse.prevY = mouse.y;
   mouse.x = e.clientX - rect.left;
   mouse.y = e.clientY - rect.top;
   mouse.active = true;
+  const dx = mouse.x - mouse.prevX;
+  const dy = mouse.y - mouse.prevY;
+  mouse.speed = Math.sqrt(dx * dx + dy * dy);
+
+  // Dragging with mouse down creates continuous ripples
+  if (mouse.down && mouse.speed > 1) {
+    ripples.push({ x: mouse.x, y: mouse.y, radius: 5, maxRadius: 40 + mouse.speed * 2, opacity: 0.3, age: 0 });
+  }
 });
-canvas.addEventListener('mouseleave', () => { mouse.active = false; mouse.x = -1000; mouse.y = -1000; });
+canvas.addEventListener('mouseleave', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
+canvas.addEventListener('mousedown', e => {
+  e.preventDefault();
+  mouse.down = true;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  // Tap creates a strong ripple
+  ripples.push({ x: mx, y: my, radius: 3, maxRadius: 100, opacity: 0.5, age: 0 });
+  // Push nearby particles outward from tap
+  for (const f of food) {
+    const dx = f.x - mx;
+    const dy = f.y - my;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 100 && dist > 0.1) {
+      const force = 2 * (1 - dist / 100);
+      f.vx += (dx / dist) * force;
+      f.vy += (dy / dist) * force;
+    }
+  }
+  for (const d of debris) {
+    const dx = d.x - mx;
+    const dy = d.y - my;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 100 && dist > 0.1) {
+      const force = 1.5 * (1 - dist / 100);
+      d.vx += (dx / dist) * force;
+      d.vy += (dy / dist) * force;
+    }
+  }
+});
+canvas.addEventListener('mouseup', () => { mouse.down = false; });
+
+// Ripple system - expanding rings from taps and drags
+const ripples = [];
 
 // Food particles - algae bits drifting in the water
 const food = [];
@@ -51,15 +95,15 @@ function spawnFood() {
 
 // Dirt/debris particles - tiny bits that float and get pushed around
 const debris = [];
-for (let i = 0; i < 200; i++) {
+for (let i = 0; i < 500; i++) {
   debris.push({
     x: Math.random() * w,
     y: Math.random() * h,
-    size: 0.3 + Math.random() * 1.0,
+    size: 0.2 + Math.random() * 0.8,
     vx: 0,
     vy: 0,
-    opacity: 0.06 + Math.random() * 0.18,
-    drift: (Math.random() - 0.5) * 0.03,
+    opacity: 0.04 + Math.random() * 0.14,
+    drift: (Math.random() - 0.5) * 0.02,
   });
 }
 
@@ -179,17 +223,34 @@ class Tadpole {
     this.hunger += dt * 0.006;
     this.energy = Math.max(0, Math.min(1, this.energy + dt * 0.003));
 
-    // Check mouse proximity for flee
+    // Check mouse proximity for flee - slow sneaky movement doesn't startle
     const mdx = mouse.x - this.x;
     const mdy = mouse.y - this.y;
     const mouseDist = Math.sqrt(mdx * mdx + mdy * mdy);
-    if (mouse.active && mouseDist < 90) {
+    // Fast cursor movement startles from further away, slow movement needs to be very close
+    const fleeRadius = mouse.down ? 120 : 20 + mouse.speed * 8;
+    if (mouse.active && mouseDist < fleeRadius && mouse.speed > 2) {
       this.state = 'flee';
       this.stateTimer = 0.3 + Math.random() * 0.3;
       this.targetAngle = Math.atan2(-mdy, -mdx) + (Math.random() - 0.5) * 0.6;
       this.speed = this.flitSpeed * 2;
       this.wiggleSpeed = 25;
       this.wiggleAmp = 0.6;
+    }
+    // Ripples also startle - check expanding ripples
+    for (const r of ripples) {
+      const rdx = r.x - this.x;
+      const rdy = r.y - this.y;
+      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+      // Startle when the ripple wavefront passes through the tadpole
+      if (Math.abs(rDist - r.radius) < 15 && r.opacity > 0.15 && this.state !== 'flee') {
+        this.state = 'flee';
+        this.stateTimer = 0.3 + Math.random() * 0.4;
+        this.targetAngle = Math.atan2(-rdy, -rdx) + (Math.random() - 0.5) * 0.8;
+        this.speed = this.flitSpeed * 1.8;
+        this.wiggleSpeed = 22;
+        this.wiggleAmp = 0.5;
+      }
     }
 
     switch (this.state) {
@@ -592,20 +653,66 @@ function drawPond(time) {
     spawnFood();
   }
 
-  // Mouse ripple indicator
-  if (mouse.active) {
-    const rippleRadius = 80;
-    ctx.beginPath();
-    ctx.arc(mouse.x, mouse.y, rippleRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(200, 220, 200, ${0.08 + Math.sin(time * 0.005) * 0.04})`;
-    ctx.lineWidth = 1;
-    ctx.stroke();
+  // Update and draw ripples
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const r = ripples[i];
+    r.age += dt;
+    r.radius += dt * 80; // expansion speed
+    r.opacity = Math.max(0, r.opacity * (1 - dt * 1.5));
 
-    // Inner ripple
+    // Push particles as wavefront passes
+    if (r.opacity > 0.05) {
+      for (const f of food) {
+        const dx = f.x - r.x;
+        const dy = f.y - r.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (Math.abs(dist - r.radius) < 10 && dist > 0.1) {
+          const force = r.opacity * 0.4;
+          f.vx += (dx / dist) * force;
+          f.vy += (dy / dist) * force;
+        }
+      }
+      for (const d of debris) {
+        const dx = d.x - r.x;
+        const dy = d.y - r.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (Math.abs(dist - r.radius) < 10 && dist > 0.1) {
+          const force = r.opacity * 0.3;
+          d.vx += (dx / dist) * force;
+          d.vy += (dy / dist) * force;
+        }
+      }
+    }
+
+    // Draw ripple ring
+    if (r.opacity > 0.01 && r.radius < r.maxRadius) {
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(200, 220, 200, ${r.opacity})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Second ring slightly behind
+      if (r.radius > 15) {
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius * 0.6, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(200, 220, 200, ${r.opacity * 0.4})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    // Remove dead ripples
+    if (r.radius >= r.maxRadius || r.opacity < 0.01) {
+      ripples.splice(i, 1);
+    }
+  }
+
+  // Subtle cursor glow when hovering (no startle)
+  if (mouse.active && !mouse.down) {
     ctx.beginPath();
-    ctx.arc(mouse.x, mouse.y, rippleRadius * 0.4 + Math.sin(time * 0.008) * 5, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(200, 220, 200, 0.06)';
-    ctx.stroke();
+    ctx.arc(mouse.x, mouse.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(200, 220, 200, 0.06)';
+    ctx.fill();
   }
 
   // Update and draw tadpoles
