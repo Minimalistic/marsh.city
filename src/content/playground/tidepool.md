@@ -455,7 +455,7 @@ let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
 // More fish on larger viewports - scales aggressively with area
-const initialFishCount = Math.max(120, Math.floor(initialArea / 400));
+const initialFishCount = Math.min(500, Math.max(120, Math.floor(initialArea / 400)));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -477,7 +477,7 @@ function rescaleAll(oldW, oldH) {
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
   // Update organic population base for new viewport size
-  const newBasePop = Math.max(80, Math.floor((w * h) / 400));
+  const newBasePop = Math.min(500, Math.max(80, Math.floor((w * h) / 400)));
   const popRatio = newBasePop / Math.max(1, basePop);
   popTarget = Math.max(newBasePop * 0.35, Math.min(newBasePop * 1.3, popTarget * popRatio));
   basePop = newBasePop;
@@ -539,7 +539,7 @@ function rescaleAll(oldW, oldH) {
 function onResize() {
   const oldW = w, oldH = h;
   ({ w, h } = resize());
-  if (w !== oldW || h !== oldH) rescaleAll(oldW, oldH);
+  if (w !== oldW || h !== oldH) { rescaleAll(oldW, oldH); rebuildGrid(); }
 }
 window.addEventListener('resize', onResize);
 // visualViewport fires on iOS when URL bar shows/hides
@@ -549,6 +549,39 @@ if (window.visualViewport) {
 
 const blurCanvas = document.createElement('canvas');
 const blurCtx = blurCanvas.getContext('2d');
+
+// Spatial grid for fast neighbor lookup (replaces O(n^2) boids)
+const GRID_CELL = 200; // px per cell — covers the largest boids radius
+let gridCols = 1, gridRows = 1;
+let spatialGrid = [];
+function rebuildGrid() {
+  gridCols = Math.max(1, Math.ceil(w / GRID_CELL));
+  gridRows = Math.max(1, Math.ceil(h / GRID_CELL));
+  spatialGrid = new Array(gridCols * gridRows);
+  for (let i = 0; i < spatialGrid.length; i++) spatialGrid[i] = [];
+}
+function populateGrid(fishArr) {
+  for (let i = 0; i < spatialGrid.length; i++) spatialGrid[i].length = 0;
+  for (const f of fishArr) {
+    const col = Math.max(0, Math.min(gridCols - 1, Math.floor(f.x / GRID_CELL)));
+    const row = Math.max(0, Math.min(gridRows - 1, Math.floor(f.y / GRID_CELL)));
+    spatialGrid[row * gridCols + col].push(f);
+  }
+}
+function* getNeighbors(fx, fy) {
+  const col = Math.max(0, Math.min(gridCols - 1, Math.floor(fx / GRID_CELL)));
+  const row = Math.max(0, Math.min(gridRows - 1, Math.floor(fy / GRID_CELL)));
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      const r = row + dr, c = col + dc;
+      if (r >= 0 && r < gridRows && c >= 0 && c < gridCols) {
+        const cell = spatialGrid[r * gridCols + c];
+        for (let i = 0; i < cell.length; i++) yield cell[i];
+      }
+    }
+  }
+}
+rebuildGrid();
 
 // Mouse
 let mouse = { x: -1000, y: -1000, prevX: -1000, prevY: -1000, active: false, speed: 0, down: false };
@@ -798,9 +831,8 @@ class Fish {
     let alignX = 0, alignY = 0, alignCount = 0;
     let cohX = 0, cohY = 0, cohCount = 0;
 
-    for (const other of fish) {
+    for (const other of getNeighbors(this.x, this.y)) {
       if (other === this) continue;
-      // School primarily with same color group (depth doesn't matter in shallow pool)
       const sameSchool = other.school === this.school;
       const dx = other.x - this.x;
       const dy = other.y - this.y;
@@ -1547,7 +1579,7 @@ class Predator {
           if (ahead < 0) continue; // ignore fish behind us
           // Prefer stragglers: fish far from their school neighbors are easier picks
           let nearbyFriends = 0;
-          for (const other of smallFish) {
+          for (const other of getNeighbors(f.x, f.y)) {
             if (other === f) continue;
             const odx = other.x - f.x, ody = other.y - f.y;
             if (odx * odx + ody * ody < 30 * 30) nearbyFriends++;
@@ -1995,7 +2027,7 @@ const schoolColors = [
   { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
   { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
 ];
-const fishCount = Math.max(120, Math.floor((w * h) / 400));
+const fishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
@@ -2018,7 +2050,7 @@ const predators = [];
 const predatorCount = w * h > 600000 ? 2 : 1;
 for (let i = 0; i < predatorCount; i++) predators.push(new Predator());
 // Organic population — wanders around a midpoint, fish come and go
-let basePop = Math.max(80, Math.floor((w * h) / 400));
+let basePop = Math.min(500, Math.max(80, Math.floor((w * h) / 400)));
 let popTarget = basePop * (0.7 + Math.random() * 0.3); // start a little varied
 let popDriftTimer = 10 + Math.random() * 20; // time until next target shift
 let schoolArrivalTimer = 15 + Math.random() * 30; // next wave of newcomers
@@ -2859,16 +2891,30 @@ function draw(time) {
   }
 
   // Update and draw fish + predators
+  populateGrid(fish); // rebuild spatial grid for O(n) neighbor queries
   for (const f of fish) f.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
 
-  // Draw all fish and predators sorted by depth
+  // Predator shadow — blurry dark shape on the pool floor beneath the big fish
+  for (const pred of predators) {
+    ctx.save();
+    const shadowOff = 4 + pred.depth * 8; // offset increases with depth
+    ctx.translate(pred.x + shadowOff, pred.y + shadowOff);
+    ctx.rotate(pred.angle);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, pred.len * 0.4, pred.bodyWidth * 1.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+    ctx.filter = 'blur(6px)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Draw all fish and predators sorted by depth — opacity only, no per-fish blur
   const allSwimmers = [...fish, ...predators];
   const sortedFish = allSwimmers.sort((a, b) => b.depth - a.depth);
   for (const f of sortedFish) {
     ctx.save();
     ctx.globalAlpha = f.depthAlpha;
-    if (f.depth > 0.1) ctx.filter = 'blur(' + (f.depth * 2.5) + 'px)';
     f.draw(ctx);
     ctx.restore();
   }
@@ -2988,17 +3034,24 @@ function draw(time) {
     ctx.restore();
   }
 
-  // DOF haze
-  blurCanvas.width = canvas.width;
-  blurCanvas.height = canvas.height;
-  blurCtx.filter = 'blur(5px)';
-  blurCtx.drawImage(canvas, 0, 0);
-  ctx.save();
-  ctx.globalAlpha = 0.4;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(blurCanvas, 0, 0);
-  ctx.restore();
+  // DOF haze — downsample to 1/4 res for performance, blur, composite back
   const dpr = window.devicePixelRatio || 1;
+  const dofScale = 0.25;
+  const dofW = Math.max(1, Math.floor(canvas.width * dofScale));
+  const dofH = Math.max(1, Math.floor(canvas.height * dofScale));
+  if (blurCanvas.width !== dofW || blurCanvas.height !== dofH) {
+    blurCanvas.width = dofW;
+    blurCanvas.height = dofH;
+  }
+  blurCtx.clearRect(0, 0, dofW, dofH);
+  blurCtx.filter = 'blur(4px)';
+  blurCtx.drawImage(canvas, 0, 0, dofW, dofH);
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(blurCanvas, 0, 0, canvas.width, canvas.height);
+  ctx.restore();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   // Vignette
