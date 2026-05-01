@@ -629,12 +629,12 @@ class Fish {
     this.vx -= Math.sign(normX) * edgeX * 0.015;
     this.vy -= Math.sign(normY) * edgeY * 0.015;
 
-    // Tidal current + local turbulence
-    this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
-    this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
+    // Tidal current + local turbulence (fish resist most of it)
+    this.vx += Math.cos(tide.angle) * tide.strength * 0.006;
+    this.vy += Math.sin(tide.angle) * tide.strength * 0.006;
     const flow = sampleFlow(this.x, this.y, time);
-    this.vx += flow.fx * 0.01;
-    this.vy += flow.fy * 0.01;
+    this.vx += flow.fx * 0.005;
+    this.vy += flow.fy * 0.005;
 
     // Food attraction - fish are very interested, urgency fades with distance
     let closestFood = null;
@@ -1062,9 +1062,9 @@ function draw(time) {
       // Distance from wave front line (perpendicular)
       const rel = (f.x - ww.x) * cosA + (f.y - ww.y) * sinA;
       if (rel > -5 && rel < ww.width) {
-        // Very slight nudge - fish mostly hold their ground
-        f.vx += cosA * pushForce * 0.005;
-        f.vy += sinA * pushForce * 0.005;
+        // Noticeable push as wave passes directly over
+        f.vx += cosA * pushForce * 0.025;
+        f.vy += sinA * pushForce * 0.025;
       }
     }
     for (const d of debris) {
@@ -1161,19 +1161,19 @@ function draw(time) {
   for (const ww of washWaves) {
     if (ww.life <= 0) continue;
     if (!ww.blobs) ww.blobs = [];
-    // Continuously spawn foam at the wave front (in world space)
+    // Continuously spawn foam at the wave front - scales with viewport
     const cosA = Math.cos(ww.angle);
     const sinA = Math.sin(ww.angle);
     const span = Math.max(w, h) * 1.2;
+    const foamCount = Math.ceil(4 * viewScale);
     if (ww.life > 0.1) {
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < foamCount; i++) {
         const lateral = (Math.random() - 0.5) * span;
-        // Spawn slightly behind the front (positive = behind in wave direction)
-        const behind = Math.random() * 5;
+        const behind = Math.random() * 5 * viewScale;
         ww.blobs.push({
           x: ww.x - cosA * behind + (-sinA) * lateral,
           y: ww.y - sinA * behind + cosA * lateral,
-          size: 0.4 + Math.pow(Math.random(), 2) * 3.5,
+          size: (0.4 + Math.pow(Math.random(), 2) * 3.5) * viewScale,
           elongX: 0.7 + Math.random() * 1.3,
           elongY: 0.5 + Math.random() * 0.7,
           rot: Math.random() * Math.PI,
@@ -1188,10 +1188,10 @@ function draw(time) {
     if (!ww.seed) ww.seed = Math.random() * 100;
     const t = ww.traveled * 0.02;
     const lines = [
-      { behind: 0, thick: 1.8, alpha: 0.35, freq: 1.0 },
-      { behind: 4, thick: 1.2, alpha: 0.2, freq: 1.3 },
-      { behind: 9, thick: 0.8, alpha: 0.12, freq: 0.8 },
-      { behind: 15, thick: 0.5, alpha: 0.07, freq: 1.6 },
+      { behind: 0, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
+      { behind: 4 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 1.3 },
+      { behind: 9 * viewScale, thick: 0.8 * viewScale, alpha: 0.12, freq: 0.8 },
+      { behind: 15 * viewScale, thick: 0.5 * viewScale, alpha: 0.07, freq: 1.6 },
     ];
     for (const ln of lines) {
       ctx.beginPath();
@@ -1199,10 +1199,11 @@ function draw(time) {
       let first = true;
       for (let pos = -span; pos <= span; pos += step) {
         const f = ln.freq;
-        const offset = Math.sin(pos * 0.015 * f + t * 0.6 + ww.seed) * 10
+        const vs = viewScale;
+        const offset = (Math.sin(pos * 0.015 * f + t * 0.6 + ww.seed) * 10
                      + Math.sin(pos * 0.04 * f + t * 1.1 + ww.seed * 2.3) * 5
                      + Math.sin(pos * 0.11 * f + t * 2.3 + ww.seed * 4.7) * 2.5
-                     + Math.sin(pos * 0.23 * f + t * 3.1 + ww.seed * 7) * 1;
+                     + Math.sin(pos * 0.23 * f + t * 3.1 + ww.seed * 7) * 1) * vs;
         const px = ww.x + perpX * pos + cosA * (offset - ln.behind);
         const py = ww.y + perpY * pos + sinA * (offset - ln.behind);
         if (first) { ctx.moveTo(px, py); first = false; }
