@@ -158,8 +158,9 @@ class Tadpole {
     this.flitSpeed = 2.5 + Math.random() * 1.5;
     this.targetAngle = this.angle;
 
-    // Depth - some tadpoles are further away, appear smaller and blurry
-    this.depth = Math.random() < 0.3 ? 0.6 + Math.random() * 0.15 : 0; // 0 = surface, >0 = deep
+    // Depth - progressive: 0 = surface (sharp), higher = further away (more blur)
+    const depthRoll = Math.random();
+    this.depth = depthRoll < 0.4 ? 0 : depthRoll < 0.65 ? 0.2 + Math.random() * 0.1 : 0.5 + Math.random() * 0.2;
 
     // Body segments
     const mobileScale = w < 500 ? 0.75 : 1;
@@ -826,16 +827,17 @@ function drawPond(time) {
     ctx.fill();
   }
 
-  // Update and draw tadpoles - deep ones first (behind), blurred
+  // Update and draw tadpoles - sorted by depth, progressive blur
   for (const t of tadpoles) t.update(dt);
-  // Draw deep tadpoles with blur (still fully opaque)
-  ctx.save();
-  ctx.filter = 'blur(1.5px)';
-  for (const t of tadpoles) {
-    if (t.depth > 0) t.draw(ctx);
+  // Deep tadpoles first (behind), blur scales with depth
+  const deepTadpoles = tadpoles.filter(t => t.depth > 0).sort((a, b) => b.depth - a.depth);
+  for (const t of deepTadpoles) {
+    ctx.save();
+    ctx.filter = 'blur(' + (t.depth * 3) + 'px)';
+    t.draw(ctx);
+    ctx.restore();
   }
-  ctx.restore();
-  // Draw surface tadpoles sharp
+  // Surface tadpoles sharp (no filter)
   for (const t of tadpoles) {
     if (t.depth === 0) t.draw(ctx);
   }
