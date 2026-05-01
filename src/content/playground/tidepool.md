@@ -84,8 +84,8 @@ canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = f
 
 const ripples = [];
 
-// Tidal current - shifts direction and strength noticeably
-const tide = { angle: 0, strength: 0.6, targetAngle: Math.random() * Math.PI * 2, targetStrength: 0.5 + Math.random() * 0.5 };
+// Tidal current - gentle drift that shifts direction
+const tide = { angle: 0, strength: 0.4, targetAngle: Math.random() * Math.PI * 2, targetStrength: 0.3 + Math.random() * 0.4 };
 
 // Debris particles
 const debris = [];
@@ -176,9 +176,9 @@ class Fish {
     if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.05; this.vy += (alignY / alignCount - this.vy) * 0.05; }
     if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.0008; this.vy += (cy - this.y) * 0.0008; }
 
-    // Tidal current influence - strong enough to visibly push them
-    this.vx += Math.cos(tide.angle) * tide.strength * 0.08;
-    this.vy += Math.sin(tide.angle) * tide.strength * 0.08;
+    // Tidal current - gentle drift, not a shove
+    this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
+    this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
 
     // Mouse avoidance
     if (mouse.active) {
@@ -481,7 +481,7 @@ function draw(time) {
   if (tideShiftTimer > 8) {
     tideShiftTimer = 0;
     tide.targetAngle = Math.random() * Math.PI * 2;
-    tide.targetStrength = 0.5 + Math.random() * 0.6;
+    tide.targetStrength = 0.3 + Math.random() * 0.4;
   }
   let angleDiff = tide.targetAngle - tide.angle;
   while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
@@ -525,8 +525,8 @@ function draw(time) {
 
   // Debris - affected by tide
   for (const d of debris) {
-    d.vx += Math.cos(tide.angle) * tide.strength * 0.02;
-    d.vy += Math.sin(tide.angle) * tide.strength * 0.02;
+    d.vx += Math.cos(tide.angle) * tide.strength * 0.008;
+    d.vy += Math.sin(tide.angle) * tide.strength * 0.008;
     d.vx *= 0.97;
     d.vy *= 0.97;
     d.x += d.vx;
