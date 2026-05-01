@@ -158,8 +158,13 @@ class Tadpole {
     this.flitSpeed = 2.5 + Math.random() * 1.5;
     this.targetAngle = this.angle;
 
+    // Depth - some tadpoles are further away, appear smaller and blurry
+    this.depth = Math.random() < 0.3 ? 0.6 + Math.random() * 0.15 : 0; // 0 = surface, >0 = deep
+
     // Body segments
-    const scale = w < 500 ? 0.75 : 1;
+    const mobileScale = w < 500 ? 0.75 : 1;
+    const depthScale = this.depth > 0 ? (1 - this.depth * 0.4) : 1;
+    const scale = mobileScale * depthScale;
     this.segments = [];
     this.segCount = 12;
     this.segLen = (5 + Math.random() * 2) * scale;
@@ -821,10 +826,22 @@ function drawPond(time) {
     ctx.fill();
   }
 
-  // Update and draw tadpoles
+  // Update and draw tadpoles - deep ones first (behind), blurred
+  for (const t of tadpoles) t.update(dt);
+  // Draw deep tadpoles with blur
+  ctx.save();
+  ctx.filter = 'blur(1.5px)';
   for (const t of tadpoles) {
-    t.update(dt);
-    t.draw(ctx);
+    if (t.depth > 0) {
+      ctx.globalAlpha = 0.7;
+      t.draw(ctx);
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  // Draw surface tadpoles sharp
+  for (const t of tadpoles) {
+    if (t.depth === 0) t.draw(ctx);
   }
 
   // Surface caustics effect (subtle)
@@ -840,13 +857,11 @@ function drawPond(time) {
   }
   ctx.globalAlpha = 1;
 
-  // Hazy center blur - brighten and soften the middle area
+  // Hazy blur overlay - subtle murky water effect across the whole pond
   ctx.save();
-  ctx.filter = 'blur(1.5px)';
-  const hazeGrad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.min(w, h) * 0.4);
-  hazeGrad.addColorStop(0, 'rgba(180, 200, 160, 0.06)');
-  hazeGrad.addColorStop(1, 'rgba(180, 200, 160, 0)');
-  ctx.fillStyle = hazeGrad;
+  ctx.filter = 'blur(2px)';
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = 'rgba(160, 190, 140, 1)';
   ctx.fillRect(0, 0, w, h);
   ctx.restore();
 
