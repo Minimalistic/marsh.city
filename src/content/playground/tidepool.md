@@ -850,63 +850,125 @@ function draw(time) {
     ctx.fill();
   }
 
-  // Draw wash wave fronts - turbulent foam and froth
+  // Draw wash wave fronts - organic foam, whorls, trailing threads
   for (const ww of washWaves) {
     if (ww.life <= 0) continue;
+    // Generate stable detail on first draw
+    if (!ww.foam) {
+      ww.foam = [];
+      ww.whorls = [];
+      ww.threads = [];
+      const span = Math.max(w, h) * 1.4;
+      // Foam clusters - denser near front, thinning backward
+      for (let i = 0; i < 80; i++) {
+        const depth = Math.pow(Math.random(), 1.8) * ww.width * 2;
+        ww.foam.push({
+          x: depth, y: (Math.random() - 0.5) * span,
+          size: 0.4 + Math.pow(Math.random(), 0.7) * 3,
+          drift: (Math.random() - 0.5) * 0.4,
+        });
+      }
+      // Whorls - spiral curls that peel off the wave
+      for (let i = 0; i < 6; i++) {
+        ww.whorls.push({
+          x: 5 + Math.random() * ww.width * 1.5,
+          y: (Math.random() - 0.5) * span * 0.8,
+          radius: 5 + Math.random() * 12,
+          turns: 0.8 + Math.random() * 1.2,
+          dir: Math.random() < 0.5 ? 1 : -1,
+          drift: 0.1 + Math.random() * 0.2,
+        });
+      }
+      // Trailing threads - thin foam lines that stretch behind
+      for (let i = 0; i < 10; i++) {
+        ww.threads.push({
+          startX: 3 + Math.random() * ww.width * 0.5,
+          y: (Math.random() - 0.5) * span * 0.9,
+          len: 10 + Math.random() * 25,
+          curve: (Math.random() - 0.5) * 8,
+          width: 0.3 + Math.random() * 0.8,
+          drift: 0.05 + Math.random() * 0.1,
+        });
+      }
+    }
+
     ctx.save();
     ctx.translate(ww.x, ww.y);
     ctx.rotate(ww.angle);
+    const span = Math.max(w, h) * 1.4;
 
-    const span = Math.max(w, h) * 1.2;
-
-    // Leading edge - irregular broken line with varying thickness
-    ctx.globalAlpha = ww.life * 0.25;
+    // Leading edge - organic broken line
+    ctx.globalAlpha = ww.life * 0.3;
     ctx.beginPath();
     ctx.moveTo(0, -span);
-    for (let y = -span; y < span; y += 6) {
-      const jitter = Math.sin(y * 0.15 + ww.traveled * 0.1) * 3 + Math.sin(y * 0.4 + ww.traveled * 0.2) * 1.5;
+    for (let y = -span; y < span; y += 4) {
+      const jitter = Math.sin(y * 0.12 + ww.traveled * 0.08) * 4
+                   + Math.sin(y * 0.35 + ww.traveled * 0.15) * 2
+                   + Math.sin(y * 0.8) * 0.8;
       ctx.lineTo(jitter, y);
     }
-    ctx.strokeStyle = 'rgba(210, 235, 240, 1)';
-    ctx.lineWidth = 2 + Math.sin(ww.traveled * 0.3) * 0.5;
+    ctx.strokeStyle = 'rgba(210, 235, 245, 1)';
+    ctx.lineWidth = 1.5 + Math.sin(ww.traveled * 0.2) * 0.5;
     ctx.stroke();
 
-    // Foam particles behind the front - scattered irregular dots
-    const foamDepth = ww.width * 1.2;
-    for (let i = 0; i < 40; i++) {
-      const fx = 2 + Math.pow(Math.random(), 1.5) * foamDepth; // cluster near front
-      const fy = (Math.random() - 0.5) * span * 1.6;
-      const fSize = 0.5 + Math.random() * 2.5;
-      const fade = (1 - fx / foamDepth);
+    // Foam particles - stable positions, drifting outward over time
+    for (const f of ww.foam) {
+      const fx = f.x + ww.traveled * f.drift * 0.3;
+      const fade = Math.max(0, 1 - fx / (ww.width * 3));
+      if (fade <= 0) continue;
       ctx.globalAlpha = ww.life * fade * 0.2;
       ctx.beginPath();
-      ctx.arc(fx, fy, fSize, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(220, 240, 245, 1)';
+      ctx.arc(fx, f.y + Math.sin(ww.traveled * 0.1 + f.x) * 2, f.size, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(215, 235, 245, 1)';
       ctx.fill();
     }
 
-    // Turbulent swirl streaks in the wake
-    ctx.globalAlpha = ww.life * 0.08;
-    for (let i = 0; i < 12; i++) {
-      const sx = 5 + Math.random() * foamDepth * 0.8;
-      const sy = (Math.random() - 0.5) * span;
-      const sLen = 4 + Math.random() * 10;
-      const sAngle = (Math.random() - 0.5) * 1.5;
+    // Whorls - spiraling curls that expand over time
+    for (const wh of ww.whorls) {
+      const wx = wh.x + ww.traveled * wh.drift;
+      const fade = Math.max(0, 1 - wx / (ww.width * 3));
+      if (fade <= 0) continue;
+      ctx.globalAlpha = ww.life * fade * 0.12;
       ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.quadraticCurveTo(sx + sLen * 0.5, sy + Math.sin(sAngle) * 5, sx + sLen, sy + Math.sin(sAngle) * 8);
-      ctx.strokeStyle = 'rgba(180, 215, 225, 1)';
-      ctx.lineWidth = 0.5 + Math.random() * 1;
+      const r = wh.radius + ww.traveled * 0.02;
+      for (let a = 0; a < wh.turns * Math.PI * 2; a += 0.2) {
+        const sr = r * (1 - a / (wh.turns * Math.PI * 2)) * 0.8;
+        const sx = wx + Math.cos(a * wh.dir + ww.traveled * 0.05) * sr;
+        const sy = wh.y + Math.sin(a * wh.dir + ww.traveled * 0.05) * sr;
+        if (a === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.strokeStyle = 'rgba(190, 220, 235, 1)';
+      ctx.lineWidth = 0.8;
       ctx.stroke();
     }
 
-    // Fading wash gradient behind
-    ctx.globalAlpha = ww.life * 0.04;
-    const washGrad = ctx.createLinearGradient(0, 0, foamDepth, 0);
+    // Trailing threads - thin foam tendrils stretching backward
+    for (const th of ww.threads) {
+      const tx = th.startX + ww.traveled * th.drift;
+      const fade = Math.max(0, 1 - tx / (ww.width * 3));
+      if (fade <= 0) continue;
+      ctx.globalAlpha = ww.life * fade * 0.15;
+      ctx.beginPath();
+      ctx.moveTo(tx, th.y);
+      const endX = tx + th.len + ww.traveled * th.drift * 0.5;
+      ctx.quadraticCurveTo(
+        tx + th.len * 0.5, th.y + th.curve + Math.sin(ww.traveled * 0.08 + th.y) * 3,
+        endX, th.y + th.curve * 1.5
+      );
+      ctx.strokeStyle = 'rgba(200, 225, 240, 1)';
+      ctx.lineWidth = th.width;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // Subtle gradient wash
+    ctx.globalAlpha = ww.life * 0.03;
+    const washGrad = ctx.createLinearGradient(0, 0, ww.width * 2, 0);
     washGrad.addColorStop(0, 'rgba(180, 220, 235, 1)');
     washGrad.addColorStop(1, 'rgba(180, 220, 235, 0)');
     ctx.fillStyle = washGrad;
-    ctx.fillRect(0, -span, foamDepth, span * 2);
+    ctx.fillRect(0, -span, ww.width * 2, span * 2);
 
     ctx.restore();
   }
