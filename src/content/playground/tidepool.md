@@ -541,12 +541,12 @@ class Fish {
     this.idleTimer = Math.random() * 5;
     this.idle = Math.random() < 0.3;
 
-    // Depth
-    const dr = Math.random();
-    this.depth = dr < 0.4 ? 0 : dr < 0.7 ? 0.2 + Math.random() * 0.1 : 0.4 + Math.random() * 0.2;
+    // Depth - continuous distribution, fish naturally overlap at different levels
+    this.depth = Math.random() * 0.5; // 0 = surface, 0.5 = deepest
     const mobileScale = w < 500 ? 0.75 : 1;
-    const depthScale = this.depth > 0 ? (1 - this.depth * 0.3) : 1;
+    const depthScale = 1 - this.depth * 0.35; // deeper fish are smaller
     this.scale = mobileScale * depthScale;
+    this.depthAlpha = 1 - this.depth * 0.5; // deeper fish are dimmer
 
     // Size - large enough for visible articulation from top-down
     this.len = (14 + Math.random() * 8) * this.scale;
@@ -557,8 +557,8 @@ class Fish {
     this.color = 'rgb(140, 150, 160)';
     this.bellyColor = 'rgb(170, 180, 190)';
 
-    // Schooling parameters - scaled up for larger fish
-    this.separationDist = 30 * this.scale;
+    // Schooling parameters - reduced separation lets fish overlap naturally
+    this.separationDist = (12 + Math.random() * 12) * this.scale;
     this.alignDist = 80 * this.scale;
     this.cohesionDist = 140 * this.scale;
 
@@ -610,8 +610,7 @@ class Fish {
 
     for (const other of fish) {
       if (other === this) continue;
-      // School primarily with same color group and similar depth
-      if (Math.abs(other.depth - this.depth) > 0.2) continue;
+      // School primarily with same color group (depth doesn't matter in shallow pool)
       const sameSchool = other.school === this.school;
       const dx = other.x - this.x;
       const dy = other.y - this.y;
@@ -887,7 +886,7 @@ class Fish {
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
     // Update chain: head leads, each joint trails behind the one ahead
-    // Like pulling a chain through water - body follows the head's path
+    // Front-mid body has slight damping for fluid motion, rear is looser
     this._joints[0].x = this.x;
     this._joints[0].y = this.y;
     for (let j = 1; j <= this._jointCount; j++) {
@@ -896,9 +895,14 @@ class Fish {
       const dx = curr.x - prev.x;
       const dy = curr.y - prev.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      // Constrain to segment length - joint snaps to trail behind previous
-      curr.x = prev.x + (dx / dist) * this._segLen;
-      curr.y = prev.y + (dy / dist) * this._segLen;
+      // Target position: exactly one segment length behind the previous joint
+      const tx = prev.x + (dx / dist) * this._segLen;
+      const ty = prev.y + (dy / dist) * this._segLen;
+      // Front body has inertia/damping so it doesn't whip around
+      const t = j / this._jointCount;
+      const stiffness = t < 0.4 ? 0.6 + t * 0.5 : 0.85 + t * 0.15; // 0.6 at head, ~0.8 mid, 1.0 at tail
+      curr.x += (tx - curr.x) * stiffness;
+      curr.y += (ty - curr.y) * stiffness;
     }
     this.speed = currentSpeed;
   }
@@ -1756,16 +1760,14 @@ function draw(time) {
   // Update and draw fish
   for (const f of fish) f.update(dt, fish, time);
 
-  // Draw by depth
-  const deepFish = fish.filter(f => f.depth > 0).sort((a, b) => b.depth - a.depth);
-  for (const f of deepFish) {
+  // Draw fish sorted by depth - deeper fish first, dimmer and slightly blurred
+  const sortedFish = [...fish].sort((a, b) => b.depth - a.depth);
+  for (const f of sortedFish) {
     ctx.save();
-    ctx.filter = 'blur(' + (f.depth * 3) + 'px)';
+    ctx.globalAlpha = f.depthAlpha;
+    if (f.depth > 0.1) ctx.filter = 'blur(' + (f.depth * 2.5) + 'px)';
     f.draw(ctx);
     ctx.restore();
-  }
-  for (const f of fish) {
-    if (f.depth === 0) f.draw(ctx);
   }
 
   // Caustics - light refracting through water surface
