@@ -697,12 +697,13 @@ class Frond {
       // Ambient water current pushes tips more than base
       s.vx += currentX * t;
       s.vy += currentY * t;
-      // Very faint tension toward rest - like a rooted stem, not a spring
+      // Tension toward rest - stronger near base (rooted), loose at tips
       const restAngle = this.growAngle;
       const restX = this.x + Math.cos(restAngle) * t * this.len;
       const restY = this.y + Math.sin(restAngle) * t * this.len;
-      s.vx += (restX - s.x) * 0.001;
-      s.vy += (restY - s.y) * 0.001;
+      const tension = 0.004 * (1 - t);
+      s.vx += (restX - s.x) * tension;
+      s.vy += (restY - s.y) * tension;
       // Heavy water drag
       s.vx *= 0.9;
       s.vy *= 0.9;
