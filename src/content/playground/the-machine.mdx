@@ -286,6 +286,19 @@ flowchart TD
   #machine-wrapper .mermaid, #machine-diagram {
     background: transparent !important;
   }
+  /* kill mermaid's default gray fills on node shapes */
+  #machine-diagram .node rect,
+  #machine-diagram .node polygon,
+  #machine-diagram .node circle,
+  #machine-diagram .node ellipse,
+  #machine-diagram .node path {
+    fill: inherit !important;
+  }
+  /* subgraph backgrounds transparent */
+  #machine-diagram .cluster rect {
+    fill: transparent !important;
+    stroke: #00ffd533 !important;
+  }
 
   /* --- how it works section --- */
   .machine-howto {
