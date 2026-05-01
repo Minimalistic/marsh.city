@@ -1210,20 +1210,24 @@ function draw(time) {
       const b = ww.blobs[i];
       b.age += dt;
       if (b.age > b.maxAge) { ww.blobs.splice(i, 1); continue; }
-      // Move with current and local turbulence
-      const flow = sampleFlow(b.x, b.y, time);
-      b.x += Math.cos(tide.angle) * tide.strength * 0.3 + flow.fx * 0.4;
-      b.y += Math.sin(tide.angle) * tide.strength * 0.3 + flow.fy * 0.4;
-      b.rot += flow.fx * 0.02; // spin slightly from turbulence
-      // Shrink as they dissipate
       const life = 1 - b.age / b.maxAge;
-      const shrink = 0.5 + life * 0.5;
+      // Turbulence intensity decays over lifetime - chaotic when fresh, calm when old
+      const turb = life * life; // quadratic falloff
+      const flow = sampleFlow(b.x, b.y, time);
+      // Strong swirling motion when young, gentle drift when old
+      b.x += Math.cos(tide.angle) * tide.strength * 0.3 + flow.fx * (0.2 + turb * 1.2);
+      b.y += Math.sin(tide.angle) * tide.strength * 0.3 + flow.fy * (0.2 + turb * 1.2);
+      // Rapid spinning when fresh, settles down
+      b.rot += (flow.fx * 0.08 + Math.sin(b.age * 3 + b.rot) * 0.04) * turb;
+      // Elongation stretches and morphs with turbulence
+      const stretch = 1 + turb * Math.sin(b.age * 2.5 + b.x * 0.1) * 0.6;
+      const shrink = 0.3 + life * 0.7;
       ctx.save();
-      ctx.globalAlpha = life * 0.2;
+      ctx.globalAlpha = life * 0.22;
       ctx.translate(b.x, b.y);
       ctx.rotate(b.rot);
       ctx.beginPath();
-      ctx.ellipse(0, 0, b.size * b.elongX * shrink, b.size * b.elongY * shrink, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, b.size * b.elongX * shrink * stretch, b.size * b.elongY * shrink / stretch, 0, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(210, 230, 240, 1)';
       ctx.fill();
       ctx.restore();
