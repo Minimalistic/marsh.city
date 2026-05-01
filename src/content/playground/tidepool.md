@@ -8,25 +8,29 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 <div id="pool-container" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
 <canvas id="pool" style="width:100%;height:100%;display:block;background:#0f1f2a;"></canvas>
 <div id="toolbar" style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:10;">
-  <button data-tool="observe" class="pool-tool active" title="Observe">👁</button>
-  <button data-tool="food" class="pool-tool" title="Drop food">🪱</button>
-  <button data-tool="rock" class="pool-tool" title="Drop rock">🪨</button>
+  <button id="food-toggle" class="pool-tool" title="Toggle food mode" aria-label="Toggle food mode" aria-pressed="false" role="switch">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="6" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="12" cy="18" r="1"/></svg>
+  </button>
   <div class="pool-sound-wrap">
-    <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound">🔇</button>
+    <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound" aria-label="Toggle ocean sound" aria-pressed="false" role="switch">
+      <svg id="sound-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    </button>
     <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume">
   </div>
 </div>
-<button id="fullscreen-btn" class="pool-tool pool-fs-btn" title="Fullscreen">⛶</button>
+<button id="fullscreen-btn" class="pool-tool pool-fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+</button>
 </div>
 <style>
 .pool-tool {
-  width: 32px; height: 32px; border-radius: 6px; border: 1px solid rgba(150,180,200,0.3);
-  background: rgba(10,20,30,0.7); backdrop-filter: blur(4px); cursor: pointer;
-  font-size: 14px; display: flex; align-items: center; justify-content: center;
-  transition: border-color 0.2s, background 0.2s;
+  width: 32px; height: 32px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.5); transition: all 0.2s;
 }
-.pool-tool:hover { border-color: rgba(150,200,220,0.6); }
-.pool-tool.active { border-color: rgba(150,200,220,0.8); background: rgba(30,60,80,0.8); }
+.pool-tool:hover { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.8); }
+.pool-tool.active { border-color: rgba(255,255,255,0.5); color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.1); }
 .pool-sound-wrap { position: relative; }
 .pool-volume {
   position: absolute; top: 36px; left: 50%; transform: translateX(-50%);
@@ -52,15 +56,15 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 const canvas = document.getElementById('pool');
 const ctx = canvas.getContext('2d');
 
-// Tool selection
+// Food toggle
 let activeTool = 'observe';
-document.querySelectorAll('.pool-tool[data-tool]').forEach(btn => {
-  btn.addEventListener('click', e => {
-    document.querySelectorAll('.pool-tool[data-tool]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeTool = btn.dataset.tool;
-    canvas.style.cursor = activeTool === 'observe' ? 'none' : 'crosshair';
-  });
+const foodBtn = document.getElementById('food-toggle');
+foodBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  activeTool = activeTool === 'food' ? 'observe' : 'food';
+  const isFood = activeTool === 'food';
+  foodBtn.classList.toggle('active', isFood);
+  foodBtn.setAttribute('aria-pressed', isFood);
 });
 
 // Ocean sound - procedural white noise shaped to sound like waves
@@ -144,13 +148,14 @@ function toggleSound() {
   if (!audioCtx) initAudio();
   soundEnabled = !soundEnabled;
   const btn = document.getElementById('sound-toggle');
+  btn.setAttribute('aria-pressed', soundEnabled);
   if (soundEnabled) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     oceanGain.gain.setTargetAtTime(masterVolume * 0.3, audioCtx.currentTime, 0.5);
-    btn.textContent = '🔊';
+    document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>';
   } else {
     oceanGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);
-    btn.textContent = '🔇';
+    document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
   }
 }
 
@@ -187,14 +192,14 @@ function showUI() {
   fsBtn.classList.remove('hidden');
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
-    if (document.fullscreenElement) {
-      toolbar.classList.add('hidden');
-      fsBtn.classList.add('hidden');
-    }
+    toolbar.classList.add('hidden');
+    fsBtn.classList.add('hidden');
   }, 3000);
 }
 poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
+// Start the auto-hide timer
+hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
 document.addEventListener('fullscreenchange', () => {
   // Multiple resize attempts to catch layout settling
   for (const delay of [50, 150, 300]) {
@@ -204,16 +209,7 @@ document.addEventListener('fullscreenchange', () => {
       if (w !== oldW || h !== oldH) rescaleAll(oldW, oldH);
     }, delay);
   }
-  if (document.fullscreenElement) {
-    hideTimer = setTimeout(() => {
-      toolbar.classList.add('hidden');
-      fsBtn.classList.add('hidden');
-    }, 3000);
-  } else {
-    toolbar.classList.remove('hidden');
-    fsBtn.classList.remove('hidden');
-    clearTimeout(hideTimer);
-  }
+  showUI();
 });
 
 // Update ocean sound to match wave state
@@ -389,9 +385,6 @@ canvas.addEventListener('mousedown', e => {
     const b = 25 + Math.floor(Math.random() * 6);
     foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
     ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
-  } else if (activeTool === 'rock') {
-    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 150, opacity: 0.7 });
-    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 80, opacity: 0.4 });
   } else {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120, opacity: 0.5 });
   }
@@ -414,9 +407,6 @@ canvas.addEventListener('touchstart', e => {
     const b2 = 25 + Math.floor(Math.random() * 6);
     foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
     ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
-  } else if (activeTool === 'rock') {
-    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 150, opacity: 0.7 });
-    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 80, opacity: 0.4 });
   } else {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 90, opacity: 0.4 });
   }
