@@ -439,6 +439,8 @@ const foodPellets = [];
 
 // Floating foam bits - tiny particles shed by waves, drift with current
 const foamBits = [];
+// Kill effect particles - blood cloud + scale glitter from predator catches
+const killFx = [];
 
 function resize() {
   const rect = canvas.getBoundingClientRect();
@@ -1044,6 +1046,29 @@ class Fish {
         }
       }
     }
+    // Predator avoidance - treat like a moving reef, steer around it
+    for (const pred of predators) {
+      const pdx = this.x - pred.x;
+      const pdy = this.y - pred.y;
+      const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
+      // Sensing range: bigger when predator is hunting, always substantial
+      const predR = pred.len * 0.5;
+      const alertMult = pred.hunting ? 2.5 : 1.5;
+      const predSense = predR * alertMult + fishLen5;
+      if (pDist < predSense && pDist > 0.1) {
+        const approach = -(this.vx * pdx + this.vy * pdy) / (spd * pDist);
+        // Even if not approaching head-on, fish are wary
+        if (approach > -0.6) {
+          const aw = Math.max(0, approach + 0.6);
+          const prox = 1 - pDist / predSense;
+          const urgency = prox * prox * prox * aw;
+          const cross = this.vx * pdy - this.vy * pdx;
+          // Stronger avoidance than rocks - it's a threat
+          reefSteer += (cross >= 0 ? 1 : -1) * urgency * (pred.hunting ? 0.35 : 0.18);
+        }
+      }
+    }
+
     // Apply accumulated steering to heading and rebuild velocity along new heading
     if (Math.abs(reefSteer) > 0.001) {
       const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer));
@@ -1371,7 +1396,7 @@ class Predator {
     else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
     else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
 
-    this.len = (40 + Math.random() * 15) * (w < 500 ? 0.8 : 1);
+    this.len = (80 + Math.random() * 30) * (w < 500 ? 0.8 : 1);
     this.bodyWidth = this.len * 0.08;
     this.speed = 0.5 + Math.random() * 0.3;
     this.baseSpeed = this.speed;
@@ -1389,6 +1414,10 @@ class Predator {
     this.target = null;
     this.burstTimer = 0;
     this.digestTimer = 0;
+    // Chomp animation state
+    this.chomping = false;
+    this.chompTimer = 0;
+    this.chompPhase = 0;
 
     const numJoints = 20;
     this._jointCount = numJoints;
@@ -1411,6 +1440,12 @@ class Predator {
       this.digestTimer -= dt;
       this.hunting = false;
       this.target = null;
+    }
+    // Chomp animation countdown
+    if (this.chomping) {
+      this.chompPhase += dt * 18;
+      this.chompTimer -= dt;
+      if (this.chompTimer <= 0) this.chomping = false;
     }
 
     this.hunting = this.hunger > 0.5 && this.digestTimer <= 0;
@@ -1452,13 +1487,44 @@ class Predator {
         const mouthX = this.x + Math.cos(this.angle) * this.len * 0.45;
         const mouthY = this.y + Math.sin(this.angle) * this.len * 0.45;
         const catchDist = Math.sqrt((this.target.x - mouthX) ** 2 + (this.target.y - mouthY) ** 2);
-        if (catchDist < 12) {
-          const idx = smallFish.indexOf(this.target);
+        if (catchDist < 18) {
+          const prey = this.target;
+          const idx = smallFish.indexOf(prey);
           if (idx >= 0) smallFish.splice(idx, 1);
           this.hunger = Math.max(0, this.hunger - 0.45);
           this.digestTimer = 5 + Math.random() * 5;
           this.target = null;
           this.hunting = false;
+          // Start chomp animation
+          this.chomping = true;
+          this.chompTimer = 1.2;
+          this.chompPhase = 0;
+          // Spawn blood cloud + scale glitter at catch point
+          const catchX = mouthX, catchY = mouthY;
+          const preyColor = prey.color || 'rgb(140,150,160)';
+          for (let k = 0; k < 12; k++) {
+            const a = Math.random() * Math.PI * 2;
+            const spd = 0.3 + Math.random() * 1.2;
+            killFx.push({
+              x: catchX + Math.cos(a) * 3, y: catchY + Math.sin(a) * 3,
+              vx: Math.cos(a) * spd + this.vx * 0.3,
+              vy: Math.sin(a) * spd + this.vy * 0.3,
+              type: 'blood', life: 1, maxLife: 1.5 + Math.random() * 1.5,
+              size: 2 + Math.random() * 4,
+            });
+          }
+          for (let k = 0; k < 8; k++) {
+            const a = Math.random() * Math.PI * 2;
+            const spd = 0.5 + Math.random() * 2;
+            killFx.push({
+              x: catchX + Math.cos(a) * 5, y: catchY + Math.sin(a) * 5,
+              vx: Math.cos(a) * spd + this.vx * 0.4,
+              vy: Math.sin(a) * spd + this.vy * 0.4,
+              type: 'scale', life: 1, maxLife: 0.8 + Math.random() * 1.2,
+              size: 0.5 + Math.random() * 1.5, color: preyColor,
+              sparkle: Math.random() * Math.PI * 2,
+            });
+          }
         }
       }
     }
@@ -1622,6 +1688,12 @@ class Predator {
     const si = this._swimSmooth;
     const phase = Date.now() * 0.00025 * (0.4 + si * 0.6) + this._phaseOffset;
 
+    // Head shake when chomping - rapid lateral oscillation that decays
+    const chompIntensity = this.chomping ? this.chompTimer / 1.2 : 0;
+    const headShake = chompIntensity * Math.sin(this.chompPhase) * this.len * 0.06;
+    // Jaw gape: opens and snaps shut repeatedly
+    const jawGape = chompIntensity * Math.max(0, Math.sin(this.chompPhase * 0.8)) * this.bodyWidth * 2.5;
+
     const cosH = Math.cos(-this.angle), sinH = Math.sin(-this.angle);
     const spineX = new Array(segs + 1), spineY = new Array(segs + 1), widths = new Array(segs + 1);
     for (let i = 0; i <= segs; i++) {
@@ -1631,6 +1703,11 @@ class Predator {
         const t = i / segs;
         const flex = t < 0.5 ? 0 : (t - 0.5) / 0.5;
         ly += Math.sin(phase - t * Math.PI * 0.7) * flex * this.len * 0.035 * (0.2 + si * 0.8);
+      }
+      // Head shake displaces the front segments laterally
+      if (i < segs * 0.3) {
+        const shakeFade = 1 - i / (segs * 0.3);
+        ly += headShake * shakeFade;
       }
       spineX[i] = lx; spineY[i] = ly;
       // Stocky predator body profile
@@ -1741,9 +1818,43 @@ class Predator {
       ctx.globalAlpha = 1;
     }
 
-    // Eyes - larger, with iris
+    // Jaw gape - split the nose open when chomping
+    if (jawGape > 0.1) {
+      const jawIdx = 2;
+      const jawNx = -(spineY[jawIdx+1]-spineY[jawIdx-1]);
+      const jawNy = spineX[jawIdx+1]-spineX[jawIdx-1];
+      const jawNL = Math.sqrt(jawNx*jawNx+jawNy*jawNy) || 1;
+      const gx = jawNx/jawNL, gy = jawNy/jawNL;
+      // Upper jaw
+      ctx.beginPath();
+      ctx.moveTo(spineX[0], spineY[0] - jawGape * 0.4);
+      ctx.lineTo(rightX[0], rightY[0] - jawGape * 0.3);
+      ctx.lineTo(rightX[2], rightY[2]);
+      ctx.lineTo(leftX[2], leftY[2]);
+      ctx.lineTo(leftX[0], leftY[0] - jawGape * 0.3);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${cr-5},${cg-5},${cb-5})`;
+      ctx.fill();
+      // Lower jaw
+      ctx.beginPath();
+      ctx.moveTo(spineX[0], spineY[0] + jawGape * 0.5);
+      ctx.lineTo(rightX[0], rightY[0] + jawGape * 0.4);
+      ctx.lineTo(rightX[2], rightY[2]);
+      ctx.lineTo(leftX[2], leftY[2]);
+      ctx.lineTo(leftX[0], leftY[0] + jawGape * 0.4);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${Math.max(0,cr-15)},${Math.max(0,cg-12)},${Math.max(0,cb-10)})`;
+      ctx.fill();
+      // Mouth interior
+      ctx.beginPath();
+      ctx.ellipse(spineX[1], spineY[1], widths[1] * 0.6, jawGape * 0.3, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgb(60, 25, 30)';
+      ctx.fill();
+    }
+
+    // Eyes - fixed size regardless of body length
     const eIdx = Math.round(segs * 0.1);
-    const eyeR = Math.max(totalLen * 0.04, 0.6);
+    const eyeR = 2.0; // constant - doesn't scale with body
     const eyeOff = widths[eIdx] * 0.55;
     for (const side of [-1, 1]) {
       const enx = -(spineY[eIdx+1]-spineY[eIdx]), eny = spineX[eIdx+1]-spineX[eIdx];
@@ -2304,6 +2415,49 @@ function draw(time) {
     ctx.arc(fb.x, fb.y, fb.size * fb.life, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(200, 225, 235, ${fb.life * 0.25})`;
     ctx.fill();
+  }
+
+  // Update and draw kill effect particles (blood + scale glitter)
+  for (let i = killFx.length - 1; i >= 0; i--) {
+    const kp = killFx[i];
+    kp.life -= dt / kp.maxLife;
+    if (kp.life <= 0) { killFx.splice(i, 1); continue; }
+    kp.vx *= 0.96;
+    kp.vy *= 0.96;
+    kp.vx += Math.cos(tide.angle) * tide.strength * 0.005;
+    kp.vy += Math.sin(tide.angle) * tide.strength * 0.005;
+    kp.x += kp.vx;
+    kp.y += kp.vy;
+    if (kp.type === 'blood') {
+      // Expanding red cloud puff
+      const r = kp.size * (1 + (1 - kp.life) * 1.5);
+      const alpha = kp.life * 0.35;
+      ctx.beginPath();
+      ctx.arc(kp.x, kp.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(140, 30, 20, ${alpha})`;
+      ctx.fill();
+      // Softer outer glow
+      ctx.beginPath();
+      ctx.arc(kp.x, kp.y, r * 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(120, 25, 15, ${alpha * 0.3})`;
+      ctx.fill();
+    } else {
+      // Scale glitter - tiny bright flecks that catch light
+      kp.sparkle += dt * 8;
+      const glint = 0.4 + Math.sin(kp.sparkle) * 0.6; // flickering brightness
+      const alpha = kp.life * glint;
+      ctx.beginPath();
+      ctx.arc(kp.x, kp.y, kp.size * kp.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(220, 230, 240, ${alpha})`;
+      ctx.fill();
+      // Colored reflection from prey's scales
+      if (alpha > 0.2) {
+        ctx.beginPath();
+        ctx.arc(kp.x, kp.y, kp.size * kp.life * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = kp.color.replace('rgb', 'rgba').replace(')', `,${alpha * 0.5})`);
+        ctx.fill();
+      }
+    }
   }
 
   // Update and draw food pellets
