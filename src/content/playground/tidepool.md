@@ -1018,13 +1018,19 @@ class Fish {
       const baseSense = Math.max(baseR * 2, baseR + fishLen5);
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
-        if (approach > -0.3) {
-          const aw = Math.max(0, approach + 0.3);
+        // Only steer when actually approaching the rock
+        if (approach > 0.0) {
           const prox = 1 - rDist / baseSense;
-          const urgency = prox * prox * prox * aw; // cubic
-          // Steer heading away from rock
+          const urgency = prox * prox * prox * approach;
           const cross = this.vx * rdy - this.vy * rdx;
           reefSteer += (cross >= 0 ? 1 : -1) * urgency * 0.12;
+        }
+        // Radial push outward regardless of heading - prevents orbit lock
+        const prox = 1 - rDist / baseSense;
+        if (prox > 0.3) {
+          const outward = (prox - 0.3) * 0.04;
+          this.vx += (rdx / rDist) * outward;
+          this.vy += (rdy / rDist) * outward;
         }
       }
       // --- Above-water crown: the solid obstacle ---
@@ -1036,13 +1042,18 @@ class Fish {
       const crownSense = Math.max(crownR * 3.5, crownR + fishLen5);
       if (cDist < crownSense && cDist > 0.1) {
         const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
-        if (approach > -0.5) {
-          const aw = Math.max(0, approach + 0.5);
+        if (approach > 0.0) {
           const prox = 1 - cDist / crownSense;
-          // Very steep ramp close in - fish MUST turn
-          const urgency = prox * prox * prox * aw;
+          const urgency = prox * prox * prox * approach;
           const cross = this.vx * cdy - this.vy * cdx;
           reefSteer += (cross >= 0 ? 1 : -1) * urgency * 0.25;
+        }
+        // Radial push outward from crown
+        const prox = 1 - cDist / crownSense;
+        if (prox > 0.25) {
+          const outward = (prox - 0.25) * 0.06;
+          this.vx += (cdx / cDist) * outward;
+          this.vy += (cdy / cDist) * outward;
         }
       }
     }
@@ -2056,6 +2067,27 @@ class Frond {
       const tension = 0.004 * (1 - t);
       s.vx += (restX - s.x) * tension;
       s.vy += (restY - s.y) * tension;
+      // Reef crown collision - segments slide around exposed rock
+      for (const rf of reefs) {
+        const cdx = s.x - (rf.x + rf.crownOffX);
+        const cdy = s.y - (rf.y + rf.crownOffY);
+        const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+        const cAngle = Math.atan2(cdy, cdx);
+        const crownEdge = rf.radiusAt(cAngle, rf.crownRadii) + 2;
+        if (cDist < crownEdge && cDist > 0.1) {
+          // Push segment out to crown surface
+          s.x = rf.x + rf.crownOffX + (cdx / cDist) * crownEdge;
+          s.y = rf.y + rf.crownOffY + (cdy / cDist) * crownEdge;
+          // Deflect velocity tangentially - slide along the rock
+          const dot = (s.vx * cdx + s.vy * cdy) / (cDist * cDist);
+          if (dot < 0) {
+            s.vx -= (cdx / cDist) * dot * cDist;
+            s.vy -= (cdy / cDist) * dot * cDist;
+          }
+          s.vx *= 0.7;
+          s.vy *= 0.7;
+        }
+      }
       s.vx *= 0.9;
       s.vy *= 0.9;
       s.x += s.vx;
