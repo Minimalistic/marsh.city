@@ -647,6 +647,16 @@ class Frond {
     this.branches = 4 + Math.floor(Math.random() * 5);
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
+    // Pre-generate branch geometry so it doesn't flicker
+    this.branchData = [];
+    for (let b = 0; b < this.branches; b++) {
+      const t = 0.2 + (b / this.branches) * 0.7;
+      this.branchData.push({
+        t,
+        lenScale: 0.7 + Math.random() * 0.3,
+        leaflets: 2 + Math.floor(Math.random() * 3),
+      });
+    }
     // Segment points for physics displacement
     this.segCount = 6;
     this.segs = [];
@@ -710,17 +720,15 @@ class Frond {
 
     // Sub-branches - alternating sides, getting shorter toward tip
     for (let b = 0; b < this.branches; b++) {
-      const t = 0.2 + (b / this.branches) * 0.7;
-      const segIdx = Math.min(Math.floor(t * this.segCount), this.segCount - 1);
+      const bd = this.branchData[b];
+      const segIdx = Math.min(Math.floor(bd.t * this.segCount), this.segCount - 1);
       const base = segs[segIdx];
       const next = segs[Math.min(segIdx + 1, this.segCount)];
       const stemAngle = Math.atan2(next.y - base.y, next.x - base.x);
       const side = (b % 2 === 0 ? 1 : -1) * this.branchSide;
       const branchAngle = stemAngle + side * (0.4 + Math.sin(time * 0.001 + b + this.phase) * 0.15);
-      const branchLen = this.len * (0.3 - t * 0.2) * (0.7 + Math.random() * 0.3);
+      const branchLen = this.len * (0.3 - bd.t * 0.2) * bd.lenScale;
 
-      // Each sub-branch has tiny leaflets
-      const leaflets = 2 + Math.floor(Math.random() * 3);
       const tipX = base.x + Math.cos(branchAngle) * branchLen;
       const tipY = base.y + Math.sin(branchAngle) * branchLen;
 
@@ -732,8 +740,8 @@ class Frond {
       ctx.stroke();
 
       // Tiny leaflets along sub-branch
-      for (let l = 0; l < leaflets; l++) {
-        const lt = 0.3 + (l / leaflets) * 0.6;
+      for (let l = 0; l < bd.leaflets; l++) {
+        const lt = 0.3 + (l / bd.leaflets) * 0.6;
         const lx = base.x + (tipX - base.x) * lt;
         const ly = base.y + (tipY - base.y) * lt;
         const leafSide = (l % 2 === 0 ? 1 : -1);
