@@ -335,14 +335,8 @@ function rescaleAll(oldW, oldH) {
 
   // Add rocks if needed
   while (rocks.length < targetRocks) {
-    const edge = Math.floor(Math.random() * 4);
-    let rx, ry;
-    if (edge === 0) { rx = Math.random() * w; ry = Math.random() * 25; }
-    else if (edge === 1) { rx = w - Math.random() * 25; ry = Math.random() * h; }
-    else if (edge === 2) { rx = Math.random() * w; ry = h - Math.random() * 25; }
-    else { rx = Math.random() * 25; ry = Math.random() * h; }
     rocks.push({
-      x: rx, y: ry,
+      x: Math.random() * w, y: Math.random() * h,
       size: 8 + Math.random() * 18,
       color: `rgb(${40 + Math.floor(Math.random() * 20)}, ${45 + Math.floor(Math.random() * 15)}, ${50 + Math.floor(Math.random() * 15)})`,
       elongation: 0.5 + Math.random() * 0.5,
@@ -854,17 +848,11 @@ for (let i = 0; i < fishCount; i++) {
   fish.push(f);
 }
 
-// Rocks - tidepool has rocky edges
+// Rocks - scattered across the tidepool floor
 const rocks = [];
 for (let i = 0; i < 15; i++) {
-  const edge = Math.floor(Math.random() * 4);
-  let rx, ry;
-  if (edge === 0) { rx = Math.random() * w; ry = Math.random() * 25; }
-  else if (edge === 1) { rx = w - Math.random() * 25; ry = Math.random() * h; }
-  else if (edge === 2) { rx = Math.random() * w; ry = h - Math.random() * 25; }
-  else { rx = Math.random() * 25; ry = Math.random() * h; }
   rocks.push({
-    x: rx, y: ry,
+    x: Math.random() * w, y: Math.random() * h,
     size: 8 + Math.random() * 18,
     color: `rgb(${40 + Math.floor(Math.random() * 20)}, ${45 + Math.floor(Math.random() * 15)}, ${50 + Math.floor(Math.random() * 15)})`,
     elongation: 0.5 + Math.random() * 0.5,
