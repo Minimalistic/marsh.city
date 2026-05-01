@@ -1742,16 +1742,16 @@ function draw(time) {
         fp.vx *= 0.82;
         fp.vy *= 0.82;
       }
-      // Base check - food in water but too close to rock drifts outward
+      // Base check - food inside the rock boundary pushes out quickly
+      // so it always ends up where fish can reach it
       const bdx = fp.x - rf.x, bdy = fp.y - rf.y;
       const bDist = Math.sqrt(bdx * bdx + bdy * bdy);
       const bAngle = Math.atan2(bdy, bdx);
-      const foodNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(bAngle * 3.1 + rf.y * 0.1);
-      const foodBaseEdge = rf.radiusAt(bAngle, rf.baseRadii) * 0.5 * foodNoise;
-      if (!stillOnRock && bDist < foodBaseEdge * 1.4 && bDist > 0.1) {
-        const pen = 1 - bDist / (foodBaseEdge * 1.4);
-        fp.vx += (bdx / bDist) * pen * 0.08;
-        fp.vy += (bdy / bDist) * pen * 0.08;
+      const foodBaseEdge = rf.radiusAt(bAngle, rf.baseRadii) * 0.7;
+      if (!stillOnRock && bDist < foodBaseEdge && bDist > 0.1) {
+        const pen = 1 - bDist / foodBaseEdge;
+        fp.vx += (bdx / bDist) * pen * 0.3;
+        fp.vy += (bdy / bDist) * pen * 0.3;
       }
     }
     // Splash when food rolls off the rock into water
