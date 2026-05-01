@@ -779,7 +779,7 @@ class Fish {
       this.vy = Math.sin(this.angle) * targetSpeed * 0.5;
     }
 
-    // Reef avoidance - steer around submerged obstacles (shape-aware)
+    // Reef avoidance - fish "see" rocks ahead and curve around them
     for (const rf of reefs) {
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
@@ -787,21 +787,31 @@ class Fish {
       const angle = Math.atan2(rdy, rdx);
       const shapeR = rf.radiusAt(angle, rf.baseRadii);
       const avoid = shapeR * 0.85 + this.len * 0.5;
-      if (rDist < avoid * 1.8 && rDist > 0.1) {
-        // Outer zone: gentle steering tangent to the reef surface
-        const penetration = 1 - rDist / (avoid * 1.8);
-        // Push outward
-        const pushStr = penetration * 0.12;
-        this.vx += (rdx / rDist) * pushStr;
-        this.vy += (rdy / rDist) * pushStr;
-        // Also steer tangentially so fish flow around, not just bounce off
-        // Cross product of (velocity, reef direction) picks the natural turn side
-        const cross = this.vx * rdy - this.vy * rdx;
-        const tangentSign = cross >= 0 ? 1 : -1;
-        const tx = -rdy / rDist * tangentSign;
-        const ty = rdx / rDist * tangentSign;
-        this.vx += tx * penetration * 0.06;
-        this.vy += ty * penetration * 0.06;
+      const senseRadius = avoid * 3.5; // wide awareness zone
+      if (rDist < senseRadius && rDist > 0.1) {
+        // How much the fish is heading toward the rock (1 = head-on, 0 = parallel, -1 = away)
+        const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+        const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
+        // Only steer if somewhat approaching (not swimming away)
+        if (approach > -0.2) {
+          const approachWeight = Math.max(0, approach + 0.2); // 0 when parallel, ~1.2 head-on
+          // Smooth gradient: gentle far out, strong close in
+          const proximity = 1 - rDist / senseRadius;
+          const urgency = proximity * proximity * approachWeight;
+          // Tangential steering dominates - fish curve around, not bounce off
+          const cross = this.vx * rdy - this.vy * rdx;
+          const tangentSign = cross >= 0 ? 1 : -1;
+          const tx = -rdy / rDist * tangentSign;
+          const ty = rdx / rDist * tangentSign;
+          this.vx += tx * urgency * 0.14;
+          this.vy += ty * urgency * 0.14;
+          // Radial push only kicks in close to prevent collision
+          if (rDist < avoid * 1.8) {
+            const closePush = (1 - rDist / (avoid * 1.8)) * 0.12;
+            this.vx += (rdx / rDist) * closePush;
+            this.vy += (rdy / rDist) * closePush;
+          }
+        }
       }
     }
 
