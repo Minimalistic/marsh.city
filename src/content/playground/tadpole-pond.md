@@ -53,42 +53,41 @@ class Tadpole {
     this.x = Math.random() * w;
     this.y = Math.random() * h;
     this.angle = Math.random() * Math.PI * 2;
-    this.speed = 0.4 + Math.random() * 0.6;
-    this.baseSpeed = this.speed;
-    this.turnRate = 0;
+    this.speed = 0;
+    this.flitSpeed = 2.5 + Math.random() * 1.5; // burst speed when flitting
     this.targetAngle = this.angle;
 
-    // Body segments for bendy movement
+    // Body segments - more segments, longer spacing for bigger bodies
     this.segments = [];
-    this.segCount = 8;
-    this.segLen = 3 + Math.random() * 1.5;
+    this.segCount = 12;
+    this.segLen = 5 + Math.random() * 2;
     for (let i = 0; i < this.segCount; i++) {
       this.segments.push({ x: this.x - Math.cos(this.angle) * i * this.segLen,
                            y: this.y - Math.sin(this.angle) * i * this.segLen });
     }
 
-    // Size variation
-    this.headSize = 3 + Math.random() * 2;
-    this.bodyWidth = this.headSize * 0.9;
+    // Size - much larger, tadpole proportions: big round head, long tapered tail
+    this.headSize = 7 + Math.random() * 4;
+    this.bodyWidth = this.headSize * 1.1;
 
     // Needs
     this.hunger = Math.random() * 0.4;
     this.energy = 0.6 + Math.random() * 0.4;
 
-    // State machine
-    this.state = 'wander'; // wander, seek_food, eat, flee, rest
-    this.stateTimer = 0;
+    // State machine - tadpoles mostly idle, then flit
+    this.state = 'idle'; // idle, flit, seek_food, eat, flee
+    this.stateTimer = 1 + Math.random() * 4;
     this.target = null;
 
-    // Wiggle
+    // Wiggle - only active during movement
     this.wigglePhase = Math.random() * Math.PI * 2;
-    this.wiggleSpeed = 6 + Math.random() * 4;
-    this.wiggleAmp = 0.3 + Math.random() * 0.2;
+    this.wiggleSpeed = 0;
+    this.wiggleAmp = 0;
 
-    // Color variation
-    const shade = Math.floor(20 + Math.random() * 30);
-    this.color = `rgb(${shade}, ${shade + 10}, ${shade})`;
-    this.bellyColor = `rgb(${shade + 30}, ${shade + 35}, ${shade + 20})`;
+    // Color variation - dark tadpole colors
+    const shade = Math.floor(15 + Math.random() * 25);
+    this.color = `rgb(${shade}, ${shade + 8}, ${shade})`;
+    this.bellyColor = `rgb(${shade + 40}, ${shade + 45}, ${shade + 25})`;
   }
 
   findFood() {
@@ -108,111 +107,128 @@ class Tadpole {
 
   update(dt) {
     this.stateTimer -= dt;
-    this.hunger += dt * 0.008;
-    this.energy = Math.max(0, Math.min(1, this.energy + dt * 0.002));
-    this.wigglePhase += dt * this.wiggleSpeed;
+    this.hunger += dt * 0.006;
+    this.energy = Math.max(0, Math.min(1, this.energy + dt * 0.003));
 
     // Check mouse proximity for flee
     const mdx = mouse.x - this.x;
     const mdy = mouse.y - this.y;
     const mouseDist = Math.sqrt(mdx * mdx + mdy * mdy);
-    if (mouse.active && mouseDist < 80) {
+    if (mouse.active && mouseDist < 90) {
       this.state = 'flee';
-      this.stateTimer = 0.8 + Math.random() * 0.5;
-      this.targetAngle = Math.atan2(-mdy, -mdx) + (Math.random() - 0.5) * 0.8;
-      this.speed = this.baseSpeed * 3.5;
-      this.wiggleSpeed = 18;
+      this.stateTimer = 0.3 + Math.random() * 0.3;
+      this.targetAngle = Math.atan2(-mdy, -mdx) + (Math.random() - 0.5) * 0.6;
+      this.speed = this.flitSpeed * 2;
+      this.wiggleSpeed = 25;
+      this.wiggleAmp = 0.6;
     }
 
     switch (this.state) {
-      case 'wander':
-        this.speed += (this.baseSpeed - this.speed) * 0.03;
-        this.wiggleSpeed += (8 - this.wiggleSpeed) * 0.05;
+      case 'idle':
+        // Decelerate to stop
+        this.speed *= 0.88;
+        this.wiggleSpeed *= 0.92;
+        this.wiggleAmp *= 0.92;
+        if (this.speed < 0.05) this.speed = 0;
+
         if (this.stateTimer <= 0) {
-          this.targetAngle = this.angle + (Math.random() - 0.5) * 1.8;
-          this.stateTimer = 1 + Math.random() * 3;
-        }
-        // Get hungry -> seek food
-        if (this.hunger > 0.6) {
-          const f = this.findFood();
-          if (f) {
-            this.target = f;
-            this.state = 'seek_food';
+          // Decide what to do next
+          if (this.hunger > 0.5) {
+            const f = this.findFood();
+            if (f) {
+              this.target = f;
+              this.state = 'seek_food';
+              break;
+            }
           }
+          // Flit to a new spot
+          this.state = 'flit';
+          this.targetAngle = this.angle + (Math.random() - 0.5) * 2.5;
+          this.speed = this.flitSpeed * (0.6 + Math.random() * 0.4);
+          this.wiggleSpeed = 14 + Math.random() * 6;
+          this.wiggleAmp = 0.4 + Math.random() * 0.2;
+          this.stateTimer = 0.15 + Math.random() * 0.35; // short burst
         }
-        // Low energy -> rest
-        if (this.energy < 0.2 && Math.random() < 0.01) {
-          this.state = 'rest';
-          this.stateTimer = 2 + Math.random() * 3;
+        break;
+
+      case 'flit':
+        // Brief burst of movement, then stop
+        this.speed *= 0.96;
+        if (this.stateTimer <= 0 || this.speed < 0.3) {
+          this.state = 'idle';
+          this.stateTimer = 1.5 + Math.random() * 4; // sit for a while
         }
         break;
 
       case 'seek_food':
         if (!this.target || food.indexOf(this.target) === -1) {
-          this.state = 'wander';
-          this.stateTimer = 0.5;
+          this.state = 'idle';
+          this.stateTimer = 1 + Math.random() * 2;
           break;
         }
         const fdx = this.target.x - this.x;
         const fdy = this.target.y - this.y;
         const fdist = Math.sqrt(fdx * fdx + fdy * fdy);
         this.targetAngle = Math.atan2(fdy, fdx);
-        this.speed = this.baseSpeed * 1.4;
-        this.wiggleSpeed = 10;
-        if (fdist < 6) {
+
+        // Flit toward food in bursts
+        if (this.speed < 0.5) {
+          this.speed = this.flitSpeed * 0.8;
+          this.wiggleSpeed = 12;
+          this.wiggleAmp = 0.35;
+        }
+        this.speed *= 0.97;
+
+        if (fdist < 10) {
           this.state = 'eat';
-          this.stateTimer = 0.4;
+          this.stateTimer = 0.5;
+          this.speed = 0;
         }
         break;
 
       case 'eat':
-        this.speed *= 0.9;
-        this.wiggleSpeed = 3;
+        this.speed *= 0.85;
+        this.wiggleSpeed *= 0.9;
+        this.wiggleAmp *= 0.9;
         if (this.target && food.indexOf(this.target) !== -1) {
           food.splice(food.indexOf(this.target), 1);
           this.hunger = Math.max(0, this.hunger - 0.3);
           this.energy = Math.min(1, this.energy + 0.1);
         }
         if (this.stateTimer <= 0) {
-          this.state = 'wander';
-          this.stateTimer = 1 + Math.random() * 2;
+          this.state = 'idle';
+          this.stateTimer = 2 + Math.random() * 3;
         }
         break;
 
       case 'flee':
+        // Rapid burst then settle
+        this.speed *= 0.94;
         if (this.stateTimer <= 0) {
-          this.state = 'wander';
-          this.stateTimer = 0.5 + Math.random();
-          this.speed = this.baseSpeed;
-          this.wiggleSpeed = 8;
-        }
-        break;
-
-      case 'rest':
-        this.speed *= 0.92;
-        this.wiggleSpeed = 2;
-        this.wiggleAmp = 0.1;
-        this.energy = Math.min(1, this.energy + dt * 0.01);
-        if (this.stateTimer <= 0) {
-          this.state = 'wander';
-          this.stateTimer = 1;
-          this.wiggleAmp = 0.3 + Math.random() * 0.2;
+          this.state = 'idle';
+          this.stateTimer = 2 + Math.random() * 3;
         }
         break;
     }
 
-    // Smooth turning
+    // Wiggle phase only advances when moving
+    if (this.speed > 0.1) {
+      this.wigglePhase += dt * this.wiggleSpeed;
+    }
+
+    // Smooth turning - faster when actively moving
     let angleDiff = this.targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    this.angle += angleDiff * 0.08;
+    const turnSpeed = this.speed > 0.5 ? 0.12 : 0.03;
+    this.angle += angleDiff * turnSpeed;
 
     // Move head
     this.x += Math.cos(this.angle) * this.speed;
     this.y += Math.sin(this.angle) * this.speed;
 
-    // Wrap at edges with soft turning
-    const margin = 20;
+    // Soft boundary avoidance
+    const margin = 30;
     if (this.x < margin) this.targetAngle = 0;
     if (this.x > w - margin) this.targetAngle = Math.PI;
     if (this.y < margin) this.targetAngle = Math.PI / 2;
@@ -231,117 +247,101 @@ class Tadpole {
         seg.x = prev.x + dx * ratio;
         seg.y = prev.y + dy * ratio;
       }
-      // Lateral wiggle increases toward tail
-      const wiggle = Math.sin(this.wigglePhase - i * 0.8) * this.wiggleAmp * (i / this.segCount);
+      // Lateral wiggle increases toward tail, only when moving
+      const wiggle = Math.sin(this.wigglePhase - i * 0.7) * this.wiggleAmp * (i / this.segCount);
       const perpAngle = Math.atan2(dy, dx) + Math.PI / 2;
-      seg.x += Math.cos(perpAngle) * wiggle * this.speed * 2;
-      seg.y += Math.sin(perpAngle) * wiggle * this.speed * 2;
+      seg.x += Math.cos(perpAngle) * wiggle * Math.min(this.speed, 3) * 2;
+      seg.y += Math.sin(perpAngle) * wiggle * Math.min(this.speed, 3) * 2;
     }
   }
 
   draw(ctx) {
     const segs = this.segments;
 
-    // Draw tail fin (thin tapered end)
-    const tail = segs[segs.length - 1];
-    const preTail = segs[segs.length - 2];
-    const tailAngle = Math.atan2(tail.y - preTail.y, tail.x - preTail.x);
-    const tailWiggle = Math.sin(this.wigglePhase) * 3 * (this.speed / this.baseSpeed);
-
-    ctx.beginPath();
-    ctx.moveTo(tail.x, tail.y);
-    ctx.lineTo(
-      tail.x + Math.cos(tailAngle + 0.6) * 5 + Math.cos(tailAngle + Math.PI / 2) * tailWiggle,
-      tail.y + Math.sin(tailAngle + 0.6) * 5 + Math.sin(tailAngle + Math.PI / 2) * tailWiggle
-    );
-    ctx.lineTo(
-      tail.x + Math.cos(tailAngle - 0.6) * 5 + Math.cos(tailAngle + Math.PI / 2) * tailWiggle,
-      tail.y + Math.sin(tailAngle - 0.6) * 5 + Math.sin(tailAngle + Math.PI / 2) * tailWiggle
-    );
-    ctx.closePath();
-    ctx.fillStyle = this.color;
-    ctx.globalAlpha = 0.7;
-    ctx.fill();
-    ctx.globalAlpha = 1;
+    // Draw tail as a thin tapered line that just ends - no fish fin
+    // The body tapering handles it naturally via the segment widths
 
     // Draw body as tapered shape through segments
+    // Tadpole shape: big round front, long thin tail that tapers to nothing
     ctx.beginPath();
-    for (let side = 0; side < 2; side++) {
-      const dir = side === 0 ? 1 : -1;
-      for (let i = 0; i < segs.length; i++) {
-        const seg = segs[i];
-        const next = segs[Math.min(i + 1, segs.length - 1)];
-        const angle = Math.atan2(next.y - seg.y, next.x - seg.x);
-        const perpAngle = angle + (Math.PI / 2) * dir;
+    // Build outline going down one side and back up the other
+    const points = [];
+    const pointsR = [];
+    for (let i = 0; i < segs.length; i++) {
+      const seg = segs[i];
+      const next = segs[Math.min(i + 1, segs.length - 1)];
+      const angle = Math.atan2(next.y - seg.y, next.x - seg.x);
 
-        // Taper: wide at head, narrow at tail
-        let width;
-        const t = i / (segs.length - 1);
-        if (t < 0.25) {
-          width = this.bodyWidth * (0.7 + t * 1.2); // head swells
-        } else {
-          width = this.bodyWidth * (1 - (t - 0.25) * 1.1); // tapers to tail
-        }
-        width = Math.max(width, 0.5);
-
-        const px = seg.x + Math.cos(perpAngle) * width;
-        const py = seg.y + Math.sin(perpAngle) * width;
-
-        if (i === 0 && side === 0) ctx.moveTo(px, py);
-        else if (side === 0) ctx.lineTo(px, py);
+      // Tadpole profile: bulbous front third, then long linear taper
+      const t = i / (segs.length - 1);
+      let width;
+      if (t < 0.15) {
+        // Head region - swells to full width
+        width = this.bodyWidth * (0.8 + t * 1.3);
+      } else if (t < 0.3) {
+        // Body - stays wide
+        width = this.bodyWidth * 1.0;
+      } else {
+        // Tail - long smooth taper to a point
+        const tailT = (t - 0.3) / 0.7;
+        width = this.bodyWidth * (1.0 - tailT) * 0.6;
       }
-      if (side === 0) {
-        // Continue along the other side in reverse
-        for (let i = segs.length - 1; i >= 0; i--) {
-          const seg = segs[i];
-          const next = segs[Math.min(i + 1, segs.length - 1)];
-          const angle = Math.atan2(next.y - seg.y, next.x - seg.x);
-          const perpAngle = angle - Math.PI / 2;
+      width = Math.max(width, 0.3);
 
-          let width;
-          const t = i / (segs.length - 1);
-          if (t < 0.25) {
-            width = this.bodyWidth * (0.7 + t * 1.2);
-          } else {
-            width = this.bodyWidth * (1 - (t - 0.25) * 1.1);
-          }
-          width = Math.max(width, 0.5);
+      const perpL = angle + Math.PI / 2;
+      const perpR = angle - Math.PI / 2;
+      points.push({ x: seg.x + Math.cos(perpL) * width, y: seg.y + Math.sin(perpL) * width });
+      pointsR.unshift({ x: seg.x + Math.cos(perpR) * width, y: seg.y + Math.sin(perpR) * width });
+    }
 
-          const px = seg.x + Math.cos(perpAngle) * width;
-          const py = seg.y + Math.sin(perpAngle) * width;
-          ctx.lineTo(px, py);
-        }
-      }
+    // Draw smooth outline
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    // Tail tip
+    const lastSeg = segs[segs.length - 1];
+    ctx.lineTo(lastSeg.x, lastSeg.y);
+    // Back up the other side
+    for (let i = 0; i < pointsR.length; i++) {
+      ctx.lineTo(pointsR[i].x, pointsR[i].y);
     }
     ctx.closePath();
     ctx.fillStyle = this.color;
     ctx.fill();
 
-    // Belly highlight
+    // Belly/body highlight - lighter underside on the round part
     ctx.beginPath();
     const belly = segs[1];
-    ctx.ellipse(belly.x, belly.y, this.bodyWidth * 0.5, this.bodyWidth * 0.3,
+    ctx.ellipse(belly.x, belly.y, this.bodyWidth * 0.6, this.bodyWidth * 0.45,
                 Math.atan2(segs[2].y - segs[0].y, segs[2].x - segs[0].x), 0, Math.PI * 2);
     ctx.fillStyle = this.bellyColor;
-    ctx.globalAlpha = 0.3;
+    ctx.globalAlpha = 0.2;
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // Head (round)
+    // Head (big round blob - the defining tadpole feature)
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.headSize, 0, Math.PI * 2);
     ctx.fillStyle = this.color;
     ctx.fill();
 
-    // Eyes
-    const eyeOffset = this.headSize * 0.5;
-    const eyeAngleL = this.angle + 0.6;
-    const eyeAngleR = this.angle - 0.6;
+    // Eyes - slightly larger for bigger heads
+    const eyeOffset = this.headSize * 0.45;
+    const eyeSize = this.headSize * 0.18;
+    const eyeAngleL = this.angle + 0.7;
+    const eyeAngleR = this.angle - 0.7;
     for (const ea of [eyeAngleL, eyeAngleR]) {
       const ex = this.x + Math.cos(ea) * eyeOffset;
       const ey = this.y + Math.sin(ea) * eyeOffset;
+      // White of eye
       ctx.beginPath();
-      ctx.arc(ex, ey, 1.2, 0, Math.PI * 2);
+      ctx.arc(ex, ey, eyeSize + 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(200, 200, 180, 0.4)';
+      ctx.fill();
+      // Pupil
+      ctx.beginPath();
+      ctx.arc(ex, ey, eyeSize, 0, Math.PI * 2);
       ctx.fillStyle = '#111';
       ctx.fill();
     }
@@ -350,7 +350,7 @@ class Tadpole {
 
 // Create tadpoles
 const tadpoles = [];
-const count = Math.max(12, Math.floor((w * h) / 8000));
+const count = Math.max(8, Math.floor((w * h) / 18000));
 for (let i = 0; i < count; i++) {
   tadpoles.push(new Tadpole());
 }
