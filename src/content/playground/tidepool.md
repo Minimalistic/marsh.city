@@ -44,6 +44,7 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
   padding: 4px;
 }
 .pool-sound-wrap:hover .pool-volume,
+.pool-sound-wrap.vol-open .pool-volume,
 .pool-volume:hover,
 .pool-volume:active { height: 60px; opacity: 1; }
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
@@ -170,18 +171,36 @@ function toggleSound() {
   }
 }
 
-document.getElementById('sound-toggle').addEventListener('click', e => {
+const soundBtn = document.getElementById('sound-toggle');
+const soundWrap = document.querySelector('.pool-sound-wrap');
+const volSlider = document.getElementById('volume-slider');
+
+function handleSoundTap(e) {
   e.stopPropagation();
+  e.preventDefault();
   toggleSound();
+  // On touch devices, toggle the volume slider open
+  if ('ontouchstart' in window) soundWrap.classList.toggle('vol-open', soundEnabled);
+}
+soundBtn.addEventListener('click', handleSoundTap);
+soundBtn.addEventListener('touchend', handleSoundTap);
+
+// Close volume slider when tapping elsewhere
+document.addEventListener('touchstart', e => {
+  if (!soundWrap.contains(e.target)) soundWrap.classList.remove('vol-open');
 });
 
 let masterVolume = 0.5;
-document.getElementById('volume-slider').addEventListener('input', e => {
+volSlider.addEventListener('input', e => {
+  e.stopPropagation();
   masterVolume = e.target.value / 100;
   if (soundEnabled && oceanGain) {
     oceanGain.gain.setTargetAtTime(masterVolume * 0.15, audioCtx.currentTime, 0.1);
   }
 });
+// Prevent touch events on slider from propagating to canvas
+volSlider.addEventListener('touchstart', e => e.stopPropagation());
+volSlider.addEventListener('touchmove', e => e.stopPropagation());
 
 // Fullscreen + auto-hide UI
 const poolContainer = document.getElementById('pool-container');
@@ -603,6 +622,8 @@ class Fish {
     this.color = 'rgb(140, 150, 160)';
     this.bellyColor = 'rgb(170, 180, 190)';
 
+    // Per-fish comfort distance from rocks - some swim closer than others
+    this.rockComfort = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
     // Schooling parameters - tight cohesive schools like real fish
     this.separationDist = (12 + Math.random() * 5) * this.scale;
     this.alignDist = 150 * this.scale;
@@ -944,8 +965,8 @@ class Fish {
       const angle = Math.atan2(rdy, rdx);
       const noise = 0.85 + 0.3 * Math.sin(angle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(angle * 3.1 + rf.y * 0.1);
       const baseCollR = rf.radiusAt(angle, rf.baseRadii) * 0.35 * noise;
-      // Wide gradient push - gets very strong close to core
-      const pushZone = baseCollR * 1.8;
+      // Wide gradient push - per-fish comfort distance varies the boundary
+      const pushZone = baseCollR * 1.8 * this.rockComfort;
       if (rDist < pushZone && rDist > 0.1) {
         const pen = 1 - rDist / pushZone;
         const pushStr = pen * pen * pen * 0.5; // cubic ramp, strong at core
@@ -958,7 +979,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
-      const crownPush = crownCollR * 1.5;
+      const crownPush = crownCollR * 1.5 * this.rockComfort;
       if (cDist < crownPush && cDist > 0.1) {
         const pen = 1 - cDist / crownPush;
         const pushStr = pen * pen * pen * 0.8;
