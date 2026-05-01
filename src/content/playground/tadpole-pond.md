@@ -637,14 +637,23 @@ for (let i = 0; i < 30; i++) {
   });
 }
 
-// Pond plants - rooted along the bottom edge
+// Pond plants - scattered around perimeter, growing inward
 const plants = [];
-for (let i = 0; i < 12; i++) {
+for (let i = 0; i < 20; i++) {
+  // Pick a random edge: 0=top, 1=right, 2=bottom, 3=left
+  const edge = Math.floor(Math.random() * 4);
+  let px, py, growAngle;
+  const inset = Math.random() * 10;
+  if (edge === 0) { px = Math.random() * w; py = inset; growAngle = Math.PI / 2; }
+  else if (edge === 1) { px = w - inset; py = Math.random() * h; growAngle = Math.PI; }
+  else if (edge === 2) { px = Math.random() * w; py = h - inset; growAngle = -Math.PI / 2; }
+  else { px = inset; py = Math.random() * h; growAngle = 0; }
   plants.push({
-    x: Math.random() * w,
-    y: h - Math.random() * 15,
+    x: px,
+    y: py,
+    growAngle,
     blades: 3 + Math.floor(Math.random() * 4),
-    height: 20 + Math.random() * 35,
+    height: 25 + Math.random() * 40,
     phase: Math.random() * Math.PI * 2,
   });
 }
@@ -676,20 +685,28 @@ function drawPond(time) {
     ctx.restore();
   }
 
-  // Plants swaying - rooted at bottom, growing upward
+  // Plants swaying - grow inward from perimeter edges
   for (const p of plants) {
     const sway = Math.sin(time * 0.001 + p.phase) * 5;
     ctx.strokeStyle = 'rgb(40, 90, 30)';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
+    const cos = Math.cos(p.growAngle);
+    const sin = Math.sin(p.growAngle);
     for (let b = 0; b < p.blades; b++) {
       const spread = (b - p.blades / 2) * 5;
+      // Perpendicular spread relative to grow direction
+      const sx = p.x + (-sin) * spread;
+      const sy = p.y + cos * spread;
+      // Tip grows inward with sway
+      const tipX = sx + cos * p.height + (-sin) * (sway + b * 2);
+      const tipY = sy + sin * p.height + cos * (sway + b * 2);
+      // Control point halfway with extra sway
+      const cpX = sx + cos * p.height * 0.6 + (-sin) * (sway * 0.7 + b);
+      const cpY = sy + sin * p.height * 0.6 + cos * (sway * 0.7 + b);
       ctx.beginPath();
-      ctx.moveTo(p.x + spread, p.y);
-      ctx.quadraticCurveTo(
-        p.x + spread + sway + b * 2, p.y - p.height * 0.6,
-        p.x + spread + sway * 1.5, p.y - p.height + b * 3
-      );
+      ctx.moveTo(sx, sy);
+      ctx.quadraticCurveTo(cpX, cpY, tipX, tipY);
       ctx.stroke();
     }
   }
@@ -859,13 +876,13 @@ function drawPond(time) {
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
 
-  // Full viewport haze - buttery bokeh blur via offscreen canvas
+  // Full viewport DOF haze - heavy buttery bokeh blur
   blurCanvas.width = canvas.width;
   blurCanvas.height = canvas.height;
-  blurCtx.filter = 'blur(3px)';
+  blurCtx.filter = 'blur(6px)';
   blurCtx.drawImage(canvas, 0, 0);
   ctx.save();
-  ctx.globalAlpha = 0.4;
+  ctx.globalAlpha = 0.5;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(blurCanvas, 0, 0);
   ctx.restore();
