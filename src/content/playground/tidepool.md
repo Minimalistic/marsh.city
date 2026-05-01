@@ -1114,44 +1114,39 @@ function draw(time) {
         });
       }
     }
-    // Draw the wave front - continuously evolving shape
+    // Draw wave front - 4 continuous turbulent lines at different offsets
     const perpX = -sinA;
     const perpY = cosA;
-    // Seed per wave for unique character, but shape morphs over time
     if (!ww.seed) ww.seed = Math.random() * 100;
-    const t = ww.traveled * 0.02; // time evolution
-    const step = 6;
-    let inStroke = false;
-    for (let pos = -span; pos <= span; pos += step) {
-      // Layered sine noise that evolves with travel distance
-      const large = Math.sin(pos * 0.018 + t * 0.7 + ww.seed) * 9;
-      const medium = Math.sin(pos * 0.06 + t * 1.3 + ww.seed * 2) * 4;
-      const small = Math.sin(pos * 0.15 + t * 2.5 + ww.seed * 3) * 2;
-      const offset = large + medium + small;
-      const thickness = 1.2 + (Math.sin(pos * 0.04 + t * 0.9) * 0.5 + 0.5) * 2;
-      const opacity = 0.2 + (Math.sin(pos * 0.03 + t * 0.6 + 1) * 0.5 + 0.5) * 0.25;
-      // Gaps that shift over time
-      const gapNoise = Math.sin(pos * 0.09 + t * 1.8 + ww.seed * 4);
-      if (gapNoise > 0.85) {
-        if (inStroke) { ctx.stroke(); inStroke = false; }
-        continue;
+    const t = ww.traveled * 0.02;
+    const lines = [
+      { behind: 0, thick: 1.8, alpha: 0.35, freq: 1.0 },
+      { behind: 4, thick: 1.2, alpha: 0.2, freq: 1.3 },
+      { behind: 9, thick: 0.8, alpha: 0.12, freq: 0.8 },
+      { behind: 15, thick: 0.5, alpha: 0.07, freq: 1.6 },
+    ];
+    for (const ln of lines) {
+      ctx.beginPath();
+      const step = 3;
+      let first = true;
+      for (let pos = -span; pos <= span; pos += step) {
+        const f = ln.freq;
+        const offset = Math.sin(pos * 0.015 * f + t * 0.6 + ww.seed) * 10
+                     + Math.sin(pos * 0.04 * f + t * 1.1 + ww.seed * 2.3) * 5
+                     + Math.sin(pos * 0.11 * f + t * 2.3 + ww.seed * 4.7) * 2.5
+                     + Math.sin(pos * 0.23 * f + t * 3.1 + ww.seed * 7) * 1;
+        const px = ww.x + perpX * pos + cosA * (offset - ln.behind);
+        const py = ww.y + perpY * pos + sinA * (offset - ln.behind);
+        if (first) { ctx.moveTo(px, py); first = false; }
+        else ctx.lineTo(px, py);
       }
-      const px = ww.x + perpX * pos + cosA * offset;
-      const py = ww.y + perpY * pos + sinA * offset;
-      if (!inStroke) {
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.globalAlpha = ww.life * opacity;
-        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        ctx.lineWidth = thickness;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        inStroke = true;
-      } else {
-        ctx.lineTo(px, py);
-      }
+      ctx.globalAlpha = ww.life * ln.alpha;
+      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      ctx.lineWidth = ln.thick;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
     }
-    if (inStroke) ctx.stroke();
 
     // Update and draw blobs - drift with current and turbulence, fade out
     for (let i = ww.blobs.length - 1; i >= 0; i--) {
