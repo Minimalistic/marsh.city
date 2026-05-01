@@ -84,8 +84,8 @@ canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = f
 
 const ripples = [];
 
-// Tidal current - slowly shifts direction and strength
-const tide = { angle: 0, strength: 0, targetAngle: Math.random() * Math.PI * 2, targetStrength: 0.3 + Math.random() * 0.4 };
+// Tidal current - shifts direction and strength noticeably
+const tide = { angle: 0, strength: 0.6, targetAngle: Math.random() * Math.PI * 2, targetStrength: 0.5 + Math.random() * 0.5 };
 
 // Debris particles
 const debris = [];
@@ -116,15 +116,14 @@ class Fish {
     const depthScale = this.depth > 0 ? (1 - this.depth * 0.3) : 1;
     this.scale = mobileScale * depthScale;
 
-    // Size
-    this.len = (8 + Math.random() * 4) * this.scale;
-    this.bodyWidth = this.len * 0.25;
+    // Size - small and slender for top-down view
+    this.len = (5 + Math.random() * 2.5) * this.scale;
+    this.bodyWidth = this.len * 0.15;
 
-    // Color - silvery with slight variation
-    const silver = 140 + Math.floor(Math.random() * 40);
-    const blue = Math.floor(Math.random() * 30);
-    this.color = `rgb(${silver - 20 + blue}, ${silver}, ${silver + 10 + blue})`;
-    this.bellyColor = `rgb(${silver + 30}, ${silver + 35}, ${silver + 40})`;
+    // Color assigned per school (set after construction)
+    this.school = 0;
+    this.color = 'rgb(140, 150, 160)';
+    this.bellyColor = 'rgb(170, 180, 190)';
 
     // Schooling parameters
     this.separationDist = 15 * this.scale;
@@ -144,8 +143,9 @@ class Fish {
 
     for (const other of fish) {
       if (other === this) continue;
-      // Only school with fish at similar depth
+      // School primarily with same color group and similar depth
       if (Math.abs(other.depth - this.depth) > 0.2) continue;
+      const sameSchool = other.school === this.school;
       const dx = other.x - this.x;
       const dy = other.y - this.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -155,12 +155,12 @@ class Fish {
         sepY -= dy / dist;
         sepCount++;
       }
-      if (dist < this.alignDist) {
+      if (dist < this.alignDist && sameSchool) {
         alignX += other.vx;
         alignY += other.vy;
         alignCount++;
       }
-      if (dist < this.cohesionDist) {
+      if (dist < this.cohesionDist && sameSchool) {
         cohX += other.x;
         cohY += other.y;
         cohCount++;
@@ -172,9 +172,9 @@ class Fish {
     if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.05; this.vy += (alignY / alignCount - this.vy) * 0.05; }
     if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.0008; this.vy += (cy - this.y) * 0.0008; }
 
-    // Tidal current influence
-    this.vx += Math.cos(tide.angle) * tide.strength * 0.02;
-    this.vy += Math.sin(tide.angle) * tide.strength * 0.02;
+    // Tidal current influence - strong enough to visibly push them
+    this.vx += Math.cos(tide.angle) * tide.strength * 0.08;
+    this.vy += Math.sin(tide.angle) * tide.strength * 0.08;
 
     // Mouse avoidance
     if (mouse.active) {
@@ -287,11 +287,22 @@ class Fish {
   }
 }
 
-// Create fish
-const fishCount = Math.max(20, Math.floor((w * h) / 8000));
+// Create fish in schools with distinct colors
+const schoolColors = [
+  { color: 'rgb(130, 155, 170)', belly: 'rgb(160, 185, 200)' },   // blue-silver
+  { color: 'rgb(160, 140, 100)', belly: 'rgb(190, 175, 140)' },   // golden
+  { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
+  { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
+];
+const fishCount = Math.max(25, Math.floor((w * h) / 7000));
 const fish = [];
 for (let i = 0; i < fishCount; i++) {
-  fish.push(new Fish());
+  const f = new Fish();
+  const school = Math.floor(i / (fishCount / schoolColors.length));
+  f.school = school;
+  f.color = schoolColors[school].color;
+  f.bellyColor = schoolColors[school].belly;
+  fish.push(f);
 }
 
 // Rocks - tidepool has rocky edges
@@ -451,13 +462,13 @@ function draw(time) {
   if (tideShiftTimer > 8) {
     tideShiftTimer = 0;
     tide.targetAngle = Math.random() * Math.PI * 2;
-    tide.targetStrength = 0.2 + Math.random() * 0.5;
+    tide.targetStrength = 0.5 + Math.random() * 0.6;
   }
   let angleDiff = tide.targetAngle - tide.angle;
   while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
   while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-  tide.angle += angleDiff * 0.005;
-  tide.strength += (tide.targetStrength - tide.strength) * 0.01;
+  tide.angle += angleDiff * 0.015;
+  tide.strength += (tide.targetStrength - tide.strength) * 0.02;
 
   // Clear - dark tidepool water
   const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
@@ -495,8 +506,8 @@ function draw(time) {
 
   // Debris - affected by tide
   for (const d of debris) {
-    d.vx += Math.cos(tide.angle) * tide.strength * 0.005;
-    d.vy += Math.sin(tide.angle) * tide.strength * 0.005;
+    d.vx += Math.cos(tide.angle) * tide.strength * 0.02;
+    d.vy += Math.sin(tide.angle) * tide.strength * 0.02;
     d.vx *= 0.97;
     d.vy *= 0.97;
     d.x += d.vx;
@@ -559,11 +570,11 @@ function draw(time) {
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
 
-  // Current indicator - subtle directional streaks
-  ctx.globalAlpha = tide.strength * 0.04;
-  for (let i = 0; i < 8; i++) {
-    const sx = (w * 0.1 + i * w * 0.1 + time * tide.strength * 0.01) % w;
-    const sy = (h * 0.1 + i * h * 0.12 + time * tide.strength * 0.008) % h;
+  // Current indicator - visible directional streaks
+  ctx.globalAlpha = tide.strength * 0.08;
+  for (let i = 0; i < 12; i++) {
+    const sx = (w * 0.08 + i * w * 0.08 + time * tide.strength * 0.03) % w;
+    const sy = (h * 0.08 + i * h * 0.09 + time * tide.strength * 0.02) % h;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
     ctx.lineTo(sx + Math.cos(tide.angle) * 20, sy + Math.sin(tide.angle) * 20);
