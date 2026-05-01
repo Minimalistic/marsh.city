@@ -1484,80 +1484,122 @@ class Predator {
     this.hunting = this.hunger > 0.5 && this.digestTimer <= 0;
 
     if (this.hunting) {
-      if (!this.target || !smallFish.includes(this.target) || Math.random() < 0.008) {
-        let closest = null;
-        let closestScore = Infinity;
-        const mouthX = this.x + Math.cos(this.angle) * this.len * 0.45;
-        const mouthY = this.y + Math.sin(this.angle) * this.len * 0.45;
-        for (const f of smallFish) {
-          const dx = f.x - mouthX, dy = f.y - mouthY;
-          const d2 = dx * dx + dy * dy;
-          // Prefer fish ahead of us
-          const dot = dx * Math.cos(this.angle) + dy * Math.sin(this.angle);
-          const score = d2 - (dot > 0 ? dot * 40 : 0);
-          if (score < closestScore) { closestScore = score; closest = f; }
-        }
-        if (closest) this.target = closest;
+      const mouthX = this.x + Math.cos(this.angle) * this.len * 0.45;
+      const mouthY = this.y + Math.sin(this.angle) * this.len * 0.45;
+      const cosA = Math.cos(this.angle), sinA = Math.sin(this.angle);
+
+      // Phase 1: cruise toward the nearest cluster of fish (school center of mass)
+      // Find average position of nearby fish - swim toward the crowd
+      let crowdX = 0, crowdY = 0, crowdN = 0;
+      for (const f of smallFish) {
+        const dx = f.x - this.x, dy = f.y - this.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 250 * 250) { crowdX += f.x; crowdY += f.y; crowdN++; }
       }
 
+      // Phase 2: only lock a target when close and it's a straggler or right in front
+      // Drop current target frequently so predator doesn't heat-seek
+      if (this.target && !smallFish.includes(this.target)) this.target = null;
+      if (this.target && Math.random() < 0.05) this.target = null; // lose interest often
+
+      // Pick a new target only from fish very close to mouth and exposed
+      if (!this.target) {
+        let best = null;
+        let bestScore = Infinity;
+        for (const f of smallFish) {
+          const dx = f.x - mouthX, dy = f.y - mouthY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 100) continue; // only consider very nearby fish
+          // How ahead of us is this fish? (dot product with heading)
+          const ahead = dx * cosA + dy * sinA;
+          if (ahead < 0) continue; // ignore fish behind us
+          // Prefer stragglers: fish far from their school neighbors are easier picks
+          let nearbyFriends = 0;
+          for (const other of smallFish) {
+            if (other === f) continue;
+            const odx = other.x - f.x, ody = other.y - f.y;
+            if (odx * odx + ody * ody < 30 * 30) nearbyFriends++;
+          }
+          // Lower score = better target. Isolated fish score low, clustered fish score high
+          const isolationBonus = nearbyFriends < 3 ? -40 : nearbyFriends * 8;
+          const score = dist + isolationBonus;
+          if (score < bestScore) { bestScore = score; best = f; }
+        }
+        if (best) this.target = best;
+      }
+
+      const urgency = Math.min(1, (this.hunger - 0.4) * 1.67);
+
       if (this.target) {
+        // Short-range pursuit of the specific target
         const dx = this.target.x - this.x, dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const pursuitAngle = Math.atan2(dy, dx);
-        const urgency = Math.min(1, (this.hunger - 0.4) * 1.67);
-        const steer = 0.02 + urgency * 0.04;
-        this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 1.8 - this.vx) * steer;
-        this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 1.8 - this.vy) * steer;
+        const steer = 0.03 + urgency * 0.05;
+        this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.0 - this.vx) * steer;
+        this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.0 - this.vy) * steer;
 
-        if (dist < 80) {
-          this.burstTimer = 0.5;
-          const burstSteer = 0.08 + urgency * 0.06;
+        if (dist < 60) {
+          this.burstTimer = 0.3;
+          const burstSteer = 0.1 + urgency * 0.06;
           this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.5 - this.vx) * burstSteer;
           this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.5 - this.vy) * burstSteer;
         }
+      } else if (crowdN > 0) {
+        // No locked target - cruise toward the school cluster
+        const cx = crowdX / crowdN, cy = crowdY / crowdN;
+        const toSchoolAngle = Math.atan2(cy - this.y, cx - this.x);
+        const steer = 0.01 + urgency * 0.02;
+        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 1.4 - this.vx) * steer;
+        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 1.4 - this.vy) * steer;
+      }
 
-        // Catch check
-        const mouthX = this.x + Math.cos(this.angle) * this.len * 0.45;
-        const mouthY = this.y + Math.sin(this.angle) * this.len * 0.45;
-        const catchDist = Math.sqrt((this.target.x - mouthX) ** 2 + (this.target.y - mouthY) ** 2);
-        if (catchDist < 18) {
-          const prey = this.target;
-          const idx = smallFish.indexOf(prey);
-          if (idx >= 0) smallFish.splice(idx, 1);
-          this.hunger = Math.max(0, this.hunger - 0.45);
-          this.digestTimer = 5 + Math.random() * 5;
-          this.target = null;
-          this.hunting = false;
-          // Start chomp animation
-          this.chomping = true;
-          this.chompTimer = 3.0;
-          this.chompPhase = 0;
-          // Spawn blood cloud + scale glitter at catch point
-          const catchX = mouthX, catchY = mouthY;
-          const preyColor = prey.color || 'rgb(140,150,160)';
-          for (let k = 0; k < 12; k++) {
-            const a = Math.random() * Math.PI * 2;
-            const spd = 0.3 + Math.random() * 1.2;
-            killFx.push({
-              x: catchX + Math.cos(a) * 3, y: catchY + Math.sin(a) * 3,
-              vx: Math.cos(a) * spd + this.vx * 0.3,
-              vy: Math.sin(a) * spd + this.vy * 0.3,
-              type: 'blood', life: 1, maxLife: 1.5 + Math.random() * 1.5,
-              size: 2 + Math.random() * 4,
-            });
-          }
-          for (let k = 0; k < 8; k++) {
-            const a = Math.random() * Math.PI * 2;
-            const spd = 0.5 + Math.random() * 2;
-            killFx.push({
-              x: catchX + Math.cos(a) * 5, y: catchY + Math.sin(a) * 5,
-              vx: Math.cos(a) * spd + this.vx * 0.4,
-              vy: Math.sin(a) * spd + this.vy * 0.4,
-              type: 'scale', life: 1, maxLife: 0.8 + Math.random() * 1.2,
-              size: 0.5 + Math.random() * 1.5, color: preyColor,
-              sparkle: Math.random() * Math.PI * 2,
-            });
-          }
+      // Catch check - locked target or any fish that wanders into the mouth
+      let prey = null;
+      if (this.target) {
+        const td = Math.sqrt((this.target.x - mouthX) ** 2 + (this.target.y - mouthY) ** 2);
+        if (td < 18) prey = this.target;
+      }
+      if (!prey) {
+        for (const f of smallFish) {
+          const sd = Math.sqrt((f.x - mouthX) ** 2 + (f.y - mouthY) ** 2);
+          if (sd < 14) { prey = f; break; }
+        }
+      }
+      if (prey) {
+        const idx = smallFish.indexOf(prey);
+        if (idx >= 0) smallFish.splice(idx, 1);
+        this.hunger = Math.max(0, this.hunger - 0.45);
+        this.digestTimer = 5 + Math.random() * 5;
+        this.target = null;
+        this.hunting = false;
+        this.chomping = true;
+        this.chompTimer = 3.0;
+        this.chompPhase = 0;
+        const catchX = mouthX, catchY = mouthY;
+        const preyColor = prey.color || 'rgb(140,150,160)';
+        for (let k = 0; k < 12; k++) {
+          const a = Math.random() * Math.PI * 2;
+          const spd = 0.3 + Math.random() * 1.2;
+          killFx.push({
+            x: catchX + Math.cos(a) * 3, y: catchY + Math.sin(a) * 3,
+            vx: Math.cos(a) * spd + this.vx * 0.3,
+            vy: Math.sin(a) * spd + this.vy * 0.3,
+            type: 'blood', life: 1, maxLife: 1.5 + Math.random() * 1.5,
+            size: 2 + Math.random() * 4,
+          });
+        }
+        for (let k = 0; k < 8; k++) {
+          const a = Math.random() * Math.PI * 2;
+          const spd = 0.5 + Math.random() * 2;
+          killFx.push({
+            x: catchX + Math.cos(a) * 5, y: catchY + Math.sin(a) * 5,
+            vx: Math.cos(a) * spd + this.vx * 0.4,
+            vy: Math.sin(a) * spd + this.vy * 0.4,
+            type: 'scale', life: 1, maxLife: 0.8 + Math.random() * 1.2,
+            size: 0.5 + Math.random() * 1.5, color: preyColor,
+            sparkle: Math.random() * Math.PI * 2,
+          });
         }
       }
     }
