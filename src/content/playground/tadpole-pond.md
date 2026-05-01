@@ -786,6 +786,10 @@ for (let i = 0; i < 16; i++) {
   growAngle += (Math.random() - 0.5) * 0.5;
   plants.push(new Frond(px, py, growAngle));
 }
+// Pre-settle plant physics so they don't snap on first frame
+for (let i = 0; i < 60; i++) {
+  for (const p of plants) p.update(0.016, i * 16);
+}
 
 let lastTime = 0;
 let foodTimer = 0;
