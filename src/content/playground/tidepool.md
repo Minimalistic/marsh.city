@@ -180,18 +180,18 @@ class Fish {
     this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
 
-    // Mouse avoidance
+    // Mouse avoidance - dart away, not blast away
     if (mouse.active) {
       const mdx = this.x - mouse.x;
       const mdy = this.y - mouse.y;
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-      const fleeR = mouse.down ? 100 : 30 + mouse.speed * 5;
+      const fleeR = mouse.down ? 80 : 25 + mouse.speed * 4;
       if (mDist < fleeR && mDist > 0.1) {
-        const force = 3 * (1 - mDist / fleeR);
+        const force = 0.6 * (1 - mDist / fleeR);
         this.vx += (mdx / mDist) * force;
         this.vy += (mdy / mDist) * force;
         this.fleeing = true;
-        this.fleeTimer = 0.5;
+        this.fleeTimer = 0.4;
       }
     }
 
@@ -201,11 +201,11 @@ class Fish {
       const rdy = this.y - r.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       if (Math.abs(rDist - r.radius) < 20 && r.opacity > 0.1 && rDist > 0.1) {
-        const force = 2 * r.opacity;
+        const force = 0.5 * r.opacity;
         this.vx += (rdx / rDist) * force;
         this.vy += (rdy / rDist) * force;
         this.fleeing = true;
-        this.fleeTimer = 0.4;
+        this.fleeTimer = 0.3;
       }
     }
 
@@ -221,7 +221,7 @@ class Fish {
 
     // Speed management - idle fish slow way down, active fish are gentle
     let targetSpeed;
-    if (this.fleeing) targetSpeed = this.baseSpeed * 2.5;
+    if (this.fleeing) targetSpeed = this.baseSpeed * 1.6;
     else if (this.idle) targetSpeed = this.baseSpeed * 0.15;
     else targetSpeed = this.baseSpeed;
 
