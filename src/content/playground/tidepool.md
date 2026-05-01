@@ -180,10 +180,13 @@ let hideTimer = null;
 
 fsBtn.addEventListener('click', e => {
   e.stopPropagation();
-  if (!document.fullscreenElement) {
-    poolContainer.requestFullscreen().catch(() => {});
+  const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!fsEl) {
+    const rfs = poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen;
+    if (rfs) rfs.call(poolContainer).catch(() => {});
   } else {
-    document.exitFullscreen();
+    const efs = document.exitFullscreen || document.webkitExitFullscreen;
+    if (efs) efs.call(document);
   }
 });
 
@@ -200,7 +203,8 @@ poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
 // Start the auto-hide timer
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
-document.addEventListener('fullscreenchange', () => {
+const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
+document.addEventListener(fsChangeEvent, () => {
   // Multiple resize attempts to catch layout settling
   for (const delay of [50, 150, 300]) {
     setTimeout(() => {
@@ -513,7 +517,7 @@ class Fish {
       else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
       else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
     }
-    this.speed = (0.3 + Math.random() * 0.8) * 1.25; // 25% faster across the board
+    this.speed = (0.6 + Math.random() * 1.4) * 1.25; // zippy little fish
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
@@ -529,8 +533,9 @@ class Fish {
     this.scale = mobileScale * depthScale;
     this.depthAlpha = 1 - this.depth * 0.5; // deeper fish are dimmer
 
-    // Size - visible articulation but not too long
-    this.len = (10 + Math.random() * 6) * this.scale;
+    // Size - consistent across viewports, with ~30% variation between fish
+    const sizeVar = 0.7 + Math.random() * 0.6; // 0.7 to 1.3 range
+    this.len = (10 + Math.random() * 5) * this.scale * sizeVar;
     this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
 
     // Color assigned per school (set after construction)
@@ -590,17 +595,17 @@ class Fish {
       const dy = other.y - this.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist < this.separationDist * viewScale && dist > 0.1) {
+      if (dist < this.separationDist && dist > 0.1) {
         sepX -= dx / dist;
         sepY -= dy / dist;
         sepCount++;
       }
-      if (dist < this.alignDist * viewScale && sameSchool) {
+      if (dist < this.alignDist && sameSchool) {
         alignX += other.vx;
         alignY += other.vy;
         alignCount++;
       }
-      if (dist < this.cohesionDist * viewScale && sameSchool) {
+      if (dist < this.cohesionDist && sameSchool) {
         cohX += other.x;
         cohY += other.y;
         cohCount++;
@@ -643,12 +648,12 @@ class Fish {
     this.vy += flow.fy * 0.005;
 
     // Base speed for this fish at current viewport scale
-    const scaledSpeed = this.baseSpeed * viewScale;
+    const scaledSpeed = this.baseSpeed;
 
     // Food attraction - skip while chewing (fish swims away to digest)
-    const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5 * viewScale;
-    const mouthY = this.y + Math.sin(this.angle) * this.len * 0.5 * viewScale;
-    const foodRange = 400 * viewScale;
+    const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5;
+    const mouthY = this.y + Math.sin(this.angle) * this.len * 0.5;
+    const foodRange = 300;
     let closestFood = null;
     let closestFoodDist = foodRange;
     if (this.eating) { closestFood = null; closestFoodDist = Infinity; }
@@ -675,8 +680,8 @@ class Fish {
       this.distracted = false;
       this.distractTimer = 5;
 
-      const eatDist = 12 * viewScale;
-      const biteDist = 7 * viewScale;
+      const eatDist = 10;
+      const biteDist = 6;
       if (closestFoodDist < eatDist && angleMismatch < 0.8) {
         // Close and roughly facing food - slow to nibble
         this.vx *= 0.9;
@@ -756,15 +761,15 @@ class Fish {
       this.idleTimer = this.idle ? 1 + Math.random() * 2 : 8 + Math.random() * 15;
     }
 
-    // Speed management - fish always keep moving, just slower when relaxed
+    // Speed management - tidepool fish dart and zip, quick speed changes
     let targetSpeed;
-    if (this.fleeing) targetSpeed = scaledSpeed * 1.1;
-    else if (this.idle) targetSpeed = scaledSpeed * 0.65;
-    else targetSpeed = scaledSpeed * 0.8;
+    if (this.fleeing) targetSpeed = scaledSpeed * 1.6;
+    else if (this.idle) targetSpeed = scaledSpeed * 0.7;
+    else targetSpeed = scaledSpeed * 1.0;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.06;
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.15;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
       this.vy *= ratio;
@@ -781,7 +786,7 @@ class Fish {
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
       const shapeR = rf.radiusAt(angle, rf.baseRadii);
-      const avoid = shapeR * 0.85 * viewScale + this.len * 0.5;
+      const avoid = shapeR * 0.85 + this.len * 0.5;
       if (rDist < avoid * 1.8 && rDist > 0.1) {
         // Outer zone: gentle steering tangent to the reef surface
         const penetration = 1 - rDist / (avoid * 1.8);
@@ -814,7 +819,7 @@ class Fish {
       this.vy -= headY * fwdSpeed * 0.8;
     }
     // Enforce minimum forward speed - fish never stall or hover
-    const minFwd = scaledSpeed * 0.35;
+    const minFwd = scaledSpeed * 0.5;
     const fwdNow = this.vx * headX + this.vy * headY;
     if (fwdNow < minFwd) {
       this.vx += headX * (minFwd - fwdNow) * 0.3;
@@ -822,8 +827,8 @@ class Fish {
     }
 
     // Drag - smooths out micro-jitter
-    this.vx *= 0.985;
-    this.vy *= 0.985;
+    this.vx *= 0.99;
+    this.vy *= 0.99;
 
     // Soft return from offscreen - fish can swim 30% beyond viewport
     const overflow = 0.3;
@@ -851,7 +856,7 @@ class Fish {
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
-      const solidR = rf.radiusAt(angle, rf.baseRadii) * 0.7 * viewScale;
+      const solidR = rf.radiusAt(angle, rf.baseRadii) * 0.7;
       if (rDist < solidR && rDist > 0.1) {
         this.x = rf.x + (rdx / rDist) * solidR;
         this.y = rf.y + (rdy / rDist) * solidR;
@@ -898,12 +903,26 @@ class Fish {
       dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
       curr.x = prev.x + (dx / dist) * this._segLen;
       curr.y = prev.y + (dy / dist) * this._segLen;
+      // Max bend angle per joint - fish are rigid-bodied, can't fold
+      if (j >= 2) {
+        const pp = this._joints[j - 2];
+        const prevAngle = Math.atan2(prev.y - pp.y, prev.x - pp.x);
+        const currAngle = Math.atan2(curr.y - prev.y, curr.x - prev.x);
+        let bend = currAngle - prevAngle;
+        while (bend > Math.PI) bend -= Math.PI * 2;
+        while (bend < -Math.PI) bend += Math.PI * 2;
+        const maxBend = 0.12; // ~7 degrees per joint, ~112 degrees total max curve
+        if (Math.abs(bend) > maxBend) {
+          const clampedAngle = prevAngle + Math.sign(bend) * maxBend;
+          curr.x = prev.x + Math.cos(clampedAngle) * this._segLen;
+          curr.y = prev.y + Math.sin(clampedAngle) * this._segLen;
+        }
+      }
     }
     this.speed = currentSpeed;
   }
 
   draw(ctx) {
-    const vs = viewScale;
     const segs = this._jointCount;
     const totalLen = this.len;
 
@@ -956,10 +975,7 @@ class Fish {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    // Scale fish: 15% bigger on small viewports, 30% smaller on large
-    const sizeBoost = vs <= 1 ? 1.15 : 1 / (1 + (vs - 1) * 0.3);
-    const fishScale = vs * sizeBoost;
-    ctx.scale(fishScale, fishScale);
+    // No viewport scaling - fish are consistent size everywhere
 
     // Compute perpendiculars and outline points
     const rightX = new Array(segs + 1), rightY = new Array(segs + 1);
@@ -1608,16 +1624,20 @@ function draw(time) {
     fp.vy += Math.sin(tide.angle) * tide.strength * 0.003;
     fp.x += fp.vx;
     fp.y += fp.vy;
-    // Food on a reef slides/rolls down to the waterline
+    // Food on a reef crown slides to the waterline, then settles
     for (const rf of reefs) {
-      const rdx = fp.x - rf.x, rdy = fp.y - rf.y;
-      const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-      const angle = Math.atan2(rdy, rdx);
-      const edgeR = rf.radiusAt(angle, rf.baseRadii) + 3;
-      if (rDist < edgeR && rDist > 0.1) {
-        // Push outward gradually - food slides down the rock
-        fp.vx += (rdx / rDist) * 0.15;
-        fp.vy += (rdy / rDist) * 0.15;
+      // Check against the above-water crown, not the full base
+      const cdx = fp.x - (rf.x + rf.crownOffX), cdy = fp.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      const crownEdge = rf.radiusAt(cAngle, rf.crownRadii) + 3;
+      if (cDist < crownEdge && cDist > 0.1) {
+        // On the dry crown - slide outward toward the waterline
+        fp.vx += (cdx / cDist) * 0.12;
+        fp.vy += (cdy / cDist) * 0.12;
+        // Heavy damping so it doesn't launch off
+        fp.vx *= 0.85;
+        fp.vy *= 0.85;
       }
     }
     if (fp.bites <= 0 || fp.size < 0.3) { foodPellets.splice(i, 1); continue; }
