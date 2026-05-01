@@ -755,12 +755,14 @@ class Fish {
       this.vy *= ratio;
     }
 
-    // Reef avoidance - steer around submerged obstacles
+    // Reef avoidance - steer around submerged obstacles (shape-aware)
     for (const rf of reefs) {
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-      const avoid = rf.avoidR * viewScale + this.len * 0.5;
+      const angle = Math.atan2(rdy, rdx);
+      const shapeR = rf.radiusAt(angle, rf.baseRadii);
+      const avoid = shapeR * 0.85 * viewScale + this.len * 0.5;
       if (rDist < avoid * 1.8 && rDist > 0.1) {
         // Outer zone: gentle steering tangent to the reef surface
         const penetration = 1 - rDist / (avoid * 1.8);
@@ -803,14 +805,14 @@ class Fish {
     this.y += this.vy;
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));
-    // Hard reef collision - push fish out if they ended up inside
+    // Hard reef collision - push fish out if they ended up inside (shape-aware)
     for (const rf of reefs) {
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-      const solidR = rf.avoidR * viewScale * 0.7;
+      const angle = Math.atan2(rdy, rdx);
+      const solidR = rf.radiusAt(angle, rf.baseRadii) * 0.7 * viewScale;
       if (rDist < solidR && rDist > 0.1) {
-        // Push to the edge
         this.x = rf.x + (rdx / rDist) * solidR;
         this.y = rf.y + (rdy / rDist) * solidR;
         // Deflect velocity tangentially
@@ -832,13 +834,14 @@ class Fish {
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
     // Update trailing joint angles - each joint follows the one ahead
+    // Front joints track tighter, rear joints lag more for natural flex
     this._angles[0] = this.angle;
     for (let j = 1; j < this._jointCount; j++) {
       let diff = this._angles[j - 1] - this._angles[j];
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      // Joints follow with a damped lag - closer joints track tighter
-      this._angles[j] += diff * 0.15;
+      const followRate = 0.35 - (j / this._jointCount) * 0.15; // 0.35 at head, 0.20 at tail
+      this._angles[j] += diff * followRate;
     }
     this.speed = currentSpeed;
   }
@@ -877,10 +880,11 @@ class Fish {
       while (relAngle > Math.PI) relAngle -= Math.PI * 2;
       while (relAngle < -Math.PI) relAngle += Math.PI * 2;
 
-      // Add gentle swim undulation on top
-      const onset = Math.max(0, t - 0.08) / 0.92;
-      const undulAmp = onset * onset * 0.15 * (0.3 + si * 0.7);
-      const undulation = Math.sin(phase - t * Math.PI * 1.4) * undulAmp;
+      // Smooth swim undulation - broad wave, gradual amplitude ramp
+      // Linear onset so the whole body participates, not just the tail tip
+      const onset = Math.max(0, t - 0.05) / 0.95;
+      const undulAmp = onset * 0.10 * (0.3 + si * 0.7);
+      const undulation = Math.sin(phase - t * Math.PI * 1.0) * undulAmp;
 
       spineA[i] = relAngle + undulation;
 
@@ -1090,10 +1094,30 @@ function makeReef(x, y) {
   const crownColor = `rgb(${g + 25}, ${g + 22}, ${g + 15})`;
   const rimColor = `rgba(${g + 50}, ${g + 45}, ${g + 35}, 0.6)`;
 
+  // Precompute radii at each vertex angle for fast lookup
+  const baseRadii = baseShape.map(p => Math.sqrt(p.x * p.x + p.y * p.y));
+  const crownRadii = crownShape.map(p => {
+    const dx = p.x - crownOffX, dy = p.y - crownOffY;
+    return Math.sqrt(dx * dx + dy * dy);
+  });
+
+  // Get boundary radius at arbitrary angle by interpolating between vertices
+  function radiusAt(angle, radii) {
+    // Normalize angle to [0, 2PI)
+    let a = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const n = radii.length;
+    const sector = a / (Math.PI * 2) * n;
+    const i0 = Math.floor(sector) % n;
+    const i1 = (i0 + 1) % n;
+    const frac = sector - Math.floor(sector);
+    return radii[i0] * (1 - frac) + radii[i1] * frac;
+  }
+
   return {
     x, y, baseR, crownR, crownOffX, crownOffY,
     baseShape, crownShape, baseColor, crownColor, rimColor,
-    // Avoidance radius: fish stay outside this circle
+    baseRadii, crownRadii, radiusAt,
+    // Avoidance uses shape-aware radius
     avoidR: baseR * 0.85,
   };
 }
@@ -1330,17 +1354,16 @@ function draw(time) {
         }
       }
     }
-    // Waves hitting reefs: spawn foam splash at the impact edge
+    // Waves hitting reefs: spawn foam along the actual rock shape
     for (const rf of reefs) {
       const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
       if (rel > -rf.baseR && rel < rf.baseR + ww.width) {
-        // Wave front is near/overlapping this reef
         const splashCount = Math.ceil(3 * viewScale);
         if (foamBits.length < 200) {
           for (let si = 0; si < splashCount; si++) {
-            // Spawn foam at the reef edge facing the wave
             const edgeAngle = Math.atan2(-sinA, -cosA) + (Math.random() - 0.5) * Math.PI * 0.8;
-            const spawnR = rf.baseR * (0.85 + Math.random() * 0.3);
+            const shapeR = rf.radiusAt(edgeAngle, rf.baseRadii);
+            const spawnR = shapeR * (0.85 + Math.random() * 0.3);
             foamBits.push({
               x: rf.x + Math.cos(edgeAngle) * spawnR,
               y: rf.y + Math.sin(edgeAngle) * spawnR,
@@ -1428,14 +1451,15 @@ function draw(time) {
     d.vy *= 0.97;
     d.x += d.vx;
     d.y += d.vy;
-    // Deflect debris around reefs
+    // Deflect debris around reefs - follows organic shape
     for (const rf of reefs) {
       const rdx = d.x - rf.x, rdy = d.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-      if (rDist < rf.baseR && rDist > 0.1) {
-        // Push out and deflect tangentially
-        d.x = rf.x + (rdx / rDist) * rf.baseR;
-        d.y = rf.y + (rdy / rDist) * rf.baseR;
+      const angle = Math.atan2(rdy, rdx);
+      const edgeR = rf.radiusAt(angle, rf.baseRadii);
+      if (rDist < edgeR && rDist > 0.1) {
+        d.x = rf.x + (rdx / rDist) * edgeR;
+        d.y = rf.y + (rdy / rDist) * edgeR;
         const dot = (d.vx * rdx + d.vy * rdy) / (rDist * rDist);
         if (dot < 0) {
           d.vx -= rdx / rDist * dot * rDist;
@@ -1463,18 +1487,21 @@ function draw(time) {
     fb.vy *= 0.96;
     fb.x += fb.vx;
     fb.y += fb.vy;
-    // Foam deflects around reefs and collects at edges
+    // Foam deflects around reefs - follows organic shape
     for (const rf of reefs) {
       const rdx = fb.x - rf.x, rdy = fb.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-      if (rDist < rf.baseR * 0.9 && rDist > 0.1) {
-        fb.x = rf.x + (rdx / rDist) * rf.baseR * 0.9;
-        fb.y = rf.y + (rdy / rDist) * rf.baseR * 0.9;
+      const angle = Math.atan2(rdy, rdx);
+      const edgeR = rf.radiusAt(angle, rf.baseRadii) * 0.9;
+      if (rDist < edgeR && rDist > 0.1) {
+        fb.x = rf.x + (rdx / rDist) * edgeR;
+        fb.y = rf.y + (rdy / rDist) * edgeR;
         // Tangential slide along the edge
+        const spd = Math.sqrt(fb.vx * fb.vx + fb.vy * fb.vy);
         const cross = fb.vx * rdy - fb.vy * rdx;
         const sign = cross >= 0 ? 1 : -1;
-        fb.vx = (-rdy / rDist) * sign * Math.sqrt(fb.vx * fb.vx + fb.vy * fb.vy) * 0.6;
-        fb.vy = (rdx / rDist) * sign * Math.sqrt(fb.vx * fb.vx + fb.vy * fb.vy) * 0.6;
+        fb.vx = (-rdy / rDist) * sign * spd * 0.6;
+        fb.vy = (rdx / rDist) * sign * spd * 0.6;
       }
     }
     if (fb.x < -20 || fb.x > w + 20 || fb.y < -20 || fb.y > h + 20) { foamBits.splice(i, 1); continue; }
