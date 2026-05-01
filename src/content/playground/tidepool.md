@@ -521,7 +521,7 @@ class Fish {
 
     // Size - large enough for visible articulation from top-down
     this.len = (14 + Math.random() * 8) * this.scale;
-    this.bodyWidth = this.len * (0.18 + Math.random() * 0.05);
+    this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
 
     // Color assigned per school (set after construction)
     this.school = 0;
