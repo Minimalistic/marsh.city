@@ -56,6 +56,10 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 #pool-container:fullscreen canvas,
 #pool-container:-webkit-full-screen canvas,
 #pool-container.fake-fullscreen canvas { width: 100% !important; height: 100% !important; }
+.fake-fullscreen ~ *, body:has(.fake-fullscreen) > *:not(script):not(style):not(link) { visibility: hidden !important; }
+.fake-fullscreen, .fake-fullscreen * { visibility: visible !important; }
+body:has(.fake-fullscreen) .site-foot-foliage { display: none !important; }
+body:has(.fake-fullscreen) { background: #000 !important; }
 </style>
 
 <script type="module">
