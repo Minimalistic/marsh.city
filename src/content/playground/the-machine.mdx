@@ -990,38 +990,48 @@ flowchart TD
       }
       requestAnimationFrame(moveLead);
 
-      // trail particles — phosphor persistence, blurry glow that lingers
-      var particleCount = 12;
+      // trail particles — mix of phosphor blobs and tiny sparks
+      var particleCount = 18;
       var interval = duration / particleCount;
       for (var p = 0; p < particleCount; p++) {
         (function(idx) {
           setTimeout(function() {
             var progress = idx / particleCount;
             var pt = pathEl.getPointAtLength(progress * totalLen);
+
+            // vary size: ~40% are tiny sparks, rest are medium/large phosphor blobs
+            var isSpark = Math.random() < 0.4;
+            var baseR = isSpark ? (0.8 + Math.random() * 1.2) : (2.5 + Math.random() * 2.5);
+            var baseOpacity = isSpark ? (0.6 + Math.random() * 0.4) : 0.9;
+
             var circle = document.createElementNS(ns, 'circle');
             circle.setAttribute('cx', pt.x);
             circle.setAttribute('cy', pt.y);
-            circle.setAttribute('r', '3.5');
+            circle.setAttribute('r', String(baseR));
             circle.setAttribute('fill', edgeColor);
-            circle.setAttribute('opacity', '0.9');
-            circle.style.filter = 'drop-shadow(0 0 6px ' + edgeColor + ') drop-shadow(0 0 14px ' + edgeColor + ')';
+            circle.setAttribute('opacity', String(baseOpacity));
+            circle.style.filter = isSpark
+              ? 'drop-shadow(0 0 3px ' + edgeColor + ')'
+              : 'drop-shadow(0 0 6px ' + edgeColor + ') drop-shadow(0 0 14px ' + edgeColor + ')';
             svgEl.appendChild(circle);
 
+            // sparks fly faster and farther, phosphor blobs drift gently
             var angle = Math.random() * Math.PI * 2;
-            var drift = 4 + Math.random() * 6;
+            var drift = isSpark ? (10 + Math.random() * 14) : (3 + Math.random() * 5);
             var dx = Math.cos(angle) * drift;
             var dy = Math.sin(angle) * drift;
             var startTime = performance.now();
-            var fadeMs = 500 + Math.random() * 400;
+            var fadeMs = isSpark ? (200 + Math.random() * 200) : (500 + Math.random() * 400);
 
             function tick(now) {
               var t = Math.min((now - startTime) / fadeMs, 1);
-              // slow ease-out for phosphor decay
-              var ease = 1 - Math.pow(1 - t, 3);
+              var ease = isSpark
+                ? t * t  // sparks decelerate quickly
+                : 1 - Math.pow(1 - t, 3);  // phosphor slow decay
               circle.setAttribute('cx', pt.x + dx * ease);
               circle.setAttribute('cy', pt.y + dy * ease);
-              circle.setAttribute('opacity', String(0.9 * (1 - ease)));
-              circle.setAttribute('r', String(3.5 + 2 * ease));
+              circle.setAttribute('opacity', String(baseOpacity * (1 - (isSpark ? t : ease))));
+              circle.setAttribute('r', String(isSpark ? baseR * (1 - t * 0.5) : baseR + 2 * ease));
               if (t < 1) {
                 requestAnimationFrame(tick);
               } else {
