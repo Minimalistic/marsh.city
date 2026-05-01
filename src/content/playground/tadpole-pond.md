@@ -167,14 +167,14 @@ class Tadpole {
     const scale = mobileScale * depthScale;
     this.segments = [];
     this.segCount = 12;
-    this.segLen = (5 + Math.random() * 2) * scale;
+    this.segLen = (4 + Math.random() * 1.5) * scale;
     for (let i = 0; i < this.segCount; i++) {
       this.segments.push({ x: this.x - Math.cos(this.angle) * i * this.segLen,
                            y: this.y - Math.sin(this.angle) * i * this.segLen });
     }
 
-    // Size
-    this.headSize = (7 + Math.random() * 4) * scale;
+    // Size - keep them consistent, no giants
+    this.headSize = (6 + Math.random() * 2) * scale;
     this.bodyWidth = this.headSize * 1.1;
 
     // Personality - each tadpole has different tendencies
