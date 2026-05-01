@@ -1272,32 +1272,39 @@ class Fish {
     const maxTurn = 0.15 + currentSpeed * 0.15; // responsive head tracking
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
-    // Update chain: head leads, each joint trails behind the one ahead
-    // Damping controls lateral lag (bendiness), then hard distance constraint
-    // keeps the body length fixed - no stretching or compressing
+    // Update chain: joints have inertia — they carry momentum and can't vibrate
     this._joints[0].x = this.x;
     this._joints[0].y = this.y;
     for (let j = 1; j <= this._jointCount; j++) {
       const prev = this._joints[j - 1];
       const curr = this._joints[j];
+      // Velocity memory — joints carry momentum from last frame
+      if (curr.px === undefined) { curr.px = curr.x; curr.py = curr.y; }
+      const velX = (curr.x - curr.px);
+      const velY = (curr.y - curr.py);
+      curr.px = curr.x;
+      curr.py = curr.y;
+      // Apply damped momentum — tail joints carry more inertia
+      const t = j / this._jointCount;
+      const inertia = 0.4 + t * 0.3; // 0.4 at head, 0.7 at tail
+      curr.x += velX * inertia;
+      curr.y += velY * inertia;
+      // Pull toward target position behind previous joint
       let dx = curr.x - prev.x;
       let dy = curr.y - prev.y;
       let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      // Target: exactly one segment length behind previous joint
       const tx = prev.x + (dx / dist) * this._segLen;
       const ty = prev.y + (dy / dist) * this._segLen;
-      // Softened trailing — body follows head smoothly, tail lags naturally
-      const t = j / this._jointCount;
-      const stiffness = 0.99 - t * 0.008; // 0.99 at head, 0.977 at tail
-      curr.x += (tx - curr.x) * stiffness;
-      curr.y += (ty - curr.y) * stiffness;
-      // Hard constraint: enforce exact segment length so body never stretches
+      const pull = 0.4 - t * 0.15; // 0.4 at head, 0.25 at tail
+      curr.x += (tx - curr.x) * pull;
+      curr.y += (ty - curr.y) * pull;
+      // Distance constraint — keep body length fixed
       dx = curr.x - prev.x;
       dy = curr.y - prev.y;
       dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
       curr.x = prev.x + (dx / dist) * this._segLen;
       curr.y = prev.y + (dy / dist) * this._segLen;
-      // Max bend angle per joint - fish are rigid-bodied, can't fold
+      // Gentle bend limit — wide enough to not snap
       if (j >= 2) {
         const pp = this._joints[j - 2];
         const prevAngle = Math.atan2(prev.y - pp.y, prev.x - pp.x);
@@ -1305,7 +1312,7 @@ class Fish {
         let bend = currAngle - prevAngle;
         while (bend > Math.PI) bend -= Math.PI * 2;
         while (bend < -Math.PI) bend += Math.PI * 2;
-        const maxBend = 0.12; // ~7 degrees per joint, ~112 degrees total max curve
+        const maxBend = 0.18;
         if (Math.abs(bend) > maxBend) {
           const clampedAngle = prevAngle + Math.sign(bend) * maxBend;
           curr.x = prev.x + Math.cos(clampedAngle) * this._segLen;
