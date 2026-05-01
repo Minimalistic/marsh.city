@@ -454,7 +454,8 @@ function resize() {
 let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
-const initialFishCount = Math.max(120, Math.floor(initialArea / 1000));
+// More fish on larger viewports - scales aggressively with area
+const initialFishCount = Math.max(120, Math.floor(initialArea / 400));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -475,7 +476,7 @@ function rescaleAll(oldW, oldH) {
 
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
-  const targetFish = Math.min(600, Math.floor(initialFishCount * areaRatio * 0.975));
+  const targetFish = Math.min(2000, Math.floor(initialFishCount * areaRatio * 0.975));
   const targetDebris = Math.min(1200, Math.floor(initialDebrisCount * areaRatio * 0.75));
   const targetPlants = Math.min(60, Math.floor(30 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
@@ -1550,11 +1551,14 @@ class Predator {
     let targetSpeed;
     if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 2.5; this.burstTimer -= dt; }
     else if (this.hunting) targetSpeed = this.baseSpeed * (1.2 + this.hunger * 0.6);
-    else targetSpeed = this.baseSpeed * 0.7;
+    // Lazy cruise: barely drifting when full, gradually picks up as hunger builds
+    else targetSpeed = this.baseSpeed * (0.25 + this.hunger * 0.8);
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    // Slow to change speed when well-fed, responsive when hungry/hunting
+    const accelRate = this.hunting ? 0.1 : 0.03 + this.hunger * 0.05;
     if (currentSpeed > 0.01) {
-      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.08;
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * accelRate;
       this.vx *= desired / currentSpeed;
       this.vy *= desired / currentSpeed;
     } else {
@@ -1653,7 +1657,9 @@ class Predator {
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    const maxTurn = 0.08 + currentSpeed * 0.08;
+    // Sluggish turns when full, snappier as hunger builds
+    const turnMult = 0.4 + this.hunger * 0.6;
+    const maxTurn = (0.06 + currentSpeed * 0.06) * turnMult;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
 
     // Joint chain
@@ -1893,7 +1899,7 @@ const schoolColors = [
   { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
   { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
 ];
-const fishCount = Math.max(120, Math.floor((w * h) / 1000));
+const fishCount = Math.max(120, Math.floor((w * h) / 400));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
@@ -2677,7 +2683,7 @@ function draw(time) {
   }
 
   // Respawn eaten fish gradually - maintain population
-  const targetPop = Math.max(120, Math.floor((w * h) / 1000));
+  const targetPop = Math.max(120, Math.floor((w * h) / 400));
   if (fish.length < targetPop) {
     fishRespawnTimer += dt;
     if (fishRespawnTimer > 0.8) {
