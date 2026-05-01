@@ -828,7 +828,32 @@ class Fish {
     const schoolWeight = this.distracted ? 0.3 : 1;
     if (sepCount > 0) { this.vx += sepX * 0.07; this.vy += sepY * 0.07; }
     if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.10 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.10 * schoolWeight; }
-    if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.006 * schoolWeight; this.vy += (cy - this.y) * 0.006 * schoolWeight; }
+    if (cohCount > 0) {
+      let cx = cohX / cohCount, cy = cohY / cohCount;
+      // Push cohesion target out of reefs so the school doesn't orbit rocks
+      for (const rf of reefs) {
+        const cdx = cx - (rf.x + rf.crownOffX), cdy = cy - (rf.y + rf.crownOffY);
+        const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+        const cAngle = Math.atan2(cdy, cdx);
+        const clearR = rf.radiusAt(cAngle, rf.crownRadii) * 1.8;
+        if (cDist < clearR && cDist > 0.1) {
+          cx = rf.x + rf.crownOffX + (cdx / cDist) * clearR;
+          cy = rf.y + rf.crownOffY + (cdy / cDist) * clearR;
+        }
+        // Also check base
+        const bdx = cx - rf.x, bdy = cy - rf.y;
+        const bDist = Math.sqrt(bdx * bdx + bdy * bdy);
+        const bAngle = Math.atan2(bdy, bdx);
+        const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1);
+        const baseClear = rf.radiusAt(bAngle, rf.baseRadii) * 0.5 * bNoise;
+        if (bDist < baseClear && bDist > 0.1) {
+          cx = rf.x + (bdx / bDist) * baseClear;
+          cy = rf.y + (bdy / bDist) * baseClear;
+        }
+      }
+      this.vx += (cx - this.x) * 0.006 * schoolWeight;
+      this.vy += (cy - this.y) * 0.006 * schoolWeight;
+    }
 
     // Gentle centering during first few seconds
     if (settleTime > 0) {
