@@ -268,11 +268,16 @@ function resize() {
 
 let { w, h } = resize();
 const initialArea = w * h;
+const initialW = w;
 const initialFishCount = Math.max(60, Math.floor(initialArea / 2750));
 const initialDebrisCount = 500;
+// View scale: larger viewports get proportionally larger/faster fish
+let viewScale = 1;
 
 function rescaleAll(oldW, oldH) {
   const sx = w / oldW, sy = h / oldH;
+  // Update view scale - sqrt of area ratio, capped
+  viewScale = Math.min(2.5, Math.sqrt((w * h) / initialArea));
   for (const r of rocks) { r.x *= sx; r.y *= sy; }
   for (const p of plants) {
     p.x *= sx; p.y *= sy;
@@ -579,17 +584,17 @@ class Fish {
       const dy = other.y - this.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist < this.separationDist && dist > 0.1) {
+      if (dist < this.separationDist * viewScale && dist > 0.1) {
         sepX -= dx / dist;
         sepY -= dy / dist;
         sepCount++;
       }
-      if (dist < this.alignDist && sameSchool) {
+      if (dist < this.alignDist * viewScale && sameSchool) {
         alignX += other.vx;
         alignY += other.vy;
         alignCount++;
       }
-      if (dist < this.cohesionDist && sameSchool) {
+      if (dist < this.cohesionDist * viewScale && sameSchool) {
         cohX += other.x;
         cohY += other.y;
         cohCount++;
@@ -737,9 +742,10 @@ class Fish {
 
     // Speed management - idle fish slow way down, active fish are gentle
     let targetSpeed;
-    if (this.fleeing) targetSpeed = this.baseSpeed * 1.15;
-    else if (this.idle) targetSpeed = this.baseSpeed * 0.15;
-    else targetSpeed = this.baseSpeed;
+    const scaledSpeed = this.baseSpeed * viewScale;
+    if (this.fleeing) targetSpeed = scaledSpeed * 1.15;
+    else if (this.idle) targetSpeed = scaledSpeed * 0.15;
+    else targetSpeed = scaledSpeed;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
@@ -787,20 +793,13 @@ class Fish {
   draw(ctx) {
     const cos = Math.cos(this.angle);
     const sin = Math.sin(this.angle);
+    const vs = viewScale;
 
-    // Fish body - streamlined oval
-    ctx.beginPath();
-    // Nose
-    const noseX = this.x + cos * this.len * 0.5;
-    const noseY = this.y + sin * this.len * 0.5;
-    // Tail base
-    const tailX = this.x - cos * this.len * 0.5;
-    const tailY = this.y - sin * this.len * 0.5;
-
-    // Elliptical body
+    // Elliptical body - scaled by viewScale
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
+    ctx.scale(vs, vs);
     ctx.beginPath();
     ctx.ellipse(0, 0, this.len * 0.45, this.bodyWidth, 0, 0, Math.PI * 2);
     ctx.fillStyle = this.color;
