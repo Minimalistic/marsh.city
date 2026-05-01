@@ -47,9 +47,11 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 #toolbar.hidden, .pool-fs-btn.hidden { opacity: 0; pointer-events: none; }
 #toolbar, .pool-fs-btn { transition: opacity 0.5s; }
 #pool-container:fullscreen,
-#pool-container:-webkit-full-screen { width: 100vw !important; height: 100vh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; }
+#pool-container:-webkit-full-screen,
+#pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; }
 #pool-container:fullscreen canvas,
-#pool-container:-webkit-full-screen canvas { width: 100% !important; height: 100% !important; }
+#pool-container:-webkit-full-screen canvas,
+#pool-container.fake-fullscreen canvas { width: 100% !important; height: 100% !important; }
 </style>
 
 <script type="module">
@@ -178,15 +180,24 @@ const toolbar = document.getElementById('toolbar');
 const fsBtn = document.getElementById('fullscreen-btn');
 let hideTimer = null;
 
+const canRealFS = !!(poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen);
+function toggleFakeFS() {
+  poolContainer.classList.toggle('fake-fullscreen');
+  handleFSChange();
+}
 fsBtn.addEventListener('click', e => {
   e.stopPropagation();
-  const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
-  if (!fsEl) {
-    const rfs = poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen;
-    if (rfs) rfs.call(poolContainer).catch(() => {});
+  if (canRealFS) {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!fsEl) {
+      const rfs = poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen;
+      rfs.call(poolContainer).catch(() => toggleFakeFS());
+    } else {
+      const efs = document.exitFullscreen || document.webkitExitFullscreen;
+      if (efs) efs.call(document);
+    }
   } else {
-    const efs = document.exitFullscreen || document.webkitExitFullscreen;
-    if (efs) efs.call(document);
+    toggleFakeFS();
   }
 });
 
@@ -203,9 +214,7 @@ poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
 // Start the auto-hide timer
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
-const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
-document.addEventListener(fsChangeEvent, () => {
-  // Multiple resize attempts to catch layout settling
+function handleFSChange() {
   for (const delay of [50, 150, 300]) {
     setTimeout(() => {
       const oldW = w, oldH = h;
@@ -214,6 +223,15 @@ document.addEventListener(fsChangeEvent, () => {
     }, delay);
   }
   showUI();
+}
+const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
+document.addEventListener(fsChangeEvent, handleFSChange);
+// Escape exits fake fullscreen
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && poolContainer.classList.contains('fake-fullscreen')) {
+    poolContainer.classList.remove('fake-fullscreen');
+    handleFSChange();
+  }
 });
 
 // Update ocean sound to match wave state
@@ -386,10 +404,17 @@ canvas.addEventListener('mousedown', e => {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   if (activeTool === 'food') {
-    // Drop food where clicked - if on a rock it'll slide down to the water
+    // Drop food where clicked - if on a rock it'll roll down into the water
     const b = 25 + Math.floor(Math.random() * 6);
-    foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
-    ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
+    let onRock = false;
+    for (const rf of reefs) {
+      const cdx = mx - (rf.x + rf.crownOffX), cdy = my - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock = true; break; }
+    }
+    foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock });
+    if (!onRock) ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120, opacity: 0.5 });
   }
@@ -410,8 +435,15 @@ canvas.addEventListener('touchstart', e => {
   mouse.speed = 0;
   if (activeTool === 'food') {
     const b2 = 25 + Math.floor(Math.random() * 6);
-    foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
-    ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
+    let onRock2 = false;
+    for (const rf of reefs) {
+      const cdx = mouse.x - (rf.x + rf.crownOffX), cdy = mouse.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock2 = true; break; }
+    }
+    foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock: onRock2 });
+    if (!onRock2) ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 90, opacity: 0.4 });
   }
@@ -860,21 +892,39 @@ class Fish {
     this.y += this.vy;
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));
-    // Hard reef collision - push fish out if they ended up inside (shape-aware)
+    // Hard reef collision - fish can't overlap the rock or swim under the crown
     for (const rf of reefs) {
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
-      const solidR = rf.radiusAt(angle, rf.baseRadii) * 0.7;
-      if (rDist < solidR && rDist > 0.1) {
-        this.x = rf.x + (rdx / rDist) * solidR;
-        this.y = rf.y + (rdy / rDist) * solidR;
-        // Deflect velocity tangentially
+      // Underwater base boundary
+      const baseCollR = rf.radiusAt(angle, rf.baseRadii) * 0.7;
+      // Above-water crown boundary (offset from reef center)
+      const cdx = this.x - (rf.x + rf.crownOffX);
+      const cdy = this.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
+      // Check both boundaries - fish must be outside the base AND outside the crown
+      const insideBase = rDist < baseCollR && rDist > 0.1;
+      const insideCrown = cDist < crownCollR && cDist > 0.1;
+      if (insideBase) {
+        this.x = rf.x + (rdx / rDist) * baseCollR;
+        this.y = rf.y + (rdy / rDist) * baseCollR;
         const dot = (this.vx * rdx + this.vy * rdy) / (rDist * rDist);
-        if (dot < 0) { // only if moving inward
+        if (dot < 0) {
           this.vx -= rdx / rDist * dot * rDist * 1.5;
           this.vy -= rdy / rDist * dot * rDist * 1.5;
+        }
+      } else if (insideCrown) {
+        // Push out from crown center
+        this.x = rf.x + rf.crownOffX + (cdx / cDist) * crownCollR;
+        this.y = rf.y + rf.crownOffY + (cdy / cDist) * crownCollR;
+        const dot = (this.vx * cdx + this.vy * cdy) / (cDist * cDist);
+        if (dot < 0) {
+          this.vx -= cdx / cDist * dot * cDist * 1.5;
+          this.vy -= cdy / cDist * dot * cDist * 1.5;
         }
       }
     }
@@ -1634,22 +1684,30 @@ function draw(time) {
     fp.vy += Math.sin(tide.angle) * tide.strength * 0.003;
     fp.x += fp.vx;
     fp.y += fp.vy;
-    // Food on a reef crown slides to the waterline, then settles
+    // Food on a reef crown rolls down into the water
+    let stillOnRock = false;
     for (const rf of reefs) {
-      // Check against the above-water crown, not the full base
       const cdx = fp.x - (rf.x + rf.crownOffX), cdy = fp.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownEdge = rf.radiusAt(cAngle, rf.crownRadii) + 3;
       if (cDist < crownEdge && cDist > 0.1) {
-        // On the dry crown - slide outward toward the waterline
-        fp.vx += (cdx / cDist) * 0.12;
-        fp.vy += (cdy / cDist) * 0.12;
-        // Heavy damping so it doesn't launch off
-        fp.vx *= 0.85;
-        fp.vy *= 0.85;
+        stillOnRock = true;
+        // Roll outward toward the waterline
+        fp.vx += (cdx / cDist) * 0.15;
+        fp.vy += (cdy / cDist) * 0.15;
+        // Heavy damping so it tumbles, not launches
+        fp.vx *= 0.82;
+        fp.vy *= 0.82;
       }
     }
+    // Splash when food rolls off the rock into water
+    if (fp.onRock && !stillOnRock) {
+      ripples.push({ x: fp.x, y: fp.y, radius: 1, maxRadius: 15, opacity: 0.3 });
+      fp.vx *= 0.3;
+      fp.vy *= 0.3;
+    }
+    fp.onRock = stillOnRock;
     if (fp.bites <= 0 || fp.size < 0.3) { foodPellets.splice(i, 1); continue; }
     ctx.beginPath();
     ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2);
