@@ -561,7 +561,7 @@ class Fish {
     this.bellyColor = 'rgb(170, 180, 190)';
 
     // Schooling parameters - reduced separation lets fish overlap naturally
-    this.separationDist = (12 + Math.random() * 12) * this.scale;
+    this.separationDist = (19 + Math.random() * 8) * this.scale;
     this.alignDist = 80 * this.scale;
     this.cohesionDist = 140 * this.scale;
 
