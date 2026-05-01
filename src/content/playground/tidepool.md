@@ -104,10 +104,14 @@ class Fish {
     this.x = Math.random() * w;
     this.y = Math.random() * h;
     this.angle = Math.random() * Math.PI * 2;
-    this.speed = 1 + Math.random() * 0.5;
+    this.speed = 0.6 + Math.random() * 0.4;
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
+
+    // Idle behavior - fish sometimes just drift
+    this.idleTimer = Math.random() * 5;
+    this.idle = Math.random() < 0.3;
 
     // Depth
     const dr = Math.random();
@@ -208,30 +212,45 @@ class Fish {
     if (this.fleeTimer > 0) this.fleeTimer -= dt;
     else this.fleeing = false;
 
-    // Speed limiting
-    const targetSpeed = this.fleeing ? this.baseSpeed * 2.5 : this.baseSpeed;
+    // Idle state - sometimes fish just drift lazily
+    this.idleTimer -= dt;
+    if (this.idleTimer <= 0) {
+      this.idle = !this.idle;
+      this.idleTimer = this.idle ? 2 + Math.random() * 5 : 3 + Math.random() * 6;
+    }
+
+    // Speed management - idle fish slow way down, active fish are gentle
+    let targetSpeed;
+    if (this.fleeing) targetSpeed = this.baseSpeed * 2.5;
+    else if (this.idle) targetSpeed = this.baseSpeed * 0.15;
+    else targetSpeed = this.baseSpeed;
+
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-    if (currentSpeed > 0.1) {
-      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.05;
+    if (currentSpeed > 0.01) {
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.02;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
       this.vy *= ratio;
     }
 
-    // Boundary avoidance
-    const margin = 40;
-    if (this.x < margin) this.vx += (margin - this.x) * 0.02;
-    if (this.x > w - margin) this.vx -= (this.x - (w - margin)) * 0.02;
-    if (this.y < margin) this.vy += (margin - this.y) * 0.02;
-    if (this.y > h - margin) this.vy -= (this.y - (h - margin)) * 0.02;
+    // Gentle drag
+    this.vx *= 0.99;
+    this.vy *= 0.99;
+
+    // Soft boundary - only nudge when very close to edge, let them roam freely
+    const margin = 15;
+    if (this.x < margin) this.vx += (margin - this.x) * 0.005;
+    if (this.x > w - margin) this.vx -= (this.x - (w - margin)) * 0.005;
+    if (this.y < margin) this.vy += (margin - this.y) * 0.005;
+    if (this.y > h - margin) this.vy -= (this.y - (h - margin)) * 0.005;
 
     // Move
     this.x += this.vx;
     this.y += this.vy;
-    this.x = Math.max(3, Math.min(w - 3, this.x));
-    this.y = Math.max(3, Math.min(h - 3, this.y));
+    this.x = Math.max(1, Math.min(w - 1, this.x));
+    this.y = Math.max(1, Math.min(h - 1, this.y));
     this.angle = Math.atan2(this.vy, this.vx);
-    this.speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    this.speed = currentSpeed;
   }
 
   draw(ctx) {
