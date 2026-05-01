@@ -871,14 +871,14 @@ class Fish {
     this.vy -= Math.sign(normY) * edgeY * 0.015;
 
     // Tidal current + local turbulence (fish resist most of it)
-    this.vx += Math.cos(tide.angle) * tide.strength * 0.006;
-    this.vy += Math.sin(tide.angle) * tide.strength * 0.006;
+    this.vx += Math.cos(tide.angle) * tide.strength * 0.006 * viewScale;
+    this.vy += Math.sin(tide.angle) * tide.strength * 0.006 * viewScale;
     const flow = sampleFlow(this.x, this.y, time);
-    this.vx += flow.fx * 0.005;
-    this.vy += flow.fy * 0.005;
+    this.vx += flow.fx * 0.005 * viewScale;
+    this.vy += flow.fy * 0.005 * viewScale;
 
-    // Base speed for this fish at current viewport scale
-    const scaledSpeed = this.baseSpeed;
+    // Base speed scales with viewport so fish cover proportional ground on larger screens
+    const scaledSpeed = this.baseSpeed * viewScale;
 
     // Food attraction - skip while chewing (fish swims away to digest)
     const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5;
@@ -1561,22 +1561,22 @@ class Predator {
         const dist = Math.sqrt(dx * dx + dy * dy);
         const pursuitAngle = Math.atan2(dy, dx);
         const steer = 0.03 + urgency * 0.05;
-        this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.0 - this.vx) * steer;
-        this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.0 - this.vy) * steer;
+        this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.0 * viewScale - this.vx) * steer;
+        this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.0 * viewScale - this.vy) * steer;
 
-        if (dist < 60) {
+        if (dist < 60 * viewScale) {
           this.burstTimer = 0.3;
           const burstSteer = 0.1 + urgency * 0.06;
-          this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.5 - this.vx) * burstSteer;
-          this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.5 - this.vy) * burstSteer;
+          this.vx += (Math.cos(pursuitAngle) * this.baseSpeed * 2.5 * viewScale - this.vx) * burstSteer;
+          this.vy += (Math.sin(pursuitAngle) * this.baseSpeed * 2.5 * viewScale - this.vy) * burstSteer;
         }
       } else if (crowdN > 0) {
         // No locked target - cruise toward the school cluster
         const cx = crowdX / crowdN, cy = crowdY / crowdN;
         const toSchoolAngle = Math.atan2(cy - this.y, cx - this.x);
         const steer = 0.01 + urgency * 0.02;
-        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 1.4 - this.vx) * steer;
-        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 1.4 - this.vy) * steer;
+        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 1.4 * viewScale - this.vx) * steer;
+        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 1.4 * viewScale - this.vy) * steer;
       }
 
       // Catch check - locked target or any fish that wanders into the mouth
@@ -1630,17 +1630,18 @@ class Predator {
     }
 
     // Tidal current
-    this.vx += Math.cos(tide.angle) * tide.strength * 0.003;
-    this.vy += Math.sin(tide.angle) * tide.strength * 0.003;
+    this.vx += Math.cos(tide.angle) * tide.strength * 0.003 * viewScale;
+    this.vy += Math.sin(tide.angle) * tide.strength * 0.003 * viewScale;
     const flow = sampleFlow(this.x, this.y, time);
-    this.vx += flow.fx * 0.003;
-    this.vy += flow.fy * 0.003;
+    this.vx += flow.fx * 0.003 * viewScale;
+    this.vy += flow.fy * 0.003 * viewScale;
 
+    const predScale = viewScale; // speed scales with viewport
     let targetSpeed;
-    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 2.5; this.burstTimer -= dt; }
-    else if (this.hunting) targetSpeed = this.baseSpeed * (1.2 + this.hunger * 0.6);
+    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 2.5 * predScale; this.burstTimer -= dt; }
+    else if (this.hunting) targetSpeed = this.baseSpeed * (1.2 + this.hunger * 0.6) * predScale;
     // Lazy cruise: barely drifting when full, gradually picks up as hunger builds
-    else targetSpeed = this.baseSpeed * (0.25 + this.hunger * 0.8);
+    else targetSpeed = this.baseSpeed * (0.25 + this.hunger * 0.8) * predScale;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     // Slow to change speed when well-fed, responsive when hungry/hunting
@@ -1710,7 +1711,7 @@ class Predator {
     this.vx -= (-headY) * latSpeed * 0.6;
     this.vy -= headX * latSpeed * 0.6;
     if (fwdSpeed < 0) { this.vx -= headX * fwdSpeed * 0.7; this.vy -= headY * fwdSpeed * 0.7; }
-    const minFwd = this.baseSpeed * 0.3;
+    const minFwd = this.baseSpeed * 0.3 * viewScale;
     const fwdNow = this.vx * headX + this.vy * headY;
     if (fwdNow < minFwd) { this.vx += headX * (minFwd - fwdNow) * 0.2; this.vy += headY * (minFwd - fwdNow) * 0.2; }
 
@@ -2302,8 +2303,8 @@ function draw(time) {
 
   // Drift vortices slowly around the pool, vary strength over time
   for (const v of vortices) {
-    v.x += Math.cos(v.driftAngle) * v.driftSpeed;
-    v.y += Math.sin(v.driftAngle) * v.driftSpeed;
+    v.x += Math.cos(v.driftAngle) * v.driftSpeed * viewScale;
+    v.y += Math.sin(v.driftAngle) * v.driftSpeed * viewScale;
     v.driftAngle += (Math.random() - 0.5) * 0.02;
     // Wrap around with padding
     if (v.x < -50) v.x = w + 50;
@@ -2466,11 +2467,11 @@ function draw(time) {
 
   // Debris - affected by tide
   for (const d of debris) {
-    d.vx += Math.cos(tide.angle) * tide.strength * 0.008;
-    d.vy += Math.sin(tide.angle) * tide.strength * 0.008;
+    d.vx += Math.cos(tide.angle) * tide.strength * 0.008 * viewScale;
+    d.vy += Math.sin(tide.angle) * tide.strength * 0.008 * viewScale;
     const dFlow = sampleFlow(d.x, d.y, time);
-    d.vx += dFlow.fx * 0.015;
-    d.vy += dFlow.fy * 0.015;
+    d.vx += dFlow.fx * 0.015 * viewScale;
+    d.vy += dFlow.fy * 0.015 * viewScale;
     d.vx *= 0.97;
     d.vy *= 0.97;
     d.x += d.vx;
@@ -2505,8 +2506,8 @@ function draw(time) {
     fb.life -= dt / fb.maxLife;
     if (fb.life <= 0) { foamBits.splice(i, 1); continue; }
     const flow = sampleFlow(fb.x, fb.y, time);
-    fb.vx += Math.cos(tide.angle) * tide.strength * 0.012 + flow.fx * 0.02;
-    fb.vy += Math.sin(tide.angle) * tide.strength * 0.012 + flow.fy * 0.02;
+    fb.vx += (Math.cos(tide.angle) * tide.strength * 0.012 + flow.fx * 0.02) * viewScale;
+    fb.vy += (Math.sin(tide.angle) * tide.strength * 0.012 + flow.fy * 0.02) * viewScale;
     fb.vx *= 0.96;
     fb.vy *= 0.96;
     fb.x += fb.vx;
@@ -2750,7 +2751,7 @@ function draw(time) {
   // Update ripples
   for (let i = ripples.length - 1; i >= 0; i--) {
     const r = ripples[i];
-    r.radius += dt * 70;
+    r.radius += dt * 70 * viewScale;
     r.opacity *= (1 - dt * 1.5);
     if (r.opacity > 0.01 && r.radius < r.maxRadius) {
       ctx.beginPath();
