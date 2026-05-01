@@ -288,10 +288,10 @@ function rescaleAll(oldW, oldH) {
 
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
-  const targetFish = Math.floor(initialFishCount * areaRatio);
-  const targetDebris = Math.floor(initialDebrisCount * areaRatio);
-  const targetPlants = Math.floor(20 * Math.sqrt(areaRatio));
-  const targetRocks = Math.floor(15 * Math.sqrt(areaRatio));
+  const targetFish = Math.min(200, Math.floor(initialFishCount * areaRatio));
+  const targetDebris = Math.min(1500, Math.floor(initialDebrisCount * areaRatio));
+  const targetPlants = Math.min(40, Math.floor(20 * Math.sqrt(areaRatio)));
+  const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
 
   // Add fish if needed
   while (fish.length < targetFish) {
