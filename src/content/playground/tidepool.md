@@ -1546,7 +1546,7 @@ class Predator {
     this.chompTimer = 0;
     this.chompPhase = 0;
 
-    const numJoints = 20;
+    const numJoints = 12;
     this._jointCount = numJoints;
     this._segLen = this.len / numJoints;
     this._joints = [];
