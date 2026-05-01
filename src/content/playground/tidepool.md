@@ -326,7 +326,7 @@ class Fish {
 
     // Food attraction - fish are very interested, urgency fades with distance
     let closestFood = null;
-    let closestFoodDist = 200;
+    let closestFoodDist = 300;
     for (const fp of foodPellets) {
       if (fp.bites <= 0) continue;
       const fdx = fp.x - this.x;
@@ -376,7 +376,7 @@ class Fish {
         }
       } else if (angleMismatch < 1.4) {
         // Good approach angle - steer toward food, stronger when closer
-        const proximity = 1 - closestFoodDist / 200;
+        const proximity = 1 - closestFoodDist / 300;
         const steer = 0.02 + proximity * 0.06;
         const desiredVx = Math.cos(desiredAngle) * this.baseSpeed * (1 + proximity * 0.5);
         const desiredVy = Math.sin(desiredAngle) * this.baseSpeed * (1 + proximity * 0.5);
@@ -860,6 +860,24 @@ function draw(time) {
         });
       }
     }
+    // Draw the wave front itself - a visible line at the current position
+    ctx.globalAlpha = ww.life * 0.2;
+    ctx.beginPath();
+    const perpX = -sinA;
+    const perpY = cosA;
+    ctx.moveTo(ww.x + perpX * span, ww.y + perpY * span);
+    ctx.lineTo(ww.x - perpX * span, ww.y - perpY * span);
+    ctx.strokeStyle = 'rgba(200, 225, 240, 1)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Softer second line slightly behind
+    ctx.globalAlpha = ww.life * 0.08;
+    ctx.beginPath();
+    ctx.moveTo(ww.x - cosA * 6 + perpX * span, ww.y - sinA * 6 + perpY * span);
+    ctx.lineTo(ww.x - cosA * 6 - perpX * span, ww.y - sinA * 6 - perpY * span);
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
     // Update and draw blobs - they stay in world space, fade out
     for (let i = ww.blobs.length - 1; i >= 0; i--) {
       const b = ww.blobs[i];
