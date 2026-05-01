@@ -266,7 +266,7 @@ const washWaves = [];
 let washTimer = 5 + Math.random() * 8;
 
 function spawnWash() {
-  const angle = waveBaseAngle + (Math.random() - 0.5) * 0.6;
+  const angle = waveBaseAngle + (Math.random() - 0.5) * 0.15;
   const startX = w / 2 - Math.cos(angle) * w * 0.7;
   const startY = h / 2 - Math.sin(angle) * h * 0.7;
   // Highly varied intensity - some are strong and fast, some barely there
@@ -792,7 +792,7 @@ function draw(time) {
   const waveCycle = Math.sin(waveTime * 0.4) * 0.6
                   + Math.sin(waveTime * 0.23) * 0.25
                   + Math.sin(waveTime * 0.71) * 0.15; // layered irregular rhythm
-  const secondaryWave = Math.sin(waveTime * 0.11) * 0.3 + Math.sin(waveTime * 0.31) * 0.15;
+  const secondaryWave = Math.sin(waveTime * 0.11) * 0.08 + Math.sin(waveTime * 0.31) * 0.04;
   tide.angle = waveBaseAngle + secondaryWave;
   tide.strength = 0.25 + waveCycle * 0.35;
 
