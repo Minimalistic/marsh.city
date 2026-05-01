@@ -201,6 +201,11 @@ class Tadpole {
     this.wiggleSpeed = 0;
     this.wiggleAmp = 0;
 
+    // Some tadpoles are further along in metamorphosis - tiny back legs
+    this.hasLegs = Math.random() < 0.3;
+    this.legLen = this.headSize * (0.6 + Math.random() * 0.4);
+    this.legPhase = Math.random() * Math.PI * 2;
+
     // Color variation
     const shade = Math.floor(15 + Math.random() * 25);
     this.color = `rgb(${shade}, ${shade + 8}, ${shade})`;
@@ -516,6 +521,36 @@ class Tadpole {
     ctx.closePath();
     ctx.fillStyle = this.color;
     ctx.fill();
+
+    // Back legs - little nubs that kick when swimming
+    if (this.hasLegs) {
+      const legSeg = segs[3];
+      const legNext = segs[4];
+      const legAngle = Math.atan2(legNext.y - legSeg.y, legNext.x - legSeg.x);
+      // Kick cycle synced to movement
+      const kick = this.speed > 0.3 ? Math.sin(this.wigglePhase * 0.8 + this.legPhase) * 0.5 : 0.1;
+      for (const side of [-1, 1]) {
+        const hipAngle = legAngle + Math.PI / 2 * side;
+        const hipX = legSeg.x + Math.cos(hipAngle) * this.bodyWidth * 0.5;
+        const hipY = legSeg.y + Math.sin(hipAngle) * this.bodyWidth * 0.5;
+        // Upper leg angles back, lower leg kicks
+        const upperAngle = hipAngle + (0.4 + kick * 0.3) * side;
+        const kneeX = hipX + Math.cos(upperAngle) * this.legLen * 0.5;
+        const kneeY = hipY + Math.sin(upperAngle) * this.legLen * 0.5;
+        const lowerAngle = upperAngle + (0.6 + kick) * side;
+        const footX = kneeX + Math.cos(lowerAngle) * this.legLen * 0.5;
+        const footY = kneeY + Math.sin(lowerAngle) * this.legLen * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(hipX, hipY);
+        ctx.lineTo(kneeX, kneeY);
+        ctx.lineTo(footX, footY);
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 1.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+    }
 
     // Belly/body highlight - lighter underside on the round part
     ctx.beginPath();
