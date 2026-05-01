@@ -45,27 +45,6 @@ block-beta
   style EY fill:#111,stroke:#fff,color:#fff
 ```
 
-## The Turtle
-
-```mermaid
-block-beta
-  columns 11
-  space:3 SH1["            "]:4 space:1 HD(("head")):1 space:2
-  LF((" ")):1 space:2 SH2["            "]:4 space:2 RF((" ")):1
-  space:1 LB((" ")):1 space:1 SH3["            "]:4 space:2 RB((" ")):1
-  space:5 TL["tail"]:1 space:5
-
-  style SH1 fill:#4CAF50,stroke:#2E7D32,color:#fff
-  style SH2 fill:#66BB6A,stroke:#388E3C,color:#fff
-  style SH3 fill:#4CAF50,stroke:#2E7D32,color:#fff
-  style HD fill:#8D6E63,stroke:#5D4037,color:#fff
-  style LF fill:#8D6E63,stroke:#5D4037,color:#8D6E63
-  style RF fill:#8D6E63,stroke:#5D4037,color:#8D6E63
-  style LB fill:#8D6E63,stroke:#5D4037,color:#8D6E63
-  style RB fill:#8D6E63,stroke:#5D4037,color:#8D6E63
-  style TL fill:#A1887F,stroke:#6D4C41,color:#fff
-```
-
 ## The Fish (system architecture)
 
 Same fish, documented like enterprise software.
