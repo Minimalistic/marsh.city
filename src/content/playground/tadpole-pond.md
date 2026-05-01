@@ -41,10 +41,26 @@ function spawnFood() {
       x: Math.random() * w,
       y: Math.random() * h,
       size: 1.5 + Math.random() * 2.5,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.1,
       drift: (Math.random() - 0.5) * 0.15,
       life: 1,
     });
   }
+}
+
+// Dirt/debris particles - tiny bits that float and get pushed around
+const debris = [];
+for (let i = 0; i < 200; i++) {
+  debris.push({
+    x: Math.random() * w,
+    y: Math.random() * h,
+    size: 0.3 + Math.random() * 1.0,
+    vx: 0,
+    vy: 0,
+    opacity: 0.06 + Math.random() * 0.18,
+    drift: (Math.random() - 0.5) * 0.03,
+  });
 }
 
 // Tadpole class
@@ -54,10 +70,10 @@ class Tadpole {
     this.y = Math.random() * h;
     this.angle = Math.random() * Math.PI * 2;
     this.speed = 0;
-    this.flitSpeed = 2.5 + Math.random() * 1.5; // burst speed when flitting
+    this.flitSpeed = 2.5 + Math.random() * 1.5;
     this.targetAngle = this.angle;
 
-    // Body segments - more segments, longer spacing for bigger bodies
+    // Body segments
     this.segments = [];
     this.segCount = 12;
     this.segLen = 5 + Math.random() * 2;
@@ -66,25 +82,40 @@ class Tadpole {
                            y: this.y - Math.sin(this.angle) * i * this.segLen });
     }
 
-    // Size - much larger, tadpole proportions: big round head, long tapered tail
+    // Size
     this.headSize = 7 + Math.random() * 4;
     this.bodyWidth = this.headSize * 1.1;
+
+    // Personality - each tadpole has different tendencies
+    this.restlessness = Math.random(); // 0 = sedentary, 1 = hyperactive
+    this.grazeChance = 0.1 + Math.random() * 0.4; // likelihood to scrape/graze
+    this.idleMin = 1 + (1 - this.restlessness) * 6; // calm ones sit much longer
+    this.idleMax = this.idleMin + 3 + (1 - this.restlessness) * 8;
 
     // Needs
     this.hunger = Math.random() * 0.4;
     this.energy = 0.6 + Math.random() * 0.4;
 
-    // State machine - tadpoles mostly idle, then flit
-    this.state = 'idle'; // idle, flit, seek_food, eat, flee
+    // State machine
+    // idle: sitting still
+    // flit: short burst of movement
+    // seek_food: heading toward food
+    // eat: consuming food particle
+    // graze: scraping algae off something (nibbling in place)
+    // drift: slow lazy glide, barely moving
+    // flee: startled escape
+    this.state = Math.random() < 0.3 ? 'graze' : 'idle';
     this.stateTimer = 1 + Math.random() * 4;
     this.target = null;
+    this.grazeAngle = 0; // head wobble while grazing
+    this.grazeDir = 1;
 
-    // Wiggle - only active during movement
+    // Wiggle
     this.wigglePhase = Math.random() * Math.PI * 2;
     this.wiggleSpeed = 0;
     this.wiggleAmp = 0;
 
-    // Color variation - dark tadpole colors
+    // Color variation
     const shade = Math.floor(15 + Math.random() * 25);
     this.color = `rgb(${shade}, ${shade + 8}, ${shade})`;
     this.bellyColor = `rgb(${shade + 40}, ${shade + 45}, ${shade + 25})`;
@@ -103,6 +134,44 @@ class Tadpole {
       }
     }
     return closest;
+  }
+
+  pickNextState() {
+    // Hungry? go find food
+    if (this.hunger > 0.5) {
+      const f = this.findFood();
+      if (f) {
+        this.target = f;
+        return 'seek_food';
+      }
+    }
+
+    const roll = Math.random();
+
+    // Personality-weighted state selection
+    if (roll < this.grazeChance) {
+      // Start grazing - nibbling at a surface
+      this.grazeDir = Math.random() < 0.5 ? 1 : -1;
+      this.stateTimer = 3 + Math.random() * 6;
+      return 'graze';
+    }
+    if (roll < this.grazeChance + 0.15 && this.restlessness < 0.5) {
+      // Lazy drift - very slow glide
+      this.targetAngle = this.angle + (Math.random() - 0.5) * 1.0;
+      this.speed = 0.2 + Math.random() * 0.3;
+      this.wiggleSpeed = 3;
+      this.wiggleAmp = 0.1;
+      this.stateTimer = 2 + Math.random() * 4;
+      return 'drift';
+    }
+
+    // Flit to a new spot
+    this.targetAngle = this.angle + (Math.random() - 0.5) * 2.5;
+    this.speed = this.flitSpeed * (0.6 + Math.random() * 0.4);
+    this.wiggleSpeed = 14 + Math.random() * 6;
+    this.wiggleAmp = 0.4 + Math.random() * 0.2;
+    this.stateTimer = 0.15 + Math.random() * 0.35;
+    return 'flit';
   }
 
   update(dt) {
@@ -125,38 +194,60 @@ class Tadpole {
 
     switch (this.state) {
       case 'idle':
-        // Decelerate to stop
         this.speed *= 0.88;
         this.wiggleSpeed *= 0.92;
         this.wiggleAmp *= 0.92;
         if (this.speed < 0.05) this.speed = 0;
 
         if (this.stateTimer <= 0) {
-          // Decide what to do next
-          if (this.hunger > 0.5) {
-            const f = this.findFood();
-            if (f) {
-              this.target = f;
-              this.state = 'seek_food';
-              break;
-            }
-          }
-          // Flit to a new spot
-          this.state = 'flit';
-          this.targetAngle = this.angle + (Math.random() - 0.5) * 2.5;
-          this.speed = this.flitSpeed * (0.6 + Math.random() * 0.4);
-          this.wiggleSpeed = 14 + Math.random() * 6;
-          this.wiggleAmp = 0.4 + Math.random() * 0.2;
-          this.stateTimer = 0.15 + Math.random() * 0.35; // short burst
+          this.state = this.pickNextState();
         }
         break;
 
       case 'flit':
-        // Brief burst of movement, then stop
         this.speed *= 0.96;
         if (this.stateTimer <= 0 || this.speed < 0.3) {
           this.state = 'idle';
-          this.stateTimer = 1.5 + Math.random() * 4; // sit for a while
+          this.stateTimer = this.idleMin + Math.random() * (this.idleMax - this.idleMin);
+        }
+        break;
+
+      case 'drift':
+        // Very slow glide, barely any tail movement
+        this.speed *= 0.995;
+        if (this.speed < 0.1) this.speed = 0.15;
+        this.wiggleAmp = 0.08;
+        this.wiggleSpeed = 2;
+        if (this.stateTimer <= 0) {
+          this.state = 'idle';
+          this.stateTimer = this.idleMin + Math.random() * (this.idleMax - this.idleMin);
+        }
+        break;
+
+      case 'graze':
+        // Scraping algae - mostly stationary with small head wobbles
+        this.speed *= 0.85;
+        if (this.speed < 0.05) this.speed = 0;
+
+        // Head wobbles side to side like nibbling
+        this.grazeAngle += dt * 3 * this.grazeDir;
+        if (Math.abs(this.grazeAngle) > 0.15) this.grazeDir *= -1;
+        this.targetAngle = this.angle + this.grazeAngle * 0.3;
+
+        // Tiny tail twitches while grazing
+        this.wiggleSpeed = 4;
+        this.wiggleAmp = 0.08 + Math.sin(this.grazeAngle * 10) * 0.05;
+
+        // Occasionally shuffle position slightly
+        if (Math.random() < 0.005) {
+          this.speed = 0.3;
+          this.targetAngle = this.angle + (Math.random() - 0.5) * 0.5;
+        }
+
+        if (this.stateTimer <= 0) {
+          this.hunger = Math.max(0, this.hunger - 0.15);
+          this.state = 'idle';
+          this.stateTimer = this.idleMin + Math.random() * (this.idleMax - this.idleMin);
         }
         break;
 
@@ -171,7 +262,6 @@ class Tadpole {
         const fdist = Math.sqrt(fdx * fdx + fdy * fdy);
         this.targetAngle = Math.atan2(fdy, fdx);
 
-        // Flit toward food in bursts
         if (this.speed < 0.5) {
           this.speed = this.flitSpeed * 0.8;
           this.wiggleSpeed = 12;
@@ -202,7 +292,6 @@ class Tadpole {
         break;
 
       case 'flee':
-        // Rapid burst then settle
         this.speed *= 0.94;
         if (this.stateTimer <= 0) {
           this.state = 'idle';
@@ -428,13 +517,71 @@ function drawPond(time) {
     }
   }
 
-  // Food
+  // Displace particles near moving tadpole segments
+  for (const t of tadpoles) {
+    if (t.speed < 0.3) continue; // only disturb when actually moving
+    for (const seg of t.segments) {
+      const pushRadius = t.headSize * 1.8;
+      const pushStrength = t.speed * 0.15;
+      // Push food
+      for (const f of food) {
+        const dx = f.x - seg.x;
+        const dy = f.y - seg.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < pushRadius && dist > 0.1) {
+          const force = pushStrength * (1 - dist / pushRadius);
+          f.vx += (dx / dist) * force;
+          f.vy += (dy / dist) * force;
+        }
+      }
+      // Push debris
+      for (const d of debris) {
+        const dx = d.x - seg.x;
+        const dy = d.y - seg.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < pushRadius && dist > 0.1) {
+          const force = pushStrength * (1 - dist / pushRadius);
+          d.vx += (dx / dist) * force;
+          d.vy += (dy / dist) * force;
+        }
+      }
+    }
+  }
+
+  // Update and draw food
   for (const f of food) {
-    f.x += f.drift;
-    f.y += Math.sin(time * 0.002 + f.x) * 0.05;
+    f.vx += f.drift * dt;
+    f.vy += Math.sin(time * 0.002 + f.x) * 0.003;
+    f.vx *= 0.97; // water drag
+    f.vy *= 0.97;
+    f.x += f.vx;
+    f.y += f.vy;
+    // Wrap edges
+    if (f.x < 0) f.x = w;
+    if (f.x > w) f.x = 0;
+    if (f.y < 0) f.y = h;
+    if (f.y > h) f.y = 0;
     ctx.beginPath();
     ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(80, 140, 50, ${0.4 + Math.sin(time * 0.003 + f.x) * 0.15})`;
+    ctx.fill();
+  }
+
+  // Update and draw debris
+  for (const d of debris) {
+    d.vx += d.drift * dt;
+    d.vy += Math.sin(time * 0.0015 + d.x * 0.1) * 0.002;
+    d.vx *= 0.98; // lighter drag - they float more
+    d.vy *= 0.98;
+    d.x += d.vx;
+    d.y += d.vy;
+    if (d.x < 0) d.x = w;
+    if (d.x > w) d.x = 0;
+    if (d.y < 0) d.y = h;
+    if (d.y > h) d.y = 0;
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(120, 110, 80, ${d.opacity})`;
     ctx.fill();
   }
 
