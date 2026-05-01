@@ -1022,37 +1022,47 @@ function draw(time) {
     // Draw the wave front - broken irregular segments with gaps and varying width
     const perpX = -sinA;
     const perpY = cosA;
-    // Generate stable randomness per wave if not yet done
-    if (!ww.frontSegs) {
-      ww.frontSegs = [];
-      let pos = -span;
-      while (pos < span) {
-        const segLen = 10 + Math.random() * 40; // varied segment lengths
-        const gap = Math.random() < 0.3; // 30% chance of a gap
-        ww.frontSegs.push({
-          start: pos,
-          len: segLen,
-          gap,
-          offset: (Math.random() - 0.5) * 6, // forward/back wobble
-          thickness: 0.8 + Math.random() * 2.5,
-          opacity: 0.1 + Math.random() * 0.2,
-        });
-        pos += segLen + (gap ? 5 + Math.random() * 15 : 2);
+    // Generate irregular wave profile - like a mountain range silhouette
+    if (!ww.profile) {
+      ww.profile = [];
+      const step = 6;
+      for (let pos = -span; pos <= span; pos += step) {
+        // Layered noise for natural irregularity at different scales
+        const large = Math.sin(pos * 0.02 + Math.random() * 0.5) * 8;
+        const medium = Math.sin(pos * 0.07 + Math.random() * 2) * 4;
+        const small = (Math.random() - 0.5) * 3;
+        const offset = large + medium + small; // forward/back displacement
+        const thickness = 1 + Math.pow(Math.random(), 0.5) * 2.5;
+        const opacity = 0.08 + Math.random() * 0.18;
+        // Random gaps
+        const gap = Math.random() < 0.08;
+        ww.profile.push({ pos, offset, thickness, opacity, gap });
       }
     }
-    for (const seg of ww.frontSegs) {
-      if (seg.gap) continue;
-      ctx.globalAlpha = ww.life * seg.opacity;
-      ctx.beginPath();
-      const offsetX = cosA * seg.offset;
-      const offsetY = sinA * seg.offset;
-      ctx.moveTo(ww.x + perpX * seg.start + offsetX, ww.y + perpY * seg.start + offsetY);
-      ctx.lineTo(ww.x + perpX * (seg.start + seg.len) + offsetX, ww.y + perpY * (seg.start + seg.len) + offsetY);
-      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineWidth = seg.thickness;
-      ctx.lineCap = 'round';
-      ctx.stroke();
+    // Draw the wave as a continuous irregular path with breaks
+    let inStroke = false;
+    for (let i = 0; i < ww.profile.length; i++) {
+      const pt = ww.profile[i];
+      if (pt.gap) {
+        if (inStroke) { ctx.stroke(); inStroke = false; }
+        continue;
+      }
+      const px = ww.x + perpX * pt.pos + cosA * pt.offset;
+      const py = ww.y + perpY * pt.pos + sinA * pt.offset;
+      if (!inStroke) {
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.globalAlpha = ww.life * pt.opacity;
+        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        ctx.lineWidth = pt.thickness;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        inStroke = true;
+      } else {
+        ctx.lineTo(px, py);
+      }
     }
+    if (inStroke) ctx.stroke();
 
     // Update and draw blobs - drift with current and turbulence, fade out
     for (let i = ww.blobs.length - 1; i >= 0; i--) {
