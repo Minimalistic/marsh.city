@@ -522,32 +522,33 @@ class Tadpole {
     ctx.fillStyle = this.color;
     ctx.fill();
 
-    // Back legs - frog-style, pointing backward with sharp knee bend
+    // Back legs - emerge from back base, splay ~25deg out, knee bends backward
     if (this.hasLegs) {
-      const legSeg = segs[3];
-      const legNext = segs[4];
-      const bodyDir = Math.atan2(legNext.y - legSeg.y, legNext.x - legSeg.x);
-      // Kick: knee opens and closes
-      const kick = this.speed > 0.3 ? Math.sin(this.wigglePhase * 0.8 + this.legPhase) * 0.6 : 0;
+      const legSeg = segs[4];
+      const legPrev = segs[3];
+      // tailward direction (backward from body)
+      const tailDir = Math.atan2(legSeg.y - legPrev.y, legSeg.x - legPrev.x);
+      // Kick: subtle knee flex when swimming
+      const kick = this.speed > 0.3 ? Math.sin(this.wigglePhase * 0.8 + this.legPhase) * 0.3 : 0;
       for (const side of [-1, 1]) {
-        // Hip attaches at sides of body
-        const hipAngle = bodyDir + Math.PI / 2 * side;
-        const hipX = legSeg.x + Math.cos(hipAngle) * this.bodyWidth * 0.5;
-        const hipY = legSeg.y + Math.sin(hipAngle) * this.bodyWidth * 0.5;
-        // Thigh goes backward and outward
-        const thighAngle = bodyDir + Math.PI * 0.8 * side + kick * 0.3 * side;
+        // Hip at back base of body, slightly to each side
+        const hipX = legSeg.x + Math.cos(tailDir + Math.PI / 2 * side) * this.bodyWidth * 0.3;
+        const hipY = legSeg.y + Math.sin(tailDir + Math.PI / 2 * side) * this.bodyWidth * 0.3;
+        // Thigh extends backward, splayed ~25 degrees outward
+        const splay = (25 * Math.PI / 180) * side;
+        const thighAngle = tailDir + splay + kick * 0.2 * side;
         const kneeX = hipX + Math.cos(thighAngle) * this.legLen * 0.5;
         const kneeY = hipY + Math.sin(thighAngle) * this.legLen * 0.5;
-        // Shin bends sharply back from knee (frog Z-shape)
-        const shinAngle = thighAngle - Math.PI * (0.6 + kick * 0.4) * side;
-        const footX = kneeX + Math.cos(shinAngle) * this.legLen * 0.5;
-        const footY = kneeY + Math.sin(shinAngle) * this.legLen * 0.5;
-        // Draw as two segments with visible knee joint
+        // Lower leg bends at knee, continuing backward
+        const kneeAngle = thighAngle + (0.4 + kick * 0.3) * side;
+        const footX = kneeX + Math.cos(kneeAngle) * this.legLen * 0.45;
+        const footY = kneeY + Math.sin(kneeAngle) * this.legLen * 0.45;
+        // Two segments with sharp knee joint
         ctx.beginPath();
         ctx.moveTo(hipX, hipY);
         ctx.lineTo(kneeX, kneeY);
         ctx.lineTo(footX, footY);
-        ctx.strokeStyle = this.bellyColor;
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = 1.8;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
