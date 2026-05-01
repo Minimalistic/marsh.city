@@ -237,12 +237,18 @@ class Fish {
     this.vx *= 0.99;
     this.vy *= 0.99;
 
-    // Soft boundary - only nudge when very close to edge, let them roam freely
-    const margin = 15;
-    if (this.x < margin) this.vx += (margin - this.x) * 0.005;
-    if (this.x > w - margin) this.vx -= (this.x - (w - margin)) * 0.005;
-    if (this.y < margin) this.vy += (margin - this.y) * 0.005;
-    if (this.y > h - margin) this.vy -= (this.y - (h - margin)) * 0.005;
+    // Active edge avoidance - fish swim away from edges, stronger the closer they get
+    const edgeMargin = 60;
+    const hardMargin = 20;
+    if (this.x < edgeMargin) { const urgency = Math.pow(1 - this.x / edgeMargin, 2); this.vx += urgency * 0.15; }
+    if (this.x > w - edgeMargin) { const urgency = Math.pow(1 - (w - this.x) / edgeMargin, 2); this.vx -= urgency * 0.15; }
+    if (this.y < edgeMargin) { const urgency = Math.pow(1 - this.y / edgeMargin, 2); this.vy += urgency * 0.15; }
+    if (this.y > h - edgeMargin) { const urgency = Math.pow(1 - (h - this.y) / edgeMargin, 2); this.vy -= urgency * 0.15; }
+    // If near edge and idle, wake up and swim away
+    if (this.idle && (this.x < hardMargin || this.x > w - hardMargin || this.y < hardMargin || this.y > h - hardMargin)) {
+      this.idle = false;
+      this.idleTimer = 3 + Math.random() * 4;
+    }
 
     // Move
     this.x += this.vx;
