@@ -258,7 +258,13 @@ let hideTimer = null;
 
 const canRealFS = !!(poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen);
 function isFakeFS() { return poolContainer.classList.contains('fake-fullscreen'); }
+let _fakefsParent = null; // original parent to restore on exit
+let _fakefsNext = null;   // next sibling for reinsertion position
 function enterFakeFS() {
+  // Move container to body to escape backdrop-filter containing block
+  _fakefsParent = poolContainer.parentElement;
+  _fakefsNext = poolContainer.nextSibling;
+  document.body.appendChild(poolContainer);
   poolContainer.classList.add('fake-fullscreen');
   document.body.style.overflow = 'hidden';
   handleFSChange();
@@ -266,6 +272,13 @@ function enterFakeFS() {
 function exitFakeFS() {
   poolContainer.classList.remove('fake-fullscreen');
   document.body.style.overflow = '';
+  // Move container back to its original position
+  if (_fakefsParent) {
+    if (_fakefsNext) _fakefsParent.insertBefore(poolContainer, _fakefsNext);
+    else _fakefsParent.appendChild(poolContainer);
+  }
+  _fakefsParent = null;
+  _fakefsNext = null;
   handleFSChange();
 }
 fsBtn.addEventListener('click', e => {
