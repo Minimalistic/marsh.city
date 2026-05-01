@@ -743,7 +743,7 @@ class Fish {
 
     // Speed management - idle fish slow way down, active fish are gentle
     let targetSpeed;
-    const scaledSpeed = this.baseSpeed * viewScale;
+    const scaledSpeed = this.baseSpeed * viewScale * (1 + (viewScale - 1) * 0.5);
     if (this.fleeing) targetSpeed = scaledSpeed * 1.15;
     else if (this.idle) targetSpeed = scaledSpeed * 0.15;
     else targetSpeed = scaledSpeed;
