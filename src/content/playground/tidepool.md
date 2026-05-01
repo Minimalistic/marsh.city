@@ -630,9 +630,10 @@ class Fish {
     this.vx += flow.fx * 0.005;
     this.vy += flow.fy * 0.005;
 
-    // Food attraction - fish are very interested, urgency fades with distance
+    // Food attraction - scales with viewport, aggressive interest
+    const foodRange = 400 * viewScale;
     let closestFood = null;
-    let closestFoodDist = 300;
+    let closestFoodDist = foodRange;
     for (const fp of foodPellets) {
       if (fp.bites <= 0) continue;
       const fdx = fp.x - this.x;
@@ -644,28 +645,30 @@ class Fish {
       const fdx = closestFood.x - this.x;
       const fdy = closestFood.y - this.y;
       const desiredAngle = Math.atan2(fdy, fdx);
-      // Check angle between current heading and food direction
       let headingDiff = desiredAngle - this.angle;
       while (headingDiff > Math.PI) headingDiff -= Math.PI * 2;
       while (headingDiff < -Math.PI) headingDiff += Math.PI * 2;
       const angleMismatch = Math.abs(headingDiff);
 
       if (this.idle) { this.idle = false; this.idleTimer = 2; }
+      if (this.distracted && closestFoodDist < foodRange * 0.5) {
+        this.distracted = false; this.distractTimer = 3;
+      }
 
-      if (closestFoodDist < 10) {
+      const eatDist = 10 * viewScale;
+      const biteDist = 6 * viewScale;
+      if (closestFoodDist < eatDist) {
         // Close enough to eat - stop and bite
         this.vx *= 0.8;
         this.vy *= 0.8;
-        if (closestFoodDist < 6 && !this.eating) {
+        if (closestFoodDist < biteDist && !this.eating) {
           closestFood.bites--;
           closestFood.size *= 0.97;
-          // Jostle the food from the bite impact
           const biteAngle = this.angle;
           closestFood.vx += Math.cos(biteAngle) * 0.3;
           closestFood.vy += Math.sin(biteAngle) * 0.3;
           this.eating = true;
-          this.eatTimer = 0.3 + Math.random() * 0.2; // brief pause to chew
-          // Spawn a fragment only after ~5 bites taken, then 25% chance
+          this.eatTimer = 0.3 + Math.random() * 0.2;
           const bitesTaken = (closestFood.startBites || closestFood.bites + 1) - closestFood.bites;
           if (bitesTaken > 5 && Math.random() < 0.25) {
             const fragAngle = Math.random() * Math.PI * 2;
@@ -680,18 +683,19 @@ class Fish {
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
-      } else if (angleMismatch < 1.4) {
-        // Good approach angle - steer toward food, stronger when closer
-        const proximity = 1 - closestFoodDist / 300;
-        const steer = 0.02 + proximity * 0.06;
-        const desiredVx = Math.cos(desiredAngle) * this.baseSpeed * (1 + proximity * 0.5);
-        const desiredVy = Math.sin(desiredAngle) * this.baseSpeed * (1 + proximity * 0.5);
+      } else if (angleMismatch < 1.6) {
+        // Good approach angle - steer aggressively toward food
+        const proximity = 1 - closestFoodDist / foodRange;
+        const steer = 0.04 + proximity * 0.1;
+        const speedBoost = 1 + proximity * 0.8;
+        const desiredVx = Math.cos(desiredAngle) * scaledSpeed * speedBoost;
+        const desiredVy = Math.sin(desiredAngle) * scaledSpeed * speedBoost;
         this.vx += (desiredVx - this.vx) * steer;
         this.vy += (desiredVy - this.vy) * steer;
-      } else if (closestFoodDist < 60) {
-        // Close but bad angle - gentle turn to come around
-        this.vx += (Math.cos(desiredAngle) - Math.cos(this.angle)) * 0.01;
-        this.vy += (Math.sin(desiredAngle) - Math.sin(this.angle)) * 0.01;
+      } else if (closestFoodDist < foodRange * 0.4) {
+        // Bad angle but close - turn to come around
+        this.vx += (Math.cos(desiredAngle) - Math.cos(this.angle)) * 0.02;
+        this.vy += (Math.sin(desiredAngle) - Math.sin(this.angle)) * 0.02;
       }
     }
 
@@ -866,7 +870,7 @@ class Frond {
     this.x = x;
     this.y = y;
     this.growAngle = growAngle;
-    this.len = 40 + Math.random() * 55;
+    this.len = (40 + Math.random() * 55) * viewScale;
     this.branches = 2 + Math.floor(Math.random() * 3);
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
@@ -933,7 +937,7 @@ class Frond {
       ctx.moveTo(segs[i].x, segs[i].y);
       ctx.lineTo(segs[i + 1].x, segs[i + 1].y);
       ctx.strokeStyle = 'rgb(20, 70, 50)';
-      ctx.lineWidth = 1.6 * (1 - t * 0.7);
+      ctx.lineWidth = 1.6 * viewScale * (1 - t * 0.7);
       ctx.stroke();
     }
     for (let b = 0; b < this.branches; b++) {
