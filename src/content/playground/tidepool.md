@@ -522,17 +522,20 @@ for (let i = 0; i < 500; i++) {
 class Fish {
   constructor(spawnInfo = null) {
     if (spawnInfo) {
-      // Spawn as part of a school group at a specific edge point
-      // spawnInfo: { x, y, angle } with slight scatter applied
-      this.x = spawnInfo.x + (Math.random() - 0.5) * 25;
-      this.y = spawnInfo.y + (Math.random() - 0.5) * 25;
+      // Spawn as part of a school group well offscreen
+      this.x = spawnInfo.x + (Math.random() - 0.5) * 30;
+      this.y = spawnInfo.y + (Math.random() - 0.5) * 30;
       this.angle = spawnInfo.angle + (Math.random() - 0.5) * 0.3;
     } else {
-      this.x = w * 0.2 + Math.random() * w * 0.6;
-      this.y = h * 0.2 + Math.random() * h * 0.6;
-      this.angle = Math.random() * Math.PI * 2;
+      // Fallback: also spawn from a random edge, never in view
+      const edge = Math.floor(Math.random() * 4);
+      const m = 80 + Math.random() * 40;
+      if (edge === 0) { this.x = -m; this.y = Math.random() * h; this.angle = (Math.random() - 0.5) * 0.6; }
+      else if (edge === 1) { this.x = w + m; this.y = Math.random() * h; this.angle = Math.PI + (Math.random() - 0.5) * 0.6; }
+      else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
+      else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
     }
-    this.speed = 0.6 + Math.random() * 0.4;
+    this.speed = 0.3 + Math.random() * 0.8; // wider range: some sluggish, some zippy
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
@@ -1105,7 +1108,7 @@ let spawnTimer = 0;
 // Pre-plan school entry points: each school enters from a different edge
 const schoolEntries = schoolColors.map((_, si) => {
   const edge = si % 4;
-  const margin = 40;
+  const margin = 80 + Math.random() * 40; // well offscreen
   let x, y, angle;
   if (edge === 0) { x = -margin; y = h * 0.2 + Math.random() * h * 0.6; angle = (Math.random() - 0.5) * 0.5; }
   else if (edge === 1) { x = w + margin; y = h * 0.2 + Math.random() * h * 0.6; angle = Math.PI + (Math.random() - 0.5) * 0.5; }
