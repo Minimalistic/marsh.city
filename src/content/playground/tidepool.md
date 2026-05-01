@@ -702,8 +702,8 @@ class Fish {
       const biteDist = 3 * viewScale;
       // Fish can only eat when mouth is directly at the food
       if (closestFoodDist < eatDist && angleMismatch < 0.5) {
-        this.vx *= 0.85;
-        this.vy *= 0.85;
+        this.vx *= 0.92; // gentle slowdown, don't stop
+        this.vy *= 0.92;
         if (closestFoodDist < biteDist && angleMismatch < 0.3 && !this.eating) {
           closestFood.bites--;
           closestFood.size *= 0.97;
@@ -726,16 +726,14 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Always steer toward food by turning - never set velocity directly
-        // Fish must swim a forward arc to reach food, like a real approach
-        const turnStr = angleMismatch > 1.2 ? 0.04 : 0.06 + (1 - closestFoodDist / foodRange) * 0.08;
+        // Gentle steering toward food - no rushing
+        const turnStr = angleMismatch > 1.2 ? 0.02 : 0.03 + (1 - closestFoodDist / foodRange) * 0.03;
         const turnDir = headingDiff > 0 ? 1 : -1;
-        // Apply as a gentle heading bias, not a velocity override
         this.vx += Math.cos(this.angle + turnDir * 0.3) * turnStr;
         this.vy += Math.sin(this.angle + turnDir * 0.3) * turnStr;
-        // Speed up when mostly aligned
+        // Mild speed increase when aligned - not a sprint
         if (angleMismatch < 1.0) {
-          const boost = (1 - angleMismatch) * (1 - closestFoodDist / foodRange) * 0.05;
+          const boost = (1 - angleMismatch) * (1 - closestFoodDist / foodRange) * 0.02;
           this.vx += Math.cos(this.angle) * boost;
           this.vy += Math.sin(this.angle) * boost;
         }
@@ -781,12 +779,12 @@ class Fish {
       this.idleTimer = this.idle ? 2 + Math.random() * 5 : 3 + Math.random() * 6;
     }
 
-    // Speed management - idle fish slow way down, active fish are gentle
+    // Speed management - fish always keep moving, just slower when relaxed
     let targetSpeed;
-    const scaledSpeed = this.baseSpeed * viewScale * (1 + (viewScale - 1) * 0.5);
-    if (this.fleeing) targetSpeed = scaledSpeed * 1.15;
-    else if (this.idle) targetSpeed = scaledSpeed * 0.15;
-    else targetSpeed = scaledSpeed;
+    const scaledSpeed = this.baseSpeed * viewScale;
+    if (this.fleeing) targetSpeed = scaledSpeed * 1.1;
+    else if (this.idle) targetSpeed = scaledSpeed * 0.4; // drifting, not stopped
+    else targetSpeed = scaledSpeed * 0.75; // cruising, not rushing
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
