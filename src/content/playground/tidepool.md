@@ -247,6 +247,9 @@ class Fish {
     // Eating pause
     this.eating = false;
     this.eatTimer = 0;
+    // Distraction - sometimes fish wander off from the school
+    this.distracted = Math.random() < 0.15;
+    this.distractTimer = this.distracted ? 3 + Math.random() * 8 : 5 + Math.random() * 10;
   }
 
   update(dt, fish, time) {
@@ -294,10 +297,18 @@ class Fish {
       }
     }
 
-    // Apply boids
+    // Distraction toggle
+    this.distractTimer -= dt;
+    if (this.distractTimer <= 0) {
+      this.distracted = !this.distracted;
+      this.distractTimer = this.distracted ? 4 + Math.random() * 10 : 5 + Math.random() * 12;
+    }
+
+    // Apply boids - distracted fish mostly ignore schooling
+    const schoolWeight = this.distracted ? 0.1 : 1;
     if (sepCount > 0) { this.vx += sepX * 0.15; this.vy += sepY * 0.15; }
-    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.05; this.vy += (alignY / alignCount - this.vy) * 0.05; }
-    if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.0008; this.vy += (cy - this.y) * 0.0008; }
+    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.05 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.05 * schoolWeight; }
+    if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.0008 * schoolWeight; this.vy += (cy - this.y) * 0.0008 * schoolWeight; }
 
     // Gentle centering during first few seconds
     if (settleTime > 0) {
