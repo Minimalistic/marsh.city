@@ -688,30 +688,31 @@ class Frond {
   }
 
   update(dt, time) {
-    // Gentle sway
-    const sway = Math.sin(time * 0.0008 + this.phase) * 0.4;
+    // Very slow underwater drift
+    const sway = Math.sin(time * 0.0003 + this.phase) * 0.2;
     for (let i = 1; i < this.segs.length; i++) {
       const s = this.segs[i];
       const t = i / this.segCount;
-      // Weak spring - tips are much looser than base
+      // Gentle pull toward rest - underwater plants barely spring back
       const restAngle = this.growAngle + sway * t;
       s.restX = this.x + Math.cos(restAngle) * t * this.len;
       s.restY = this.y + Math.sin(restAngle) * t * this.len;
-      const stiffness = 0.015 * (1 - t * 0.7); // weaker toward tip
+      const stiffness = 0.006 * (1 - t * 0.5);
       s.vx += (s.restX - s.x) * stiffness;
       s.vy += (s.restY - s.y) * stiffness;
-      s.vx *= 0.96; // less damping = more flowy
-      s.vy *= 0.96;
+      // Heavy water drag - kills momentum quickly, no oscillation
+      s.vx *= 0.88;
+      s.vy *= 0.88;
       s.x += s.vx;
       s.y += s.vy;
-      // Chain constraint - keep segment distance from previous
+      // Chain constraint
       const prev = this.segs[i - 1];
       const dx = s.x - prev.x;
       const dy = s.y - prev.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       const segLen = this.len / this.segCount;
-      if (dist > segLen * 1.3) {
-        const ratio = segLen * 1.3 / dist;
+      if (dist > segLen * 1.2) {
+        const ratio = segLen * 1.2 / dist;
         s.x = prev.x + dx * ratio;
         s.y = prev.y + dy * ratio;
       }
