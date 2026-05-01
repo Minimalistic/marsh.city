@@ -104,10 +104,7 @@ mermaid.render(id, syntax);`}</code></pre>
     0%, 100% { opacity: 0.7; }
     50% { opacity: 1; }
   }
-  @keyframes borderGlow {
-    0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 204, 0.3), inset 0 0 8px rgba(0, 255, 204, 0.05); }
-    50% { box-shadow: 0 0 16px rgba(0, 255, 204, 0.5), 0 0 40px rgba(0, 255, 204, 0.15), inset 0 0 12px rgba(0, 255, 204, 0.08); }
-  }
+  /* borderGlow removed — static subtle glow instead */
   @keyframes scanline {
     0% { transform: translateY(-100%); }
     100% { transform: translateY(100%); }
@@ -128,7 +125,7 @@ mermaid.render(id, syntax);`}</code></pre>
     overflow: hidden;
     margin: 1.5rem 0;
     position: relative;
-    animation: borderGlow 4s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.15), inset 0 0 6px rgba(0, 255, 204, 0.03);
   }
   /* CRT scanline overlay */
   .machine-terminal::before {
@@ -924,6 +921,56 @@ mermaid.render(id, syntax);`}</code></pre>
       if (nodeEdges.length) steps.push({ type: 'edges', items: nodeEdges });
     });
 
+    // particle emitter — spawns glowing dots along an edge path's leading point
+    function emitParticles(pathEl, svgEl, duration) {
+      var totalLen = pathEl.getTotalLength();
+      var particleCount = 12;
+      var interval = duration / particleCount;
+      var ns = 'http://www.w3.org/2000/svg';
+      var colors = ['#00ffcc', '#ff0055', '#00aaff', '#ffcc00'];
+
+      for (var p = 0; p < particleCount; p++) {
+        (function(idx) {
+          setTimeout(function() {
+            var progress = idx / particleCount;
+            var pt = pathEl.getPointAtLength(progress * totalLen);
+            var circle = document.createElementNS(ns, 'circle');
+            var color = colors[Math.floor(Math.random() * colors.length)];
+            circle.setAttribute('cx', pt.x);
+            circle.setAttribute('cy', pt.y);
+            circle.setAttribute('r', '2.5');
+            circle.setAttribute('fill', color);
+            circle.setAttribute('opacity', '1');
+            circle.style.filter = 'drop-shadow(0 0 4px ' + color + ')';
+            svgEl.appendChild(circle);
+
+            // drift outward and fade
+            var angle = Math.random() * Math.PI * 2;
+            var drift = 8 + Math.random() * 12;
+            var dx = Math.cos(angle) * drift;
+            var dy = Math.sin(angle) * drift;
+            var startTime = performance.now();
+            var fadeMs = 400 + Math.random() * 300;
+
+            function tick(now) {
+              var t = Math.min((now - startTime) / fadeMs, 1);
+              var ease = 1 - (1 - t) * (1 - t); // easeOutQuad
+              circle.setAttribute('cx', pt.x + dx * ease);
+              circle.setAttribute('cy', pt.y + dy * ease);
+              circle.setAttribute('opacity', String(1 - ease));
+              circle.setAttribute('r', String(2.5 * (1 - ease * 0.6)));
+              if (t < 1) {
+                requestAnimationFrame(tick);
+              } else {
+                circle.remove();
+              }
+            }
+            requestAnimationFrame(tick);
+          }, idx * interval);
+        })(p);
+      }
+    }
+
     function runStep(i) {
       if (i >= steps.length) {
         // cleanup inline styles so diagram looks clean after animation
@@ -952,6 +999,8 @@ mermaid.render(id, syntax);`}</code></pre>
         step.items.forEach(function(e) {
           e.el.style.transition = 'stroke-dashoffset 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
           e.el.style.strokeDashoffset = '0';
+          // spawn particles along the leading edge
+          emitParticles(e.el, svg, 700);
         });
         setTimeout(function() {
           // restore arrowheads and fade in labels
