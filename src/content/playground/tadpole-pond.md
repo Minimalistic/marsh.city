@@ -688,7 +688,7 @@ class Frond {
   }
 
   update(dt, time) {
-    // No spring-back to rest. Just gentle ambient current + drag.
+    // Ambient current + very gradual tension back toward origin
     const currentX = Math.sin(time * 0.0002 + this.phase) * 0.03;
     const currentY = Math.cos(time * 0.00015 + this.phase * 1.3) * 0.02;
     for (let i = 1; i < this.segs.length; i++) {
@@ -697,6 +697,12 @@ class Frond {
       // Ambient water current pushes tips more than base
       s.vx += currentX * t;
       s.vy += currentY * t;
+      // Very faint tension toward rest - like a rooted stem, not a spring
+      const restAngle = this.growAngle;
+      const restX = this.x + Math.cos(restAngle) * t * this.len;
+      const restY = this.y + Math.sin(restAngle) * t * this.len;
+      s.vx += (restX - s.x) * 0.001;
+      s.vy += (restY - s.y) * 0.001;
       // Heavy water drag
       s.vx *= 0.9;
       s.vy *= 0.9;
