@@ -671,6 +671,9 @@ class Fish {
     this.vx += flow.fx * 0.005;
     this.vy += flow.fy * 0.005;
 
+    // Base speed for this fish at current viewport scale
+    const scaledSpeed = this.baseSpeed * viewScale;
+
     // Food attraction - all distances measured from the mouth tip
     const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5 * viewScale;
     const mouthY = this.y + Math.sin(this.angle) * this.len * 0.5 * viewScale;
@@ -780,7 +783,6 @@ class Fish {
 
     // Speed management - fish always keep moving, just slower when relaxed
     let targetSpeed;
-    const scaledSpeed = this.baseSpeed * viewScale;
     if (this.fleeing) targetSpeed = scaledSpeed * 1.1;
     else if (this.idle) targetSpeed = scaledSpeed * 0.4; // drifting, not stopped
     else targetSpeed = scaledSpeed * 0.75; // cruising, not rushing
