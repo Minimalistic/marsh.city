@@ -308,24 +308,27 @@ class Fish {
     this.vx *= 0.99;
     this.vy *= 0.99;
 
-    // Active edge avoidance - fish swim away from edges, stronger the closer they get
-    const edgeMargin = 60;
-    const hardMargin = 20;
-    if (this.x < edgeMargin) { const urgency = Math.pow(1 - this.x / edgeMargin, 2); this.vx += urgency * 0.15; }
-    if (this.x > w - edgeMargin) { const urgency = Math.pow(1 - (w - this.x) / edgeMargin, 2); this.vx -= urgency * 0.15; }
-    if (this.y < edgeMargin) { const urgency = Math.pow(1 - this.y / edgeMargin, 2); this.vy += urgency * 0.15; }
-    if (this.y > h - edgeMargin) { const urgency = Math.pow(1 - (h - this.y) / edgeMargin, 2); this.vy -= urgency * 0.15; }
-    // If near edge and idle, wake up and swim away
-    if (this.idle && (this.x < hardMargin || this.x > w - hardMargin || this.y < hardMargin || this.y > h - hardMargin)) {
+    // Soft return from offscreen - fish can swim 30% beyond viewport
+    // but get gently pulled back toward the visible area
+    const overflow = 0.3;
+    const minX = -w * overflow, maxX = w * (1 + overflow);
+    const minY = -h * overflow, maxY = h * (1 + overflow);
+    // Start pulling back when beyond the viewport edge
+    if (this.x < 0) this.vx += Math.abs(this.x) * 0.003;
+    if (this.x > w) this.vx -= (this.x - w) * 0.003;
+    if (this.y < 0) this.vy += Math.abs(this.y) * 0.003;
+    if (this.y > h) this.vy -= (this.y - h) * 0.003;
+    // Wake from idle if way offscreen
+    if (this.idle && (this.x < -w * 0.15 || this.x > w * 1.15 || this.y < -h * 0.15 || this.y > h * 1.15)) {
       this.idle = false;
       this.idleTimer = 3 + Math.random() * 4;
     }
 
-    // Move
+    // Move - allowed 30% beyond viewport
     this.x += this.vx;
     this.y += this.vy;
-    this.x = Math.max(1, Math.min(w - 1, this.x));
-    this.y = Math.max(1, Math.min(h - 1, this.y));
+    this.x = Math.max(minX, Math.min(maxX, this.x));
+    this.y = Math.max(minY, Math.min(maxY, this.y));
     this.angle = Math.atan2(this.vy, this.vx);
     this.speed = currentSpeed;
   }
