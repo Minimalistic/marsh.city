@@ -593,17 +593,11 @@ class Fish {
   }
 
   update(dt, fish, time) {
-    // Eating pause - fish stops to chew
+    // Eating nibble - fish slows slightly but keeps swimming
     if (this.eating) {
       this.eatTimer -= dt;
-      this.vx *= 0.7;
-      this.vy *= 0.7;
       if (this.eatTimer <= 0) this.eating = false;
-      // Still move position but very slowly
-      this.x += this.vx;
-      this.y += this.vy;
-      this.speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-      return;
+      // Don't return early - fish keeps moving and updating normally
     }
 
     // Boids forces
@@ -833,6 +827,13 @@ class Fish {
     if (fwdSpeed < 0) {
       this.vx -= headX * fwdSpeed * 0.8;
       this.vy -= headY * fwdSpeed * 0.8;
+    }
+    // Enforce minimum forward speed - fish never stall or hover
+    const minFwd = scaledSpeed * 0.35;
+    const fwdNow = this.vx * headX + this.vy * headY;
+    if (fwdNow < minFwd) {
+      this.vx += headX * (minFwd - fwdNow) * 0.3;
+      this.vy += headY * (minFwd - fwdNow) * 0.3;
     }
 
     // Drag - smooths out micro-jitter
