@@ -828,17 +828,13 @@ function drawPond(time) {
 
   // Update and draw tadpoles - deep ones first (behind), blurred
   for (const t of tadpoles) t.update(dt);
-  // Draw deep tadpoles with blur
+  // Draw deep tadpoles with blur (still fully opaque)
   ctx.save();
   ctx.filter = 'blur(1.5px)';
   for (const t of tadpoles) {
-    if (t.depth > 0) {
-      ctx.globalAlpha = 0.7;
-      t.draw(ctx);
-    }
+    if (t.depth > 0) t.draw(ctx);
   }
   ctx.restore();
-  ctx.globalAlpha = 1;
   // Draw surface tadpoles sharp
   for (const t of tadpoles) {
     if (t.depth === 0) t.draw(ctx);
