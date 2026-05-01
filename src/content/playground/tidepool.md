@@ -780,7 +780,7 @@ class Fish {
 
     // Size - scales with viewport, with ~30% variation between fish
     const sizeVar = 0.7 + Math.random() * 0.6; // 0.7 to 1.3 range
-    this.len = (10 + Math.random() * 5) * this.scale * sizeVar;
+    this.len = (12.5 + Math.random() * 6.25) * this.scale * sizeVar;
     this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
 
     // Color assigned per school (set after construction)
@@ -2316,16 +2316,28 @@ class Frond {
   draw(ctx, time) {
     const segs = this.segs;
     const ps = this._plantScale;
+    const n = segs.length;
     ctx.lineCap = 'round';
-    for (let i = 0; i < segs.length - 1; i++) {
-      const t = i / (segs.length - 1);
+    // Main stem — each segment tapers from its width to the next segment's width
+    for (let i = 0; i < n - 1; i++) {
+      const t0 = i / (n - 1), t1 = (i + 1) / (n - 1);
+      const w0 = 1.6 * ps * (1 - t0 * 0.85);
+      const w1 = 1.6 * ps * (1 - t1 * 0.85);
+      const ax = segs[i].x, ay = segs[i].y;
+      const bx = segs[i+1].x, by = segs[i+1].y;
+      const dx = bx - ax, dy = by - ay;
+      const len = Math.sqrt(dx*dx+dy*dy) || 1;
+      const nx = -dy/len, ny = dx/len;
       ctx.beginPath();
-      ctx.moveTo(segs[i].x, segs[i].y);
-      ctx.lineTo(segs[i + 1].x, segs[i + 1].y);
-      ctx.strokeStyle = 'rgb(20, 70, 50)';
-      ctx.lineWidth = 1.6 * ps * (1 - t * 0.7);
-      ctx.stroke();
+      ctx.moveTo(ax + nx*w0*0.5, ay + ny*w0*0.5);
+      ctx.lineTo(bx + nx*w1*0.5, by + ny*w1*0.5);
+      ctx.lineTo(bx - nx*w1*0.5, by - ny*w1*0.5);
+      ctx.lineTo(ax - nx*w0*0.5, ay - ny*w0*0.5);
+      ctx.closePath();
+      ctx.fillStyle = 'rgb(20, 70, 50)';
+      ctx.fill();
     }
+    // Branches and leaflets — taper from base to tip
     for (let b = 0; b < this.branches; b++) {
       const bd = this.branchData[b];
       const segIdx = Math.min(Math.floor(bd.t * this.segCount), this.segCount - 1);
@@ -2338,24 +2350,38 @@ class Frond {
       const tipX = base.x + Math.cos(branchAngle) * branchLen;
       const tipY = base.y + Math.sin(branchAngle) * branchLen;
       const taper = Math.pow(1 - bd.t, 0.6);
+      const bw = (0.3 + taper * 0.8) * ps;
+      // Tapered branch — wide at base, pointed at tip
+      const bdx = tipX - base.x, bdy = tipY - base.y;
+      const blen = Math.sqrt(bdx*bdx+bdy*bdy) || 1;
+      const bnx = -bdy/blen, bny = bdx/blen;
       ctx.beginPath();
-      ctx.moveTo(base.x, base.y);
+      ctx.moveTo(base.x + bnx*bw*0.5, base.y + bny*bw*0.5);
       ctx.lineTo(tipX, tipY);
-      ctx.strokeStyle = 'rgb(30, 85, 55)';
-      ctx.lineWidth = (0.3 + taper * 0.8) * ps;
-      ctx.stroke();
+      ctx.lineTo(base.x - bnx*bw*0.5, base.y - bny*bw*0.5);
+      ctx.closePath();
+      ctx.fillStyle = 'rgb(30, 85, 55)';
+      ctx.fill();
       for (let l = 0; l < bd.leaflets; l++) {
         const lt = 0.3 + (l / bd.leaflets) * 0.6;
         const lx = base.x + (tipX - base.x) * lt;
         const ly = base.y + (tipY - base.y) * lt;
         const leafAngle = branchAngle + ((l % 2 === 0 ? 1 : -1)) * (0.5 + l * 0.07);
         const leafLen = branchLen * (0.2 + taper * 0.15);
+        const lw = (0.2 + taper * 0.3) * ps;
+        // Tapered leaflet
+        const ltx = lx + Math.cos(leafAngle) * leafLen;
+        const lty = ly + Math.sin(leafAngle) * leafLen;
+        const ldx = ltx - lx, ldy = lty - ly;
+        const lln = Math.sqrt(ldx*ldx+ldy*ldy) || 1;
+        const lnx = -ldy/lln, lny = ldx/lln;
         ctx.beginPath();
-        ctx.moveTo(lx, ly);
-        ctx.lineTo(lx + Math.cos(leafAngle) * leafLen, ly + Math.sin(leafAngle) * leafLen);
-        ctx.strokeStyle = 'rgb(35, 95, 60)';
-        ctx.lineWidth = (0.3 + taper * 0.4) * ps;
-        ctx.stroke();
+        ctx.moveTo(lx + lnx*lw*0.5, ly + lny*lw*0.5);
+        ctx.lineTo(ltx, lty);
+        ctx.lineTo(lx - lnx*lw*0.5, ly - lny*lw*0.5);
+        ctx.closePath();
+        ctx.fillStyle = 'rgb(35, 95, 60)';
+        ctx.fill();
       }
     }
   }
