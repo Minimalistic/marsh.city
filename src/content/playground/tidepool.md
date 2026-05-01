@@ -1849,47 +1849,33 @@ class Predator {
     while (rDiff < -Math.PI) rDiff += Math.PI * 2;
     this._renderAngle += rDiff * 0.08;
 
-    // Joint chain — inertia-based, heavy body carries momentum
+    // Joint chain — plant-style verlet with heavy damping, no hard bend clamping
+    // Body straightens naturally over time through rest-position pull
     this._joints[0].x = this.x;
     this._joints[0].y = this.y;
     for (let j = 1; j <= this._jointCount; j++) {
       const prev = this._joints[j - 1];
       const curr = this._joints[j];
-      // Heavy inertia — barracuda body carries massive momentum
+      // Verlet: velocity = current - previous, heavily damped
       if (curr.px === undefined) { curr.px = curr.x; curr.py = curr.y; }
       const velX = curr.x - curr.px, velY = curr.y - curr.py;
       curr.px = curr.x; curr.py = curr.y;
       const t = j / this._jointCount;
-      const inertia = 0.6 + t * 0.25; // 0.6 at head, 0.85 at tail — heavy mass
-      curr.x += velX * inertia;
-      curr.y += velY * inertia;
-      // Gentle pull toward target — body eases into position
+      // Heavy drag — muscular body resists movement, then holds shape
+      const drag = 0.85 - t * 0.05; // 0.85 head, 0.8 tail
+      curr.x += velX * drag;
+      curr.y += velY * drag;
+      // Gentle pull toward rest position (straight behind head)
+      const restX = this.x - Math.cos(this._renderAngle) * j * this._segLen;
+      const restY = this.y - Math.sin(this._renderAngle) * j * this._segLen;
+      const straighten = 0.008 * (1 - t * 0.5); // stronger near head
+      curr.x += (restX - curr.x) * straighten;
+      curr.y += (restY - curr.y) * straighten;
+      // Distance constraint only — no bend clamping
       let dx = curr.x - prev.x, dy = curr.y - prev.y;
       let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      const tx = prev.x + (dx / dist) * this._segLen;
-      const ty = prev.y + (dy / dist) * this._segLen;
-      const pull = 0.25 - t * 0.1; // 0.25 at head, 0.15 at tail
-      curr.x += (tx - curr.x) * pull;
-      curr.y += (ty - curr.y) * pull;
-      // Distance constraint
-      dx = curr.x - prev.x; dy = curr.y - prev.y;
-      dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
       curr.x = prev.x + (dx / dist) * this._segLen;
       curr.y = prev.y + (dy / dist) * this._segLen;
-      // Wide bend limit — big fish curves, doesn't kink
-      if (j >= 2) {
-        const pp = this._joints[j - 2];
-        const prevAngle = Math.atan2(prev.y - pp.y, prev.x - pp.x);
-        const currAngle = Math.atan2(curr.y - prev.y, curr.x - prev.x);
-        let bend = currAngle - prevAngle;
-        while (bend > Math.PI) bend -= Math.PI * 2;
-        while (bend < -Math.PI) bend += Math.PI * 2;
-        if (Math.abs(bend) > 0.2) {
-          const ca = prevAngle + Math.sign(bend) * 0.2;
-          curr.x = prev.x + Math.cos(ca) * this._segLen;
-          curr.y = prev.y + Math.sin(ca) * this._segLen;
-        }
-      }
     }
     this.speed = currentSpeed;
   }
