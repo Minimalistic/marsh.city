@@ -23,6 +23,10 @@ function resize() {
 let { w, h } = resize();
 window.addEventListener('resize', () => { ({ w, h } = resize()); });
 
+// Offscreen canvas for blur pass
+const blurCanvas = document.createElement('canvas');
+const blurCtx = blurCanvas.getContext('2d');
+
 // Mouse tracking with velocity
 let mouse = { x: -1000, y: -1000, prevX: -1000, prevY: -1000, active: false, speed: 0, down: false };
 canvas.addEventListener('mouseenter', e => {
@@ -855,12 +859,18 @@ function drawPond(time) {
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
 
-  // Full viewport haze - buttery bokeh blur across the scene
+  // Full viewport haze - buttery bokeh blur via offscreen canvas
+  blurCanvas.width = canvas.width;
+  blurCanvas.height = canvas.height;
+  blurCtx.filter = 'blur(3px)';
+  blurCtx.drawImage(canvas, 0, 0);
   ctx.save();
-  ctx.filter = 'blur(3px)';
   ctx.globalAlpha = 0.4;
-  ctx.drawImage(canvas, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(blurCanvas, 0, 0);
   ctx.restore();
+  const dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   // Vignette - darken edges, brighten center
   const vigGrad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.2, w / 2, h / 2, Math.max(w, h) * 0.7);
