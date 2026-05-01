@@ -1129,7 +1129,9 @@ for (let i = 0; i < 15; i++) {
 // Reef structures - partially submerged obstacles
 // Each reef has an irregular outline generated from noisy radius samples
 function makeReef(x, y, sizeMultiplier = 1) {
-  const baseR = (60 + Math.random() * 90) * sizeMultiplier * viewScale;
+  // Scale aggressively with viewport - reefs should dominate on large screens
+  const vpScale = Math.sqrt(w * h) / 500; // ~1 at 500px equiv, ~4 at 2000px
+  const baseR = (60 + Math.random() * 90) * sizeMultiplier * vpScale;
   const crownR = baseR * (0.45 + Math.random() * 0.2); // above-water is smaller
   const crownOffX = (Math.random() - 0.5) * baseR * 0.3; // crown offset from center
   const crownOffY = (Math.random() - 0.5) * baseR * 0.3;
