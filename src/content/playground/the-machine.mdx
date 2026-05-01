@@ -99,21 +99,85 @@ mermaid.render(id, syntax);`}</code></pre>
 </div>
 
 <style>{`
-  /* --- terminal chrome --- */
+  /* --- cyberpunk terminal chrome --- */
+  @keyframes neonPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+  @keyframes borderGlow {
+    0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 204, 0.3), inset 0 0 8px rgba(0, 255, 204, 0.05); }
+    50% { box-shadow: 0 0 16px rgba(0, 255, 204, 0.5), 0 0 40px rgba(0, 255, 204, 0.15), inset 0 0 12px rgba(0, 255, 204, 0.08); }
+  }
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  @keyframes textFlicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.8; }
+    94% { opacity: 1; }
+    96% { opacity: 0.9; }
+    97% { opacity: 1; }
+  }
+
   .machine-terminal {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
+    background: #0a0e14;
+    border: 1px solid #00ffcc44;
     border-radius: 8px;
     overflow: hidden;
     margin: 1.5rem 0;
+    position: relative;
+    animation: borderGlow 4s ease-in-out infinite;
   }
+  /* CRT scanline overlay */
+  .machine-terminal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 204, 0.015) 2px,
+      rgba(0, 255, 204, 0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+  /* slow-moving scanline bar */
+  .machine-terminal::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 255, 204, 0.03) 45%,
+      rgba(0, 255, 204, 0.06) 50%,
+      rgba(0, 255, 204, 0.03) 55%,
+      transparent 100%
+    );
+    animation: scanline 8s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
   .terminal-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.5rem 1rem;
-    background: var(--bg-elev2, var(--bg-elev));
-    border-bottom: 1px solid var(--border);
+    background: #080c10;
+    border-bottom: 1px solid #00ffcc33;
+    position: relative;
+    z-index: 2;
   }
   .terminal-dots {
     display: flex;
@@ -126,22 +190,42 @@ mermaid.render(id, syntax);`}</code></pre>
     background: var(--fg-muted);
     opacity: 0.3;
   }
-  .terminal-dots span:first-child { background: #e06c60; opacity: 0.7; }
-  .terminal-dots span:nth-child(2) { background: #e5bf4a; opacity: 0.7; }
-  .terminal-dots span:last-child { background: #5fc56e; opacity: 0.7; }
+  .terminal-dots span:first-child {
+    background: #ff0055;
+    opacity: 0.9;
+    box-shadow: 0 0 6px #ff0055, 0 0 12px rgba(255, 0, 85, 0.4);
+    animation: neonPulse 3s ease-in-out infinite;
+  }
+  .terminal-dots span:nth-child(2) {
+    background: #ffcc00;
+    opacity: 0.9;
+    box-shadow: 0 0 6px #ffcc00, 0 0 12px rgba(255, 204, 0, 0.4);
+    animation: neonPulse 3s ease-in-out 0.5s infinite;
+  }
+  .terminal-dots span:last-child {
+    background: #00ffcc;
+    opacity: 0.9;
+    box-shadow: 0 0 6px #00ffcc, 0 0 12px rgba(0, 255, 204, 0.4);
+    animation: neonPulse 3s ease-in-out 1s infinite;
+  }
   .terminal-title {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: var(--fg-muted);
-    letter-spacing: 0.02em;
+    color: #00ffcc;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(0, 255, 204, 0.6);
+    animation: textFlicker 8s linear infinite;
   }
   .terminal-body {
     padding: 1.25rem 1.5rem;
+    position: relative;
+    z-index: 2;
   }
   .terminal-prompt {
     font-size: 0.92rem;
     line-height: 1.6;
-    color: var(--fg-soft);
+    color: #8ba4b8;
     margin: 0 0 0.5rem;
   }
 
@@ -151,7 +235,9 @@ mermaid.render(id, syntax);`}</code></pre>
     font-size: 1.3rem;
     min-height: 1.6em;
     font-family: var(--font-mono);
-    letter-spacing: -0.01em;
+    letter-spacing: 0.02em;
+    color: #00ffcc;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.5), 0 0 30px rgba(0, 255, 204, 0.2);
   }
   .machine-controls {
     display: flex;
@@ -165,44 +251,64 @@ mermaid.render(id, syntax);`}</code></pre>
     font-size: 0.78rem;
     padding: 0.4rem 1.2rem;
     background: transparent;
-    border: 1px solid var(--fg-muted);
+    border: 1px solid #00ffcc66;
     border-radius: 2px;
-    color: var(--fg);
+    color: #00ffcc;
     cursor: pointer;
-    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
     white-space: nowrap;
-    text-transform: lowercase;
-    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 6px rgba(0, 255, 204, 0.4);
+    position: relative;
   }
   #machine-shuffle:hover {
-    border-color: #5fc56e;
-    color: #5fc56e;
-    box-shadow: 0 0 8px rgba(95, 197, 110, 0.15);
+    border-color: #ff0055;
+    color: #ff0055;
+    box-shadow: 0 0 12px rgba(255, 0, 85, 0.4), 0 0 30px rgba(255, 0, 85, 0.15), inset 0 0 12px rgba(255, 0, 85, 0.1);
+    text-shadow: 0 0 8px rgba(255, 0, 85, 0.6);
   }
   #machine-shuffle:focus-visible {
-    outline: 2px solid #5fc56e;
+    outline: 2px solid #00ffcc;
     outline-offset: 2px;
+    box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
   }
   #machine-counter {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: var(--fg-muted);
+    color: #5a7a8a;
   }
   .machine-style-tag {
     font-family: var(--font-mono);
     font-size: 0.72rem;
-    color: var(--fg-muted);
+    color: #5a7a8a;
     opacity: 0.7;
   }
   #machine-style {
-    color: #5fc56e;
+    color: #ff0055;
+    text-shadow: 0 0 6px rgba(255, 0, 85, 0.4);
   }
   .machine-desc {
     font-size: 0.9rem;
     line-height: 1.6;
-    color: var(--fg-soft);
+    color: #8ba4b8;
     margin-top: 1rem;
     max-width: 65ch;
+  }
+
+  /* --- mermaid diagram neon treatment --- */
+  #machine-wrapper {
+    background: #0a0e14;
+    border-radius: 4px;
+    padding: 1rem;
+    border: 1px solid #00ffcc15;
+  }
+  #machine-wrapper svg {
+    filter: drop-shadow(0 0 4px rgba(0, 255, 204, 0.2));
+  }
+  /* force mermaid's own background dark */
+  #machine-wrapper .mermaid, #machine-diagram {
+    background: transparent !important;
   }
 
   /* --- how it works section --- */
@@ -213,40 +319,49 @@ mermaid.render(id, syntax);`}</code></pre>
     font-family: var(--font-mono);
     font-size: 1.1rem;
     margin: 0 0 1rem;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.02em;
+    color: #00ffcc;
+    text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
   }
   .machine-howto p {
     font-size: 0.9rem;
     line-height: 1.65;
-    color: var(--fg-soft);
+    color: #8ba4b8;
     max-width: 65ch;
     margin: 0.75rem 0;
   }
   .machine-howto a {
-    color: #5fc56e;
+    color: #00ffcc;
     text-decoration: none;
-    border-bottom: 1px solid rgba(95, 197, 110, 0.3);
+    border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+    text-shadow: 0 0 4px rgba(0, 255, 204, 0.3);
+    transition: all 0.2s ease;
   }
   .machine-howto a:hover {
-    border-bottom-color: #5fc56e;
+    border-bottom-color: #ff0055;
+    color: #ff0055;
+    text-shadow: 0 0 6px rgba(255, 0, 85, 0.4);
   }
   .machine-howto code {
     font-family: var(--font-mono);
     font-size: 0.82em;
-    background: var(--bg-elev2, rgba(0,0,0,0.1));
+    background: rgba(0, 255, 204, 0.08);
     padding: 0.15em 0.4em;
     border-radius: 3px;
+    color: #00ffcc;
+    border: 1px solid rgba(0, 255, 204, 0.15);
   }
   .machine-code {
-    background: #1a1e24;
-    color: #b8c4d0;
+    background: #060a0e;
+    color: #7aa0b8;
     border-radius: 4px;
     padding: 1rem 1.25rem;
     overflow-x: auto;
     font-size: 0.78rem;
     line-height: 1.65;
     margin: 1rem 0;
-    border: 1px solid rgba(95, 197, 110, 0.1);
+    border: 1px solid #00ffcc22;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.08), inset 0 0 20px rgba(0, 0, 0, 0.4);
   }
   .machine-code code {
     font-family: var(--font-mono);
@@ -254,6 +369,7 @@ mermaid.render(id, syntax);`}</code></pre>
     padding: 0;
     color: inherit;
     font-size: inherit;
+    border: none;
   }
 `}</style>
 
@@ -703,20 +819,20 @@ mermaid.render(id, syntax);`}</code></pre>
     }
   ];
 
-  // layer colors — muted tones that distinguish layers without clashing
+  // layer colors — neon cyberpunk palette
   var lightColors = [
-    { fill: '#f5e6d8', stroke: '#c49470', color: '#3a2a1a' },
-    { fill: '#f0eacc', stroke: '#b8a44a', color: '#3a3420' },
-    { fill: '#d8e8d8', stroke: '#5a8a5a', color: '#1a3a1a' },
-    { fill: '#d4dce8', stroke: '#5a6a8a', color: '#1a2a3a' },
-    { fill: '#e4d8e8', stroke: '#7a5a8a', color: '#2a1a3a' }
+    { fill: '#0a1a1a', stroke: '#00ffcc', color: '#00ffcc' },
+    { fill: '#1a0a1a', stroke: '#ff0055', color: '#ff0055' },
+    { fill: '#0a0a1a', stroke: '#00aaff', color: '#00aaff' },
+    { fill: '#1a1a0a', stroke: '#ffcc00', color: '#ffcc00' },
+    { fill: '#0a1a0a', stroke: '#00ff66', color: '#00ff66' }
   ];
   var darkColors = [
-    { fill: '#3a2820', stroke: '#c49470', color: '#f0e0d0' },
-    { fill: '#32301a', stroke: '#b8a44a', color: '#f0eacc' },
-    { fill: '#1a3020', stroke: '#5a8a5a', color: '#d8e8d8' },
-    { fill: '#1a2230', stroke: '#5a6a8a', color: '#d4dce8' },
-    { fill: '#281a30', stroke: '#7a5a8a', color: '#e4d8e8' }
+    { fill: '#0a1a1a', stroke: '#00ffcc', color: '#00ffcc' },
+    { fill: '#1a0a1a', stroke: '#ff0055', color: '#ff0055' },
+    { fill: '#0a0a1a', stroke: '#00aaff', color: '#00aaff' },
+    { fill: '#1a1a0a', stroke: '#ffcc00', color: '#ffcc00' },
+    { fill: '#0a1a0a', stroke: '#00ff66', color: '#00ff66' }
   ];
 
   function buildSyntax(system) {
@@ -913,14 +1029,19 @@ mermaid.render(id, syntax);`}</code></pre>
 
     // re-initialize mermaid with the chosen look — directives don't reliably
     // activate rough.js, but the look config in initialize() does
-    var isDark = document.documentElement.dataset.theme === 'dark';
     window.mermaid.initialize({
       startOnLoad: false,
       look: style,
-      theme: isDark ? 'dark' : 'default',
-      themeVariables: isDark
-        ? { primaryColor: '#2d4a3e', primaryTextColor: '#e8e0d4', lineColor: '#5a7a6a' }
-        : { primaryColor: '#e8e0d4', primaryTextColor: '#2c2c2c', lineColor: '#5a7a6a' }
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#0a1a1a',
+        primaryTextColor: '#00ffcc',
+        lineColor: '#00ffcc',
+        secondaryColor: '#1a0a1a',
+        tertiaryColor: '#0a0a1a',
+        primaryBorderColor: '#00ffcc',
+        background: '#0a0e14'
+      }
     });
 
     var syntax = buildSyntax(sys);
@@ -931,6 +1052,14 @@ mermaid.render(id, syntax);`}</code></pre>
 
     window.mermaid.render('machine' + Date.now(), syntax).then(function(result) {
       container.innerHTML = result.svg;
+      // force transparent background on the SVG mermaid generates
+      var svgEl = container.querySelector('svg');
+      if (svgEl) {
+        svgEl.style.background = 'transparent';
+        // also nuke any rect mermaid uses as a background fill
+        var bgRect = svgEl.querySelector('rect.er');
+        if (bgRect) bgRect.setAttribute('fill', 'transparent');
+      }
       setupAnimation(wrapper, order, sys, immediate);
     });
   }
