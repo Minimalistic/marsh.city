@@ -546,6 +546,10 @@ class Fish {
     this._phaseOffset = Math.random() * Math.PI * 20;
     // Smoothed swim intensity for animation - avoids jerky transitions
     this._swimSmooth = 0.5;
+    // Trailing angle history - body follows head through turns
+    const numJoints = 16;
+    this._angles = new Array(numJoints).fill(this.angle);
+    this._jointCount = numJoints;
   }
 
   update(dt, fish, time) {
@@ -826,46 +830,75 @@ class Fish {
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
     const maxTurn = 0.08 + currentSpeed * 0.1; // faster fish can turn quicker
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
+
+    // Update trailing joint angles - each joint follows the one ahead
+    this._angles[0] = this.angle;
+    for (let j = 1; j < this._jointCount; j++) {
+      let diff = this._angles[j - 1] - this._angles[j];
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      // Joints follow with a damped lag - closer joints track tighter
+      this._angles[j] += diff * 0.15;
+    }
     this.speed = currentSpeed;
   }
 
   draw(ctx) {
     const vs = viewScale;
-    const segs = 10; // more segments = smoother curves
+    const segs = this._jointCount; // one segment per joint
     const totalLen = this.len;
+    const segLen = totalLen / segs;
 
     // Smoothed swim intensity - gradual transitions, never freezes
     const rawIntensity = Math.min(1, this.speed * 0.8);
-    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.015; // slow blend
+    this._swimSmooth += (rawIntensity - this._swimSmooth) * 0.015;
     const si = this._swimSmooth;
 
-    // Phase always advances at a reasonable rate - relaxed fish just undulate gently
+    // Gentle undulation phase - layered on top of physical body curve
     const phase = Date.now() * 0.00048 * (0.6 + si * 0.4) + this._phaseOffset;
 
-    // Build spine in local space (head-forward along +X axis)
+    // Build spine in world space by walking the joint chain backward from head
+    // Each joint's angle comes from the trailing history (physical turning)
+    // plus a subtle sine wave for swimming undulation
     const spineX = new Array(segs + 1);
     const spineY = new Array(segs + 1);
+    const spineA = new Array(segs + 1); // angle at each joint
     const widths = new Array(segs + 1);
 
-    for (let i = 0; i <= segs; i++) {
-      const t = i / segs; // 0=nose, 1=tail
-      spineX[i] = (0.5 - t) * totalLen;
+    // Head position is the fish position
+    spineX[0] = 0;
+    spineY[0] = 0;
+    spineA[0] = 0; // relative to fish heading (which is already rotated by ctx)
 
-      // Whole-body S-curve: always moving, amplitude varies with effort
-      // Relaxed fish: gentle lazy sway. Active fish: stronger undulation.
-      const onset = Math.max(0, t - 0.1) / 0.9;
-      const maxAmp = totalLen * (0.04 + 0.10 * si);
-      const amp = onset * onset * maxAmp;
-      spineY[i] = Math.sin(phase - t * Math.PI * 1.6) * amp;
+    for (let i = 1; i <= segs; i++) {
+      const t = i / segs;
+      // Joint angle relative to head: difference between this joint and head
+      let relAngle = this._angles[Math.min(i, this._jointCount - 1)] - this._angles[0];
+      while (relAngle > Math.PI) relAngle -= Math.PI * 2;
+      while (relAngle < -Math.PI) relAngle += Math.PI * 2;
+
+      // Add gentle swim undulation on top
+      const onset = Math.max(0, t - 0.08) / 0.92;
+      const undulAmp = onset * onset * 0.15 * (0.3 + si * 0.7);
+      const undulation = Math.sin(phase - t * Math.PI * 1.4) * undulAmp;
+
+      spineA[i] = relAngle + undulation;
+
+      // Walk backward along the chain
+      const chainAngle = Math.PI + spineA[i]; // reverse direction (head to tail)
+      spineX[i] = spineX[i - 1] + Math.cos(chainAngle) * segLen;
+      spineY[i] = spineY[i - 1] + Math.sin(chainAngle) * segLen;
 
       // Body width profile - fusiform fish shape
       let hw;
-      if (t < 0.08) hw = t / 0.08 * this.bodyWidth * 0.35;       // snout
-      else if (t < 0.25) hw = this.bodyWidth * (0.35 + (t - 0.08) / 0.17 * 0.65); // widen to max
-      else if (t < 0.6) hw = this.bodyWidth * (1 - (t - 0.25) / 0.35 * 0.25);     // gentle taper
-      else hw = this.bodyWidth * 0.75 * Math.pow(1 - (t - 0.6) / 0.4, 1.5);       // tail taper
+      if (t < 0.08) hw = t / 0.08 * this.bodyWidth * 0.35;
+      else if (t < 0.25) hw = this.bodyWidth * (0.35 + (t - 0.08) / 0.17 * 0.65);
+      else if (t < 0.6) hw = this.bodyWidth * (1 - (t - 0.25) / 0.35 * 0.25);
+      else hw = this.bodyWidth * 0.75 * Math.pow(1 - (t - 0.6) / 0.4, 1.5);
       widths[i] = Math.max(hw, 0.15);
     }
+    // Head width
+    widths[0] = this.bodyWidth * 0.35;
 
     ctx.save();
     ctx.translate(this.x, this.y);
