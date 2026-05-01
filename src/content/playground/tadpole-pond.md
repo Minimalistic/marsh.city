@@ -675,7 +675,7 @@ function drawPond(time) {
   // Plants swaying - rooted at bottom, growing upward
   for (const p of plants) {
     const sway = Math.sin(time * 0.001 + p.phase) * 5;
-    ctx.strokeStyle = 'rgba(50, 110, 35, 0.35)';
+    ctx.strokeStyle = 'rgb(40, 90, 30)';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     for (let b = 0; b < p.blades; b++) {
