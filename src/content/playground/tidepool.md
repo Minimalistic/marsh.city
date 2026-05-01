@@ -86,10 +86,20 @@ let oceanLfo = null;
 let oceanLfoGain = null;
 let soundEnabled = false;
 
-function initAudio() {
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioReady = false;
 
-  // Build nodes but don't start sources yet
+async function ensureAudio() {
+  if (audioReady) return;
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // Must resume in user gesture - await it so sources start after
+  if (audioCtx.state !== 'running') {
+    await audioCtx.resume();
+  }
+  if (audioReady) return; // guard against double-entry
+  audioReady = true;
+
   const bufferSize = audioCtx.sampleRate * 4;
   const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = noiseBuffer.getChannelData(0);
@@ -143,35 +153,24 @@ function initAudio() {
   crashFilter.connect(window._crashGain);
   window._crashGain.connect(audioCtx.destination);
 
-  // Start sources only after context is running - iOS kills sources started while suspended
-  function startSources() {
-    noise.start();
-    oceanLfo.start();
-    crashNoise.start();
-    // Set gain after sources are running - scheduling before resume is unreliable
-    if (soundEnabled) {
-      oceanGain.gain.setTargetAtTime(masterVolume * 0.3, audioCtx.currentTime, 0.3);
-    }
-  }
-  if (audioCtx.state === 'running') {
-    startSources();
-  } else {
-    audioCtx.resume().then(startSources);
-  }
+  // Context is running, start sources now
+  noise.start();
+  oceanLfo.start();
+  crashNoise.start();
 }
 
-function toggleSound() {
-  if (!audioCtx) initAudio();
+async function toggleSound() {
+  await ensureAudio();
   soundEnabled = !soundEnabled;
   const btn = document.getElementById('sound-toggle');
   btn.setAttribute('aria-pressed', soundEnabled);
   if (soundEnabled) {
-    if (audioCtx.state === 'suspended') audioCtx.resume().then(() => {
-      oceanGain.gain.setTargetAtTime(masterVolume * 0.3, audioCtx.currentTime, 0.3);
-    });
-    oceanGain.gain.setTargetAtTime(masterVolume * 0.3, audioCtx.currentTime, 0.5);
+    // Context guaranteed running, set gain immediately
+    oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    oceanGain.gain.setValueAtTime(masterVolume * 0.3, audioCtx.currentTime);
     document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>';
   } else {
+    oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
     oceanGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);
     document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
   }
