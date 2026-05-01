@@ -705,14 +705,14 @@ class Frond {
       s.vy *= 0.88;
       s.x += s.vx;
       s.y += s.vy;
-      // Chain constraint
+      // Rigid chain constraint - maintain exact segment distance
       const prev = this.segs[i - 1];
       const dx = s.x - prev.x;
       const dy = s.y - prev.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       const segLen = this.len / this.segCount;
-      if (dist > segLen * 1.2) {
-        const ratio = segLen * 1.2 / dist;
+      if (dist > 0.01) {
+        const ratio = segLen / dist;
         s.x = prev.x + dx * ratio;
         s.y = prev.y + dy * ratio;
       }
