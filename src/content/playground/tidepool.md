@@ -231,10 +231,11 @@ class Fish {
     this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.012;
 
-    // Food attraction - swim toward nearest pellet
+    // Food attraction - steer toward nearest pellet, not orbit it
     let closestFood = null;
-    let closestFoodDist = 100;
+    let closestFoodDist = 120;
     for (const fp of foodPellets) {
+      if (fp.life <= 0) continue;
       const fdx = fp.x - this.x;
       const fdy = fp.y - this.y;
       const fd = Math.sqrt(fdx * fdx + fdy * fdy);
@@ -243,8 +244,15 @@ class Fish {
     if (closestFood) {
       const fdx = closestFood.x - this.x;
       const fdy = closestFood.y - this.y;
-      this.vx += (fdx / closestFoodDist) * 0.04;
-      this.vy += (fdy / closestFoodDist) * 0.04;
+      // Desired velocity points directly at food
+      const desiredAngle = Math.atan2(fdy, fdx);
+      const approachSpeed = this.baseSpeed * 1.3;
+      const desiredVx = Math.cos(desiredAngle) * approachSpeed;
+      const desiredVy = Math.sin(desiredAngle) * approachSpeed;
+      // Steer: blend current velocity toward desired (kills orbiting)
+      const steerStrength = closestFoodDist < 30 ? 0.15 : 0.06;
+      this.vx += (desiredVx - this.vx) * steerStrength;
+      this.vy += (desiredVy - this.vy) * steerStrength;
       if (this.idle) { this.idle = false; this.idleTimer = 2; }
       // Eat it when close enough
       if (closestFoodDist < 6) {
