@@ -6,7 +6,7 @@ description: Tiny fish schooling in a shallow tidepool. Watch the current shift.
 A rocky tidepool. Tiny silver fish school together, responding to the shifting current and each other.
 
 <div id="pool-container" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
-<canvas id="pool" style="width:100%;height:100%;cursor:none;display:block;background:#0f1f2a;"></canvas>
+<canvas id="pool" style="width:100%;height:100%;display:block;background:#0f1f2a;"></canvas>
 <div id="toolbar" style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:10;">
   <button data-tool="observe" class="pool-tool active" title="Observe">👁</button>
   <button data-tool="food" class="pool-tool" title="Drop food">🪱</button>
@@ -547,11 +547,13 @@ class Fish {
       this.vy += (h / 2 - this.y) * centerPull * 0.01;
     }
 
-    // Faint gradient pull toward center - stronger near edges, zero in middle
-    const edgeX = Math.max(0, Math.abs(this.x - w / 2) / (w / 2) - 0.5) * 2; // 0 in center 50%, ramps to 1 at edge
-    const edgeY = Math.max(0, Math.abs(this.y - h / 2) / (h / 2) - 0.5) * 2;
-    this.vx += (w / 2 - this.x) * edgeX * 0.0002;
-    this.vy += (h / 2 - this.y) * edgeY * 0.0002;
+    // Very faint bias toward center - only activates in outer 15%, viewport-normalized
+    const normX = (this.x - w / 2) / (w / 2); // -1 to 1
+    const normY = (this.y - h / 2) / (h / 2);
+    const edgeX = Math.max(0, Math.abs(normX) - 0.85) / 0.15; // 0 in inner 85%, ramps to 1 at edge
+    const edgeY = Math.max(0, Math.abs(normY) - 0.85) / 0.15;
+    this.vx -= Math.sign(normX) * edgeX * 0.015;
+    this.vy -= Math.sign(normY) * edgeY * 0.015;
 
     // Tidal current + local turbulence
     this.vx += Math.cos(tide.angle) * tide.strength * 0.012;
@@ -683,15 +685,14 @@ class Fish {
     this.vy *= 0.985;
 
     // Soft return from offscreen - fish can swim 30% beyond viewport
-    // but get gently pulled back toward the visible area
     const overflow = 0.3;
     const minX = -w * overflow, maxX = w * (1 + overflow);
     const minY = -h * overflow, maxY = h * (1 + overflow);
-    // Start pulling back when beyond the viewport edge
-    if (this.x < 0) this.vx += Math.abs(this.x) * 0.003;
-    if (this.x > w) this.vx -= (this.x - w) * 0.003;
-    if (this.y < 0) this.vy += Math.abs(this.y) * 0.003;
-    if (this.y > h) this.vy -= (this.y - h) * 0.003;
+    // Gentle pull when offscreen, normalized so it's consistent at any viewport size
+    if (this.x < 0) this.vx += (Math.abs(this.x) / w) * 0.3;
+    if (this.x > w) this.vx -= ((this.x - w) / w) * 0.3;
+    if (this.y < 0) this.vy += (Math.abs(this.y) / h) * 0.3;
+    if (this.y > h) this.vy -= ((this.y - h) / h) * 0.3;
     // Wake from idle if way offscreen
     if (this.idle && (this.x < -w * 0.15 || this.x > w * 1.15 || this.y < -h * 0.15 || this.y > h * 1.15)) {
       this.idle = false;
