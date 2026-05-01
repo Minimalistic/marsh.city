@@ -257,6 +257,9 @@ function updateOceanSound() {
 // Food particles that attract fish
 const foodPellets = [];
 
+// Floating foam bits - tiny particles shed by waves, drift with current
+const foamBits = [];
+
 function resize() {
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
@@ -903,13 +906,15 @@ class Frond {
   }
 
   update(dt, time) {
-    const currentX = Math.cos(tide.angle) * tide.strength * 0.04 + Math.sin(time * 0.0002 + this.phase) * 0.02;
-    const currentY = Math.sin(tide.angle) * tide.strength * 0.04 + Math.cos(time * 0.00015 + this.phase) * 0.015;
+    const currentX = Math.cos(tide.angle) * tide.strength * 0.12 + Math.sin(time * 0.0002 + this.phase) * 0.04;
+    const currentY = Math.sin(tide.angle) * tide.strength * 0.12 + Math.cos(time * 0.00015 + this.phase) * 0.03;
     for (let i = 1; i < this.segs.length; i++) {
       const s = this.segs[i];
       const t = i / this.segCount;
-      s.vx += currentX * t;
-      s.vy += currentY * t;
+      // Current + local turbulence pushes plants
+      const flow = sampleFlow(s.x, s.y, time);
+      s.vx += (currentX + flow.fx * 0.06) * t;
+      s.vy += (currentY + flow.fy * 0.06) * t;
       const restX = this.x + Math.cos(this.growAngle) * t * this.len;
       const restY = this.y + Math.sin(this.growAngle) * t * this.len;
       const tension = 0.004 * (1 - t);
@@ -1133,6 +1138,25 @@ function draw(time) {
     ctx.fill();
   }
 
+  // Update and draw floating foam bits
+  for (let i = foamBits.length - 1; i >= 0; i--) {
+    const fb = foamBits[i];
+    fb.life -= dt / fb.maxLife;
+    if (fb.life <= 0) { foamBits.splice(i, 1); continue; }
+    const flow = sampleFlow(fb.x, fb.y, time);
+    fb.vx += Math.cos(tide.angle) * tide.strength * 0.012 + flow.fx * 0.02;
+    fb.vy += Math.sin(tide.angle) * tide.strength * 0.012 + flow.fy * 0.02;
+    fb.vx *= 0.96;
+    fb.vy *= 0.96;
+    fb.x += fb.vx;
+    fb.y += fb.vy;
+    if (fb.x < -20 || fb.x > w + 20 || fb.y < -20 || fb.y > h + 20) { foamBits.splice(i, 1); continue; }
+    ctx.beginPath();
+    ctx.arc(fb.x, fb.y, fb.size * fb.life, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 225, 235, ${fb.life * 0.25})`;
+    ctx.fill();
+  }
+
   // Update and draw food pellets
   for (let i = foodPellets.length - 1; i >= 0; i--) {
     const fp = foodPellets[i];
@@ -1174,6 +1198,21 @@ function draw(time) {
         });
       }
     }
+    // Shed tiny foam bits into the water (cap at 150)
+    if (ww.life > 0.1 && foamBits.length < 150) {
+      for (let i = 0; i < 2; i++) {
+        const lateral = (Math.random() - 0.5) * span;
+        foamBits.push({
+          x: ww.x - cosA * Math.random() * 10 + (-sinA) * lateral,
+          y: ww.y - sinA * Math.random() * 10 + cosA * lateral,
+          size: (0.3 + Math.random() * 0.8) * viewScale,
+          vx: 0, vy: 0,
+          life: 1,
+          maxLife: 6 + Math.random() * 10,
+        });
+      }
+    }
+
     // Draw wave front - 4 continuous turbulent lines at different offsets
     const perpX = -sinA;
     const perpY = cosA;
