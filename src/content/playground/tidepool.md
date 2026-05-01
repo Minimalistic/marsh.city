@@ -7,7 +7,6 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
 
 <div id="pool-container" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
 <canvas id="pool" style="width:100%;height:100%;cursor:none;display:block;background:#0f1f2a;"></canvas>
-<button id="fullscreen-btn" class="pool-tool pool-fs-btn" title="Fullscreen">⛶</button>
 <div id="toolbar" style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:10;">
   <button data-tool="observe" class="pool-tool active" title="Observe">👁</button>
   <button data-tool="food" class="pool-tool" title="Drop food">🪱</button>
@@ -17,6 +16,7 @@ A rocky tidepool. Tiny silver fish school together, responding to the shifting c
     <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume">
   </div>
 </div>
+<button id="fullscreen-btn" class="pool-tool pool-fs-btn" title="Fullscreen">⛶</button>
 </div>
 <style>
 .pool-tool {
