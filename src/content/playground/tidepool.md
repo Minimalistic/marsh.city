@@ -535,7 +535,7 @@ class Fish {
       else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
       else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
     }
-    this.speed = 0.3 + Math.random() * 0.8; // wider range: some sluggish, some zippy
+    this.speed = (0.3 + Math.random() * 0.8) * 1.25; // 25% faster across the board
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
@@ -976,8 +976,9 @@ class Fish {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    // Scale fish size - 30% smaller at larger viewports
-    const fishScale = vs * (1 / (1 + (vs - 1) * 0.3));
+    // Scale fish: 15% bigger on small viewports, 30% smaller on large
+    const sizeBoost = vs <= 1 ? 1.15 : 1 / (1 + (vs - 1) * 0.3);
+    const fishScale = vs * sizeBoost;
     ctx.scale(fishScale, fishScale);
 
     // Compute perpendiculars and outline points
