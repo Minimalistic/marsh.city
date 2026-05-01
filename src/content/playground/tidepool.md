@@ -840,7 +840,7 @@ class Fish {
     const si = this._swimSmooth;
 
     // Phase always advances at a reasonable rate - relaxed fish just undulate gently
-    const phase = Date.now() * 0.0012 * (0.6 + si * 0.4) + this._phaseOffset;
+    const phase = Date.now() * 0.00048 * (0.6 + si * 0.4) + this._phaseOffset;
 
     // Build spine in local space (head-forward along +X axis)
     const spineX = new Array(segs + 1);
@@ -1623,15 +1623,80 @@ function draw(time) {
   }
 
 
-  // Reef structures - above-water crown (drawn over fish and water effects)
+  // Reef structures - waterline effects then above-water crown
   for (const rf of reefs) {
     ctx.save();
     ctx.translate(rf.x, rf.y);
+    const nv = rf.crownShape.length;
+    const t = time * 0.001; // seconds
+
+    // Waterline ripples - animated rings that lap around the crown edge
+    // Multiple offset rings at slightly different radii create a lapping effect
+    for (let ring = 0; ring < 3; ring++) {
+      const ringPhase = t * (0.4 + ring * 0.15) + ring * 2.1;
+      const ringOffset = Math.sin(ringPhase) * 2 + ring * 1.5;
+      ctx.beginPath();
+      for (let i = 0; i <= nv; i++) {
+        const idx = i % nv;
+        const cp = rf.crownShape[idx];
+        // Each point oscillates outward independently for organic lapping
+        const pointPhase = ringPhase + idx * 0.7;
+        const wobble = Math.sin(pointPhase) * 2.5 + Math.sin(pointPhase * 2.3 + 1.7) * 1.2;
+        const dist = Math.sqrt(cp.x * cp.x + cp.y * cp.y) || 1;
+        const nx = cp.x / dist, ny = cp.y / dist;
+        const px = cp.x + nx * (ringOffset + wobble);
+        const py = cp.y + ny * (ringOffset + wobble);
+        if (i === 0) ctx.moveTo(px, py);
+        else {
+          const prev = rf.crownShape[(i - 1) % nv];
+          const prevDist = Math.sqrt(prev.x * prev.x + prev.y * prev.y) || 1;
+          const prevPhase = ringPhase + ((i - 1) % nv) * 0.7;
+          const prevWobble = Math.sin(prevPhase) * 2.5 + Math.sin(prevPhase * 2.3 + 1.7) * 1.2;
+          const prevPx = prev.x + (prev.x / prevDist) * (ringOffset + prevWobble);
+          const prevPy = prev.y + (prev.y / prevDist) * (ringOffset + prevWobble);
+          const mx = (prevPx + px) * 0.5, my = (prevPy + py) * 0.5;
+          ctx.quadraticCurveTo(prevPx, prevPy, mx, my);
+        }
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(180, 210, 225, ${0.15 - ring * 0.04})`;
+      ctx.lineWidth = 1.2 - ring * 0.3;
+      ctx.stroke();
+    }
+
+    // Foam/froth patches that drift around the waterline
+    const foamPoints = 12;
+    for (let i = 0; i < foamPoints; i++) {
+      const angle = (i / foamPoints) * Math.PI * 2;
+      const cIdx = Math.floor((i / foamPoints) * nv);
+      const cp = rf.crownShape[cIdx];
+      const dist = Math.sqrt(cp.x * cp.x + cp.y * cp.y) || 1;
+      const nx = cp.x / dist, ny = cp.y / dist;
+      // Foam drifts in and out with the current
+      const drift = Math.sin(t * 0.3 + i * 1.9) * 4 + Math.sin(t * 0.7 + i * 3.1) * 2;
+      const fx = cp.x + nx * (drift + 3);
+      const fy = cp.y + ny * (drift + 3);
+      const foamSize = (1.5 + Math.sin(t * 0.5 + i * 2.7) * 0.8) * viewScale;
+      const foamAlpha = 0.08 + Math.sin(t * 0.4 + i * 1.3) * 0.04;
+      ctx.beginPath();
+      ctx.arc(fx, fy, foamSize, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200, 225, 235, ${foamAlpha})`;
+      ctx.fill();
+    }
+
+    // Subtle wet sheen - animated highlight that shifts with the light
+    const sheenAngle = t * 0.15;
+    const sheenX = Math.cos(sheenAngle) * rf.crownR * 0.3;
+    const sheenY = Math.sin(sheenAngle) * rf.crownR * 0.3;
+    const sheenGrad = ctx.createRadialGradient(sheenX, sheenY, 0, sheenX, sheenY, rf.crownR * 0.6);
+    sheenGrad.addColorStop(0, 'rgba(160, 200, 220, 0.08)');
+    sheenGrad.addColorStop(1, 'rgba(160, 200, 220, 0)');
+
     // Crown shape - the dry rock poking out of the water
     ctx.beginPath();
     ctx.moveTo(rf.crownShape[0].x, rf.crownShape[0].y);
-    for (let i = 0; i < rf.crownShape.length; i++) {
-      const next = rf.crownShape[(i + 1) % rf.crownShape.length];
+    for (let i = 0; i < nv; i++) {
+      const next = rf.crownShape[(i + 1) % nv];
       const mx = (rf.crownShape[i].x + next.x) * 0.5;
       const my = (rf.crownShape[i].y + next.y) * 0.5;
       ctx.quadraticCurveTo(rf.crownShape[i].x, rf.crownShape[i].y, mx, my);
@@ -1639,12 +1704,15 @@ function draw(time) {
     ctx.closePath();
     ctx.fillStyle = rf.crownColor;
     ctx.fill();
+    // Wet sheen on rock surface
+    ctx.fillStyle = sheenGrad;
+    ctx.fill();
     // Rim highlight - wet edge where water meets rock
     ctx.strokeStyle = rf.rimColor;
     ctx.lineWidth = 1.5;
     ctx.stroke();
     // Surface texture - a few speckles for barnacle/roughness feel
-    for (let i = 0; i < rf.crownShape.length; i++) {
+    for (let i = 0; i < nv; i++) {
       const p = rf.crownShape[i];
       const speckR = 1 + Math.sin(i * 7.3 + rf.x) * 0.8;
       if (speckR > 0.5) {
