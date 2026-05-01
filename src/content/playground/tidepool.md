@@ -810,15 +810,19 @@ class Fish {
       }
     }
 
-    // Fish actively swim forward - velocity aligns toward heading
-    // This prevents sideways sliding from pushes; fish reorient to swim properly
+    // Fish can only swim forward - kill lateral drift and backward motion
     const headX = Math.cos(this.angle);
     const headY = Math.sin(this.angle);
-    const fwdSpeed = this.vx * headX + this.vy * headY; // speed along heading
-    const latSpeed = this.vx * (-headY) + this.vy * headX; // sideways drift
-    // Dampen lateral drift - fish resist being pushed sideways
-    this.vx -= (-headY) * latSpeed * 0.12;
-    this.vy -= headX * latSpeed * 0.12;
+    const fwdSpeed = this.vx * headX + this.vy * headY;
+    const latSpeed = this.vx * (-headY) + this.vy * headX;
+    // Heavily dampen sideways drift - fish aren't crabs
+    this.vx -= (-headY) * latSpeed * 0.45;
+    this.vy -= headX * latSpeed * 0.45;
+    // Prevent backward movement entirely - clamp forward component
+    if (fwdSpeed < 0) {
+      this.vx -= headX * fwdSpeed * 0.6;
+      this.vy -= headY * fwdSpeed * 0.6;
+    }
 
     // Drag - smooths out micro-jitter
     this.vx *= 0.985;
