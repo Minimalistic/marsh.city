@@ -808,6 +808,8 @@ class Fish {
     this.leaving = false;
     // Fixed phase offset for undulation desync (not position-based)
     this._phaseOffset = Math.random() * Math.PI * 20;
+    // Smoothed render angle — prevents tail flicker from heading jitter
+    this._renderAngle = this.angle;
     // Smoothed swim intensity for animation - avoids jerky transitions
     this._swimSmooth = 0.5;
     // Chain of world-space joint positions - body trails behind head
@@ -920,8 +922,8 @@ class Fish {
     this.vx += flow.fx * 0.005 * viewScale;
     this.vy += flow.fy * 0.005 * viewScale;
 
-    // Base speed scales with viewport so fish cover proportional ground on larger screens
-    const scaledSpeed = this.baseSpeed * viewScale;
+    // Base speed scales with viewport — slightly damped so large screens aren't too frantic
+    const scaledSpeed = this.baseSpeed * (1 + (viewScale - 1) * 0.8);
 
     // Food attraction - skip while chewing (fish swims away to digest)
     const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5;
@@ -1269,8 +1271,13 @@ class Fish {
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    const maxTurn = 0.15 + currentSpeed * 0.15; // responsive head tracking
+    const maxTurn = 0.08 + currentSpeed * 0.08;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
+    // Smooth render angle — body visuals lag behind physics heading
+    let renderDiff = this.angle - this._renderAngle;
+    while (renderDiff > Math.PI) renderDiff -= Math.PI * 2;
+    while (renderDiff < -Math.PI) renderDiff += Math.PI * 2;
+    this._renderAngle += renderDiff * 0.15;
 
     // Update chain: joints have inertia — they carry momentum and can't vibrate
     this._joints[0].x = this.x;
@@ -1335,9 +1342,8 @@ class Fish {
     // Undulation phase — moderate speed, capped so it can't flicker
     const phase = Date.now() * 0.0002 * (0.4 + si * 0.4) + this._phaseOffset;
 
-    // Build spine directly from world-space joint positions
-    // Transform joints into local space (relative to head position and heading)
-    const cosH = Math.cos(-this.angle), sinH = Math.sin(-this.angle);
+    // Build spine from world-space joints, using smoothed render angle
+    const cosH = Math.cos(-this._renderAngle), sinH = Math.sin(-this._renderAngle);
     const spineX = new Array(segs + 1);
     const spineY = new Array(segs + 1);
     const widths = new Array(segs + 1);
@@ -1375,7 +1381,7 @@ class Fish {
 
     ctx.save();
     ctx.translate(this.x, this.y);
-    ctx.rotate(this.angle);
+    ctx.rotate(this._renderAngle);
     // No viewport scaling - fish are consistent size everywhere
 
     // Compute perpendiculars and outline points
