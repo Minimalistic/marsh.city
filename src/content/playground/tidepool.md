@@ -575,10 +575,10 @@ class Fish {
     this.color = 'rgb(140, 150, 160)';
     this.bellyColor = 'rgb(170, 180, 190)';
 
-    // Schooling parameters - reduced separation lets fish overlap naturally
-    this.separationDist = (19 + Math.random() * 8) * this.scale;
-    this.alignDist = 80 * this.scale;
-    this.cohesionDist = 140 * this.scale;
+    // Schooling parameters - tight cohesive schools like real fish
+    this.separationDist = (12 + Math.random() * 5) * this.scale;
+    this.alignDist = 150 * this.scale;
+    this.cohesionDist = 200 * this.scale;
 
     // Flee state
     this.fleeing = false;
@@ -587,8 +587,8 @@ class Fish {
     this.eating = false;
     this.eatTimer = 0;
     // Distraction - sometimes fish wander off from the school
-    this.distracted = Math.random() < 0.15;
-    this.distractTimer = this.distracted ? 3 + Math.random() * 8 : 5 + Math.random() * 10;
+    this.distracted = Math.random() < 0.08;
+    this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
     // Fixed phase offset for undulation desync (not position-based)
     this._phaseOffset = Math.random() * Math.PI * 20;
     // Smoothed swim intensity for animation - avoids jerky transitions
@@ -648,14 +648,14 @@ class Fish {
     this.distractTimer -= dt;
     if (this.distractTimer <= 0) {
       this.distracted = !this.distracted;
-      this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
+      this.distractTimer = this.distracted ? 1.5 + Math.random() * 3 : 12 + Math.random() * 25;
     }
 
-    // Apply boids - stronger cohesion for tight schooling
-    const schoolWeight = this.distracted ? 0.2 : 1;
-    if (sepCount > 0) { this.vx += sepX * 0.10; this.vy += sepY * 0.10; }
-    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.07 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.07 * schoolWeight; }
-    if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.002 * schoolWeight; this.vy += (cy - this.y) * 0.002 * schoolWeight; }
+    // Apply boids - cohesion dominates for tight real-looking schools
+    const schoolWeight = this.distracted ? 0.3 : 1;
+    if (sepCount > 0) { this.vx += sepX * 0.07; this.vy += sepY * 0.07; }
+    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.10 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.10 * schoolWeight; }
+    if (cohCount > 0) { const cx = cohX / cohCount; const cy = cohY / cohCount; this.vx += (cx - this.x) * 0.006 * schoolWeight; this.vy += (cy - this.y) * 0.006 * schoolWeight; }
 
     // Gentle centering during first few seconds
     if (settleTime > 0) {
@@ -814,12 +814,13 @@ class Fish {
     // Reef avoidance - fish sense both the underwater base and the above-water crown
     const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
     for (const rf of reefs) {
-      // --- Underwater base: gentle outer awareness ---
+      // --- Underwater base: gentle outer awareness with irregular boundary ---
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
-      const baseR = rf.radiusAt(angle, rf.baseRadii) * 0.85 + this.len * 0.5;
+      const bNoise = 0.85 + 0.3 * Math.sin(angle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(angle * 3.1 + rf.y * 0.1);
+      const baseR = rf.radiusAt(angle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
       const baseSense = baseR * 2.5;
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
@@ -912,33 +913,40 @@ class Fish {
     this.y += this.vy;
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));
-    // Hard reef collision - fish can't overlap the rock or swim under the crown
+    // Reef collision - gradient push with irregular boundary
     for (const rf of reefs) {
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
-      // Underwater base boundary
-      const baseCollR = rf.radiusAt(angle, rf.baseRadii) * 0.7;
-      // Above-water crown boundary (offset from reef center)
+      // Irregular base boundary - noisy multiplier varies with angle per-reef
+      const noise = 0.85 + 0.3 * Math.sin(angle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(angle * 3.1 + rf.y * 0.1);
+      const baseCollR = rf.radiusAt(angle, rf.baseRadii) * 0.35 * noise;
+      // Gradient push zone - increasingly strong as fish approaches the core
+      const pushZone = baseCollR * 1.8;
+      if (rDist < pushZone && rDist > 0.1) {
+        const penetration = 1 - rDist / pushZone;
+        const pushStr = penetration * penetration * 0.25;
+        this.vx += (rdx / rDist) * pushStr;
+        this.vy += (rdy / rDist) * pushStr;
+        // Hard stop at the core - can't go past this
+        if (rDist < baseCollR) {
+          this.x = rf.x + (rdx / rDist) * baseCollR;
+          this.y = rf.y + (rdy / rDist) * baseCollR;
+          const dot = (this.vx * rdx + this.vy * rdy) / (rDist * rDist);
+          if (dot < 0) {
+            this.vx -= rdx / rDist * dot * rDist * 1.5;
+            this.vy -= rdy / rDist * dot * rDist * 1.5;
+          }
+        }
+      }
+      // Above-water crown - still a hard boundary, fish can't swim through solid rock
       const cdx = this.x - (rf.x + rf.crownOffX);
       const cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
-      // Check both boundaries - fish must be outside the base AND outside the crown
-      const insideBase = rDist < baseCollR && rDist > 0.1;
-      const insideCrown = cDist < crownCollR && cDist > 0.1;
-      if (insideBase) {
-        this.x = rf.x + (rdx / rDist) * baseCollR;
-        this.y = rf.y + (rdy / rDist) * baseCollR;
-        const dot = (this.vx * rdx + this.vy * rdy) / (rDist * rDist);
-        if (dot < 0) {
-          this.vx -= rdx / rDist * dot * rDist * 1.5;
-          this.vy -= rdy / rDist * dot * rDist * 1.5;
-        }
-      } else if (insideCrown) {
-        // Push out from crown center
+      if (cDist < crownCollR && cDist > 0.1) {
         this.x = rf.x + rf.crownOffX + (cdx / cDist) * crownCollR;
         this.y = rf.y + rf.crownOffY + (cdy / cDist) * crownCollR;
         const dot = (this.vx * cdx + this.vy * cdy) / (cDist * cDist);
@@ -1671,21 +1679,29 @@ function draw(time) {
     fb.vy *= 0.96;
     fb.x += fb.vx;
     fb.y += fb.vy;
-    // Foam deflects around reefs - follows organic shape
+    // Foam deflects around reefs - irregular boundary, gradient push
     for (const rf of reefs) {
       const rdx = fb.x - rf.x, rdy = fb.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
-      const edgeR = rf.radiusAt(angle, rf.baseRadii) * 0.9;
-      if (rDist < edgeR && rDist > 0.1) {
-        fb.x = rf.x + (rdx / rDist) * edgeR;
-        fb.y = rf.y + (rdy / rDist) * edgeR;
-        // Tangential slide along the edge
+      const fNoise = 0.85 + 0.3 * Math.sin(angle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(angle * 3.1 + rf.y * 0.1);
+      const edgeR = rf.radiusAt(angle, rf.baseRadii) * 0.45 * fNoise;
+      const pushZone = edgeR * 1.6;
+      if (rDist < pushZone && rDist > 0.1) {
+        const pen = 1 - rDist / pushZone;
+        // Gradient push outward + tangential slide
+        fb.vx += (rdx / rDist) * pen * 0.15;
+        fb.vy += (rdy / rDist) * pen * 0.15;
         const spd = Math.sqrt(fb.vx * fb.vx + fb.vy * fb.vy);
         const cross = fb.vx * rdy - fb.vy * rdx;
         const sign = cross >= 0 ? 1 : -1;
-        fb.vx = (-rdy / rDist) * sign * spd * 0.6;
-        fb.vy = (rdx / rDist) * sign * spd * 0.6;
+        fb.vx += (-rdy / rDist) * sign * pen * spd * 0.3;
+        fb.vy += (rdx / rDist) * sign * pen * spd * 0.3;
+        // Hard stop at core
+        if (rDist < edgeR) {
+          fb.x = rf.x + (rdx / rDist) * edgeR;
+          fb.y = rf.y + (rdy / rDist) * edgeR;
+        }
       }
     }
     if (fb.x < -20 || fb.x > w + 20 || fb.y < -20 || fb.y > h + 20) { foamBits.splice(i, 1); continue; }
@@ -1720,15 +1736,15 @@ function draw(time) {
         fp.vy *= 0.82;
       }
       // Base check - food in water but too close to rock drifts outward
-      // so it ends up where fish can actually reach it
       const bdx = fp.x - rf.x, bdy = fp.y - rf.y;
       const bDist = Math.sqrt(bdx * bdx + bdy * bdy);
       const bAngle = Math.atan2(bdy, bdx);
-      const baseEdge = rf.radiusAt(bAngle, rf.baseRadii);
-      if (!stillOnRock && bDist < baseEdge * 1.15 && bDist > 0.1) {
-        // Gentle push past the rock's submerged edge into open water
-        fp.vx += (bdx / bDist) * 0.06;
-        fp.vy += (bdy / bDist) * 0.06;
+      const foodNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(bAngle * 3.1 + rf.y * 0.1);
+      const foodBaseEdge = rf.radiusAt(bAngle, rf.baseRadii) * 0.5 * foodNoise;
+      if (!stillOnRock && bDist < foodBaseEdge * 1.4 && bDist > 0.1) {
+        const pen = 1 - bDist / (foodBaseEdge * 1.4);
+        fp.vx += (bdx / bDist) * pen * 0.08;
+        fp.vy += (bdy / bDist) * pen * 0.08;
       }
     }
     // Splash when food rolls off the rock into water
