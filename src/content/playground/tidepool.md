@@ -811,37 +811,57 @@ class Fish {
       this.vy = Math.sin(this.angle) * targetSpeed * 0.5;
     }
 
-    // Reef avoidance - fish "see" rocks ahead and curve around them
+    // Reef avoidance - fish sense both the underwater base and the above-water crown
+    const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
     for (const rf of reefs) {
+      // --- Underwater base: gentle outer awareness ---
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
-      const shapeR = rf.radiusAt(angle, rf.baseRadii);
-      const avoid = shapeR * 0.85 + this.len * 0.5;
-      const senseRadius = avoid * 3.5; // wide awareness zone
-      if (rDist < senseRadius && rDist > 0.1) {
-        // How much the fish is heading toward the rock (1 = head-on, 0 = parallel, -1 = away)
-        const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+      const baseR = rf.radiusAt(angle, rf.baseRadii) * 0.85 + this.len * 0.5;
+      const baseSense = baseR * 2.5;
+      if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
-        // Only steer if somewhat approaching (not swimming away)
         if (approach > -0.2) {
-          const approachWeight = Math.max(0, approach + 0.2); // 0 when parallel, ~1.2 head-on
-          // Smooth gradient: gentle far out, strong close in
-          const proximity = 1 - rDist / senseRadius;
-          const urgency = proximity * proximity * approachWeight;
-          // Tangential steering dominates - fish curve around, not bounce off
+          const aw = Math.max(0, approach + 0.2);
+          const prox = 1 - rDist / baseSense;
+          const urgency = prox * prox * aw;
           const cross = this.vx * rdy - this.vy * rdx;
-          const tangentSign = cross >= 0 ? 1 : -1;
-          const tx = -rdy / rDist * tangentSign;
-          const ty = rdx / rDist * tangentSign;
-          this.vx += tx * urgency * 0.14;
-          this.vy += ty * urgency * 0.14;
-          // Radial push only kicks in close to prevent collision
-          if (rDist < avoid * 1.8) {
-            const closePush = (1 - rDist / (avoid * 1.8)) * 0.12;
-            this.vx += (rdx / rDist) * closePush;
-            this.vy += (rdy / rDist) * closePush;
+          const ts = cross >= 0 ? 1 : -1;
+          this.vx += (-rdy / rDist * ts) * urgency * 0.10;
+          this.vy += (rdx / rDist * ts) * urgency * 0.10;
+          if (rDist < baseR * 1.5) {
+            const push = (1 - rDist / (baseR * 1.5)) * 0.08;
+            this.vx += (rdx / rDist) * push;
+            this.vy += (rdy / rDist) * push;
+          }
+        }
+      }
+      // --- Above-water crown: strong avoidance, fish can't swim through this ---
+      const cdx = this.x - (rf.x + rf.crownOffX);
+      const cdy = this.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
+      const crownSense = crownR * 4; // very wide awareness for the solid obstacle
+      if (cDist < crownSense && cDist > 0.1) {
+        const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
+        if (approach > -0.3) {
+          const aw = Math.max(0, approach + 0.3);
+          const prox = 1 - cDist / crownSense;
+          // Cubic ramp - gentle far out, very strong close in
+          const urgency = prox * prox * prox * aw;
+          const cross = this.vx * cdy - this.vy * cdx;
+          const ts = cross >= 0 ? 1 : -1;
+          // Strong tangential steering - fish arc smoothly around the crown
+          this.vx += (-cdy / cDist * ts) * urgency * 0.35;
+          this.vy += (cdx / cDist * ts) * urgency * 0.35;
+          // Radial push ramps up close to the crown edge
+          if (cDist < crownR * 2) {
+            const push = (1 - cDist / (crownR * 2)) * 0.15;
+            this.vx += (cdx / cDist) * push;
+            this.vy += (cdy / cDist) * push;
           }
         }
       }
@@ -1684,21 +1704,31 @@ function draw(time) {
     fp.vy += Math.sin(tide.angle) * tide.strength * 0.003;
     fp.x += fp.vx;
     fp.y += fp.vy;
-    // Food on a reef crown rolls down into the water
+    // Food on or near a reef slides out to where fish can reach it
     let stillOnRock = false;
     for (const rf of reefs) {
+      // Crown check - food on the dry rock rolls off
       const cdx = fp.x - (rf.x + rf.crownOffX), cdy = fp.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownEdge = rf.radiusAt(cAngle, rf.crownRadii) + 3;
       if (cDist < crownEdge && cDist > 0.1) {
         stillOnRock = true;
-        // Roll outward toward the waterline
         fp.vx += (cdx / cDist) * 0.15;
         fp.vy += (cdy / cDist) * 0.15;
-        // Heavy damping so it tumbles, not launches
         fp.vx *= 0.82;
         fp.vy *= 0.82;
+      }
+      // Base check - food in water but too close to rock drifts outward
+      // so it ends up where fish can actually reach it
+      const bdx = fp.x - rf.x, bdy = fp.y - rf.y;
+      const bDist = Math.sqrt(bdx * bdx + bdy * bdy);
+      const bAngle = Math.atan2(bdy, bdx);
+      const baseEdge = rf.radiusAt(bAngle, rf.baseRadii);
+      if (!stillOnRock && bDist < baseEdge * 1.15 && bDist > 0.1) {
+        // Gentle push past the rock's submerged edge into open water
+        fp.vx += (bdx / bDist) * 0.06;
+        fp.vy += (bdy / bDist) * 0.06;
       }
     }
     // Splash when food rolls off the rock into water
