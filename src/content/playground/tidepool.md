@@ -1455,8 +1455,29 @@ class Predator {
     }
     // Chomp animation countdown
     if (this.chomping) {
-      this.chompPhase += dt * 18;
+      const prevJaw = Math.sin(this.chompPhase * 0.8);
+      this.chompPhase += dt * 14;
       this.chompTimer -= dt;
+      // Spit out scales each time jaw flares open
+      const curJaw = Math.sin(this.chompPhase * 0.8);
+      if (prevJaw <= 0 && curJaw > 0) {
+        const mx = this.x + Math.cos(this.angle) * this.len * 0.45;
+        const my = this.y + Math.sin(this.angle) * this.len * 0.45;
+        const count = 2 + Math.floor(Math.random() * 3);
+        for (let k = 0; k < count; k++) {
+          const a = this.angle + (Math.random() - 0.5) * 1.2;
+          const spd = 0.8 + Math.random() * 1.5;
+          killFx.push({
+            x: mx + Math.cos(a) * 4, y: my + Math.sin(a) * 4,
+            vx: Math.cos(a) * spd + this.vx * 0.3,
+            vy: Math.sin(a) * spd + this.vy * 0.3,
+            type: 'scale', life: 1, maxLife: 1 + Math.random() * 1.5,
+            size: 0.4 + Math.random() * 1.2,
+            color: 'rgb(160,170,180)',
+            sparkle: Math.random() * Math.PI * 2,
+          });
+        }
+      }
       if (this.chompTimer <= 0) this.chomping = false;
     }
 
@@ -1509,7 +1530,7 @@ class Predator {
           this.hunting = false;
           // Start chomp animation
           this.chomping = true;
-          this.chompTimer = 1.2;
+          this.chompTimer = 3.0;
           this.chompPhase = 0;
           // Spawn blood cloud + scale glitter at catch point
           const catchX = mouthX, catchY = mouthY;
@@ -1706,7 +1727,7 @@ class Predator {
     const phase = Date.now() * 0.00025 * (0.4 + si * 0.6) + this._phaseOffset;
 
     // Head shake when chomping - rapid lateral oscillation that decays
-    const chompIntensity = this.chomping ? this.chompTimer / 1.2 : 0;
+    const chompIntensity = this.chomping ? this.chompTimer / 3.0 : 0;
     const headShake = chompIntensity * Math.sin(this.chompPhase) * this.len * 0.06;
     // Jaw gape: opens and snaps shut repeatedly
     const jawGape = chompIntensity * Math.max(0, Math.sin(this.chompPhase * 0.8)) * this.bodyWidth * 2.5;
