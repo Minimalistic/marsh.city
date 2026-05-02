@@ -1269,16 +1269,30 @@ class Fish {
         this.vx += (rdx / rDist) * pushStr;
         this.vy += (rdy / rDist) * pushStr;
       }
-      // Crown - gradient push that gets overwhelming close in
+      // Crown - hard wall, fish cannot enter the exposed rock
       const cdx = this.x - (rf.x + rf.crownOffX);
       const cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
+      // Hard clamp — if inside crown, eject to the edge
+      if (cDist < crownCollR && cDist > 0.1) {
+        this.x = rf.x + rf.crownOffX + (cdx / cDist) * crownCollR;
+        this.y = rf.y + rf.crownOffY + (cdy / cDist) * crownCollR;
+        // Deflect velocity tangentially — slide along the rock
+        const dot = (this.vx * cdx + this.vy * cdy) / (cDist * cDist);
+        if (dot < 0) {
+          this.vx -= (cdx / cDist) * dot * cDist;
+          this.vy -= (cdy / cDist) * dot * cDist;
+        }
+        this.vx *= 0.85;
+        this.vy *= 0.85;
+      }
+      // Soft push zone outside the crown so fish steer before hitting
       const crownPush = crownCollR * 1.5 * this.rockComfort;
-      if (cDist < crownPush && cDist > 0.1) {
-        const pen = 1 - cDist / crownPush;
-        const pushStr = pen * pen * pen * 0.8;
+      if (cDist < crownPush && cDist > crownCollR) {
+        const pen = 1 - (cDist - crownCollR) / (crownPush - crownCollR);
+        const pushStr = pen * pen * 0.5;
         this.vx += (cdx / cDist) * pushStr;
         this.vy += (cdy / cDist) * pushStr;
       }
@@ -2097,17 +2111,28 @@ class Predator {
     this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
     this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
 
-    // Reef collision push
+    // Reef collision — hard wall on crown
     for (const rf of reefs) {
       if (rf.submerged) continue;
       const cdx = this.x - (rf.x + rf.crownOffX), cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      if (cDist < crownCollR * 1.3 && cDist > 0.1) {
-        const pen = 1 - cDist / (crownCollR * 1.3);
-        this.vx += (cdx / cDist) * pen * pen * 0.6;
-        this.vy += (cdy / cDist) * pen * pen * 0.6;
+      // Hard clamp — eject if inside crown
+      if (cDist < crownCollR && cDist > 0.1) {
+        this.x = rf.x + rf.crownOffX + (cdx / cDist) * crownCollR;
+        this.y = rf.y + rf.crownOffY + (cdy / cDist) * crownCollR;
+        const dot = (this.vx * cdx + this.vy * cdy) / (cDist * cDist);
+        if (dot < 0) {
+          this.vx -= (cdx / cDist) * dot * cDist;
+          this.vy -= (cdy / cDist) * dot * cDist;
+        }
+        this.vx *= 0.85;
+        this.vy *= 0.85;
+      } else if (cDist < crownCollR * 1.4 && cDist > 0.1) {
+        const pen = 1 - (cDist - crownCollR) / (crownCollR * 0.4);
+        this.vx += (cdx / cDist) * pen * pen * 0.4;
+        this.vy += (cdy / cDist) * pen * pen * 0.4;
       }
     }
 
@@ -2439,6 +2464,18 @@ function spawnAllFish(count) {
     f.school = school;
     f.color = jitterTunaColor(schoolColors[school].color);
     f.bellyColor = jitterTunaColor(schoolColors[school].belly);
+    // Eject from any reef crown so fish never start inside rock
+    for (const rf of reefs) {
+      if (rf.submerged) continue;
+      const cdx = f.x - (rf.x + rf.crownOffX), cdy = f.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      const crownR = rf.radiusAt(cAngle, rf.crownRadii) + 5;
+      if (cDist < crownR && cDist > 0.1) {
+        f.x = rf.x + rf.crownOffX + (cdx / cDist) * crownR;
+        f.y = rf.y + rf.crownOffY + (cdy / cDist) * crownR;
+      }
+    }
     fish.push(f);
   }
 }
