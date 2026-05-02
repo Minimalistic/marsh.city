@@ -3085,7 +3085,13 @@ function draw(time) {
     ctx.fillStyle = shadowGrad;
     ctx.fillRect(-rf.baseR * 1.5, -rf.baseR * 1.5, rf.baseR * 3, rf.baseR * 3);
     // Submerged rock base — layered shape fills that fade inward from perimeter
-    const cm = rf.baseColor.match(/\d+/g).map(Number);
+    // Blend base color toward sandy tones so it merges with the seafloor
+    const cm0 = rf.baseColor.match(/\d+/g).map(Number);
+    const cm = [
+      Math.round(cm0[0] * 0.4 + 160 * 0.6),
+      Math.round(cm0[1] * 0.4 + 150 * 0.6),
+      Math.round(cm0[2] * 0.4 + 120 * 0.6),
+    ];
     const layers = 6;
     for (let layer = 0; layer < layers; layer++) {
       const scale = 1.2 - (layer / layers) * 0.7; // 1.2 outer to 0.5 inner
