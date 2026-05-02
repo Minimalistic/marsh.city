@@ -3572,12 +3572,13 @@ function draw(time) {
       }
     }
     if (fb.x < -20 || fb.x > w + 20 || fb.y < -20 || fb.y > h + 20) { foamBits.splice(i, 1); continue; }
-    // Gradual size decay — holds ~80% for the first half of life, then shrinks
-    const sizeCurve = fb.life > 0.5 ? 1 - (1 - fb.life) * 0.4 : fb.life * 1.6;
-    const drawSize = fb.size * Math.max(0.15, sizeCurve);
-    // Opacity fades smoothly — slow initial fade, accelerates toward end
-    const alpha = fb.life * fb.life * 0.3;
-    if (alpha < 0.005) continue;
+    // Size: holds steady for first 60% of life, then smoothly shrinks to zero
+    const sizeCurve = fb.life > 0.6 ? 1 - (1 - fb.life) * 0.3 : Math.pow(fb.life / 0.6, 1.5);
+    const drawSize = fb.size * sizeCurve;
+    if (drawSize < 0.05) { foamBits.splice(i, 1); continue; }
+    // Opacity: gentle fade that accelerates — cubic ease-out to zero
+    const alpha = fb.life * fb.life * fb.life * 0.35;
+    if (alpha < 0.003) { foamBits.splice(i, 1); continue; }
     ctx.beginPath();
     ctx.arc(fb.x, fb.y, drawSize, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(200, 225, 235, ${alpha})`;
