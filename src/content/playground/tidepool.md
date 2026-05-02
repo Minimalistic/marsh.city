@@ -21,7 +21,7 @@ A rocky tidepool. Schools of tiny fish dart through the current - but something 
 <button id="fullscreen-btn" class="pool-tool pool-fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
 </button>
-<button id="fs-close-btn" class="pool-tool pool-fs-close hidden" title="Exit fullscreen" aria-label="Exit fullscreen" hidden>
+<button id="fs-close-btn" class="pool-tool pool-fs-close" title="Exit fullscreen" aria-label="Exit fullscreen" hidden>
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
 <div id="sound-hint" class="pool-hint" hidden>No audio? Check your phone's silent mode switch</div>
@@ -789,8 +789,6 @@ class Fish {
     this.separationDist = (12 + Math.random() * 5) * this.scale;
     this.alignDist = 150 * this.scale;
     this.cohesionDist = 200 * this.scale;
-    // Per-fish taper: varies so each school's front taper is slightly different
-    this._taperStrength = 0.5 + Math.random() * 1.0;
 
     // Flee state
     this.fleeing = false;
@@ -835,7 +833,6 @@ class Fish {
     let alignX = 0, alignY = 0, alignCount = 0;
     let cohX = 0, cohY = 0, cohCount = 0;
 
-    const hdX = Math.cos(this.angle), hdY = Math.sin(this.angle);
     for (const other of getNeighbors(this.x, this.y)) {
       if (other === this) continue;
       const sameSchool = other.school === this.school;
@@ -844,12 +841,8 @@ class Fish {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < this.separationDist && dist > 0.1) {
-        // Taper: stronger separation from neighbors ahead, weaker behind
-        // Creates a pointed front and wider back
-        const ahead = (dx * hdX + dy * hdY) / dist; // -1 behind, +1 ahead
-        const taperMul = 1 + ahead * 0.4 * this._taperStrength;
-        sepX -= (dx / dist) * taperMul;
-        sepY -= (dy / dist) * taperMul;
+        sepX -= dx / dist;
+        sepY -= dy / dist;
         sepCount++;
       }
       if (dist < this.alignDist && sameSchool) {
@@ -874,7 +867,7 @@ class Fish {
     // Apply boids - cohesion dominates for tight real-looking schools
     const schoolWeight = this.distracted ? 0.3 : 1;
     if (sepCount > 0) { this.vx += sepX * 0.07; this.vy += sepY * 0.07; }
-    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.10 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.10 * schoolWeight; }
+    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.07 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.07 * schoolWeight; }
     if (cohCount > 0) {
       let cx = cohX / cohCount, cy = cohY / cohCount;
       // Push cohesion target well clear of reefs so the school doesn't orbit them
@@ -898,8 +891,19 @@ class Fish {
           cy = rf.y + (bdy / bDist) * baseClear;
         }
       }
-      this.vx += (cx - this.x) * 0.006 * schoolWeight;
-      this.vy += (cy - this.y) * 0.006 * schoolWeight;
+      // Rounded school shape: stronger lateral pull than fore/aft pull
+      // Fish to the side of center get pulled harder, fish ahead/behind less
+      const toCx = cx - this.x, toCy = cy - this.y;
+      const headingX = Math.cos(this.angle), headingY = Math.sin(this.angle);
+      // Dot product: positive = center is ahead, negative = behind
+      const toCDist = Math.sqrt(toCx * toCx + toCy * toCy) || 1;
+      const foreAft = (toCx * headingX + toCy * headingY) / toCDist;
+      // Cross product magnitude: how far to the side the center is
+      const lateral = Math.abs(toCx * headingY - toCy * headingX) / toCDist;
+      // Boost lateral cohesion, dampen fore-aft to prevent elongation
+      const cohStr = 0.008 + lateral * 0.006 - Math.max(0, foreAft) * 0.003;
+      this.vx += toCx * cohStr * schoolWeight;
+      this.vy += toCy * cohStr * schoolWeight;
     }
 
     // Gentle centering during first few seconds
@@ -1265,30 +1269,16 @@ class Fish {
         this.vx += (rdx / rDist) * pushStr;
         this.vy += (rdy / rDist) * pushStr;
       }
-      // Crown - hard wall, fish cannot enter the exposed rock
+      // Crown - gradient push that gets overwhelming close in
       const cdx = this.x - (rf.x + rf.crownOffX);
       const cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
-      // Hard clamp — if inside crown, eject to the edge
-      if (cDist < crownCollR && cDist > 0.1) {
-        this.x = rf.x + rf.crownOffX + (cdx / cDist) * crownCollR;
-        this.y = rf.y + rf.crownOffY + (cdy / cDist) * crownCollR;
-        // Deflect velocity tangentially — slide along the rock
-        const dot = (this.vx * cdx + this.vy * cdy) / (cDist * cDist);
-        if (dot < 0) {
-          this.vx -= (cdx / cDist) * dot * cDist;
-          this.vy -= (cdy / cDist) * dot * cDist;
-        }
-        this.vx *= 0.85;
-        this.vy *= 0.85;
-      }
-      // Soft push zone outside the crown so fish steer before hitting
       const crownPush = crownCollR * 1.5 * this.rockComfort;
-      if (cDist < crownPush && cDist > crownCollR) {
-        const pen = 1 - (cDist - crownCollR) / (crownPush - crownCollR);
-        const pushStr = pen * pen * 0.5;
+      if (cDist < crownPush && cDist > 0.1) {
+        const pen = 1 - cDist / crownPush;
+        const pushStr = pen * pen * pen * 0.8;
         this.vx += (cdx / cDist) * pushStr;
         this.vy += (cdy / cDist) * pushStr;
       }
@@ -2107,28 +2097,17 @@ class Predator {
     this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
     this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
 
-    // Reef collision — hard wall on crown
+    // Reef collision push
     for (const rf of reefs) {
       if (rf.submerged) continue;
       const cdx = this.x - (rf.x + rf.crownOffX), cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      // Hard clamp — eject if inside crown
-      if (cDist < crownCollR && cDist > 0.1) {
-        this.x = rf.x + rf.crownOffX + (cdx / cDist) * crownCollR;
-        this.y = rf.y + rf.crownOffY + (cdy / cDist) * crownCollR;
-        const dot = (this.vx * cdx + this.vy * cdy) / (cDist * cDist);
-        if (dot < 0) {
-          this.vx -= (cdx / cDist) * dot * cDist;
-          this.vy -= (cdy / cDist) * dot * cDist;
-        }
-        this.vx *= 0.85;
-        this.vy *= 0.85;
-      } else if (cDist < crownCollR * 1.4 && cDist > 0.1) {
-        const pen = 1 - (cDist - crownCollR) / (crownCollR * 0.4);
-        this.vx += (cdx / cDist) * pen * pen * 0.4;
-        this.vy += (cdy / cDist) * pen * pen * 0.4;
+      if (cDist < crownCollR * 1.3 && cDist > 0.1) {
+        const pen = 1 - cDist / (crownCollR * 1.3);
+        this.vx += (cdx / cDist) * pen * pen * 0.6;
+        this.vy += (cdy / cDist) * pen * pen * 0.6;
       }
     }
 
@@ -2445,46 +2424,25 @@ function jitterTunaColor(base) {
 const fishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
 const fish = [];
 // Spawn all fish immediately inside the viewport in school clusters
-// Pre-pick cluster centers and shared headings per school
-let schoolClusters = [];
-function pickSchoolClusters() {
-  schoolClusters = schoolColors.map(() => ({
-    x: w * (0.15 + Math.random() * 0.7),
-    y: h * (0.15 + Math.random() * 0.7),
-    angle: Math.random() * Math.PI * 2,
-  }));
-}
-pickSchoolClusters();
 function spawnAllFish(count) {
   for (let i = 0; i < count; i++) {
     const school = i % schoolColors.length;
-    const cluster = schoolClusters[school];
+    // Each school clusters in a random area of the viewport
+    const clusterX = w * (0.15 + (school * 0.2) % 0.7 + Math.random() * 0.15);
+    const clusterY = h * (0.15 + Math.random() * 0.7);
     const f = new Fish();
-    // Tight cluster around the school center, shared heading with jitter
-    f.x = cluster.x + (Math.random() - 0.5) * 40;
-    f.y = cluster.y + (Math.random() - 0.5) * 40;
-    f.angle = cluster.angle + (Math.random() - 0.5) * 0.4;
+    f.x = clusterX + (Math.random() - 0.5) * 60;
+    f.y = clusterY + (Math.random() - 0.5) * 60;
+    f.angle = Math.random() * Math.PI * 2;
     f.vx = Math.cos(f.angle) * f.speed;
     f.vy = Math.sin(f.angle) * f.speed;
     f.school = school;
     f.color = jitterTunaColor(schoolColors[school].color);
     f.bellyColor = jitterTunaColor(schoolColors[school].belly);
-    // Eject from any reef crown so fish never start inside rock
-    for (const rf of reefs) {
-      if (rf.submerged) continue;
-      const cdx = f.x - (rf.x + rf.crownOffX), cdy = f.y - (rf.y + rf.crownOffY);
-      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
-      const cAngle = Math.atan2(cdy, cdx);
-      const crownR = rf.radiusAt(cAngle, rf.crownRadii) + 5;
-      if (cDist < crownR && cDist > 0.1) {
-        f.x = rf.x + rf.crownOffX + (cdx / cDist) * crownR;
-        f.y = rf.y + rf.crownOffY + (cdy / cDist) * crownR;
-      }
-    }
     fish.push(f);
   }
 }
-// Initial fish spawn deferred until after reefs exist (see below)
+spawnAllFish(fishCount);
 // School entry points still needed for later arrivals/respawns
 const schoolEntries = schoolColors.map((_, si) => {
   const edge = si % 4;
@@ -2634,9 +2592,6 @@ for (const rf of reefs) {
   const count = Math.floor(Math.random() * 6); // 0 to 5
   for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
 }
-
-// Now spawn fish — reefs exist so crown ejection works
-spawnAllFish(fishCount);
 
 // Kelp fronds — grow upward from seafloor, slight perspective tilt
 class Frond {
@@ -2948,11 +2903,10 @@ regenerateWorld = function() {
   spawnKelp();
   for (let i = 0; i < 60; i++) { for (const p of plants) p.update(0.016, i * 16); }
 
-  // Fish — spawn all immediately in school clusters
+  // Fish — spawn all immediately inside viewport
   basePop = Math.min(500, Math.max(80, Math.floor((w * h) / 400)));
   popTarget = basePop * (0.7 + Math.random() * 0.3);
   const newFishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
-  pickSchoolClusters();
   spawnAllFish(newFishCount);
   // Refresh school entry points for later arrivals
   for (let i = 0; i < schoolEntries.length; i++) {
