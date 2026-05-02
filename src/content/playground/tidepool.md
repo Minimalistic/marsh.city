@@ -504,7 +504,7 @@ function rescaleAll(oldW, oldH) {
     const bright = Math.random() < 0.25;
     debris.push({
       x: Math.random() * w, y: Math.random() * h,
-      size: bright ? (0.8 + Math.random() * 1.2) : (0.2 + Math.random() * 0.7),
+      size: bright ? (0.4 + Math.random() * 0.6) : (0.1 + Math.random() * 0.35),
       vx: 0, vy: 0,
       opacity: bright ? (0.2 + Math.random() * 0.2) : (0.05 + Math.random() * 0.12),
     });
@@ -732,7 +732,7 @@ for (let i = 0; i < 500; i++) {
   const bright = Math.random() < 0.25;
   debris.push({
     x: Math.random() * w, y: Math.random() * h,
-    size: bright ? (0.8 + Math.random() * 1.2) : (0.2 + Math.random() * 0.7),
+    size: bright ? (0.4 + Math.random() * 0.6) : (0.1 + Math.random() * 0.35),
     vx: 0, vy: 0,
     opacity: bright ? (0.2 + Math.random() * 0.2) : (0.05 + Math.random() * 0.12),
   });
@@ -2742,7 +2742,7 @@ regenerateWorld = function() {
   for (let i = 0; i < 500; i++) {
     const bright = Math.random() < 0.25;
     debris.push({ x: Math.random() * w, y: Math.random() * h,
-      size: bright ? (0.8+Math.random()*1.2) : (0.2+Math.random()*0.7), vx: 0, vy: 0,
+      size: bright ? (0.4+Math.random()*0.6) : (0.1+Math.random()*0.35), vx: 0, vy: 0,
       opacity: bright ? (0.2+Math.random()*0.2) : (0.05+Math.random()*0.12) });
   }
 
@@ -2909,7 +2909,7 @@ function draw(time) {
             foamBits.push({
               x: rf.x + rf.crownOffX + Math.cos(edgeAngle) * spawnR,
               y: rf.y + rf.crownOffY + Math.sin(edgeAngle) * spawnR,
-              size: (0.5 + Math.random() * 1.5) * viewScale,
+              size: (0.2 + Math.random() * 1.2) * viewScale,
               vx: Math.cos(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
               vy: Math.sin(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
               life: 1,
@@ -3201,7 +3201,7 @@ function draw(time) {
         foamBits.push({
           x: ww.x - cosA * Math.random() * 10 + (-sinA) * lateral,
           y: ww.y - sinA * Math.random() * 10 + cosA * lateral,
-          size: (0.3 + Math.random() * 0.8) * viewScale,
+          size: (0.1 + Math.random() * 0.7) * viewScale,
           vx: 0, vy: 0,
           life: 1,
           maxLife: 6 + Math.random() * 10,
@@ -3460,7 +3460,7 @@ function draw(time) {
       const drift = Math.sin(t * 0.3 + i * 1.9) * 4 + Math.sin(t * 0.7 + i * 3.1) * 2;
       const fx = cp.x + nx * (drift + 3);
       const fy = cp.y + ny * (drift + 3);
-      const foamSize = (1.5 + Math.sin(t * 0.5 + i * 2.7) * 0.8) * viewScale;
+      const foamSize = (0.8 + Math.sin(t * 0.5 + i * 2.7) * 0.5 + Math.sin(t * 1.3 + i * 4.1) * 0.3) * viewScale;
       const foamAlpha = 0.08 + Math.sin(t * 0.4 + i * 1.3) * 0.04;
       ctx.beginPath();
       ctx.arc(fx, fy, foamSize, 0, Math.PI * 2);
