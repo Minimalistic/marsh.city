@@ -872,6 +872,7 @@ class Fish {
       let cx = cohX / cohCount, cy = cohY / cohCount;
       // Push cohesion target well clear of reefs so the school doesn't orbit them
       for (const rf of reefs) {
+        if (rf.submerged) continue;
         const cdx = cx - (rf.x + rf.crownOffX), cdy = cy - (rf.y + rf.crownOffY);
         const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
         const cAngle = Math.atan2(cdy, cdx);
@@ -1114,6 +1115,7 @@ class Fish {
     const fishLen5 = this.len * 5; // sensing distance in body lengths
     let reefSteer = 0; // accumulated angle adjustment
     for (const rf of reefs) {
+      if (rf.submerged) continue;
       // --- Underwater base ---
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
@@ -1242,6 +1244,7 @@ class Fish {
     }
     // Reef collision - pure gradient, no hard snaps
     for (const rf of reefs) {
+      if (rf.submerged) continue;
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
@@ -2020,6 +2023,7 @@ class Predator {
     const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
     let reefSteer = 0;
     for (const rf of reefs) {
+      if (rf.submerged) continue;
       const cdx = this.x - (rf.x + rf.crownOffX), cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
@@ -2085,6 +2089,7 @@ class Predator {
 
     // Reef collision push
     for (const rf of reefs) {
+      if (rf.submerged) continue;
       const cdx = this.x - (rf.x + rf.crownOffX), cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
@@ -2550,7 +2555,7 @@ for (let i = 0; i < satelliteCount; i++) {
   });
   if (!tooClose) {
     const sr = makeReef(rx, ry, sizeMult);
-    sr.avoidR = sr.baseR * 0.6; // smaller avoidance radius
+    sr.submerged = true; // fully underwater, fish swim over them
     reefs.push(sr);
   }
 }
@@ -2862,7 +2867,7 @@ regenerateWorld = function() {
     const tooClose = reefs.some(r => Math.sqrt((r.x-rx)**2+(r.y-ry)**2) < r.baseR + estR + 15);
     if (!tooClose) {
       const sr = makeReef(rx, ry, sizeMult);
-      sr.avoidR = sr.baseR * 0.6;
+      sr.submerged = true;
       reefs.push(sr);
     }
   }
@@ -3537,6 +3542,7 @@ function draw(time) {
 
   // Reef structures - waterline effects then above-water crown
   for (const rf of reefs) {
+    if (rf.submerged) continue; // fully underwater, no crown to draw
     ctx.save();
     ctx.translate(rf.x, rf.y);
     const nv = rf.crownShape.length;
