@@ -2024,7 +2024,7 @@ class Predator {
 
     // Eyes - fixed size regardless of body length
     const eIdx = Math.round(segs * 0.1);
-    const eyeR = 1.0; // small beady predator eyes
+    const eyeR = 0.6; // small beady predator eyes
     const eyeOff = widths[eIdx] * 0.55;
     for (const side of [-1, 1]) {
       const enx = -(spineY[eIdx+1]-spineY[eIdx]), eny = spineX[eIdx+1]-spineX[eIdx];
