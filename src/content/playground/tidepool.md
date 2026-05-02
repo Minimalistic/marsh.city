@@ -1863,14 +1863,16 @@ class Predator {
       const velX = curr.x - curr.px, velY = curr.y - curr.py;
       curr.px = curr.x; curr.py = curr.y;
       const t = j / this._jointCount;
-      // Heavy drag — muscular body resists movement, then holds shape
-      const drag = 0.85 - t * 0.05; // 0.85 head, 0.8 tail
+      // Drag — stiff near head, looser toward tail for natural flex
+      const drag = 0.75 - t * 0.1; // 0.75 head, 0.65 tail
       curr.x += velX * drag;
       curr.y += velY * drag;
       // Gentle pull toward rest position (straight behind head)
       const restX = this.x - Math.cos(this._renderAngle) * j * this._segLen;
       const restY = this.y - Math.sin(this._renderAngle) * j * this._segLen;
-      const straighten = 0.008 * (1 - t * 0.5); // stronger near head
+      // Straighten more at speed, stay flexed when slow-turning
+      const speedFactor = Math.min(1, currentSpeed / (this.baseSpeed * 2));
+      const straighten = (0.001 + speedFactor * 0.004) * (1 - t * 0.5);
       curr.x += (restX - curr.x) * straighten;
       curr.y += (restY - curr.y) * straighten;
       // Distance constraint only — no bend clamping
