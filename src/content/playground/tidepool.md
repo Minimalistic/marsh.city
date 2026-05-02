@@ -3018,23 +3018,14 @@ function draw(time) {
     ctx.restore();
   }
 
-  // Plants
-  for (const p of plants) {
-    p.update(dt, time);
-    p.draw(ctx, time);
-  }
-
-  // Displace plants from fish and predators
+  // Update plants + displace from fish
+  for (const p of plants) p.update(dt, time);
   for (const f of fish) {
     if (f.speed < 0.5) continue;
-    for (const p of plants) {
-      p.displace(f.x, f.y, 20 * f.scale, f.speed * 0.1);
-    }
+    for (const p of plants) p.displace(f.x, f.y, 20 * f.scale, f.speed * 0.1);
   }
   for (const pred of predators) {
-    for (const p of plants) {
-      p.displace(pred.x, pred.y, 35, pred.speed * 0.2);
-    }
+    for (const p of plants) p.displace(pred.x, pred.y, 35, pred.speed * 0.2);
   }
 
   // Debris - affected by tide
@@ -3430,14 +3421,23 @@ function draw(time) {
   for (const rf of reefFish) rf.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
 
-  // Draw all swimmers sorted by depth — opacity only, no per-fish blur
-  const allSwimmers = [...fish, ...reefFish, ...predators];
-  const sortedFish = allSwimmers.sort((a, b) => b.depth - a.depth);
-  for (const f of sortedFish) {
-    ctx.save();
-    ctx.globalAlpha = f.depthAlpha;
-    f.draw(ctx);
-    ctx.restore();
+  // Draw swimmers and plants interleaved by y-position (top-down perspective)
+  // Items higher on screen (lower y) are "further back" and drawn first
+  const drawables = [];
+  for (const f of fish) drawables.push({ y: f.y, type: 'fish', obj: f });
+  for (const rf of reefFish) drawables.push({ y: rf.y, type: 'fish', obj: rf });
+  for (const p of predators) drawables.push({ y: p.y, type: 'fish', obj: p });
+  for (const p of plants) drawables.push({ y: p.y, type: 'plant', obj: p });
+  drawables.sort((a, b) => a.y - b.y);
+  for (const d of drawables) {
+    if (d.type === 'plant') {
+      d.obj.draw(ctx, time);
+    } else {
+      ctx.save();
+      ctx.globalAlpha = d.obj.depthAlpha;
+      d.obj.draw(ctx);
+      ctx.restore();
+    }
   }
 
   // Caustics - light refracting through water surface
