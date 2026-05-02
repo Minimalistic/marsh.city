@@ -1791,7 +1791,7 @@ class Starfish {
     const mobileScale = Math.min(w, h) < 500 ? 0.7 : 1;
     const vpBoost = 1 + Math.min(0.4, (viewScale - 1) * 0.4);
     this.scale = mobileScale * vpBoost;
-    this.size = (4 + Math.random() * 3) * this.scale; // arm length from center
+    this.size = (2.8 + Math.random() * 2.1) * this.scale; // arm length from center
     this.arms = 5;
 
     // Each arm has slight length/width variation for organic look
@@ -1802,7 +1802,8 @@ class Starfish {
       this._armWidths.push(this.size * (0.28 + Math.random() * 0.08));
     }
 
-    // Color - ochre/orange/rust/purple range like real tidepool starfish
+    // Color - ochre/orange/rust/purple range, tinted toward the water (rgb 30,117,133)
+    // so they look submerged rather than sitting on top of the scene
     const palettes = [
       { body: [180, 90, 45], highlight: [210, 120, 65] },   // ochre
       { body: [190, 75, 35], highlight: [220, 105, 55] },    // rust
@@ -1811,9 +1812,13 @@ class Starfish {
       { body: [140, 70, 55], highlight: [170, 95, 75] },     // dark brown
     ];
     const pal = palettes[Math.floor(Math.random() * palettes.length)];
-    const jit = () => Math.round((Math.random() - 0.5) * 15);
-    this.bodyColor = `rgb(${pal.body[0]+jit()},${pal.body[1]+jit()},${pal.body[2]+jit()})`;
-    this.highlightColor = `rgb(${pal.highlight[0]+jit()},${pal.highlight[1]+jit()},${pal.highlight[2]+jit()})`;
+    const jit = () => Math.round((Math.random() - 0.5) * 12);
+    // Blend ~35% toward the caribbean water color to mute them underwater
+    const waterR = 30, waterG = 117, waterB = 133;
+    const tint = 0.35;
+    const tb = (v, wv) => Math.round(v * (1 - tint) + wv * tint);
+    this.bodyColor = `rgb(${tb(pal.body[0],waterR)+jit()},${tb(pal.body[1],waterG)+jit()},${tb(pal.body[2],waterB)+jit()})`;
+    this.highlightColor = `rgb(${tb(pal.highlight[0],waterR)+jit()},${tb(pal.highlight[1],waterG)+jit()},${tb(pal.highlight[2],waterB)+jit()})`;
 
     // Movement - very slow creeping with pauses
     this.speed = 0.008 + Math.random() * 0.012; // extremely slow
@@ -3269,7 +3274,7 @@ function draw(time) {
       const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
       if (rel > -rf.crownR * 1.5 && rel < rf.crownR * 1.5 + ww.width) {
         const splashCount = Math.ceil(3 * viewScale);
-        if (foamBits.length < 200) {
+        if (foamBits.length < 300) {
           for (let si = 0; si < splashCount; si++) {
             const edgeAngle = Math.atan2(-sinA, -cosA) + (Math.random() - 0.5) * Math.PI * 0.8;
             // Spawn at the crown edge (waterline), offset by crown position
@@ -3278,11 +3283,11 @@ function draw(time) {
             foamBits.push({
               x: rf.x + rf.crownOffX + Math.cos(edgeAngle) * spawnR,
               y: rf.y + rf.crownOffY + Math.sin(edgeAngle) * spawnR,
-              size: (0.2 + Math.random() * 1.2) * viewScale,
+              size: (0.3 + Math.random() * 1.4) * viewScale,
               vx: Math.cos(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
               vy: Math.sin(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
               life: 1,
-              maxLife: 3 + Math.random() * 5,
+              maxLife: 6 + Math.random() * 12,
             });
           }
         }
@@ -3391,16 +3396,28 @@ function draw(time) {
     if (d.y < 0) d.y = h; if (d.y > h) d.y = 0;
   }
 
-  // Update and draw floating foam bits
+  // Update and draw floating foam bits — drift with current, slowly shrink and fade
   for (let i = foamBits.length - 1; i >= 0; i--) {
     const fb = foamBits[i];
     fb.life -= dt / fb.maxLife;
     if (fb.life <= 0) { foamBits.splice(i, 1); continue; }
     const flow = sampleFlow(fb.x, fb.y, time);
-    fb.vx += (Math.cos(tide.angle) * tide.strength * 0.012 + flow.fx * 0.02) * viewScale;
-    fb.vy += (Math.sin(tide.angle) * tide.strength * 0.012 + flow.fy * 0.02) * viewScale;
-    fb.vx *= 0.96;
-    fb.vy *= 0.96;
+    // Stronger current influence so foam really drifts with the water
+    fb.vx += (Math.cos(tide.angle) * tide.strength * 0.018 + flow.fx * 0.035) * viewScale;
+    fb.vy += (Math.sin(tide.angle) * tide.strength * 0.018 + flow.fy * 0.035) * viewScale;
+    // Wash wave push — foam gets shoved by passing wave fronts
+    for (const ww of washWaves) {
+      if (ww.life <= 0) continue;
+      const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
+      const rel = (fb.x - ww.x) * cosA + (fb.y - ww.y) * sinA;
+      if (rel > -5 && rel < ww.width) {
+        const push = ww.strength * ww.life * 0.08;
+        fb.vx += cosA * push;
+        fb.vy += sinA * push;
+      }
+    }
+    fb.vx *= 0.97;
+    fb.vy *= 0.97;
     fb.x += fb.vx;
     fb.y += fb.vy;
     // Foam deflects around reefs - irregular boundary, gradient push
@@ -3413,7 +3430,6 @@ function draw(time) {
       const pushZone = edgeR * 1.6;
       if (rDist < pushZone && rDist > 0.1) {
         const pen = 1 - rDist / pushZone;
-        // Gradient push outward + tangential slide
         fb.vx += (rdx / rDist) * pen * 0.15;
         fb.vy += (rdy / rDist) * pen * 0.15;
         const spd = Math.sqrt(fb.vx * fb.vx + fb.vy * fb.vy);
@@ -3421,7 +3437,6 @@ function draw(time) {
         const sign = cross >= 0 ? 1 : -1;
         fb.vx += (-rdy / rDist) * sign * pen * spd * 0.3;
         fb.vy += (rdx / rDist) * sign * pen * spd * 0.3;
-        // Hard stop at core
         if (rDist < edgeR) {
           fb.x = rf.x + (rdx / rDist) * edgeR;
           fb.y = rf.y + (rdy / rDist) * edgeR;
@@ -3429,9 +3444,15 @@ function draw(time) {
       }
     }
     if (fb.x < -20 || fb.x > w + 20 || fb.y < -20 || fb.y > h + 20) { foamBits.splice(i, 1); continue; }
+    // Gradual size decay — holds ~80% for the first half of life, then shrinks
+    const sizeCurve = fb.life > 0.5 ? 1 - (1 - fb.life) * 0.4 : fb.life * 1.6;
+    const drawSize = fb.size * Math.max(0.15, sizeCurve);
+    // Opacity fades smoothly — slow initial fade, accelerates toward end
+    const alpha = fb.life * fb.life * 0.3;
+    if (alpha < 0.005) continue;
     ctx.beginPath();
-    ctx.arc(fb.x, fb.y, fb.size * fb.life, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(200, 225, 235, ${fb.life * 0.25})`;
+    ctx.arc(fb.x, fb.y, drawSize, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 225, 235, ${alpha})`;
     ctx.fill();
   }
 
@@ -3560,16 +3581,16 @@ function draw(time) {
       }
     }
     // Shed tiny foam bits into the water (cap at 150)
-    if (ww.life > 0.1 && foamBits.length < 150) {
+    if (ww.life > 0.1 && foamBits.length < 250) {
       for (let i = 0; i < 2; i++) {
         const lateral = (Math.random() - 0.5) * span;
         foamBits.push({
           x: ww.x - cosA * Math.random() * 10 + (-sinA) * lateral,
           y: ww.y - sinA * Math.random() * 10 + cosA * lateral,
-          size: (0.1 + Math.random() * 0.7) * viewScale,
+          size: (0.15 + Math.random() * 0.8) * viewScale,
           vx: 0, vy: 0,
           life: 1,
-          maxLife: 6 + Math.random() * 10,
+          maxLife: 8 + Math.random() * 16,
         });
       }
     }
