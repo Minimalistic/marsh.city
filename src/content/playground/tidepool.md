@@ -789,6 +789,8 @@ class Fish {
     this.separationDist = (12 + Math.random() * 5) * this.scale;
     this.alignDist = 150 * this.scale;
     this.cohesionDist = 200 * this.scale;
+    // Per-fish taper: varies so each school's front taper is slightly different
+    this._taperStrength = 0.5 + Math.random() * 1.0;
 
     // Flee state
     this.fleeing = false;
@@ -833,6 +835,7 @@ class Fish {
     let alignX = 0, alignY = 0, alignCount = 0;
     let cohX = 0, cohY = 0, cohCount = 0;
 
+    const headX = Math.cos(this.angle), headY = Math.sin(this.angle);
     for (const other of getNeighbors(this.x, this.y)) {
       if (other === this) continue;
       const sameSchool = other.school === this.school;
@@ -841,8 +844,12 @@ class Fish {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < this.separationDist && dist > 0.1) {
-        sepX -= dx / dist;
-        sepY -= dy / dist;
+        // Taper: stronger separation from neighbors ahead, weaker behind
+        // Creates a pointed front and wider back
+        const ahead = (dx * headX + dy * headY) / dist; // -1 behind, +1 ahead
+        const taperMul = 1 + ahead * 0.4 * this._taperStrength;
+        sepX -= (dx / dist) * taperMul;
+        sepY -= (dy / dist) * taperMul;
         sepCount++;
       }
       if (dist < this.alignDist && sameSchool) {
