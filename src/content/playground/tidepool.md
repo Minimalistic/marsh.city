@@ -1579,8 +1579,8 @@ class Predator {
       // Spit out scales each time jaw flares open
       const curJaw = Math.sin(this.chompPhase * 0.8);
       if (prevJaw <= 0 && curJaw > 0) {
-        const mx = this.x + Math.cos(this.angle) * this.len * 0.45;
-        const my = this.y + Math.sin(this.angle) * this.len * 0.45;
+        const mx = this.x + Math.cos(this.angle) * this.len * 0.05;
+        const my = this.y + Math.sin(this.angle) * this.len * 0.05;
         const count = 2 + Math.floor(Math.random() * 3);
         for (let k = 0; k < count; k++) {
           const a = this.angle + (Math.random() - 0.5) * 1.2;
@@ -1602,8 +1602,8 @@ class Predator {
     this.hunting = this.hunger > 0.5 && this.digestTimer <= 0;
 
     if (this.hunting) {
-      const mouthX = this.x + Math.cos(this.angle) * this.len * 0.45;
-      const mouthY = this.y + Math.sin(this.angle) * this.len * 0.45;
+      const mouthX = this.x + Math.cos(this.angle) * this.len * 0.05;
+      const mouthY = this.y + Math.sin(this.angle) * this.len * 0.05;
       const cosA = Math.cos(this.angle), sinA = Math.sin(this.angle);
       const urgency = Math.min(1, (this.hunger - 0.4) * 1.67);
 
@@ -2182,7 +2182,7 @@ class Frond {
     this.y = y;
     this.growAngle = growAngle;
     // Plant scale: 3x base size, proportional to viewport area
-    const plantScale = viewScale * 3;
+    const plantScale = viewScale * 2.25;
     this.len = (40 + Math.random() * 55) * plantScale;
     this.branches = 3 + Math.floor(Math.random() * 4);
     this.phase = Math.random() * Math.PI * 2;
