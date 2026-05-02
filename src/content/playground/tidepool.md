@@ -3058,7 +3058,7 @@ function draw(time) {
     for (const p of plants) p.displace(pred.x, pred.y, 35, pred.speed * 0.2);
   }
 
-  // Debris - affected by tide
+  // Debris update - affected by tide (drawing happens in y-sorted pass)
   for (const d of debris) {
     d.vx += Math.cos(tide.angle) * tide.strength * 0.008 * viewScale;
     d.vy += Math.sin(tide.angle) * tide.strength * 0.008 * viewScale;
@@ -3069,7 +3069,6 @@ function draw(time) {
     d.vy *= 0.97;
     d.x += d.vx;
     d.y += d.vy;
-    // Deflect debris around reefs - follows organic shape
     for (const rf of reefs) {
       const rdx = d.x - rf.x, rdy = d.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
@@ -3087,10 +3086,6 @@ function draw(time) {
     }
     if (d.x < 0) d.x = w; if (d.x > w) d.x = 0;
     if (d.y < 0) d.y = h; if (d.y > h) d.y = 0;
-    ctx.beginPath();
-    ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(210, 235, 240, ${d.opacity})`;
-    ctx.fill();
   }
 
   // Update and draw floating foam bits
@@ -3458,10 +3453,16 @@ function draw(time) {
   for (const rf of reefFish) drawables.push({ y: rf.y, type: 'fish', obj: rf });
   for (const p of predators) drawables.push({ y: p.y, type: 'fish', obj: p });
   for (const p of plants) drawables.push({ y: p.y, type: 'plant', obj: p });
+  for (const d of debris) drawables.push({ y: d.y, type: 'debris', obj: d });
   drawables.sort((a, b) => a.y - b.y);
   for (const d of drawables) {
     if (d.type === 'plant') {
       d.obj.draw(ctx, time);
+    } else if (d.type === 'debris') {
+      ctx.beginPath();
+      ctx.arc(d.obj.x, d.obj.y, d.obj.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(210, 235, 240, ${d.obj.opacity})`;
+      ctx.fill();
     } else {
       ctx.save();
       ctx.globalAlpha = d.obj.depthAlpha;
