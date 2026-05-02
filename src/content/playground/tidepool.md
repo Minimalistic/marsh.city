@@ -3084,24 +3084,24 @@ function draw(time) {
     shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = shadowGrad;
     ctx.fillRect(-rf.baseR * 1.5, -rf.baseR * 1.5, rf.baseR * 3, rf.baseR * 3);
-    // Submerged rock base — radial gradient fades edges into seafloor
-    ctx.beginPath();
-    ctx.moveTo(rf.baseShape[0].x, rf.baseShape[0].y);
-    for (let i = 0; i < rf.baseShape.length; i++) {
-      const next = rf.baseShape[(i + 1) % rf.baseShape.length];
-      const mx = (rf.baseShape[i].x + next.x) * 0.5;
-      const my = (rf.baseShape[i].y + next.y) * 0.5;
-      ctx.quadraticCurveTo(rf.baseShape[i].x, rf.baseShape[i].y, mx, my);
-    }
-    ctx.closePath();
-    // Parse base color for gradient
+    // Submerged rock base — layered shape fills that fade inward from perimeter
     const cm = rf.baseColor.match(/\d+/g).map(Number);
-    const baseGrad = ctx.createRadialGradient(0, 0, rf.baseR * 0.25, 0, 0, rf.baseR * 1.05);
-    baseGrad.addColorStop(0, `rgba(${cm[0]},${cm[1]},${cm[2]}, 0.7)`);
-    baseGrad.addColorStop(0.6, `rgba(${cm[0]},${cm[1]},${cm[2]}, 0.5)`);
-    baseGrad.addColorStop(1, `rgba(${cm[0]},${cm[1]},${cm[2]}, 0)`);
-    ctx.fillStyle = baseGrad;
-    ctx.fill();
+    const layers = 6;
+    for (let layer = 0; layer < layers; layer++) {
+      const scale = 1.15 - (layer / layers) * 0.55; // 1.15 outer to 0.6 inner
+      const alpha = (layer / (layers - 1)) * 0.45; // 0 outer to 0.45 inner
+      ctx.beginPath();
+      ctx.moveTo(rf.baseShape[0].x * scale, rf.baseShape[0].y * scale);
+      for (let i = 0; i < rf.baseShape.length; i++) {
+        const next = rf.baseShape[(i + 1) % rf.baseShape.length];
+        const mx = (rf.baseShape[i].x + next.x) * 0.5 * scale;
+        const my = (rf.baseShape[i].y + next.y) * 0.5 * scale;
+        ctx.quadraticCurveTo(rf.baseShape[i].x * scale, rf.baseShape[i].y * scale, mx, my);
+      }
+      ctx.closePath();
+      ctx.fillStyle = `rgba(${cm[0]},${cm[1]},${cm[2]},${alpha})`;
+      ctx.fill();
+    }
     ctx.restore();
   }
 
