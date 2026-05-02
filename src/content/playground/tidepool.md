@@ -1732,10 +1732,10 @@ class Predator {
     const predScale = viewScale;
     let targetSpeed;
     if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 4.0 * predScale; this.burstTimer -= dt; }
-    else if (this.target) targetSpeed = this.baseSpeed * (2.5 + this.hunger * 1.0) * predScale;
-    else if (this.hunting) targetSpeed = this.baseSpeed * (0.5 + this.hunger * 0.4) * predScale;
+    else if (this.target) targetSpeed = this.baseSpeed * (1.75 + this.hunger * 0.7) * predScale;
+    else if (this.hunting) targetSpeed = this.baseSpeed * (0.35 + this.hunger * 0.28) * predScale;
     // Hovering — barracuda idles almost motionless, barely drifting
-    else targetSpeed = this.baseSpeed * (0.1 + this.hunger * 0.3) * predScale;
+    else targetSpeed = this.baseSpeed * (0.07 + this.hunger * 0.21) * predScale;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     // Slow to change speed when well-fed, responsive when hungry/hunting
