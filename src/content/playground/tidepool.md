@@ -2489,7 +2489,7 @@ class Frond {
     this.y = y;
     this.growAngle = growAngle;
     // Plant scale: 3x base size, proportional to viewport area
-    const plantScale = viewScale * 1.575;
+    const plantScale = viewScale * 0.945;
     this.len = (40 + Math.random() * 55) * plantScale;
     this.branches = 3 + Math.floor(Math.random() * 4);
     this.phase = Math.random() * Math.PI * 2;
