@@ -2517,6 +2517,26 @@ class Predator {
     }
     if (this._spawnFrames > 0) this._spawnFrames--;
     this.speed = currentSpeed;
+
+    // Burst bubbles — trail of disturbed water behind the tail during dashes
+    if (this.burstTimer > 0 && Math.random() < 0.6) {
+      const tail = this._joints[this._jointCount];
+      const midTail = this._joints[Math.floor(this._jointCount * 0.7)];
+      // Spawn 1-3 bubbles near the tail and mid-body wake
+      const count = 1 + Math.floor(Math.random() * 3);
+      for (let b = 0; b < count; b++) {
+        const src = Math.random() < 0.6 ? tail : midTail;
+        const spread = this.len * 0.15;
+        killFx.push({
+          x: src.x + (Math.random() - 0.5) * spread,
+          y: src.y + (Math.random() - 0.5) * spread,
+          vx: -this.vx * (0.1 + Math.random() * 0.15) + (Math.random() - 0.5) * 0.3,
+          vy: -this.vy * (0.1 + Math.random() * 0.15) + (Math.random() - 0.5) * 0.3,
+          type: 'bubble', life: 1, maxLife: 0.6 + Math.random() * 1.0,
+          size: (0.5 + Math.random() * 1.5) * viewScale,
+        });
+      }
+    }
   }
 
   draw(ctx) {
@@ -3587,6 +3607,22 @@ function draw(time) {
       ctx.beginPath();
       ctx.arc(kp.x, kp.y, r * 1.6, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(120, 25, 15, ${alpha * 0.3})`;
+      ctx.fill();
+    } else if (kp.type === 'bubble') {
+      // Turbulence bubbles — pale circles that shrink and rise slightly
+      kp.vy -= 0.02; // bubbles drift upward slightly
+      const r = kp.size * (0.5 + kp.life * 0.5);
+      const alpha = kp.life * kp.life * 0.4;
+      // Outer ring
+      ctx.beginPath();
+      ctx.arc(kp.x, kp.y, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(180, 220, 230, ${alpha})`;
+      ctx.lineWidth = Math.max(0.3, r * 0.25);
+      ctx.stroke();
+      // Inner highlight
+      ctx.beginPath();
+      ctx.arc(kp.x - r * 0.2, kp.y - r * 0.2, r * 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(210, 240, 245, ${alpha * 0.6})`;
       ctx.fill();
     } else {
       // Scale glitter - tiny bright flecks that catch light
