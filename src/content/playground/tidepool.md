@@ -6,7 +6,7 @@ description: Schools of tiny fish dodge a lurking predator in a shallow tidepool
 A rocky tidepool. Schools of tiny fish dart through the current - but something larger is cruising among them.
 
 <div id="pool-container" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
-<canvas id="pool" style="width:100%;height:100%;display:block;background:#1a3a4a;"></canvas>
+<canvas id="pool" style="width:100%;height:100%;display:block;background:#1a6b7a;"></canvas>
 <div id="toolbar" style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:10;">
   <button id="food-toggle" class="pool-tool" title="Toggle food mode" aria-label="Toggle food mode" aria-pressed="false" role="switch">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="6" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="12" cy="18" r="1"/></svg>
@@ -66,14 +66,14 @@ A rocky tidepool. Schools of tiny fish dart through the current - but something 
 #toolbar, .pool-fs-btn, .pool-fs-close { transition: opacity 0.5s; }
 #pool-container:fullscreen,
 #pool-container:-webkit-full-screen,
-#pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; background: #1a3a4a !important; }
+#pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; background: #1a6b7a !important; }
 #pool-container:fullscreen canvas,
 #pool-container:-webkit-full-screen canvas,
 #pool-container.fake-fullscreen canvas { width: 100% !important; height: 100% !important; }
 .fake-fullscreen ~ *, body:has(.fake-fullscreen) > *:not(script):not(style):not(link) { visibility: hidden !important; }
 .fake-fullscreen, .fake-fullscreen * { visibility: visible !important; }
 body:has(.fake-fullscreen) .site-foot-foliage { display: none !important; }
-body:has(.fake-fullscreen) { background: #1a3a4a !important; overflow: hidden !important; }
+body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !important; }
 </style>
 
 <script type="module">
@@ -530,7 +530,7 @@ function rescaleAll(oldW, oldH) {
     rocks.push({
       x: Math.random() * w, y: Math.random() * h,
       size: 8 + Math.random() * 18,
-      color: `rgb(${40 + Math.floor(Math.random() * 20)}, ${45 + Math.floor(Math.random() * 15)}, ${50 + Math.floor(Math.random() * 15)})`,
+      color: `rgb(${75 + Math.floor(Math.random() * 25)}, ${80 + Math.floor(Math.random() * 20)}, ${70 + Math.floor(Math.random() * 20)})`,
       elongation: 0.5 + Math.random() * 0.5,
       angle: Math.random() * Math.PI,
     });
@@ -2346,10 +2346,10 @@ class Predator {
 
 // Tuna palette — all schools are silver-blue with slight variation
 const schoolColors = [
-  { color: 'rgb(110, 130, 155)', belly: 'rgb(170, 185, 200)' },   // steel blue
-  { color: 'rgb(100, 135, 150)', belly: 'rgb(165, 190, 205)' },   // cool silver
-  { color: 'rgb(115, 125, 148)', belly: 'rgb(175, 182, 195)' },   // blue-grey
-  { color: 'rgb(105, 140, 158)', belly: 'rgb(160, 188, 210)' },   // ocean silver
+  { color: 'rgb(130, 155, 175)', belly: 'rgb(190, 210, 225)' },   // bright silver
+  { color: 'rgb(120, 160, 170)', belly: 'rgb(185, 215, 230)' },   // tropical silver
+  { color: 'rgb(135, 148, 168)', belly: 'rgb(195, 208, 220)' },   // warm silver
+  { color: 'rgb(125, 165, 180)', belly: 'rgb(180, 212, 235)' },   // lagoon silver
 ];
 // Per-fish color jitter so individuals aren't clones
 function jitterTunaColor(base) {
@@ -2392,7 +2392,7 @@ for (let i = 0; i < 15; i++) {
   rocks.push({
     x: Math.random() * w, y: Math.random() * h,
     size: 8 + Math.random() * 18,
-    color: `rgb(${40 + Math.floor(Math.random() * 20)}, ${45 + Math.floor(Math.random() * 15)}, ${50 + Math.floor(Math.random() * 15)})`,
+    color: `rgb(${75 + Math.floor(Math.random() * 25)}, ${80 + Math.floor(Math.random() * 20)}, ${70 + Math.floor(Math.random() * 20)})`,
     elongation: 0.5 + Math.random() * 0.5,
     angle: Math.random() * Math.PI,
   });
@@ -2425,11 +2425,11 @@ function makeReef(x, y, sizeMultiplier = 1) {
     crownShape.push({ x: crownOffX + Math.cos(a) * cr, y: crownOffY + Math.sin(a) * cr });
   }
 
-  // Color palette - dark wet rock tones
-  const g = 30 + Math.floor(Math.random() * 25);
-  const baseColor = `rgb(${g - 5}, ${g}, ${g + 8})`;
-  const crownColor = `rgb(${g + 25}, ${g + 22}, ${g + 15})`;
-  const rimColor = `rgba(${g + 50}, ${g + 45}, ${g + 35}, 0.6)`;
+  // Color palette - sun-bleached coral rock tones
+  const g = 65 + Math.floor(Math.random() * 30);
+  const baseColor = `rgb(${g + 5}, ${g - 5}, ${g - 10})`;
+  const crownColor = `rgb(${g + 35}, ${g + 28}, ${g + 15})`;
+  const rimColor = `rgba(${g + 55}, ${g + 50}, ${g + 40}, 0.6)`;
 
   // Precompute radii at each vertex angle for fast lookup
   const baseRadii = baseShape.map(p => Math.sqrt(p.x * p.x + p.y * p.y));
@@ -2598,7 +2598,7 @@ class Frond {
       ctx.lineTo(bx - nx*w1*0.5, by - ny*w1*0.5);
       ctx.lineTo(ax - nx*w0*0.5, ay - ny*w0*0.5);
       ctx.closePath();
-      ctx.fillStyle = 'rgb(20, 70, 50)';
+      ctx.fillStyle = 'rgb(30, 120, 70)';
       ctx.fill();
     }
     // Branches and leaflets — taper from base to tip
@@ -2624,7 +2624,7 @@ class Frond {
       ctx.lineTo(tipX, tipY);
       ctx.lineTo(base.x - bnx*bw*0.5, base.y - bny*bw*0.5);
       ctx.closePath();
-      ctx.fillStyle = 'rgb(30, 85, 55)';
+      ctx.fillStyle = 'rgb(45, 135, 75)';
       ctx.fill();
       for (let l = 0; l < bd.leaflets; l++) {
         const lt = 0.3 + (l / bd.leaflets) * 0.6;
@@ -2644,7 +2644,7 @@ class Frond {
         ctx.lineTo(ltx, lty);
         ctx.lineTo(lx - lnx*lw*0.5, ly - lny*lw*0.5);
         ctx.closePath();
-        ctx.fillStyle = 'rgb(35, 95, 60)';
+        ctx.fillStyle = 'rgb(50, 145, 80)';
         ctx.fill();
       }
     }
@@ -2903,9 +2903,9 @@ function draw(time) {
 
   // Clear - bright tropical tidepool water
   const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-  gradient.addColorStop(0, '#1e4d5e');
-  gradient.addColorStop(0.6, '#174050');
-  gradient.addColorStop(1, '#0f2e3a');
+  gradient.addColorStop(0, '#2a8a9a');
+  gradient.addColorStop(0.6, '#1e7585');
+  gradient.addColorStop(1, '#156068');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, w, h);
 
@@ -2998,7 +2998,7 @@ function draw(time) {
     if (d.y < 0) d.y = h; if (d.y > h) d.y = 0;
     ctx.beginPath();
     ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(100, 120, 130, ${d.opacity})`;
+    ctx.fillStyle = `rgba(140, 180, 190, ${d.opacity})`;
     ctx.fill();
   }
 
@@ -3376,8 +3376,8 @@ function draw(time) {
     const cy = h * 0.3 + Math.cos(time * 0.00016 + i * 1.9) * h * 0.35;
     const cr = 40 + Math.sin(time * 0.0003 + i) * 20;
     const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
-    cg.addColorStop(0, 'rgba(100, 160, 180, 0.03)');
-    cg.addColorStop(1, 'rgba(100, 160, 180, 0)');
+    cg.addColorStop(0, 'rgba(120, 210, 220, 0.06)');
+    cg.addColorStop(1, 'rgba(120, 210, 220, 0)');
     ctx.fillStyle = cg;
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
@@ -3449,8 +3449,8 @@ function draw(time) {
     const sheenX = Math.cos(sheenAngle) * rf.crownR * 0.3;
     const sheenY = Math.sin(sheenAngle) * rf.crownR * 0.3;
     const sheenGrad = ctx.createRadialGradient(sheenX, sheenY, 0, sheenX, sheenY, rf.crownR * 0.6);
-    sheenGrad.addColorStop(0, 'rgba(160, 200, 220, 0.08)');
-    sheenGrad.addColorStop(1, 'rgba(160, 200, 220, 0)');
+    sheenGrad.addColorStop(0, 'rgba(180, 230, 240, 0.1)');
+    sheenGrad.addColorStop(1, 'rgba(180, 230, 240, 0)');
 
     // Crown shape - the dry rock poking out of the water
     ctx.beginPath();
@@ -3508,7 +3508,7 @@ function draw(time) {
   // Vignette
   const vigGrad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.25, w / 2, h / 2, Math.max(w, h) * 0.65);
   vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  vigGrad.addColorStop(1, 'rgba(5, 15, 20, 0.35)');
+  vigGrad.addColorStop(1, 'rgba(5, 20, 30, 0.2)');
   ctx.fillStyle = vigGrad;
   ctx.fillRect(0, 0, w, h);
 
