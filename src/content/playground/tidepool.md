@@ -1569,21 +1569,24 @@ class ReefFish {
   update(dt, fish, time) {
     const rf = this.reef;
 
-    // Wander around the reef
-    this._wanderTimer -= dt;
-    if (this._wanderTimer <= 0) {
-      this._wanderAngle = Math.random() * Math.PI * 2;
-      this._wanderTimer = 2 + Math.random() * 4;
-    }
+    // Gentle wander — slowly drift the target angle, don't jump
+    this._wanderAngle += (Math.sin(time * 0.0004 + this._phaseOffset) * 0.3
+                        + Math.sin(time * 0.00017 + this._phaseOffset * 2.3) * 0.15) * dt;
 
-    // Target point: orbit near the reef edge
-    const orbitR = rf.baseR * (0.5 + Math.sin(time * 0.0003 + this._phaseOffset) * 0.15);
+    // Target point: hover near the reef edge
+    const orbitR = rf.baseR * (0.5 + Math.sin(time * 0.0002 + this._phaseOffset) * 0.1);
     const targetX = rf.x + Math.cos(this._wanderAngle) * orbitR;
     const targetY = rf.y + Math.sin(this._wanderAngle) * orbitR;
     const tdx = targetX - this.x, tdy = targetY - this.y;
     const tDist = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
-    this.vx += (tdx / tDist) * 0.02;
-    this.vy += (tdy / tDist) * 0.02;
+    // Gentle pull that weakens when close — no overshooting
+    const pull = Math.min(tDist * 0.001, 0.008);
+    this.vx += (tdx / tDist) * pull;
+    this.vy += (tdy / tDist) * pull;
+
+    // Damping — reef fish drift, they don't jet
+    this.vx *= 0.96;
+    this.vy *= 0.96;
 
     // Leash — if too far from reef, pull back hard
     const dx = this.x - rf.x, dy = this.y - rf.y;
@@ -1636,12 +1639,12 @@ class ReefFish {
       }
     }
 
-    // Speed control
+    // Speed control — reef fish hover slowly, only burst when scared
     const scaledSpeed = this.baseSpeed * (1 + (viewScale - 1) * 0.8);
-    const targetSpeed = this.fleeing ? scaledSpeed * 1.8 : scaledSpeed * 0.6;
+    const targetSpeed = this.fleeing ? scaledSpeed * 2.0 : scaledSpeed * 0.25;
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.1;
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.06;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
       this.vy *= ratio;
@@ -1650,16 +1653,16 @@ class ReefFish {
     this.x += this.vx;
     this.y += this.vy;
 
-    // Angle tracking
+    // Angle tracking — slow lazy turns
     const targetAngle = Math.atan2(this.vy, this.vx);
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    this.angle += Math.max(-0.12, Math.min(0.12, angleDiff));
+    this.angle += Math.max(-0.05, Math.min(0.05, angleDiff));
     let renderDiff = this.angle - this._renderAngle;
     while (renderDiff > Math.PI) renderDiff -= Math.PI * 2;
     while (renderDiff < -Math.PI) renderDiff += Math.PI * 2;
-    this._renderAngle += renderDiff * 0.15;
+    this._renderAngle += renderDiff * 0.08;
 
     // Chain update
     this._joints[0].x = this.x;
