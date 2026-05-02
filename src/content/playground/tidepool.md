@@ -1038,33 +1038,38 @@ class Fish {
       }
     }
 
-    // Predator avoidance — jinking, darting, sharp turns like real baitfish
+    // Predator avoidance — only react to aggressive movement, fear scales with distance
     for (const pred of predators) {
-      if (!pred.hunting) continue;
+      const predSpeed = Math.sqrt(pred.vx * pred.vx + pred.vy * pred.vy);
+      const predAggression = predSpeed / (pred.baseSpeed * viewScale);
+      const beingChased = pred.target === this;
+      // Ignore slow-cruising predators unless they're chasing us directly
+      if (!beingChased && predAggression < 1.2) continue;
       const pdx = this.x - pred.x;
       const pdy = this.y - pred.y;
       const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
-      const beingChased = pred.target === this;
-      const fleeRange = beingChased ? 200 * viewScale : 140 * viewScale;
+      // Flee range scales with how aggressively the predator is moving
+      const baseRange = beingChased ? 200 : 60 + predAggression * 50;
+      const fleeRange = baseRange * viewScale;
       if (pDist < fleeRange && pDist > 0.1) {
         const proximity = 1 - pDist / fleeRange;
-        // Base flee direction — away from predator
+        // Fear scales with proximity squared — distant fish barely notice
+        const fear = proximity * proximity;
         const fleeAngle = Math.atan2(pdy, pdx);
-        // Jink: random sharp lateral dodge, stronger when closer
-        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (1.0 + proximity * 1.5);
-        const force = beingChased ? (0.4 * proximity + 0.2) : (0.15 * proximity + 0.05);
+        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (0.8 + fear * 1.5);
+        const force = beingChased ? (0.4 * fear + 0.15) : (0.12 * fear);
         this.vx += Math.cos(jinkAngle) * force * viewScale;
         this.vy += Math.sin(jinkAngle) * force * viewScale;
-        this.fleeing = true;
-        this.fleeTimer = beingChased ? 1.2 : 0.6;
-        this.distracted = true;
-        this.distractTimer = 1.5 + Math.random() * 2;
-        // Chased fish dart with sudden speed bursts
-        if (beingChased && pDist < fleeRange * 0.5) {
-          // Sharp random direction change — not just straight away
+        if (fear > 0.15) {
+          this.fleeing = true;
+          this.fleeTimer = beingChased ? 1.2 : 0.3 + fear * 0.5;
+        }
+        if (beingChased && pDist < fleeRange * 0.4) {
           const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
           this.vx += Math.cos(dartAngle) * scaledSpeed * 0.5;
           this.vy += Math.sin(dartAngle) * scaledSpeed * 0.5;
+          this.distracted = true;
+          this.distractTimer = 1.5 + Math.random() * 2;
         }
       }
     }
