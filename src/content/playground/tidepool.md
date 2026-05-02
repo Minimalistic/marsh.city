@@ -755,7 +755,7 @@ class Fish {
       else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
       else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
     }
-    this.speed = (0.6 + Math.random() * 1.4) * 0.7; // calm cruising, flee multipliers handle bursts
+    this.speed = (0.6 + Math.random() * 1.4) * 0.56; // calm cruising, flee multipliers handle bursts
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
@@ -1801,14 +1801,14 @@ class Predator {
     this._segLen = this.len / numJoints;
     this._joints = [];
     for (let j = 0; j <= numJoints; j++) {
-      this._joints.push({
-        x: this.x - Math.cos(this.angle) * j * this._segLen,
-        y: this.y - Math.sin(this.angle) * j * this._segLen,
-      });
+      const jx = this.x - Math.cos(this.angle) * j * this._segLen;
+      const jy = this.y - Math.sin(this.angle) * j * this._segLen;
+      this._joints.push({ x: jx, y: jy, px: jx, py: jy });
     }
     this._phaseOffset = Math.random() * Math.PI * 20;
     this._swimSmooth = 0.3;
     this._renderAngle = this.angle;
+    this._spawnFrames = 30; // frames of strong straightening at spawn
   }
 
   update(dt, smallFish, time) {
@@ -2107,7 +2107,6 @@ class Predator {
       const prev = this._joints[j - 1];
       const curr = this._joints[j];
       // Verlet: velocity = current - previous, heavily damped
-      if (curr.px === undefined) { curr.px = curr.x; curr.py = curr.y; }
       const velX = curr.x - curr.px, velY = curr.y - curr.py;
       curr.px = curr.x; curr.py = curr.y;
       const t = j / this._jointCount;
@@ -2119,8 +2118,10 @@ class Predator {
       const restX = this.x - Math.cos(this._renderAngle) * j * this._segLen;
       const restY = this.y - Math.sin(this._renderAngle) * j * this._segLen;
       // Straighten more at speed, stay flexed when slow-turning
+      // Extra strong straightening during first frames to prevent crumpled spawn
       const speedFactor = Math.min(1, currentSpeed / (this.baseSpeed * 2));
-      const straighten = (0.001 + speedFactor * 0.004) * (1 - t * 0.5);
+      const spawnBoost = this._spawnFrames > 0 ? 0.15 : 0;
+      const straighten = (0.001 + speedFactor * 0.004 + spawnBoost) * (1 - t * 0.5);
       curr.x += (restX - curr.x) * straighten;
       curr.y += (restY - curr.y) * straighten;
       // Distance constraint only — no bend clamping
@@ -2129,6 +2130,7 @@ class Predator {
       curr.x = prev.x + (dx / dist) * this._segLen;
       curr.y = prev.y + (dy / dist) * this._segLen;
     }
+    if (this._spawnFrames > 0) this._spawnFrames--;
     this.speed = currentSpeed;
   }
 
