@@ -3094,7 +3094,7 @@ function draw(time) {
     ];
     const layers = 6;
     for (let layer = 0; layer < layers; layer++) {
-      const scale = 1.2 - (layer / layers) * 0.7; // 1.2 outer to 0.5 inner
+      const scale = (1.2 - (layer / layers) * 0.7) * 1.5; // 1.8 outer to 0.75 inner
       const alpha = (layer / (layers - 1)) * 0.25; // 0 outer to 0.25 inner
       ctx.beginPath();
       ctx.moveTo(rf.baseShape[0].x * scale, rf.baseShape[0].y * scale);
