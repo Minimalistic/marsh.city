@@ -1953,12 +1953,12 @@ class Predator {
     ctx.globalAlpha = 1;
 
     // Dorsal fin — centered ridge along the spine (top-down view)
-    const dStart = Math.round(segs * 0.15), dEnd = Math.round(segs * 0.45);
+    const dStart = Math.round(segs * 0.55), dEnd = Math.round(segs * 0.72);
     ctx.beginPath();
     // Trace one side of the ridge
     for (let i = dStart; i <= dEnd; i++) {
       const t = (i - dStart) / (dEnd - dStart);
-      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 0.5;
+      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 0.25;
       const nx2 = -(spineY[Math.min(i+1, segs)] - spineY[Math.max(i-1, 0)]);
       const ny2 = spineX[Math.min(i+1, segs)] - spineX[Math.max(i-1, 0)];
       const nL = Math.sqrt(nx2 * nx2 + ny2 * ny2) || 1;
@@ -1967,7 +1967,7 @@ class Predator {
     // Trace the other side back
     for (let i = dEnd; i >= dStart; i--) {
       const t = (i - dStart) / (dEnd - dStart);
-      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 0.5;
+      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 0.25;
       const nx2 = -(spineY[Math.min(i+1, segs)] - spineY[Math.max(i-1, 0)]);
       const ny2 = spineX[Math.min(i+1, segs)] - spineX[Math.max(i-1, 0)];
       const nL = Math.sqrt(nx2 * nx2 + ny2 * ny2) || 1;
