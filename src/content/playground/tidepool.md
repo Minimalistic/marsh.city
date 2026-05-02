@@ -466,6 +466,7 @@ function rescaleAll(oldW, oldH) {
   viewScale = Math.min(2.5, Math.sqrt((w * h) / initialArea));
   for (const r of rocks) { r.x *= sx; r.y *= sy; }
   for (const rf of reefs) { rf.x *= sx; rf.y *= sy; }
+  for (const rf of reefFish) { rf.x *= sx; rf.y *= sy; }
   for (const p of plants) {
     p.x *= sx; p.y *= sy;
     for (const s of p.segs) { s.x *= sx; s.y *= sy; }
@@ -492,8 +493,8 @@ function rescaleAll(oldW, oldH) {
     const entry = schoolEntries[school];
     const f = new Fish(entry);
     f.school = school;
-    f.color = schoolColors[school].color;
-    f.bellyColor = schoolColors[school].belly;
+    f.color = jitterTunaColor(schoolColors[school].color);
+    f.bellyColor = jitterTunaColor(schoolColors[school].belly);
     fish.push(f);
   }
   while (fish.length > softTarget * 1.5 && fish.length > 40) fish.pop();
@@ -1515,6 +1516,251 @@ class Fish {
   }
 }
 
+// Reef fish — small bright blue fish that live around a specific reef
+class ReefFish {
+  constructor(reef) {
+    this.reef = reef;
+    // Start near the reef edge
+    const a = Math.random() * Math.PI * 2;
+    const dist = reef.baseR * (0.4 + Math.random() * 0.3);
+    this.x = reef.x + Math.cos(a) * dist;
+    this.y = reef.y + Math.sin(a) * dist;
+    this.angle = a + Math.PI * 0.5 + (Math.random() - 0.5) * 0.5;
+    this._renderAngle = this.angle;
+
+    const mobileScale = w < 500 ? 0.75 : 1;
+    const vpSizeBoost = 1 + Math.min(0.5, (viewScale - 1) * 0.5);
+    this.scale = mobileScale * vpSizeBoost;
+    // Quarter size of tuna
+    this.len = (3.5 + Math.random() * 2) * this.scale;
+    this.bodyWidth = this.len * (0.06 + Math.random() * 0.02);
+
+    this.speed = 0.3 + Math.random() * 0.3;
+    this.baseSpeed = this.speed;
+    this.vx = Math.cos(this.angle) * this.speed * 0.5;
+    this.vy = Math.sin(this.angle) * this.speed * 0.5;
+
+    this.depth = 0.15 + Math.random() * 0.2;
+    this.depthAlpha = 1 - this.depth * 0.3;
+
+    // Bright blue with slight per-fish variation
+    const bj = () => Math.round((Math.random() - 0.5) * 15);
+    this.color = `rgb(${50+bj()},${120+bj()},${210+bj()})`;
+    this.bellyColor = `rgb(${100+bj()},${170+bj()},${240+bj()})`;
+
+    this._phaseOffset = Math.random() * Math.PI * 2;
+    this._joints = [];
+    const numJoints = 6;
+    this._segLen = this.len / numJoints;
+    for (let j = 0; j <= numJoints; j++) {
+      this._joints.push({
+        x: this.x - Math.cos(this.angle) * j * this._segLen,
+        y: this.y - Math.sin(this.angle) * j * this._segLen,
+      });
+    }
+
+    // Wander state - picks nearby points around the reef to swim to
+    this._wanderAngle = Math.random() * Math.PI * 2;
+    this._wanderTimer = 1 + Math.random() * 3;
+    this.fleeing = false;
+    this.fleeTimer = 0;
+  }
+
+  update(dt, fish, time) {
+    const rf = this.reef;
+
+    // Wander around the reef
+    this._wanderTimer -= dt;
+    if (this._wanderTimer <= 0) {
+      this._wanderAngle = Math.random() * Math.PI * 2;
+      this._wanderTimer = 2 + Math.random() * 4;
+    }
+
+    // Target point: orbit near the reef edge
+    const orbitR = rf.baseR * (0.5 + Math.sin(time * 0.0003 + this._phaseOffset) * 0.15);
+    const targetX = rf.x + Math.cos(this._wanderAngle) * orbitR;
+    const targetY = rf.y + Math.sin(this._wanderAngle) * orbitR;
+    const tdx = targetX - this.x, tdy = targetY - this.y;
+    const tDist = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
+    this.vx += (tdx / tDist) * 0.02;
+    this.vy += (tdy / tDist) * 0.02;
+
+    // Leash — if too far from reef, pull back hard
+    const dx = this.x - rf.x, dy = this.y - rf.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const maxDist = rf.baseR * 1.2;
+    if (dist > maxDist) {
+      const pull = (dist - maxDist) * 0.05;
+      this.vx -= (dx / dist) * pull;
+      this.vy -= (dy / dist) * pull;
+    }
+
+    // Avoid the crown (solid rock)
+    const cdx = this.x - (rf.x + rf.crownOffX);
+    const cdy = this.y - (rf.y + rf.crownOffY);
+    const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+    const cAngle = Math.atan2(cdy, cdx);
+    const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len;
+    if (cDist < crownR && cDist > 0.1) {
+      const push = (1 - cDist / crownR) * 0.15;
+      this.vx += (cdx / cDist) * push;
+      this.vy += (cdy / cDist) * push;
+    }
+
+    // Flee from predators
+    if (this.fleeTimer > 0) this.fleeTimer -= dt;
+    else this.fleeing = false;
+    for (const pred of predators) {
+      const pdx = this.x - pred.x, pdy = this.y - pred.y;
+      const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
+      if (pDist < 60 && pDist > 0.1) {
+        const force = 0.2 * (1 - pDist / 60);
+        this.vx += (pdx / pDist) * force;
+        this.vy += (pdy / pDist) * force;
+        this.fleeing = true;
+        this.fleeTimer = 0.5;
+      }
+    }
+
+    // Flee from mouse
+    if (mouse.active) {
+      const mdx = this.x - mouse.x, mdy = this.y - mouse.y;
+      const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+      const fleeR = 40;
+      if (mDist < fleeR && mDist > 0.1) {
+        const force = 0.15 * (1 - mDist / fleeR);
+        this.vx += (mdx / mDist) * force;
+        this.vy += (mdy / mDist) * force;
+        this.fleeing = true;
+        this.fleeTimer = 0.3;
+      }
+    }
+
+    // Speed control
+    const scaledSpeed = this.baseSpeed * (1 + (viewScale - 1) * 0.8);
+    const targetSpeed = this.fleeing ? scaledSpeed * 1.8 : scaledSpeed * 0.6;
+    const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    if (currentSpeed > 0.01) {
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.1;
+      const ratio = desired / currentSpeed;
+      this.vx *= ratio;
+      this.vy *= ratio;
+    }
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Angle tracking
+    const targetAngle = Math.atan2(this.vy, this.vx);
+    let angleDiff = targetAngle - this.angle;
+    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+    this.angle += Math.max(-0.12, Math.min(0.12, angleDiff));
+    let renderDiff = this.angle - this._renderAngle;
+    while (renderDiff > Math.PI) renderDiff -= Math.PI * 2;
+    while (renderDiff < -Math.PI) renderDiff += Math.PI * 2;
+    this._renderAngle += renderDiff * 0.15;
+
+    // Chain update
+    this._joints[0].x = this.x;
+    this._joints[0].y = this.y;
+    for (let i = 1; i < this._joints.length; i++) {
+      const prev = this._joints[i - 1];
+      const curr = this._joints[i];
+      const jdx = curr.x - prev.x, jdy = curr.y - prev.y;
+      const jDist = Math.sqrt(jdx * jdx + jdy * jdy) || 1;
+      curr.x = prev.x + (jdx / jDist) * this._segLen;
+      curr.y = prev.y + (jdy / jDist) * this._segLen;
+    }
+  }
+
+  draw(ctx) {
+    // Reuse the Fish draw logic but simpler — small bright body
+    const segs = this._joints.length - 1;
+    const totalLen = this.len;
+    const spineX = [], spineY = [], widths = [];
+
+    for (let i = 0; i <= segs; i++) {
+      const lx = this._joints[i].x - this.x;
+      const ly = this._joints[i].y - this.y;
+      spineX[i] = lx;
+      spineY[i] = ly;
+      const tw = i / segs;
+      let hw;
+      if (tw < 0.1) hw = tw / 0.1 * this.bodyWidth * 0.4;
+      else if (tw < 0.3) hw = this.bodyWidth * (0.4 + (tw - 0.1) / 0.2 * 0.6);
+      else if (tw < 0.6) hw = this.bodyWidth * (1 - (tw - 0.3) / 0.3 * 0.2);
+      else hw = this.bodyWidth * 0.8 * Math.pow(1 - (tw - 0.6) / 0.4, 1.5);
+      widths[i] = Math.max(hw, 0.1);
+    }
+    widths[0] = this.bodyWidth * 0.35;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this._renderAngle);
+
+    // Body outline
+    const rightX = [], rightY = [], leftX = [], leftY = [];
+    for (let i = 0; i <= segs; i++) {
+      let nx, ny;
+      if (i === 0) { nx = -(spineY[1] - spineY[0]); ny = spineX[1] - spineX[0]; }
+      else if (i === segs) { nx = -(spineY[i] - spineY[i-1]); ny = spineX[i] - spineX[i-1]; }
+      else { nx = -(spineY[i+1] - spineY[i-1]); ny = spineX[i+1] - spineX[i-1]; }
+      const nLen = Math.sqrt(nx * nx + ny * ny) || 1;
+      nx /= nLen; ny /= nLen;
+      rightX[i] = spineX[i] + nx * widths[i];
+      rightY[i] = spineY[i] + ny * widths[i];
+      leftX[i] = spineX[i] - nx * widths[i];
+      leftY[i] = spineY[i] - ny * widths[i];
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(spineX[0], spineY[0]);
+    ctx.lineTo(rightX[0], rightY[0]);
+    for (let i = 0; i < segs; i++) ctx.quadraticCurveTo(rightX[i], rightY[i], (rightX[i]+rightX[i+1])*0.5, (rightY[i]+rightY[i+1])*0.5);
+    ctx.lineTo(rightX[segs], rightY[segs]);
+    ctx.lineTo(spineX[segs], spineY[segs]);
+    ctx.lineTo(leftX[segs], leftY[segs]);
+    for (let i = segs; i > 0; i--) ctx.quadraticCurveTo(leftX[i], leftY[i], (leftX[i]+leftX[i-1])*0.5, (leftY[i]+leftY[i-1])*0.5);
+    ctx.lineTo(leftX[0], leftY[0]);
+    ctx.closePath();
+    ctx.fillStyle = this.color;
+    ctx.fill();
+
+    // Tail fin
+    const tsi = segs;
+    const tailDir = Math.atan2(spineY[tsi]-spineY[tsi-1], spineX[tsi]-spineX[tsi-1]);
+    const tailSpread = this.bodyWidth * 1.2;
+    const tailLen = totalLen * 0.12;
+    const tPx = -Math.sin(tailDir), tPy = Math.cos(tailDir);
+    ctx.beginPath();
+    ctx.moveTo(rightX[tsi], rightY[tsi]);
+    ctx.quadraticCurveTo(spineX[tsi]+Math.cos(tailDir)*tailLen+tPx*tailSpread*0.4, spineY[tsi]+Math.sin(tailDir)*tailLen+tPy*tailSpread*0.4, spineX[tsi]+Math.cos(tailDir)*tailLen, spineY[tsi]+Math.sin(tailDir)*tailLen);
+    ctx.quadraticCurveTo(spineX[tsi]+Math.cos(tailDir)*tailLen-tPx*tailSpread*0.4, spineY[tsi]+Math.sin(tailDir)*tailLen-tPy*tailSpread*0.4, leftX[tsi], leftY[tsi]);
+    ctx.closePath();
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = 0.5;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Eye dots
+    const eIdx = Math.round(segs * 0.15);
+    const eyeR = Math.max(totalLen * 0.04, 0.3);
+    const eyeOff = widths[eIdx] * 0.5;
+    for (const side of [-1, 1]) {
+      const enx = -(spineY[Math.min(eIdx+1,segs)] - spineY[eIdx]);
+      const eny = spineX[Math.min(eIdx+1,segs)] - spineX[eIdx];
+      const eLen = Math.sqrt(enx*enx+eny*eny) || 1;
+      ctx.beginPath();
+      ctx.arc(spineX[eIdx]+(enx/eLen)*eyeOff*side, spineY[eIdx]+(eny/eLen)*eyeOff*side, eyeR, 0, Math.PI*2);
+      ctx.fillStyle = '#222';
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
 // Predator fish - larger, hunts small fish based on hunger
 class Predator {
   constructor() {
@@ -2090,13 +2336,19 @@ class Predator {
   }
 }
 
-// Create fish in schools with distinct colors
+// Tuna palette — all schools are silver-blue with slight variation
 const schoolColors = [
-  { color: 'rgb(130, 155, 170)', belly: 'rgb(160, 185, 200)' },   // blue-silver
-  { color: 'rgb(160, 140, 100)', belly: 'rgb(190, 175, 140)' },   // golden
-  { color: 'rgb(100, 150, 130)', belly: 'rgb(140, 185, 165)' },   // teal
-  { color: 'rgb(150, 130, 150)', belly: 'rgb(180, 165, 180)' },   // lavender-silver
+  { color: 'rgb(110, 130, 155)', belly: 'rgb(170, 185, 200)' },   // steel blue
+  { color: 'rgb(100, 135, 150)', belly: 'rgb(165, 190, 205)' },   // cool silver
+  { color: 'rgb(115, 125, 148)', belly: 'rgb(175, 182, 195)' },   // blue-grey
+  { color: 'rgb(105, 140, 158)', belly: 'rgb(160, 188, 210)' },   // ocean silver
 ];
+// Per-fish color jitter so individuals aren't clones
+function jitterTunaColor(base) {
+  const m = base.match(/\d+/g).map(Number);
+  const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
+  return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
+}
 const fishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
 const fish = [];
 // Fish swim in as school groups from edges
@@ -2218,6 +2470,13 @@ for (let i = 0; i < reefCount; i++) {
     return Math.sqrt(dx * dx + dy * dy) < r.baseR + estR + 40;
   }));
   reefs.push(makeReef(rx, ry, sizeMult));
+}
+
+// Reef fish — 0-5 bright blue fish per reef
+const reefFish = [];
+for (const rf of reefs) {
+  const count = Math.floor(Math.random() * 6); // 0 to 5
+  for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
 }
 
 // Seaweed fronds around perimeter
@@ -2417,6 +2676,7 @@ regenerateWorld = function() {
   predators.length = 0;
   rocks.length = 0;
   reefs.length = 0;
+  reefFish.length = 0;
   plants.length = 0;
   debris.length = 0;
   ripples.length = 0;
@@ -2443,6 +2703,11 @@ regenerateWorld = function() {
     do { rx = w * 0.12 + Math.random() * w * 0.76; ry = h * 0.12 + Math.random() * h * 0.76; tries++; }
     while (tries < 40 && reefs.some(r => Math.sqrt((r.x-rx)**2+(r.y-ry)**2) < r.baseR + estR + 40));
     reefs.push(makeReef(rx, ry, sizeMult));
+  }
+  // Reef fish
+  for (const rf of reefs) {
+    const count = Math.floor(Math.random() * 6);
+    for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
   }
 
   // Debris
@@ -2511,8 +2776,8 @@ function draw(time) {
       for (let b = 0; b < batchSize; b++) {
         const f = new Fish(entry);
         f.school = school;
-        f.color = schoolColors[school].color;
-        f.bellyColor = schoolColors[school].belly;
+        f.color = jitterTunaColor(schoolColors[school].color);
+        f.bellyColor = jitterTunaColor(schoolColors[school].belly);
         fish.push(f);
         fishSpawned++;
       }
@@ -3057,8 +3322,8 @@ function draw(time) {
     for (let i = 0; i < waveSize; i++) {
       const nf = new Fish({ x: ex, y: ey, angle: ea });
       nf.school = school;
-      nf.color = schoolColors[school].color;
-      nf.bellyColor = schoolColors[school].belly;
+      nf.color = jitterTunaColor(schoolColors[school].color);
+      nf.bellyColor = jitterTunaColor(schoolColors[school].belly);
       fish.push(nf);
     }
     schoolArrivalTimer = 20 + Math.random() * 60;
@@ -3073,21 +3338,22 @@ function draw(time) {
       const entry = schoolEntries[school];
       const f = new Fish(entry);
       f.school = school;
-      f.color = schoolColors[school].color;
-      f.bellyColor = schoolColors[school].belly;
+      f.color = jitterTunaColor(schoolColors[school].color);
+      f.bellyColor = jitterTunaColor(schoolColors[school].belly);
       fish.push(f);
     }
   } else {
     fishRespawnTimer = 0;
   }
 
-  // Update and draw fish + predators
+  // Update and draw fish + predators + reef fish
   populateGrid(fish); // rebuild spatial grid for O(n) neighbor queries
   for (const f of fish) f.update(dt, fish, time);
+  for (const rf of reefFish) rf.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
 
-  // Draw all fish and predators sorted by depth — opacity only, no per-fish blur
-  const allSwimmers = [...fish, ...predators];
+  // Draw all swimmers sorted by depth — opacity only, no per-fish blur
+  const allSwimmers = [...fish, ...reefFish, ...predators];
   const sortedFish = allSwimmers.sort((a, b) => b.depth - a.depth);
   for (const f of sortedFish) {
     ctx.save();
