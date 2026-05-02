@@ -525,15 +525,9 @@ function rescaleAll(oldW, oldH) {
   }
   while (plants.length > targetPlants && plants.length > 30) plants.pop();
 
-  // Add rocks if needed
+  // Add coral if needed
   while (rocks.length < targetRocks) {
-    rocks.push({
-      x: Math.random() * w, y: Math.random() * h,
-      size: 8 + Math.random() * 18,
-      color: `rgb(${75 + Math.floor(Math.random() * 25)}, ${80 + Math.floor(Math.random() * 20)}, ${70 + Math.floor(Math.random() * 20)})`,
-      elongation: 0.5 + Math.random() * 0.5,
-      angle: Math.random() * Math.PI,
-    });
+    rocks.push(makeCoral(Math.random() * w, Math.random() * h));
   }
   while (rocks.length > targetRocks && rocks.length > 15) rocks.pop();
 }
@@ -2386,16 +2380,52 @@ let popDriftTimer = 10 + Math.random() * 20; // time until next target shift
 let schoolArrivalTimer = 15 + Math.random() * 30; // next wave of newcomers
 let fishRespawnTimer = 0;
 
-// Rocks - scattered across the tidepool floor
+// Coral fragments - scattered across the seafloor
+const coralPalette = [
+  [220, 120, 140],  // pink
+  [240, 160, 100],  // peach/orange
+  [180, 100, 170],  // purple
+  [230, 200, 100],  // yellow
+  [200, 80, 100],   // rose
+  [160, 200, 140],  // seafoam
+  [240, 140, 130],  // salmon
+];
+function makeCoral(x, y) {
+  const base = coralPalette[Math.floor(Math.random() * coralPalette.length)];
+  const j = () => Math.round((Math.random() - 0.5) * 20);
+  const size = 5 + Math.random() * 14;
+  // Generate 3-6 irregular branches
+  const branches = [];
+  const numBranches = 3 + Math.floor(Math.random() * 4);
+  const baseAngle = Math.random() * Math.PI * 2;
+  for (let b = 0; b < numBranches; b++) {
+    const a = baseAngle + (b / numBranches) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
+    const len = size * (0.5 + Math.random() * 0.7);
+    const width = size * (0.12 + Math.random() * 0.15);
+    // Sub-branches at the tip
+    const tips = [];
+    if (Math.random() < 0.6) {
+      const numTips = 1 + Math.floor(Math.random() * 2);
+      for (let t = 0; t < numTips; t++) {
+        tips.push({
+          angle: a + (Math.random() - 0.5) * 1.2,
+          len: len * (0.3 + Math.random() * 0.3),
+          width: width * 0.6,
+        });
+      }
+    }
+    branches.push({ angle: a, len, width, tips });
+  }
+  return {
+    x, y, size, branches,
+    color: `rgb(${base[0]+j()},${base[1]+j()},${base[2]+j()})`,
+    highlight: `rgb(${Math.min(255,base[0]+40+j())},${Math.min(255,base[1]+40+j())},${Math.min(255,base[2]+40+j())})`,
+    angle: Math.random() * Math.PI,
+  };
+}
 const rocks = [];
 for (let i = 0; i < 15; i++) {
-  rocks.push({
-    x: Math.random() * w, y: Math.random() * h,
-    size: 8 + Math.random() * 18,
-    color: `rgb(${75 + Math.floor(Math.random() * 25)}, ${80 + Math.floor(Math.random() * 20)}, ${70 + Math.floor(Math.random() * 20)})`,
-    elongation: 0.5 + Math.random() * 0.5,
-    angle: Math.random() * Math.PI,
-  });
+  rocks.push(makeCoral(Math.random() * w, Math.random() * h));
 }
 
 // Reef structures - partially submerged obstacles
@@ -2694,12 +2724,9 @@ regenerateWorld = function() {
   washWaves.length = 0;
   tapVoids.length = 0;
 
-  // Rocks
-  const rockCount = Math.max(2, Math.floor(Math.sqrt(w * h) / 200));
+  // Coral fragments
   for (let i = 0; i < 15; i++) {
-    rocks.push({ x: Math.random() * w, y: Math.random() * h, size: 8 + Math.random() * 18,
-      color: `rgb(${40+Math.floor(Math.random()*20)},${45+Math.floor(Math.random()*15)},${50+Math.floor(Math.random()*15)})`,
-      elongation: 0.5 + Math.random() * 0.5, angle: Math.random() * Math.PI });
+    rocks.push(makeCoral(Math.random() * w, Math.random() * h));
   }
 
   // Reefs — 2-4, not more
@@ -2909,15 +2936,45 @@ function draw(time) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, w, h);
 
-  // Rocks
+  // Coral fragments
   for (const r of rocks) {
     ctx.save();
     ctx.translate(r.x, r.y);
-    ctx.rotate(r.angle);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r.size, r.size * r.elongation, 0, 0, Math.PI * 2);
-    ctx.fillStyle = r.color;
-    ctx.fill();
+    ctx.globalAlpha = 0.75;
+    for (const br of r.branches) {
+      const cx = Math.cos(br.angle), cy = Math.sin(br.angle);
+      const px = -cy, py = cx; // perpendicular
+      const tipX = cx * br.len, tipY = cy * br.len;
+      // Main branch
+      ctx.beginPath();
+      ctx.moveTo(-px * br.width, -py * br.width);
+      ctx.quadraticCurveTo(cx * br.len * 0.5 + px * br.width * 0.5, cy * br.len * 0.5 + py * br.width * 0.5, tipX, tipY);
+      ctx.quadraticCurveTo(cx * br.len * 0.5 - px * br.width * 0.5, cy * br.len * 0.5 - py * br.width * 0.5, px * br.width, py * br.width);
+      ctx.closePath();
+      ctx.fillStyle = r.color;
+      ctx.fill();
+      // Highlight along the top edge
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(cx * br.len * 0.4 + px * br.width * 0.3, cy * br.len * 0.4 + py * br.width * 0.3, tipX, tipY);
+      ctx.strokeStyle = r.highlight;
+      ctx.lineWidth = br.width * 0.3;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      // Sub-branches
+      for (const tip of br.tips) {
+        const tcx = Math.cos(tip.angle), tcy = Math.sin(tip.angle);
+        const tpx = -tcy, tpy = tcx;
+        ctx.beginPath();
+        ctx.moveTo(tipX - tpx * tip.width, tipY - tpy * tip.width);
+        ctx.lineTo(tipX + tcx * tip.len, tipY + tcy * tip.len);
+        ctx.lineTo(tipX + tpx * tip.width, tipY + tpy * tip.width);
+        ctx.closePath();
+        ctx.fillStyle = r.highlight;
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
