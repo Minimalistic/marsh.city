@@ -2046,7 +2046,7 @@ class Predator {
     else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
 
     this.len = (52 + Math.random() * 19.5) * (w < 500 ? 0.8 : 1);
-    this.bodyWidth = this.len * 0.068;
+    this.bodyWidth = this.len * 0.048; // sleek barracuda profile
     this.speed = 0.5 + Math.random() * 0.3;
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
@@ -2069,6 +2069,9 @@ class Predator {
     this.chomping = false;
     this.chompTimer = 0;
     this.chompPhase = 0;
+    // Tail flick on burst — brief powerful lateral tail sweep
+    this._burstFlick = 0; // 0 = no flick, decays from 1.0
+    this._burstFlickDir = 1; // which side the tail kicks to
 
     const numJoints = 12;
     this._jointCount = numJoints;
@@ -2189,9 +2192,11 @@ class Predator {
         this.vx += (Math.cos(pursuitAngle) * chaseSpeed - this.vx) * steer;
         this.vy += (Math.sin(pursuitAngle) * chaseSpeed - this.vy) * steer;
 
-        // Final lunge — burst of raw speed
-        if (dist < 50 * viewScale) {
+        // Final lunge — burst of raw speed with tail flick
+        if (dist < 50 * viewScale && this.burstTimer <= 0) {
           this.burstTimer = 0.6;
+          this._burstFlick = 1.0;
+          this._burstFlickDir = Math.random() < 0.5 ? 1 : -1;
         }
       } else if (crowdN > 0) {
         // Barely drifting in the general direction of fish — not committed
@@ -2370,8 +2375,12 @@ class Predator {
     if (this._snapTimer <= 0 && !this.target) {
       this._snapping = true;
       // Snap 40-90 degrees to one side
-      this._snapAngle = this.angle + (Math.random() < 0.5 ? 1 : -1) * (0.7 + Math.random() * 0.9);
+      const snapDir = Math.random() < 0.5 ? 1 : -1;
+      this._snapAngle = this.angle + snapDir * (0.7 + Math.random() * 0.9);
       this._snapTimer = 8 + Math.random() * 20;
+      // Tail flick powers the direction change
+      this._burstFlick = 0.7;
+      this._burstFlickDir = -snapDir; // tail kicks opposite to turn direction
     }
     if (this._snapping) {
       // Steer velocity toward snap angle quickly
@@ -2401,6 +2410,9 @@ class Predator {
     while (rDiff < -Math.PI) rDiff += Math.PI * 2;
     this._renderAngle += rDiff * (this._snapping ? 0.3 : 0.16);
 
+    // Decay burst tail flick
+    if (this._burstFlick > 0) this._burstFlick = Math.max(0, this._burstFlick - dt * 4);
+
     // Joint chain — plant-style verlet with heavy damping, no hard bend clamping
     // Body straightens naturally over time through rest-position pull
     this._joints[0].x = this.x;
@@ -2418,6 +2430,16 @@ class Predator {
       const drag = headStiff - t * 0.15;
       curr.x += velX * drag;
       curr.y += velY * drag;
+      // Burst tail flick — rear 40% of body gets a sharp lateral kick
+      if (this._burstFlick > 0 && t > 0.6) {
+        const flickT = (t - 0.6) / 0.4; // 0 at 60%, 1 at tail tip
+        const flickStrength = this._burstFlick * flickT * flickT * this.len * 0.12;
+        // Perpendicular to the segment direction (prev -> curr)
+        const sdx = curr.x - prev.x, sdy = curr.y - prev.y;
+        const sl = Math.sqrt(sdx * sdx + sdy * sdy) || 1;
+        curr.x += (-sdy / sl) * flickStrength * this._burstFlickDir;
+        curr.y += (sdx / sl) * flickStrength * this._burstFlickDir;
+      }
       // Pull toward rest position (straight behind head)
       const restX = this.x - Math.cos(this._renderAngle) * j * this._segLen;
       const restY = this.y - Math.sin(this._renderAngle) * j * this._segLen;
