@@ -1157,7 +1157,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      const crownSense = Math.max(crownR * 3.5, crownR + fishLen5);
+      const crownSense = Math.max(crownR * 2.45, crownR + fishLen5);
       if (cDist < crownSense && cDist > 0.1) {
         const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
         if (approach > 0.0) {
@@ -1275,7 +1275,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownCollR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
-      const crownPush = crownCollR * 1.5 * this.rockComfort;
+      const crownPush = crownCollR * 1.05 * this.rockComfort;
       if (cDist < crownPush && cDist > 0.1) {
         const pen = 1 - cDist / crownPush;
         const pushStr = pen * pen * pen * 0.8;
