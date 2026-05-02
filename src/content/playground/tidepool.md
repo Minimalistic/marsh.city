@@ -1996,7 +1996,7 @@ class Predator {
     ctx.moveTo(spineX[dStart], spineY[dStart]);
     for (let i = dStart; i <= dEnd; i++) {
       const t = (i - dStart) / (dEnd - dStart);
-      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 1.2;
+      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 3;
       const nx2 = -(spineY[Math.min(i+1, segs)] - spineY[Math.max(i-1, 0)]);
       const ny2 = spineX[Math.min(i+1, segs)] - spineX[Math.max(i-1, 0)];
       const nL = Math.sqrt(nx2 * nx2 + ny2 * ny2) || 1;
@@ -2005,7 +2005,7 @@ class Predator {
     ctx.lineTo(spineX[dEnd], spineY[dEnd]);
     ctx.closePath();
     ctx.fillStyle = `rgb(${cr-15},${cg-15},${cb-10})`;
-    ctx.globalAlpha = 0.45;
+    ctx.globalAlpha = 0.7;
     ctx.fill();
     ctx.globalAlpha = 1;
 
