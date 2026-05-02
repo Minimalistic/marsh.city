@@ -2479,7 +2479,7 @@ function spawnAllFish(count) {
     fish.push(f);
   }
 }
-spawnAllFish(fishCount);
+// Initial fish spawn deferred until after reefs exist (see below)
 // School entry points still needed for later arrivals/respawns
 const schoolEntries = schoolColors.map((_, si) => {
   const edge = si % 4;
@@ -2629,6 +2629,9 @@ for (const rf of reefs) {
   const count = Math.floor(Math.random() * 6); // 0 to 5
   for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
 }
+
+// Now spawn fish — reefs exist so crown ejection works
+spawnAllFish(fishCount);
 
 // Kelp fronds — grow upward from seafloor, slight perspective tilt
 class Frond {
