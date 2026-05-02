@@ -2423,14 +2423,30 @@ function jitterTunaColor(base) {
 }
 const fishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
 const fish = [];
-// Fish swim in as school groups from edges
-let fishToSpawn = fishCount;
-let fishSpawned = 0;
-let spawnTimer = 0;
-// Pre-plan school entry points: each school enters from a different edge
+// Spawn all fish immediately inside the viewport in school clusters
+function spawnAllFish(count) {
+  for (let i = 0; i < count; i++) {
+    const school = i % schoolColors.length;
+    // Each school clusters in a random area of the viewport
+    const clusterX = w * (0.15 + (school * 0.2) % 0.7 + Math.random() * 0.15);
+    const clusterY = h * (0.15 + Math.random() * 0.7);
+    const f = new Fish();
+    f.x = clusterX + (Math.random() - 0.5) * 60;
+    f.y = clusterY + (Math.random() - 0.5) * 60;
+    f.angle = Math.random() * Math.PI * 2;
+    f.vx = Math.cos(f.angle) * f.speed;
+    f.vy = Math.sin(f.angle) * f.speed;
+    f.school = school;
+    f.color = jitterTunaColor(schoolColors[school].color);
+    f.bellyColor = jitterTunaColor(schoolColors[school].belly);
+    fish.push(f);
+  }
+}
+spawnAllFish(fishCount);
+// School entry points still needed for later arrivals/respawns
 const schoolEntries = schoolColors.map((_, si) => {
   const edge = si % 4;
-  const margin = 80 + Math.random() * 40; // well offscreen
+  const margin = 80 + Math.random() * 40;
   let x, y, angle;
   if (edge === 0) { x = -margin; y = h * 0.2 + Math.random() * h * 0.6; angle = (Math.random() - 0.5) * 0.5; }
   else if (edge === 1) { x = w + margin; y = h * 0.2 + Math.random() * h * 0.6; angle = Math.PI + (Math.random() - 0.5) * 0.5; }
@@ -2887,13 +2903,12 @@ regenerateWorld = function() {
   spawnKelp();
   for (let i = 0; i < 60; i++) { for (const p of plants) p.update(0.016, i * 16); }
 
-  // Fish — fresh school entries
+  // Fish — spawn all immediately inside viewport
   basePop = Math.min(500, Math.max(80, Math.floor((w * h) / 400)));
   popTarget = basePop * (0.7 + Math.random() * 0.3);
   const newFishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
-  fishToSpawn = newFishCount;
-  fishSpawned = 0;
-  spawnTimer = 0;
+  spawnAllFish(newFishCount);
+  // Refresh school entry points for later arrivals
   for (let i = 0; i < schoolEntries.length; i++) {
     const edge = i % 4;
     const margin = 80 + Math.random() * 40;
@@ -2918,26 +2933,6 @@ function draw(time) {
   lastTime = time;
   if (settleTime > 0) settleTime -= dt;
 
-  // Spawn fish as school groups swimming in from edges
-  if (fishSpawned < fishToSpawn) {
-    spawnTimer += dt;
-    // Small batches every ~0.15s so schools arrive as clusters
-    while (spawnTimer >= 0.15 && fishSpawned < fishToSpawn) {
-      spawnTimer -= 0.15;
-      // Spawn 2-4 fish from the same school entry point
-      const batchSize = Math.min(2 + Math.floor(Math.random() * 3), fishToSpawn - fishSpawned);
-      const school = fishSpawned % schoolColors.length;
-      const entry = schoolEntries[school];
-      for (let b = 0; b < batchSize; b++) {
-        const f = new Fish(entry);
-        f.school = school;
-        f.color = jitterTunaColor(schoolColors[school].color);
-        f.bellyColor = jitterTunaColor(schoolColors[school].belly);
-        fish.push(f);
-        fishSpawned++;
-      }
-    }
-  }
 
   // Wave current - irregular oscillation, not perfectly sinusoidal
   waveTime += dt;
