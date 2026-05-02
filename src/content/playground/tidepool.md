@@ -2153,11 +2153,28 @@ class Predator {
       const straighten = (0.001 + speedFactor * 0.004 + spawnBoost + headBoost) * (1 - t * 0.5);
       curr.x += (restX - curr.x) * straighten;
       curr.y += (restY - curr.y) * straighten;
-      // Distance constraint only — no bend clamping
+      // Distance constraint
       let dx = curr.x - prev.x, dy = curr.y - prev.y;
       let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
       curr.x = prev.x + (dx / dist) * this._segLen;
       curr.y = prev.y + (dy / dist) * this._segLen;
+      // Bend clamping — limit angle between consecutive segments
+      // Stiffer at head, slightly more flex toward tail
+      if (j >= 2) {
+        const pp = this._joints[j - 2];
+        const prevAng = Math.atan2(prev.y - pp.y, prev.x - pp.x);
+        const currAng = Math.atan2(curr.y - prev.y, curr.x - prev.x);
+        let bend = currAng - prevAng;
+        while (bend > Math.PI) bend -= Math.PI * 2;
+        while (bend < -Math.PI) bend += Math.PI * 2;
+        // Max bend per joint: ~15 deg at head, ~25 deg at tail
+        const maxBend = (0.26 + t * 0.18);
+        if (Math.abs(bend) > maxBend) {
+          const clamped = prevAng + Math.sign(bend) * maxBend;
+          curr.x = prev.x + Math.cos(clamped) * this._segLen;
+          curr.y = prev.y + Math.sin(clamped) * this._segLen;
+        }
+      }
     }
     if (this._spawnFrames > 0) this._spawnFrames--;
     this.speed = currentSpeed;
