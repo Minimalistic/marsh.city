@@ -2662,13 +2662,13 @@ class Frond {
     const segs = this.segs;
     const ps = this._plantScale;
     const n = segs.length;
-    const baseIdx = 2; // lower quarter drawn separately
+    const baseIdx = 2;
     ctx.lineCap = 'round';
-    // Main stem — upper segments only
+    // Thin stipe (kelp tube stem) — upper segments
     for (let i = baseIdx; i < n - 1; i++) {
       const t0 = i / (n - 1), t1 = (i + 1) / (n - 1);
-      const w0 = 1.6 * ps * (1 - t0 * 0.85);
-      const w1 = 1.6 * ps * (1 - t1 * 0.85);
+      const w0 = 0.6 * ps * (1 - t0 * 0.5);
+      const w1 = 0.6 * ps * (1 - t1 * 0.5);
       const ax = segs[i].x, ay = segs[i].y;
       const bx = segs[i+1].x, by = segs[i+1].y;
       const dx = bx - ax, dy = by - ay;
@@ -2680,80 +2680,68 @@ class Frond {
       ctx.lineTo(bx - nx*w1*0.5, by - ny*w1*0.5);
       ctx.lineTo(ax - nx*w0*0.5, ay - ny*w0*0.5);
       ctx.closePath();
-      ctx.fillStyle = 'rgb(30, 120, 70)';
+      ctx.fillStyle = 'rgb(25, 100, 55)';
       ctx.fill();
     }
-    // Branches and leaflets — taper from base to tip
+    // Kelp blades — elongated leaf shapes at segment junctions, alternating sides
     for (let b = 0; b < this.branches; b++) {
       const bd = this.branchData[b];
       const segIdx = Math.min(Math.floor(bd.t * this.segCount), this.segCount - 1);
+      if (segIdx < baseIdx) continue;
       const base = segs[segIdx];
       const next = segs[Math.min(segIdx + 1, this.segCount)];
       const stemAngle = Math.atan2(next.y - base.y, next.x - base.x);
       const side = (b % 2 === 0 ? 1 : -1) * this.branchSide;
-      const branchAngle = stemAngle + side * (0.4 + Math.sin(time * 0.001 + b + this.phase) * 0.1);
-      const branchLen = this.len * (0.35 - bd.t * 0.2) * bd.lenScale;
-      const tipX = base.x + Math.cos(branchAngle) * branchLen;
-      const tipY = base.y + Math.sin(branchAngle) * branchLen;
-      const taper = Math.pow(1 - bd.t, 0.6);
-      const bw = (0.3 + taper * 0.8) * ps;
-      // Tapered branch — wide at base, pointed at tip
-      const bdx = tipX - base.x, bdy = tipY - base.y;
-      const blen = Math.sqrt(bdx*bdx+bdy*bdy) || 1;
-      const bnx = -bdy/blen, bny = bdx/blen;
+      // Blade angles out from stem, with gentle sway
+      const bladeAngle = stemAngle + side * (0.6 + Math.sin(time * 0.0008 + b * 1.7 + this.phase) * 0.2);
+      const taper = Math.pow(1 - bd.t, 0.5);
+      const bladeLen = this.len * (0.25 + taper * 0.15) * bd.lenScale;
+      const bladeW = (0.8 + taper * 1.2) * ps;
+      // Blade tip
+      const tipX = base.x + Math.cos(bladeAngle) * bladeLen;
+      const tipY = base.y + Math.sin(bladeAngle) * bladeLen;
+      // Elongated oval blade using bezier curves
+      const bpx = -Math.sin(bladeAngle), bpy = Math.cos(bladeAngle);
+      const midX = (base.x + tipX) * 0.5, midY = (base.y + tipY) * 0.5;
       ctx.beginPath();
-      ctx.moveTo(base.x + bnx*bw*0.5, base.y + bny*bw*0.5);
-      ctx.lineTo(tipX, tipY);
-      ctx.lineTo(base.x - bnx*bw*0.5, base.y - bny*bw*0.5);
+      ctx.moveTo(base.x, base.y);
+      ctx.quadraticCurveTo(midX + bpx * bladeW * 0.5, midY + bpy * bladeW * 0.5, tipX, tipY);
+      ctx.quadraticCurveTo(midX - bpx * bladeW * 0.5, midY - bpy * bladeW * 0.5, base.x, base.y);
       ctx.closePath();
-      ctx.fillStyle = 'rgb(45, 135, 75)';
+      ctx.fillStyle = 'rgb(40, 130, 65)';
       ctx.fill();
-      for (let l = 0; l < bd.leaflets; l++) {
-        const lt = 0.3 + (l / bd.leaflets) * 0.6;
-        const lx = base.x + (tipX - base.x) * lt;
-        const ly = base.y + (tipY - base.y) * lt;
-        const leafAngle = branchAngle + ((l % 2 === 0 ? 1 : -1)) * (0.5 + l * 0.07);
-        const leafLen = branchLen * (0.2 + taper * 0.15);
-        const lw = (0.2 + taper * 0.3) * ps;
-        // Tapered leaflet
-        const ltx = lx + Math.cos(leafAngle) * leafLen;
-        const lty = ly + Math.sin(leafAngle) * leafLen;
-        const ldx = ltx - lx, ldy = lty - ly;
-        const lln = Math.sqrt(ldx*ldx+ldy*ldy) || 1;
-        const lnx = -ldy/lln, lny = ldx/lln;
-        ctx.beginPath();
-        ctx.moveTo(lx + lnx*lw*0.5, ly + lny*lw*0.5);
-        ctx.lineTo(ltx, lty);
-        ctx.lineTo(lx - lnx*lw*0.5, ly - lny*lw*0.5);
-        ctx.closePath();
-        ctx.fillStyle = 'rgb(50, 145, 80)';
-        ctx.fill();
-      }
+      // Blade midrib — thin line down the center
+      ctx.beginPath();
+      ctx.moveTo(base.x, base.y);
+      ctx.lineTo(tipX, tipY);
+      ctx.strokeStyle = 'rgba(25, 90, 45, 0.4)';
+      ctx.lineWidth = 0.4 * ps;
+      ctx.stroke();
     }
   }
 
-  // Draw lower stem + root — always on top, never behind fish
+  // Draw lower stipe + root — always on top, never behind fish
   drawBase(ctx) {
     const segs = this.segs;
     const ps = this._plantScale;
     const baseIdx = 2;
     ctx.lineCap = 'round';
-    // Root base gradient
-    const rootR = 3 * ps;
+    // Root holdfast gradient
+    const rootR = 2 * ps;
     const rootGrad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, rootR);
-    rootGrad.addColorStop(0, 'rgba(40, 100, 65, 0.3)');
-    rootGrad.addColorStop(0.5, 'rgba(40, 100, 65, 0.15)');
-    rootGrad.addColorStop(1, 'rgba(40, 100, 65, 0)');
+    rootGrad.addColorStop(0, 'rgba(35, 85, 50, 0.3)');
+    rootGrad.addColorStop(0.5, 'rgba(35, 85, 50, 0.15)');
+    rootGrad.addColorStop(1, 'rgba(35, 85, 50, 0)');
     ctx.beginPath();
     ctx.ellipse(this.x, this.y, rootR, rootR * 0.5, 0, 0, Math.PI * 2);
     ctx.fillStyle = rootGrad;
     ctx.fill();
-    // Lower stem segments
+    // Lower stipe — thin tube matching upper segments
     const n = segs.length;
     for (let i = 0; i < baseIdx; i++) {
       const t0 = i / (n - 1), t1 = (i + 1) / (n - 1);
-      const w0 = 1.6 * ps * (1 - t0 * 0.85);
-      const w1 = 1.6 * ps * (1 - t1 * 0.85);
+      const w0 = 0.6 * ps * (1 - t0 * 0.5);
+      const w1 = 0.6 * ps * (1 - t1 * 0.5);
       const ax = segs[i].x, ay = segs[i].y;
       const bx = segs[i+1].x, by = segs[i+1].y;
       const dx = bx - ax, dy = by - ay;
@@ -2765,7 +2753,7 @@ class Frond {
       ctx.lineTo(bx - nx*w1*0.5, by - ny*w1*0.5);
       ctx.lineTo(ax - nx*w0*0.5, ay - ny*w0*0.5);
       ctx.closePath();
-      ctx.fillStyle = 'rgb(30, 120, 70)';
+      ctx.fillStyle = 'rgb(25, 100, 55)';
       ctx.fill();
     }
   }
