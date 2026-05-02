@@ -474,6 +474,7 @@ function rescaleAll(oldW, oldH) {
   for (const d of debris) { d.x *= sx; d.y *= sy; }
   for (const f of fish) { f.x *= sx; f.y *= sy; }
   for (const p of predators) { p.x *= sx; p.y *= sy; }
+  for (const s of starfish) { s.x *= sx; s.y *= sy; s.homeX *= sx; s.homeY *= sy; }
 
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
@@ -1781,6 +1782,210 @@ class ReefFish {
   }
 }
 
+// Starfish - small benthic creatures that cling to rocks and creep slowly
+class Starfish {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.angle = Math.random() * Math.PI * 2; // body rotation
+    const mobileScale = Math.min(w, h) < 500 ? 0.7 : 1;
+    const vpBoost = 1 + Math.min(0.4, (viewScale - 1) * 0.4);
+    this.scale = mobileScale * vpBoost;
+    this.size = (4 + Math.random() * 3) * this.scale; // arm length from center
+    this.arms = 5;
+
+    // Each arm has slight length/width variation for organic look
+    this._armLengths = [];
+    this._armWidths = [];
+    for (let i = 0; i < this.arms; i++) {
+      this._armLengths.push(this.size * (0.85 + Math.random() * 0.3));
+      this._armWidths.push(this.size * (0.28 + Math.random() * 0.08));
+    }
+
+    // Color - ochre/orange/rust/purple range like real tidepool starfish
+    const palettes = [
+      { body: [180, 90, 45], highlight: [210, 120, 65] },   // ochre
+      { body: [190, 75, 35], highlight: [220, 105, 55] },    // rust
+      { body: [160, 55, 80], highlight: [190, 80, 110] },    // purple
+      { body: [200, 110, 50], highlight: [230, 145, 75] },   // orange
+      { body: [140, 70, 55], highlight: [170, 95, 75] },     // dark brown
+    ];
+    const pal = palettes[Math.floor(Math.random() * palettes.length)];
+    const jit = () => Math.round((Math.random() - 0.5) * 15);
+    this.bodyColor = `rgb(${pal.body[0]+jit()},${pal.body[1]+jit()},${pal.body[2]+jit()})`;
+    this.highlightColor = `rgb(${pal.highlight[0]+jit()},${pal.highlight[1]+jit()},${pal.highlight[2]+jit()})`;
+
+    // Movement - very slow creeping with pauses
+    this.speed = 0.008 + Math.random() * 0.012; // extremely slow
+    this.moveAngle = Math.random() * Math.PI * 2; // direction of travel
+    this.vx = 0;
+    this.vy = 0;
+
+    // State: 'resting' or 'creeping'
+    this.state = Math.random() < 0.6 ? 'resting' : 'creeping';
+    this.stateTimer = 3 + Math.random() * 15; // seconds until state change
+    this._turnRate = 0; // gentle turning while creeping
+
+    // Depth - starfish sit on the bottom
+    this.depth = 0.05 + Math.random() * 0.1;
+    this.depthAlpha = 0.85 + this.depth * 0.1;
+
+    // Subtle arm animation phase
+    this._phase = Math.random() * Math.PI * 2;
+
+    // Home reef (if any) - starfish prefer to stay near their home
+    this.homeX = x;
+    this.homeY = y;
+    this.roamRadius = 30 + Math.random() * 50; // how far they'll wander from home
+  }
+
+  update(dt, time) {
+    this.stateTimer -= dt;
+    if (this.stateTimer <= 0) {
+      // Toggle state
+      if (this.state === 'resting') {
+        this.state = 'creeping';
+        this.stateTimer = 4 + Math.random() * 12;
+        // Pick a new direction, biased toward home if far away
+        const dx = this.homeX - this.x, dy = this.homeY - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > this.roamRadius * 0.7) {
+          // Bias toward home
+          this.moveAngle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.2;
+        } else {
+          this.moveAngle = Math.random() * Math.PI * 2;
+        }
+        this._turnRate = (Math.random() - 0.5) * 0.003; // gentle arc
+      } else {
+        this.state = 'resting';
+        this.stateTimer = 5 + Math.random() * 20;
+      }
+    }
+
+    if (this.state === 'creeping') {
+      this.moveAngle += this._turnRate;
+      const scaledSpeed = this.speed * (1 + (viewScale - 1) * 0.5);
+      this.vx = Math.cos(this.moveAngle) * scaledSpeed;
+      this.vy = Math.sin(this.moveAngle) * scaledSpeed;
+      // Tiny tidal drift
+      this.vx += Math.cos(tide.angle) * tide.strength * 0.0005;
+      this.vy += Math.sin(tide.angle) * tide.strength * 0.0005;
+      // Body rotation slowly aligns with movement
+      let angleDiff = this.moveAngle - this.angle;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+      this.angle += angleDiff * 0.005;
+    } else {
+      this.vx *= 0.9;
+      this.vy *= 0.9;
+    }
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Stay in bounds with soft bounce
+    const margin = this.size * 2;
+    if (this.x < margin) { this.x = margin; this.moveAngle = Math.random() * Math.PI * 0.5 - Math.PI * 0.25; }
+    if (this.x > w - margin) { this.x = w - margin; this.moveAngle = Math.PI + (Math.random() - 0.5) * 0.5; }
+    if (this.y < margin) { this.y = margin; this.moveAngle = Math.PI * 0.5 + (Math.random() - 0.5) * 0.5; }
+    if (this.y > h - margin) { this.y = h - margin; this.moveAngle = -Math.PI * 0.5 + (Math.random() - 0.5) * 0.5; }
+
+    // Avoid reef crowns - creep around emerged rock
+    for (const rf of reefs) {
+      if (rf.submerged) continue;
+      const cdx = this.x - (rf.x + rf.crownOffX);
+      const cdy = this.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      const crownEdge = rf.radiusAt(cAngle, rf.crownRadii) + this.size;
+      if (cDist < crownEdge && cDist > 0.1) {
+        this.x = rf.x + rf.crownOffX + (cdx / cDist) * crownEdge;
+        this.y = rf.y + rf.crownOffY + (cdy / cDist) * crownEdge;
+        // Redirect along the edge
+        this.moveAngle = cAngle + (Math.random() < 0.5 ? 0.5 : -0.5);
+      }
+    }
+
+    this._phase = time * 0.0003;
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    const arms = this.arms;
+    const armAngle = (Math.PI * 2) / arms;
+
+    // Draw each arm
+    for (let i = 0; i < arms; i++) {
+      const a = armAngle * i;
+      const armLen = this._armLengths[i] + Math.sin(this._phase + i * 1.3) * this.size * 0.03;
+      const armW = this._armWidths[i];
+
+      ctx.save();
+      ctx.rotate(a);
+
+      // Arm shape - tapered with slight curve
+      ctx.beginPath();
+      ctx.moveTo(armW * 0.5, 0);
+      // Right side of arm - curves outward slightly
+      ctx.quadraticCurveTo(armW * 0.55, armLen * 0.4, armW * 0.2, armLen * 0.85);
+      // Rounded tip
+      ctx.quadraticCurveTo(0, armLen * 1.05, -armW * 0.2, armLen * 0.85);
+      // Left side
+      ctx.quadraticCurveTo(-armW * 0.55, armLen * 0.4, -armW * 0.5, 0);
+      ctx.closePath();
+
+      ctx.fillStyle = this.bodyColor;
+      ctx.fill();
+
+      // Center ridge / highlight stripe down each arm
+      ctx.beginPath();
+      ctx.moveTo(0, this.size * 0.15);
+      ctx.lineTo(armW * 0.08, armLen * 0.7);
+      ctx.lineTo(0, armLen * 0.85);
+      ctx.lineTo(-armW * 0.08, armLen * 0.7);
+      ctx.closePath();
+      ctx.fillStyle = this.highlightColor;
+      ctx.globalAlpha = 0.5;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Tiny texture dots along the arm (tube feet / bumps)
+      for (let d = 0; d < 3; d++) {
+        const dy = armLen * (0.25 + d * 0.22);
+        const dotR = armW * 0.06;
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(side * armW * 0.22, dy, dotR, 0, Math.PI * 2);
+          ctx.fillStyle = this.highlightColor;
+          ctx.globalAlpha = 0.35;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      ctx.restore();
+    }
+
+    // Central disc
+    ctx.beginPath();
+    ctx.arc(0, 0, this.size * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = this.bodyColor;
+    ctx.fill();
+    // Disc highlight
+    ctx.beginPath();
+    ctx.arc(0, 0, this.size * 0.15, 0, Math.PI * 2);
+    ctx.fillStyle = this.highlightColor;
+    ctx.globalAlpha = 0.4;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+  }
+}
+
 // Predator fish - larger, hunts small fish based on hunger
 class Predator {
   constructor() {
@@ -2804,6 +3009,40 @@ for (let i = 0; i < 60; i++) {
   for (const p of plants) p.update(0.016, i * 16);
 }
 
+// Starfish — small benthic creatures near reefs, rocks, and kelp
+const starfish = [];
+function spawnStarfish() {
+  // Scale count with viewport — 4-8 starfish
+  const count = Math.max(3, Math.min(8, Math.floor(Math.sqrt(w * h) / 300)));
+  // ~60% near reef bases, ~20% near kelp, ~20% on open substrate
+  for (let i = 0; i < count; i++) {
+    let sx, sy;
+    const roll = Math.random();
+    if (roll < 0.6 && reefs.length > 0) {
+      // Near a reef base — underwater rock edge where starfish graze
+      const rf = reefs[Math.floor(Math.random() * reefs.length)];
+      const a = Math.random() * Math.PI * 2;
+      const dist = rf.baseR * (0.6 + Math.random() * 0.8);
+      sx = rf.x + Math.cos(a) * dist;
+      sy = rf.y + Math.sin(a) * dist;
+    } else if (roll < 0.8 && plants.length > 0) {
+      // Near kelp base
+      const p = plants[Math.floor(Math.random() * plants.length)];
+      sx = p.x + (Math.random() - 0.5) * 25;
+      sy = p.y + (Math.random() - 0.5) * 15;
+    } else {
+      // Open substrate — lower half preferred
+      sx = w * 0.1 + Math.random() * w * 0.8;
+      sy = h * 0.4 + Math.random() * h * 0.55;
+    }
+    // Clamp to bounds
+    sx = Math.max(10, Math.min(w - 10, sx));
+    sy = Math.max(10, Math.min(h - 10, sy));
+    starfish.push(new Starfish(sx, sy));
+  }
+}
+spawnStarfish();
+
 let lastTime = 0;
 let waveTime = 0;
 let settleTime = 0;
@@ -2830,6 +3069,7 @@ regenerateWorld = function() {
   killFx.length = 0;
   washWaves.length = 0;
   tapVoids.length = 0;
+  starfish.length = 0;
 
   // Sand patches
   for (let i = 0; i < 15; i++) {
@@ -2886,6 +3126,9 @@ regenerateWorld = function() {
   // Kelp
   spawnKelp();
   for (let i = 0; i < 60; i++) { for (const p of plants) p.update(0.016, i * 16); }
+
+  // Starfish
+  spawnStarfish();
 
   // Fish — swim in from edges
   basePop = Math.min(500, Math.max(80, Math.floor((w * h) / 400)));
@@ -3505,6 +3748,7 @@ function draw(time) {
   for (const f of fish) f.update(dt, fish, time);
   for (const rf of reefFish) rf.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
+  for (const s of starfish) s.update(dt, time);
 
   // Draw swimmers and plants interleaved by y-position (top-down perspective)
   // Items higher on screen (lower y) are "further back" and drawn first
@@ -3514,6 +3758,7 @@ function draw(time) {
   for (const p of predators) drawables.push({ y: p.y, type: 'fish', obj: p });
   for (const p of plants) drawables.push({ y: p.y, type: 'plant', obj: p });
   for (const d of debris) drawables.push({ y: d.y, type: 'debris', obj: d });
+  for (const s of starfish) drawables.push({ y: s.y, type: 'starfish', obj: s });
   drawables.sort((a, b) => a.y - b.y);
   for (const d of drawables) {
     if (d.type === 'plant') {
@@ -3523,6 +3768,11 @@ function draw(time) {
       ctx.arc(d.obj.x, d.obj.y, d.obj.size, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(210, 235, 240, ${d.obj.opacity})`;
       ctx.fill();
+    } else if (d.type === 'starfish') {
+      ctx.save();
+      ctx.globalAlpha = d.obj.depthAlpha;
+      d.obj.draw(ctx);
+      ctx.restore();
     } else {
       ctx.save();
       ctx.globalAlpha = d.obj.depthAlpha;
