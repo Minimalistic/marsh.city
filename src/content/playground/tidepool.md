@@ -506,7 +506,7 @@ function rescaleAll(oldW, oldH) {
       x: Math.random() * w, y: Math.random() * h,
       size: bright ? (0.4 + Math.random() * 0.6) : (0.1 + Math.random() * 0.35),
       vx: 0, vy: 0,
-      opacity: bright ? (0.2 + Math.random() * 0.2) : (0.05 + Math.random() * 0.12),
+      opacity: bright ? (0.35 + Math.random() * 0.25) : (0.1 + Math.random() * 0.15),
     });
   }
   while (debris.length > targetDebris && debris.length > initialDebrisCount) debris.pop();
@@ -734,7 +734,7 @@ for (let i = 0; i < 500; i++) {
     x: Math.random() * w, y: Math.random() * h,
     size: bright ? (0.4 + Math.random() * 0.6) : (0.1 + Math.random() * 0.35),
     vx: 0, vy: 0,
-    opacity: bright ? (0.2 + Math.random() * 0.2) : (0.05 + Math.random() * 0.12),
+    opacity: bright ? (0.35 + Math.random() * 0.25) : (0.1 + Math.random() * 0.15),
   });
 }
 
@@ -3025,7 +3025,7 @@ function draw(time) {
     if (d.y < 0) d.y = h; if (d.y > h) d.y = 0;
     ctx.beginPath();
     ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(140, 180, 190, ${d.opacity})`;
+    ctx.fillStyle = `rgba(210, 235, 240, ${d.opacity})`;
     ctx.fill();
   }
 
