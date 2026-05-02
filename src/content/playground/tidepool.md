@@ -511,17 +511,17 @@ function rescaleAll(oldW, oldH) {
   }
   while (debris.length > targetDebris && debris.length > initialDebrisCount) debris.pop();
 
-  // Add plants if needed
+  // Add kelp if needed
   while (plants.length < targetPlants) {
-    const edge = Math.floor(Math.random() * 4);
-    let px, py, growAngle;
-    const inset = Math.random() * 5;
-    if (edge === 0) { px = Math.random() * w; py = inset; growAngle = Math.PI / 2; }
-    else if (edge === 1) { px = w - inset; py = Math.random() * h; growAngle = Math.PI; }
-    else if (edge === 2) { px = Math.random() * w; py = h - inset; growAngle = -Math.PI / 2; }
-    else { px = inset; py = Math.random() * h; growAngle = 0; }
-    growAngle += (Math.random() - 0.5) * 0.5;
-    plants.push(new Frond(px, py, growAngle));
+    // Spawn in lower half or near a random reef
+    if (Math.random() < 0.4 && reefs.length > 0) {
+      const rf = reefs[Math.floor(Math.random() * reefs.length)];
+      const a = Math.random() * Math.PI * 2;
+      const dist = rf.baseR * (0.8 + Math.random() * 0.5);
+      plants.push(new Frond(rf.x + Math.cos(a) * dist, rf.y + Math.sin(a) * dist));
+    } else {
+      plants.push(new Frond(Math.random() * w, h * (0.5 + Math.random() * 0.5)));
+    }
   }
   while (plants.length > targetPlants && plants.length > 30) plants.pop();
 
@@ -2537,15 +2537,15 @@ for (const rf of reefs) {
   for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
 }
 
-// Seaweed fronds around perimeter
+// Kelp fronds — grow upward from seafloor, slight perspective tilt
 class Frond {
-  constructor(x, y, growAngle) {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.growAngle = growAngle;
-    // Plant scale: 3x base size, proportional to viewport area
+    // Grow upward with slight random lean (-PI/2 = straight up on screen)
+    this.growAngle = -Math.PI / 2 + (Math.random() - 0.5) * 0.3;
     const plantScale = viewScale * 0.945;
-    this.len = (40 + Math.random() * 55) * plantScale;
+    this.len = (30 + Math.random() * 45) * plantScale;
     this.branches = 3 + Math.floor(Math.random() * 4);
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
@@ -2560,7 +2560,7 @@ class Frond {
     this.segs = [];
     for (let i = 0; i <= this.segCount; i++) {
       const t = i / this.segCount;
-      this.segs.push({ x: x + Math.cos(growAngle) * t * this.len, y: y + Math.sin(growAngle) * t * this.len, vx: 0, vy: 0 });
+      this.segs.push({ x: x + Math.cos(this.growAngle) * t * this.len, y: y + Math.sin(this.growAngle) * t * this.len, vx: 0, vy: 0 });
     }
   }
 
@@ -2632,6 +2632,11 @@ class Frond {
     const ps = this._plantScale;
     const n = segs.length;
     ctx.lineCap = 'round';
+    // Root base — small dark oval where stem meets sand
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y, 3 * ps, 1.5 * ps, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(20, 80, 50, 0.5)';
+    ctx.fill();
     // Main stem — each segment tapers from its width to the next segment's width
     for (let i = 0; i < n - 1; i++) {
       const t0 = i / (n - 1), t1 = (i + 1) / (n - 1);
@@ -2702,17 +2707,36 @@ class Frond {
 }
 
 const plants = [];
-for (let i = 0; i < 30; i++) {
-  const edge = Math.floor(Math.random() * 4);
-  let px, py, growAngle;
-  const inset = Math.random() * 5;
-  if (edge === 0) { px = Math.random() * w; py = inset; growAngle = Math.PI / 2; }
-  else if (edge === 1) { px = w - inset; py = Math.random() * h; growAngle = Math.PI; }
-  else if (edge === 2) { px = Math.random() * w; py = h - inset; growAngle = -Math.PI / 2; }
-  else { px = inset; py = Math.random() * h; growAngle = 0; }
-  growAngle += (Math.random() - 0.5) * 0.5;
-  plants.push(new Frond(px, py, growAngle));
+// Kelp placement: bottom edge, around reefs, and random patches
+function spawnKelp() {
+  // Bottom edge — scattered along the lower portion
+  const bottomCount = 8 + Math.floor(Math.random() * 6);
+  for (let i = 0; i < bottomCount; i++) {
+    const px = Math.random() * w;
+    const py = h * (0.75 + Math.random() * 0.25);
+    plants.push(new Frond(px, py));
+  }
+  // Around reefs — 2-5 per reef, clustered near the base
+  for (const rf of reefs) {
+    const count = 2 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const dist = rf.baseR * (0.8 + Math.random() * 0.5);
+      plants.push(new Frond(rf.x + Math.cos(a) * dist, rf.y + Math.sin(a) * dist));
+    }
+  }
+  // Random patches — 2-3 clusters of 2-4 kelp each
+  const patchCount = 2 + Math.floor(Math.random() * 2);
+  for (let p = 0; p < patchCount; p++) {
+    const cx = w * 0.15 + Math.random() * w * 0.7;
+    const cy = h * 0.4 + Math.random() * h * 0.45;
+    const clusterSize = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < clusterSize; i++) {
+      plants.push(new Frond(cx + (Math.random() - 0.5) * 30, cy + (Math.random() - 0.5) * 20));
+    }
+  }
 }
+spawnKelp();
 for (let i = 0; i < 60; i++) {
   for (const p of plants) p.update(0.016, i * 16);
 }
@@ -2773,18 +2797,8 @@ regenerateWorld = function() {
       opacity: bright ? (0.2+Math.random()*0.2) : (0.05+Math.random()*0.12) });
   }
 
-  // Plants
-  for (let i = 0; i < 30; i++) {
-    const edge = Math.floor(Math.random() * 4);
-    let px, py, growAngle;
-    const inset = Math.random() * 5;
-    if (edge === 0) { px = Math.random() * w; py = inset; growAngle = Math.PI / 2; }
-    else if (edge === 1) { px = w - inset; py = Math.random() * h; growAngle = Math.PI; }
-    else if (edge === 2) { px = Math.random() * w; py = h - inset; growAngle = -Math.PI / 2; }
-    else { px = inset; py = Math.random() * h; growAngle = 0; }
-    growAngle += (Math.random() - 0.5) * 0.5;
-    plants.push(new Frond(px, py, growAngle));
-  }
+  // Kelp
+  spawnKelp();
   for (let i = 0; i < 60; i++) { for (const p of plants) p.update(0.016, i * 16); }
 
   // Fish — fresh school entries
