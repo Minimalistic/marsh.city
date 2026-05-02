@@ -3546,6 +3546,28 @@ function draw(time) {
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
   }
 
+  // Sun rays - angled shafts of light from upper-right
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  for (let i = 0; i < 5; i++) {
+    const baseX = w * (0.5 + i * 0.12) + Math.sin(time * 0.00008 + i * 2.1) * w * 0.04;
+    const rayW = 30 + Math.sin(time * 0.00015 + i * 1.7) * 12;
+    const opacity = 0.03 + Math.sin(time * 0.0001 + i * 0.9) * 0.015;
+    const angle = -0.35 + Math.sin(time * 0.00006 + i) * 0.04; // slight sway
+    ctx.save();
+    ctx.translate(baseX, 0);
+    ctx.rotate(angle);
+    const rg = ctx.createLinearGradient(0, -h * 0.1, 0, h * 1.1);
+    rg.addColorStop(0, `rgba(180, 220, 200, ${opacity * 1.5})`);
+    rg.addColorStop(0.3, `rgba(150, 210, 195, ${opacity})`);
+    rg.addColorStop(0.7, `rgba(120, 190, 180, ${opacity * 0.5})`);
+    rg.addColorStop(1, 'rgba(120, 190, 180, 0)');
+    ctx.fillStyle = rg;
+    ctx.fillRect(-rayW / 2, -h * 0.1, rayW, h * 1.2);
+    ctx.restore();
+  }
+  ctx.restore();
+
 
   // Reef structures - waterline effects then above-water crown
   for (const rf of reefs) {
@@ -3669,13 +3691,6 @@ function draw(time) {
   ctx.drawImage(blurCanvas, 0, 0, canvas.width, canvas.height);
   ctx.restore();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  // Vignette
-  const vigGrad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.25, w / 2, h / 2, Math.max(w, h) * 0.65);
-  vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  vigGrad.addColorStop(1, 'rgba(5, 20, 30, 0.2)');
-  ctx.fillStyle = vigGrad;
-  ctx.fillRect(0, 0, w, h);
 
   requestAnimationFrame(draw);
 }
