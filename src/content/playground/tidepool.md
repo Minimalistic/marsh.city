@@ -1050,17 +1050,30 @@ class Fish {
       }
     }
 
-    // Predator avoidance — only react to aggressive movement, fear scales with distance
+    // Predator avoidance — always give big fish a wide berth, escalate when chased
     let panicSprint = false; // last-ditch escape mode
     for (const pred of predators) {
-      const predSpeed = Math.sqrt(pred.vx * pred.vx + pred.vy * pred.vy);
-      const predAggression = predSpeed / (pred.baseSpeed * viewScale);
-      const beingChased = pred.target === this;
-      // Ignore slow-cruising predators unless they're chasing us directly
-      if (!beingChased && predAggression < 1.2) continue;
       const pdx = this.x - pred.x;
       const pdy = this.y - pred.y;
       const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
+      const predSpeed = Math.sqrt(pred.vx * pred.vx + pred.vy * pred.vy);
+      const predAggression = predSpeed / (pred.baseSpeed * viewScale);
+      const beingChased = pred.target === this;
+
+      // Passive avoidance — fish always steer clear of the big fish
+      // Even a slow-cruising predator is something small fish don't want to be near
+      const comfortZone = 90 * viewScale; // wide berth radius
+      if (pDist < comfortZone && pDist > 0.1) {
+        const avoidance = 1 - pDist / comfortZone;
+        const pushAngle = Math.atan2(pdy, pdx);
+        // Gentle but firm — stronger the closer they are
+        const pushForce = avoidance * avoidance * 0.08 * viewScale;
+        this.vx += Math.cos(pushAngle) * pushForce;
+        this.vy += Math.sin(pushAngle) * pushForce;
+      }
+
+      // Active flee — triggered by aggressive movement or being targeted
+      if (!beingChased && predAggression < 1.2) continue;
       // Flee range scales with how aggressively the predator is moving
       const baseRange = beingChased ? 200 : 60 + predAggression * 50;
       const fleeRange = baseRange * viewScale;
