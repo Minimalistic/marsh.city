@@ -761,7 +761,7 @@ class Fish {
       else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
       else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
     }
-    this.speed = (0.6 + Math.random() * 1.4) * 1.0; // calm cruising, flee multipliers handle bursts
+    this.speed = (0.6 + Math.random() * 1.4) * 0.7; // calm cruising, flee multipliers handle bursts
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
