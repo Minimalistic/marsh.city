@@ -2091,13 +2091,13 @@ class Predator {
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
     // Sluggish turns when full, snappier as hunger builds
     const turnMult = 0.4 + this.hunger * 0.6;
-    const maxTurn = (0.06 + currentSpeed * 0.06) * turnMult;
+    const maxTurn = (0.12 + currentSpeed * 0.12) * turnMult;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
-    // Smooth render angle — heavy mass means body lags behind heading
+    // Smooth render angle — body follows heading
     let rDiff = this.angle - this._renderAngle;
     while (rDiff > Math.PI) rDiff -= Math.PI * 2;
     while (rDiff < -Math.PI) rDiff += Math.PI * 2;
-    this._renderAngle += rDiff * 0.08;
+    this._renderAngle += rDiff * 0.16;
 
     // Joint chain — plant-style verlet with heavy damping, no hard bend clamping
     // Body straightens naturally over time through rest-position pull
@@ -2110,8 +2110,8 @@ class Predator {
       const velX = curr.x - curr.px, velY = curr.y - curr.py;
       curr.px = curr.x; curr.py = curr.y;
       const t = j / this._jointCount;
-      // Drag — stiff near head, looser toward tail for natural flex
-      const drag = 0.75 - t * 0.1; // 0.75 head, 0.65 tail
+      // Drag — stiff near head, looser toward tail for responsive flex
+      const drag = 0.65 - t * 0.15; // 0.65 head, 0.50 tail
       curr.x += velX * drag;
       curr.y += velY * drag;
       // Gentle pull toward rest position (straight behind head)
