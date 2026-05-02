@@ -504,7 +504,7 @@ function rescaleAll(oldW, oldH) {
     const bright = Math.random() < 0.25;
     debris.push({
       x: Math.random() * w, y: Math.random() * h,
-      size: bright ? (0.4 + Math.random() * 0.6) : (0.1 + Math.random() * 0.35),
+      size: (bright ? (0.4 + Math.random() * 0.6) : (0.1 + Math.random() * 0.35)) * viewScale,
       vx: 0, vy: 0,
       opacity: bright ? (0.35 + Math.random() * 0.25) : (0.1 + Math.random() * 0.15),
     });
@@ -732,7 +732,7 @@ for (let i = 0; i < 500; i++) {
   const bright = Math.random() < 0.25;
   debris.push({
     x: Math.random() * w, y: Math.random() * h,
-    size: bright ? (0.4 + Math.random() * 0.6) : (0.1 + Math.random() * 0.35),
+    size: (bright ? (0.4 + Math.random() * 0.6) : (0.1 + Math.random() * 0.35)) * viewScale,
     vx: 0, vy: 0,
     opacity: bright ? (0.35 + Math.random() * 0.25) : (0.1 + Math.random() * 0.15),
   });
@@ -2430,7 +2430,7 @@ let fishRespawnTimer = 0;
 
 // Sand patches - subtle lighter spots on the seafloor
 function makeSand(x, y) {
-  const size = 15 + Math.random() * 35;
+  const size = (15 + Math.random() * 35) * viewScale;
   const elongation = 0.5 + Math.random() * 0.5;
   const angle = Math.random() * Math.PI;
   const brightness = 0.03 + Math.random() * 0.04; // very subtle
@@ -2762,7 +2762,7 @@ regenerateWorld = function() {
   for (let i = 0; i < 500; i++) {
     const bright = Math.random() < 0.25;
     debris.push({ x: Math.random() * w, y: Math.random() * h,
-      size: bright ? (0.4+Math.random()*0.6) : (0.1+Math.random()*0.35), vx: 0, vy: 0,
+      size: (bright ? (0.4+Math.random()*0.6) : (0.1+Math.random()*0.35)) * viewScale, vx: 0, vy: 0,
       opacity: bright ? (0.2+Math.random()*0.2) : (0.05+Math.random()*0.12) });
   }
 
