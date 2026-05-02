@@ -2527,7 +2527,7 @@ for (let i = 0; i < reefCount; i++) {
   reefs.push(makeReef(rx, ry, sizeMult));
 }
 // Small satellite rocks — 5-6 extras, some near big reefs, some standalone
-const satelliteCount = 5 + Math.floor(Math.random() * 2);
+const satelliteCount = 15 + Math.floor(Math.random() * 4);
 for (let i = 0; i < satelliteCount; i++) {
   const sizeMult = 0.25 + Math.random() * 0.2; // much smaller
   const estR = (60 + 45) * sizeMult * viewScale;
@@ -2844,7 +2844,7 @@ regenerateWorld = function() {
     reefs.push(makeReef(rx, ry, sizeMult));
   }
   // Small satellite rocks
-  const satCount = 5 + Math.floor(Math.random() * 2);
+  const satCount = 15 + Math.floor(Math.random() * 4);
   for (let i = 0; i < satCount; i++) {
     const sizeMult = 0.25 + Math.random() * 0.2;
     let rx, ry;
