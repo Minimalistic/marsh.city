@@ -2627,23 +2627,15 @@ class Frond {
     }
   }
 
+  // Draw upper portion (segments 2+) — interleaved with fish
   draw(ctx, time) {
     const segs = this.segs;
     const ps = this._plantScale;
     const n = segs.length;
+    const baseIdx = 2; // lower quarter drawn separately
     ctx.lineCap = 'round';
-    // Root base — soft gradient oval blending into sand
-    const rootR = 3 * ps;
-    const rootGrad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, rootR);
-    rootGrad.addColorStop(0, 'rgba(40, 100, 65, 0.3)');
-    rootGrad.addColorStop(0.5, 'rgba(40, 100, 65, 0.15)');
-    rootGrad.addColorStop(1, 'rgba(40, 100, 65, 0)');
-    ctx.beginPath();
-    ctx.ellipse(this.x, this.y, rootR, rootR * 0.5, 0, 0, Math.PI * 2);
-    ctx.fillStyle = rootGrad;
-    ctx.fill();
-    // Main stem — each segment tapers from its width to the next segment's width
-    for (let i = 0; i < n - 1; i++) {
+    // Main stem — upper segments only
+    for (let i = baseIdx; i < n - 1; i++) {
       const t0 = i / (n - 1), t1 = (i + 1) / (n - 1);
       const w0 = 1.6 * ps * (1 - t0 * 0.85);
       const w1 = 1.6 * ps * (1 - t1 * 0.85);
@@ -2707,6 +2699,44 @@ class Frond {
         ctx.fillStyle = 'rgb(50, 145, 80)';
         ctx.fill();
       }
+    }
+  }
+
+  // Draw lower stem + root — always on top, never behind fish
+  drawBase(ctx) {
+    const segs = this.segs;
+    const ps = this._plantScale;
+    const baseIdx = 2;
+    ctx.lineCap = 'round';
+    // Root base gradient
+    const rootR = 3 * ps;
+    const rootGrad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, rootR);
+    rootGrad.addColorStop(0, 'rgba(40, 100, 65, 0.3)');
+    rootGrad.addColorStop(0.5, 'rgba(40, 100, 65, 0.15)');
+    rootGrad.addColorStop(1, 'rgba(40, 100, 65, 0)');
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y, rootR, rootR * 0.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = rootGrad;
+    ctx.fill();
+    // Lower stem segments
+    const n = segs.length;
+    for (let i = 0; i < baseIdx; i++) {
+      const t0 = i / (n - 1), t1 = (i + 1) / (n - 1);
+      const w0 = 1.6 * ps * (1 - t0 * 0.85);
+      const w1 = 1.6 * ps * (1 - t1 * 0.85);
+      const ax = segs[i].x, ay = segs[i].y;
+      const bx = segs[i+1].x, by = segs[i+1].y;
+      const dx = bx - ax, dy = by - ay;
+      const len = Math.sqrt(dx*dx+dy*dy) || 1;
+      const nx = -dy/len, ny = dx/len;
+      ctx.beginPath();
+      ctx.moveTo(ax + nx*w0*0.5, ay + ny*w0*0.5);
+      ctx.lineTo(bx + nx*w1*0.5, by + ny*w1*0.5);
+      ctx.lineTo(bx - nx*w1*0.5, by - ny*w1*0.5);
+      ctx.lineTo(ax - nx*w0*0.5, ay - ny*w0*0.5);
+      ctx.closePath();
+      ctx.fillStyle = 'rgb(30, 120, 70)';
+      ctx.fill();
     }
   }
 }
@@ -3439,6 +3469,9 @@ function draw(time) {
       ctx.restore();
     }
   }
+
+  // Kelp base stems — always drawn on top so fish never clip behind roots
+  for (const p of plants) p.drawBase(ctx);
 
   // Caustics - light refracting through water surface
   for (let i = 0; i < 5; i++) {
