@@ -1529,10 +1529,11 @@ class Fish {
   }
 }
 
-// Reef fish — small bright blue fish that live around a specific reef
+// Reef fish — small bright blue fish that live around reefs
 class ReefFish {
   constructor(reef) {
     this.reef = reef;
+    this.homeReef = reef; // remember original home
     // Start near the reef edge
     const a = Math.random() * Math.PI * 2;
     const dist = reef.baseR * (0.4 + Math.random() * 0.3);
@@ -1582,64 +1583,26 @@ class ReefFish {
     this._wanderTimer = 1 + Math.random() * 3;
     this.fleeing = false;
     this.fleeTimer = 0;
+    // When startled far from home, can adopt a new nearby reef
+    this._displaced = false;
+    this._returnTimer = 0; // counts up while displaced, eventually drifts home
   }
 
   update(dt, fish, time) {
     const rf = this.reef;
 
-    // Gentle wander — slowly drift the target angle, don't jump
-    this._wanderAngle += (Math.sin(time * 0.0004 + this._phaseOffset) * 0.3
-                        + Math.sin(time * 0.00017 + this._phaseOffset * 2.3) * 0.15) * dt;
-
-    // Target point: hover near the reef edge
-    const orbitR = rf.baseR * (0.5 + Math.sin(time * 0.0002 + this._phaseOffset) * 0.1);
-    const targetX = rf.x + Math.cos(this._wanderAngle) * orbitR;
-    const targetY = rf.y + Math.sin(this._wanderAngle) * orbitR;
-    const tdx = targetX - this.x, tdy = targetY - this.y;
-    const tDist = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
-    // Gentle pull that weakens when close — no overshooting
-    const pull = Math.min(tDist * 0.001, 0.008);
-    this.vx += (tdx / tDist) * pull;
-    this.vy += (tdy / tDist) * pull;
-
-    // Damping — reef fish drift, they don't jet
-    this.vx *= 0.96;
-    this.vy *= 0.96;
-
-    // Leash — if too far from reef, pull back hard
-    const dx = this.x - rf.x, dy = this.y - rf.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const maxDist = rf.baseR * 1.2;
-    if (dist > maxDist) {
-      const pull = (dist - maxDist) * 0.05;
-      this.vx -= (dx / dist) * pull;
-      this.vy -= (dy / dist) * pull;
-    }
-
-    // Avoid the crown (solid rock)
-    const cdx = this.x - (rf.x + rf.crownOffX);
-    const cdy = this.y - (rf.y + rf.crownOffY);
-    const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
-    const cAngle = Math.atan2(cdy, cdx);
-    const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len;
-    if (cDist < crownR && cDist > 0.1) {
-      const push = (1 - cDist / crownR) * 0.15;
-      this.vx += (cdx / cDist) * push;
-      this.vy += (cdy / cDist) * push;
-    }
-
-    // Flee from predators
+    // Flee from predators — can push fish away from their home reef
     if (this.fleeTimer > 0) this.fleeTimer -= dt;
     else this.fleeing = false;
     for (const pred of predators) {
       const pdx = this.x - pred.x, pdy = this.y - pred.y;
       const pDist = Math.sqrt(pdx * pdx + pdy * pdy);
-      if (pDist < 60 && pDist > 0.1) {
-        const force = 0.2 * (1 - pDist / 60);
+      if (pDist < 80 && pDist > 0.1) {
+        const force = 0.25 * (1 - pDist / 80);
         this.vx += (pdx / pDist) * force;
         this.vy += (pdy / pDist) * force;
         this.fleeing = true;
-        this.fleeTimer = 0.5;
+        this.fleeTimer = 1.2 + Math.random() * 0.8; // longer flee so they actually leave
       }
     }
 
@@ -1647,19 +1610,100 @@ class ReefFish {
     if (mouse.active) {
       const mdx = this.x - mouse.x, mdy = this.y - mouse.y;
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-      const fleeR = 40;
+      const fleeR = 50;
       if (mDist < fleeR && mDist > 0.1) {
-        const force = 0.15 * (1 - mDist / fleeR);
+        const force = 0.2 * (1 - mDist / fleeR);
         this.vx += (mdx / mDist) * force;
         this.vy += (mdy / mDist) * force;
         this.fleeing = true;
-        this.fleeTimer = 0.3;
+        this.fleeTimer = 0.8 + Math.random() * 0.5;
       }
+    }
+
+    // Check if displaced far from current reef — maybe adopt a closer one
+    const homeDx = this.x - rf.x, homeDy = this.y - rf.y;
+    const homeDist = Math.sqrt(homeDx * homeDx + homeDy * homeDy);
+    if (homeDist > rf.baseR * 2.5 && this.fleeing) {
+      // Look for a nearby reef to shelter at instead of rubber-banding home
+      let closest = null, closestDist = Infinity;
+      for (const candidate of reefs) {
+        if (candidate === rf) continue;
+        const cdx = this.x - candidate.x, cdy = this.y - candidate.y;
+        const cd = Math.sqrt(cdx * cdx + cdy * cdy);
+        // Only adopt reefs that are actually closer and within reasonable range
+        if (cd < closestDist && cd < candidate.baseR * 3) {
+          closest = candidate;
+          closestDist = cd;
+        }
+      }
+      if (closest) {
+        this.reef = closest;
+        this._displaced = true;
+        this._returnTimer = 0;
+        this._wanderAngle = Math.atan2(this.y - closest.y, this.x - closest.x);
+      }
+    }
+
+    // If displaced, slowly build desire to return home (over 15-30s)
+    if (this._displaced) {
+      this._returnTimer += dt;
+      if (this._returnTimer > 15 + Math.random() * 15) {
+        this.reef = this.homeReef;
+        this._displaced = false;
+        this._returnTimer = 0;
+      }
+    }
+
+    // When not fleeing, gently orbit the current reef
+    if (!this.fleeing) {
+      // Gentle wander — slowly drift the target angle, don't jump
+      this._wanderAngle += (Math.sin(time * 0.0004 + this._phaseOffset) * 0.3
+                          + Math.sin(time * 0.00017 + this._phaseOffset * 2.3) * 0.15) * dt;
+
+      // Target point: hover near the reef edge
+      const curReef = this.reef;
+      const orbitR = curReef.baseR * (0.5 + Math.sin(time * 0.0002 + this._phaseOffset) * 0.1);
+      const targetX = curReef.x + Math.cos(this._wanderAngle) * orbitR;
+      const targetY = curReef.y + Math.sin(this._wanderAngle) * orbitR;
+      const tdx = targetX - this.x, tdy = targetY - this.y;
+      const tDist = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
+      // Pull strength scales with distance — gentle when close, firmer when far
+      const pullStr = this._displaced ? 0.012 : 0.008; // slightly stronger pull to new reef
+      const pull = Math.min(tDist * 0.001, pullStr);
+      this.vx += (tdx / tDist) * pull;
+      this.vy += (tdy / tDist) * pull;
+    }
+
+    // Damping — reef fish drift, they don't jet
+    this.vx *= 0.96;
+    this.vy *= 0.96;
+
+    // Soft leash — only pulls when really far, and gently
+    const curReef = this.reef;
+    const ldx = this.x - curReef.x, ldy = this.y - curReef.y;
+    const lDist = Math.sqrt(ldx * ldx + ldy * ldy);
+    const maxDist = curReef.baseR * (this.fleeing ? 3.0 : 1.8);
+    if (lDist > maxDist && !this.fleeing) {
+      const pullBack = (lDist - maxDist) * 0.02; // gentler than before
+      this.vx -= (ldx / lDist) * pullBack;
+      this.vy -= (ldy / lDist) * pullBack;
+    }
+
+    // Avoid the crown (solid rock) of current reef
+    const cdx = this.x - (curReef.x + curReef.crownOffX);
+    const cdy = this.y - (curReef.y + curReef.crownOffY);
+    const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+    const cAngle = Math.atan2(cdy, cdx);
+    const crownR = curReef.radiusAt(cAngle, curReef.crownRadii) + this.len;
+    if (cDist < crownR && cDist > 0.1) {
+      const push = (1 - cDist / crownR) * 0.15;
+      this.vx += (cdx / cDist) * push;
+      this.vy += (cdy / cDist) * push;
     }
 
     // Speed control — reef fish hover slowly, only burst when scared
     const scaledSpeed = this.baseSpeed * (1 + (viewScale - 1) * 0.8);
-    const targetSpeed = this.fleeing ? scaledSpeed * 2.0 : scaledSpeed * 0.25;
+    const targetSpeed = this.fleeing ? scaledSpeed * 2.5 : scaledSpeed * 0.25;
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
       const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.06;
@@ -2780,10 +2824,10 @@ for (let i = 0; i < satelliteCount; i++) {
   }
 }
 
-// Reef fish — 0-5 bright blue fish per reef
+// Reef fish — 0-3 bright blue fish per reef
 const reefFish = [];
 for (const rf of reefs) {
-  const count = Math.floor(Math.random() * 6); // 0 to 5
+  const count = Math.floor(Math.random() * 4); // 0 to 3
   for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
 }
 
@@ -3116,7 +3160,7 @@ regenerateWorld = function() {
   }
   // Reef fish
   for (const rf of reefs) {
-    const count = Math.floor(Math.random() * 6);
+    const count = Math.floor(Math.random() * 4);
     for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
   }
 
