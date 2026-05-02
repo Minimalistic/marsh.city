@@ -525,9 +525,9 @@ function rescaleAll(oldW, oldH) {
   }
   while (plants.length > targetPlants && plants.length > 30) plants.pop();
 
-  // Add coral if needed
+  // Add sand patches if needed
   while (rocks.length < targetRocks) {
-    rocks.push(makeCoral(Math.random() * w, Math.random() * h));
+    rocks.push(makeSand(Math.random() * w, Math.random() * h));
   }
   while (rocks.length > targetRocks && rocks.length > 15) rocks.pop();
 }
@@ -2380,41 +2380,17 @@ let popDriftTimer = 10 + Math.random() * 20; // time until next target shift
 let schoolArrivalTimer = 15 + Math.random() * 30; // next wave of newcomers
 let fishRespawnTimer = 0;
 
-// Coral fragments - scattered across the seafloor
-const coralPalette = [
-  [220, 120, 140],  // pink
-  [240, 160, 100],  // peach/orange
-  [180, 100, 170],  // purple
-  [230, 200, 100],  // yellow
-  [200, 80, 100],   // rose
-  [160, 200, 140],  // seafoam
-  [240, 140, 130],  // salmon
-];
-function makeCoral(x, y) {
-  const base = coralPalette[Math.floor(Math.random() * coralPalette.length)];
-  const j = () => Math.round((Math.random() - 0.5) * 20);
-  const size = 4 + Math.random() * 10;
-  // Cluster of overlapping soft blobs
-  const blobs = [];
-  const numBlobs = 2 + Math.floor(Math.random() * 4); // 2-5 blobs per cluster
-  for (let b = 0; b < numBlobs; b++) {
-    const a = Math.random() * Math.PI * 2;
-    const dist = b === 0 ? 0 : size * (0.2 + Math.random() * 0.4);
-    blobs.push({
-      ox: Math.cos(a) * dist,
-      oy: Math.sin(a) * dist,
-      r: size * (0.4 + Math.random() * 0.4),
-    });
-  }
-  return {
-    x, y, size, blobs,
-    color: `rgb(${base[0]+j()},${base[1]+j()},${base[2]+j()})`,
-    highlight: `rgb(${Math.min(255,base[0]+40+j())},${Math.min(255,base[1]+40+j())},${Math.min(255,base[2]+40+j())})`,
-  };
+// Sand patches - subtle lighter spots on the seafloor
+function makeSand(x, y) {
+  const size = 15 + Math.random() * 35;
+  const elongation = 0.5 + Math.random() * 0.5;
+  const angle = Math.random() * Math.PI;
+  const brightness = 0.03 + Math.random() * 0.04; // very subtle
+  return { x, y, size, elongation, angle, brightness };
 }
 const rocks = [];
 for (let i = 0; i < 15; i++) {
-  rocks.push(makeCoral(Math.random() * w, Math.random() * h));
+  rocks.push(makeSand(Math.random() * w, Math.random() * h));
 }
 
 // Reef structures - partially submerged obstacles
@@ -2713,9 +2689,9 @@ regenerateWorld = function() {
   washWaves.length = 0;
   tapVoids.length = 0;
 
-  // Coral fragments
+  // Sand patches
   for (let i = 0; i < 15; i++) {
-    rocks.push(makeCoral(Math.random() * w, Math.random() * h));
+    rocks.push(makeSand(Math.random() * w, Math.random() * h));
   }
 
   // Reefs — 2-4, not more
@@ -2925,27 +2901,19 @@ function draw(time) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, w, h);
 
-  // Coral fragments — soft blob clusters
+  // Sand patches — soft lighter spots on the seafloor
   for (const r of rocks) {
     ctx.save();
     ctx.translate(r.x, r.y);
-    ctx.globalAlpha = 0.7;
-    // Base blobs
-    for (const bl of r.blobs) {
-      ctx.beginPath();
-      ctx.arc(bl.ox, bl.oy, bl.r, 0, Math.PI * 2);
-      ctx.fillStyle = r.color;
-      ctx.fill();
-    }
-    // Highlight on top half of each blob
-    ctx.globalAlpha = 0.35;
-    for (const bl of r.blobs) {
-      ctx.beginPath();
-      ctx.arc(bl.ox, bl.oy - bl.r * 0.15, bl.r * 0.7, 0, Math.PI * 2);
-      ctx.fillStyle = r.highlight;
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
+    ctx.rotate(r.angle);
+    const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, r.size);
+    sg.addColorStop(0, `rgba(200, 190, 160, ${r.brightness})`);
+    sg.addColorStop(0.6, `rgba(190, 180, 150, ${r.brightness * 0.5})`);
+    sg.addColorStop(1, 'rgba(190, 180, 150, 0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r.size, r.size * r.elongation, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 
