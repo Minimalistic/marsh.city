@@ -2632,10 +2632,15 @@ class Frond {
     const ps = this._plantScale;
     const n = segs.length;
     ctx.lineCap = 'round';
-    // Root base — small dark oval where stem meets sand
+    // Root base — soft gradient oval blending into sand
+    const rootR = 3 * ps;
+    const rootGrad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, rootR);
+    rootGrad.addColorStop(0, 'rgba(40, 100, 65, 0.3)');
+    rootGrad.addColorStop(0.5, 'rgba(40, 100, 65, 0.15)');
+    rootGrad.addColorStop(1, 'rgba(40, 100, 65, 0)');
     ctx.beginPath();
-    ctx.ellipse(this.x, this.y, 3 * ps, 1.5 * ps, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(20, 80, 50, 0.5)';
+    ctx.ellipse(this.x, this.y, rootR, rootR * 0.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = rootGrad;
     ctx.fill();
     // Main stem — each segment tapers from its width to the next segment's width
     for (let i = 0; i < n - 1; i++) {
