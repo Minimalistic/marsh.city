@@ -1924,6 +1924,46 @@ class Predator {
     const cr = Math.round(55 + shimmer * 0.3);
     const cg = Math.round(95 + shimmer);
     const cb = Math.round(100 + shimmer * 0.7);
+
+    // Pectoral fins (front side fins) — drawn before body so they peek out behind
+    const pIdx = Math.round(segs * 0.2);
+    const finLen = totalLen * 0.25;
+    for (const side of [-1, 1]) {
+      const bx = side === 1 ? rightX[pIdx] : leftX[pIdx];
+      const by = side === 1 ? rightY[pIdx] : leftY[pIdx];
+      const bodyDir = Math.atan2(spineY[pIdx]-spineY[pIdx+1], spineX[pIdx]-spineX[pIdx+1]);
+      const tipX = bx + Math.cos(bodyDir + side * 0.8) * finLen;
+      const tipY = by + Math.sin(bodyDir + side * 0.8) * finLen;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.quadraticCurveTo(tipX, tipY, bx + Math.cos(bodyDir) * finLen * 0.4, by + Math.sin(bodyDir) * finLen * 0.4);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
+      ctx.globalAlpha = 0.6;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Pelvic fins (rear side fins) — also behind body
+    const pvIdx = Math.round(segs * 0.55);
+    const pvFinLen = totalLen * 0.12;
+    for (const side of [-1, 1]) {
+      const bx = side === 1 ? rightX[pvIdx] : leftX[pvIdx];
+      const by = side === 1 ? rightY[pvIdx] : leftY[pvIdx];
+      const bodyDir = Math.atan2(spineY[pvIdx]-spineY[pvIdx+1], spineX[pvIdx]-spineX[pvIdx+1]);
+      const tipX = bx + Math.cos(bodyDir + side * 0.7) * pvFinLen;
+      const tipY = by + Math.sin(bodyDir + side * 0.7) * pvFinLen;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.quadraticCurveTo(tipX, tipY, bx + Math.cos(bodyDir) * pvFinLen * 0.35, by + Math.sin(bodyDir) * pvFinLen * 0.35);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
+      ctx.globalAlpha = 0.5;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Body outline
     ctx.beginPath();
     ctx.moveTo(spineX[0], spineY[0]);
     ctx.lineTo(rightX[0], rightY[0]);
@@ -1981,44 +2021,6 @@ class Predator {
     ctx.globalAlpha = 0.6;
     ctx.fill();
     ctx.globalAlpha = 1;
-
-    // Pectoral fins (front side fins)
-    const pIdx = Math.round(segs * 0.25);
-    const finLen = totalLen * 0.25;
-    for (const side of [-1, 1]) {
-      const bx = side === 1 ? rightX[pIdx] : leftX[pIdx];
-      const by = side === 1 ? rightY[pIdx] : leftY[pIdx];
-      const bodyDir = Math.atan2(spineY[pIdx]-spineY[pIdx+1], spineX[pIdx]-spineX[pIdx+1]);
-      const tipX = bx + Math.cos(bodyDir + side * 0.6) * finLen;
-      const tipY = by + Math.sin(bodyDir + side * 0.6) * finLen;
-      ctx.beginPath();
-      ctx.moveTo(bx, by);
-      ctx.quadraticCurveTo(tipX, tipY, bx + Math.cos(bodyDir) * finLen * 0.4, by + Math.sin(bodyDir) * finLen * 0.4);
-      ctx.closePath();
-      ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
-      ctx.globalAlpha = 0.4;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-
-    // Pelvic fins (rear side fins)
-    const pvIdx = Math.round(segs * 0.55);
-    const pvFinLen = totalLen * 0.12;
-    for (const side of [-1, 1]) {
-      const bx = side === 1 ? rightX[pvIdx] : leftX[pvIdx];
-      const by = side === 1 ? rightY[pvIdx] : leftY[pvIdx];
-      const bodyDir = Math.atan2(spineY[pvIdx]-spineY[pvIdx+1], spineX[pvIdx]-spineX[pvIdx+1]);
-      const tipX = bx + Math.cos(bodyDir + side * 0.7) * pvFinLen;
-      const tipY = by + Math.sin(bodyDir + side * 0.7) * pvFinLen;
-      ctx.beginPath();
-      ctx.moveTo(bx, by);
-      ctx.quadraticCurveTo(tipX, tipY, bx + Math.cos(bodyDir) * pvFinLen * 0.35, by + Math.sin(bodyDir) * pvFinLen * 0.35);
-      ctx.closePath();
-      ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
-      ctx.globalAlpha = 0.35;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
 
     // Jaw gape when chomping — uses perpendicular direction from spine
     if (jawGape > 0.1) {
