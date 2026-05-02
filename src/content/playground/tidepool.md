@@ -1982,9 +1982,9 @@ class Predator {
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // Pectoral fins
+    // Pectoral fins (front side fins)
     const pIdx = Math.round(segs * 0.25);
-    const finLen = totalLen * 0.18;
+    const finLen = totalLen * 0.25;
     for (const side of [-1, 1]) {
       const bx = side === 1 ? rightX[pIdx] : leftX[pIdx];
       const by = side === 1 ? rightY[pIdx] : leftY[pIdx];
@@ -1997,6 +1997,25 @@ class Predator {
       ctx.closePath();
       ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
       ctx.globalAlpha = 0.4;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Pelvic fins (rear side fins)
+    const pvIdx = Math.round(segs * 0.55);
+    const pvFinLen = totalLen * 0.12;
+    for (const side of [-1, 1]) {
+      const bx = side === 1 ? rightX[pvIdx] : leftX[pvIdx];
+      const by = side === 1 ? rightY[pvIdx] : leftY[pvIdx];
+      const bodyDir = Math.atan2(spineY[pvIdx]-spineY[pvIdx+1], spineX[pvIdx]-spineX[pvIdx+1]);
+      const tipX = bx + Math.cos(bodyDir + side * 0.7) * pvFinLen;
+      const tipY = by + Math.sin(bodyDir + side * 0.7) * pvFinLen;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.quadraticCurveTo(tipX, tipY, bx + Math.cos(bodyDir) * pvFinLen * 0.35, by + Math.sin(bodyDir) * pvFinLen * 0.35);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
+      ctx.globalAlpha = 0.35;
       ctx.fill();
       ctx.globalAlpha = 1;
     }
