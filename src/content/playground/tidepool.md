@@ -867,7 +867,7 @@ class Fish {
     // Apply boids - cohesion dominates for tight real-looking schools
     const schoolWeight = this.distracted ? 0.3 : 1;
     if (sepCount > 0) { this.vx += sepX * 0.07; this.vy += sepY * 0.07; }
-    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.10 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.10 * schoolWeight; }
+    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.07 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.07 * schoolWeight; }
     if (cohCount > 0) {
       let cx = cohX / cohCount, cy = cohY / cohCount;
       // Push cohesion target well clear of reefs so the school doesn't orbit them
@@ -881,7 +881,6 @@ class Fish {
           cx = rf.x + rf.crownOffX + (cdx / cDist) * clearR;
           cy = rf.y + rf.crownOffY + (cdy / cDist) * clearR;
         }
-        // Also check base
         const bdx = cx - rf.x, bdy = cy - rf.y;
         const bDist = Math.sqrt(bdx * bdx + bdy * bdy);
         const bAngle = Math.atan2(bdy, bdx);
@@ -892,8 +891,19 @@ class Fish {
           cy = rf.y + (bdy / bDist) * baseClear;
         }
       }
-      this.vx += (cx - this.x) * 0.006 * schoolWeight;
-      this.vy += (cy - this.y) * 0.006 * schoolWeight;
+      // Rounded school shape: stronger lateral pull than fore/aft pull
+      // Fish to the side of center get pulled harder, fish ahead/behind less
+      const toCx = cx - this.x, toCy = cy - this.y;
+      const headingX = Math.cos(this.angle), headingY = Math.sin(this.angle);
+      // Dot product: positive = center is ahead, negative = behind
+      const toCDist = Math.sqrt(toCx * toCx + toCy * toCy) || 1;
+      const foreAft = (toCx * headingX + toCy * headingY) / toCDist;
+      // Cross product magnitude: how far to the side the center is
+      const lateral = Math.abs(toCx * headingY - toCy * headingX) / toCDist;
+      // Boost lateral cohesion, dampen fore-aft to prevent elongation
+      const cohStr = 0.008 + lateral * 0.006 - Math.max(0, foreAft) * 0.003;
+      this.vx += toCx * cohStr * schoolWeight;
+      this.vy += toCy * cohStr * schoolWeight;
     }
 
     // Gentle centering during first few seconds
