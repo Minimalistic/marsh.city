@@ -875,12 +875,12 @@ class Fish {
     if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.10 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.10 * schoolWeight; }
     if (cohCount > 0) {
       let cx = cohX / cohCount, cy = cohY / cohCount;
-      // Push cohesion target out of reefs so the school doesn't orbit rocks
+      // Push cohesion target well clear of reefs so the school doesn't orbit them
       for (const rf of reefs) {
         const cdx = cx - (rf.x + rf.crownOffX), cdy = cy - (rf.y + rf.crownOffY);
         const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
         const cAngle = Math.atan2(cdy, cdx);
-        const clearR = rf.radiusAt(cAngle, rf.crownRadii) * 1.8;
+        const clearR = rf.radiusAt(cAngle, rf.crownRadii) * 2.5;
         if (cDist < clearR && cDist > 0.1) {
           cx = rf.x + rf.crownOffX + (cdx / cDist) * clearR;
           cy = rf.y + rf.crownOffY + (cdy / cDist) * clearR;
@@ -890,7 +890,7 @@ class Fish {
         const bDist = Math.sqrt(bdx * bdx + bdy * bdy);
         const bAngle = Math.atan2(bdy, bdx);
         const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1);
-        const baseClear = rf.radiusAt(bAngle, rf.baseRadii) * 0.5 * bNoise;
+        const baseClear = rf.radiusAt(bAngle, rf.baseRadii) * 0.8 * bNoise;
         if (bDist < baseClear && bDist > 0.1) {
           cx = rf.x + (bdx / bDist) * baseClear;
           cy = rf.y + (bdy / bDist) * baseClear;
@@ -1133,8 +1133,8 @@ class Fish {
         }
         // Radial push outward regardless of heading - prevents orbit lock
         const prox = 1 - rDist / baseSense;
-        if (prox > 0.3) {
-          const outward = (prox - 0.3) * 0.04;
+        if (prox > 0.15) {
+          const outward = (prox - 0.15) * 0.1;
           this.vx += (rdx / rDist) * outward;
           this.vy += (rdy / rDist) * outward;
         }
@@ -1156,8 +1156,8 @@ class Fish {
         }
         // Radial push outward from crown
         const prox = 1 - cDist / crownSense;
-        if (prox > 0.25) {
-          const outward = (prox - 0.25) * 0.06;
+        if (prox > 0.15) {
+          const outward = (prox - 0.15) * 0.12;
           this.vx += (cdx / cDist) * outward;
           this.vy += (cdy / cDist) * outward;
         }
