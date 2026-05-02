@@ -2511,11 +2511,9 @@ function makeReef(x, y, sizeMultiplier = 1) {
 
 const reefs = [];
 const reefCount = Math.max(2, Math.min(4, Math.floor(Math.sqrt(w * h) / 400)));
+// Main reefs — 30% larger than before
 for (let i = 0; i < reefCount; i++) {
-  // First reef is the dominant one - much larger than the rest
-  const sizeMult = i === 0 ? 1.3 + Math.random() * 0.4 : 0.7 + Math.random() * 0.3;
-  // Place reefs away from edges and away from each other
-  // Estimate radius for spacing check before creating
+  const sizeMult = i === 0 ? 1.7 + Math.random() * 0.5 : 0.9 + Math.random() * 0.4;
   const estR = (60 + 45) * sizeMult * viewScale;
   let rx, ry, tries = 0;
   do {
@@ -2524,10 +2522,37 @@ for (let i = 0; i < reefCount; i++) {
     tries++;
   } while (tries < 40 && reefs.some(r => {
     const dx = r.x - rx, dy = r.y - ry;
-    // Both radii matter - no overlapping
     return Math.sqrt(dx * dx + dy * dy) < r.baseR + estR + 40;
   }));
   reefs.push(makeReef(rx, ry, sizeMult));
+}
+// Small satellite rocks — 5-6 extras, some near big reefs, some standalone
+const satelliteCount = 5 + Math.floor(Math.random() * 2);
+for (let i = 0; i < satelliteCount; i++) {
+  const sizeMult = 0.25 + Math.random() * 0.2; // much smaller
+  const estR = (60 + 45) * sizeMult * viewScale;
+  let rx, ry, tries = 0;
+  // ~60% cluster near an existing reef, ~40% standalone
+  if (Math.random() < 0.6 && reefs.length > 0) {
+    const parent = reefs[Math.floor(Math.random() * Math.min(reefs.length, reefCount))];
+    const a = Math.random() * Math.PI * 2;
+    const dist = parent.baseR * (1.1 + Math.random() * 0.6);
+    rx = parent.x + Math.cos(a) * dist;
+    ry = parent.y + Math.sin(a) * dist;
+  } else {
+    rx = w * 0.08 + Math.random() * w * 0.84;
+    ry = h * 0.08 + Math.random() * h * 0.84;
+  }
+  // Don't overlap existing reefs
+  const tooClose = reefs.some(r => {
+    const dx = r.x - rx, dy = r.y - ry;
+    return Math.sqrt(dx * dx + dy * dy) < r.baseR + estR + 15;
+  });
+  if (!tooClose) {
+    const sr = makeReef(rx, ry, sizeMult);
+    sr.avoidR = sr.baseR * 0.6; // smaller avoidance radius
+    reefs.push(sr);
+  }
 }
 
 // Reef fish — 0-5 bright blue fish per reef
@@ -2808,15 +2833,38 @@ regenerateWorld = function() {
     rocks.push(makeSand(Math.random() * w, Math.random() * h));
   }
 
-  // Reefs — 2-4, not more
+  // Main reefs — 30% larger
   const reefCount2 = Math.max(2, Math.min(4, Math.floor(Math.sqrt(w * h) / 400)));
   for (let i = 0; i < reefCount2; i++) {
-    const sizeMult = i === 0 ? 1.3 + Math.random() * 0.4 : 0.7 + Math.random() * 0.3;
+    const sizeMult = i === 0 ? 1.7 + Math.random() * 0.5 : 0.9 + Math.random() * 0.4;
     const estR = (60 + 45) * sizeMult * viewScale;
     let rx, ry, tries = 0;
     do { rx = w * 0.12 + Math.random() * w * 0.76; ry = h * 0.12 + Math.random() * h * 0.76; tries++; }
     while (tries < 40 && reefs.some(r => Math.sqrt((r.x-rx)**2+(r.y-ry)**2) < r.baseR + estR + 40));
     reefs.push(makeReef(rx, ry, sizeMult));
+  }
+  // Small satellite rocks
+  const satCount = 5 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < satCount; i++) {
+    const sizeMult = 0.25 + Math.random() * 0.2;
+    let rx, ry;
+    if (Math.random() < 0.6 && reefs.length > 0) {
+      const parent = reefs[Math.floor(Math.random() * Math.min(reefs.length, reefCount2))];
+      const a = Math.random() * Math.PI * 2;
+      const dist = parent.baseR * (1.1 + Math.random() * 0.6);
+      rx = parent.x + Math.cos(a) * dist;
+      ry = parent.y + Math.sin(a) * dist;
+    } else {
+      rx = w * 0.08 + Math.random() * w * 0.84;
+      ry = h * 0.08 + Math.random() * h * 0.84;
+    }
+    const estR = (60 + 45) * sizeMult * viewScale;
+    const tooClose = reefs.some(r => Math.sqrt((r.x-rx)**2+(r.y-ry)**2) < r.baseR + estR + 15);
+    if (!tooClose) {
+      const sr = makeReef(rx, ry, sizeMult);
+      sr.avoidR = sr.baseR * 0.6;
+      reefs.push(sr);
+    }
   }
   // Reef fish
   for (const rf of reefs) {
