@@ -867,7 +867,7 @@ class Fish {
     // Apply boids - cohesion dominates for tight real-looking schools
     const schoolWeight = this.distracted ? 0.3 : 1;
     if (sepCount > 0) { this.vx += sepX * 0.07; this.vy += sepY * 0.07; }
-    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.07 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.07 * schoolWeight; }
+    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.12 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.12 * schoolWeight; }
     if (cohCount > 0) {
       let cx = cohX / cohCount, cy = cohY / cohCount;
       // Push cohesion target well clear of reefs so the school doesn't orbit them
@@ -901,7 +901,7 @@ class Fish {
       // Cross product magnitude: how far to the side the center is
       const lateral = Math.abs(toCx * headingY - toCy * headingX) / toCDist;
       // Boost lateral cohesion, dampen fore-aft to prevent elongation
-      const cohStr = 0.008 + lateral * 0.006 - Math.max(0, foreAft) * 0.003;
+      const cohStr = 0.005 + lateral * 0.004 - Math.max(0, foreAft) * 0.002;
       this.vx += toCx * cohStr * schoolWeight;
       this.vy += toCy * cohStr * schoolWeight;
     }
