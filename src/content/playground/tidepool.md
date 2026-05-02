@@ -3084,7 +3084,7 @@ function draw(time) {
     shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = shadowGrad;
     ctx.fillRect(-rf.baseR * 1.5, -rf.baseR * 1.5, rf.baseR * 3, rf.baseR * 3);
-    // Submerged rock base - irregular outline
+    // Submerged rock base — radial gradient fades edges into seafloor
     ctx.beginPath();
     ctx.moveTo(rf.baseShape[0].x, rf.baseShape[0].y);
     for (let i = 0; i < rf.baseShape.length; i++) {
@@ -3094,10 +3094,14 @@ function draw(time) {
       ctx.quadraticCurveTo(rf.baseShape[i].x, rf.baseShape[i].y, mx, my);
     }
     ctx.closePath();
-    ctx.fillStyle = rf.baseColor;
-    ctx.globalAlpha = 0.6;
+    // Parse base color for gradient
+    const cm = rf.baseColor.match(/\d+/g).map(Number);
+    const baseGrad = ctx.createRadialGradient(0, 0, rf.baseR * 0.25, 0, 0, rf.baseR * 1.05);
+    baseGrad.addColorStop(0, `rgba(${cm[0]},${cm[1]},${cm[2]}, 0.7)`);
+    baseGrad.addColorStop(0.6, `rgba(${cm[0]},${cm[1]},${cm[2]}, 0.5)`);
+    baseGrad.addColorStop(1, `rgba(${cm[0]},${cm[1]},${cm[2]}, 0)`);
+    ctx.fillStyle = baseGrad;
     ctx.fill();
-    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
