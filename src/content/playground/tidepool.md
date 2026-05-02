@@ -1987,7 +1987,7 @@ class Predator {
     else if (this.target) targetSpeed = this.baseSpeed * (1.75 + this.hunger * 0.7) * predScale;
     else if (this.hunting) targetSpeed = this.baseSpeed * (0.35 + this.hunger * 0.28) * predScale;
     // Hovering — barracuda idles almost motionless, barely drifting
-    else targetSpeed = this.baseSpeed * (0.07 + this.hunger * 0.21) * predScale;
+    else targetSpeed = this.baseSpeed * (0.09 + this.hunger * 0.26) * predScale;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     // Slow to change speed when well-fed, responsive when hungry/hunting
@@ -2136,18 +2136,21 @@ class Predator {
       const velX = curr.x - curr.px, velY = curr.y - curr.py;
       curr.px = curr.x; curr.py = curr.y;
       const t = j / this._jointCount;
-      // Drag — stiff near head, looser toward tail for responsive flex
-      const drag = 0.65 - t * 0.15; // 0.65 head, 0.50 tail
+      // Drag — very stiff at snout, loosens toward tail
+      // First 3 joints (head/snout) are nearly rigid
+      const headStiff = j <= 3 ? 0.85 : 0.65;
+      const drag = headStiff - t * 0.15;
       curr.x += velX * drag;
       curr.y += velY * drag;
-      // Gentle pull toward rest position (straight behind head)
+      // Pull toward rest position (straight behind head)
       const restX = this.x - Math.cos(this._renderAngle) * j * this._segLen;
       const restY = this.y - Math.sin(this._renderAngle) * j * this._segLen;
       // Straighten more at speed, stay flexed when slow-turning
-      // Extra strong straightening during first frames to prevent crumpled spawn
+      // Head joints get much stronger straightening to stay rigid
       const speedFactor = Math.min(1, currentSpeed / (this.baseSpeed * 2));
       const spawnBoost = this._spawnFrames > 0 ? 0.15 : 0;
-      const straighten = (0.001 + speedFactor * 0.004 + spawnBoost) * (1 - t * 0.5);
+      const headBoost = j <= 3 ? 0.05 : 0;
+      const straighten = (0.001 + speedFactor * 0.004 + spawnBoost + headBoost) * (1 - t * 0.5);
       curr.x += (restX - curr.x) * straighten;
       curr.y += (restY - curr.y) * straighten;
       // Distance constraint only — no bend clamping
