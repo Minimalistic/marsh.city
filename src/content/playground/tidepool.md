@@ -1525,7 +1525,7 @@ class Predator {
     else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
     else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
 
-    this.len = (80 + Math.random() * 30) * (w < 500 ? 0.8 : 1);
+    this.len = (52 + Math.random() * 19.5) * (w < 500 ? 0.8 : 1);
     this.bodyWidth = this.len * 0.068;
     this.speed = 0.5 + Math.random() * 0.3;
     this.baseSpeed = this.speed;
@@ -2182,7 +2182,7 @@ class Frond {
     this.y = y;
     this.growAngle = growAngle;
     // Plant scale: 3x base size, proportional to viewport area
-    const plantScale = viewScale * 2.25;
+    const plantScale = viewScale * 1.575;
     this.len = (40 + Math.random() * 55) * plantScale;
     this.branches = 3 + Math.floor(Math.random() * 4);
     this.phase = Math.random() * Math.PI * 2;
