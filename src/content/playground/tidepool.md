@@ -3088,8 +3088,8 @@ function draw(time) {
     const cm = rf.baseColor.match(/\d+/g).map(Number);
     const layers = 6;
     for (let layer = 0; layer < layers; layer++) {
-      const scale = 1.15 - (layer / layers) * 0.55; // 1.15 outer to 0.6 inner
-      const alpha = (layer / (layers - 1)) * 0.45; // 0 outer to 0.45 inner
+      const scale = 1.2 - (layer / layers) * 0.7; // 1.2 outer to 0.5 inner
+      const alpha = (layer / (layers - 1)) * 0.25; // 0 outer to 0.25 inner
       ctx.beginPath();
       ctx.moveTo(rf.baseShape[0].x * scale, rf.baseShape[0].y * scale);
       for (let i = 0; i < rf.baseShape.length; i++) {
