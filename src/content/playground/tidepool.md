@@ -1785,8 +1785,10 @@ class Predator {
     this.color = 'rgb(55, 95, 100)';
     this.bellyColor = 'rgb(140, 170, 165)';
 
-    // Hunger: 0 = full, 1 = starving. Hunting starts at 0.5
+    // Hunger: 0 = full, 1 = starving. Threshold varies per fish
     this.hunger = 0.2 + Math.random() * 0.2;
+    this._hungerRate = 0.008 + Math.random() * 0.008; // variable metabolism
+    this._huntThreshold = 0.4 + Math.random() * 0.25; // some hunt sooner than others
     this.hunting = false;
     this.target = null;
     this.burstTimer = 0;
@@ -1816,7 +1818,7 @@ class Predator {
   }
 
   update(dt, smallFish, time) {
-    this.hunger = Math.min(1, this.hunger + dt * 0.012);
+    this.hunger = Math.min(1, this.hunger + dt * this._hungerRate);
 
     if (this.digestTimer > 0) {
       this.digestTimer -= dt;
@@ -1851,7 +1853,7 @@ class Predator {
       if (this.chompTimer <= 0) this.chomping = false;
     }
 
-    this.hunting = this.hunger > 0.5 && this.digestTimer <= 0;
+    this.hunting = this.hunger > this._huntThreshold && this.digestTimer <= 0;
 
     if (this.hunting) {
       const mouthX = this.x + Math.cos(this.angle) * this.len * 0.05;
@@ -1940,7 +1942,7 @@ class Predator {
         const idx = smallFish.indexOf(prey);
         if (idx >= 0) smallFish.splice(idx, 1);
         this.hunger = Math.max(0, this.hunger - 0.45);
-        this.digestTimer = 5 + Math.random() * 5;
+        this.digestTimer = 4 + Math.random() * 12;
         this.target = null;
         this.hunting = false;
         this.chomping = true;
