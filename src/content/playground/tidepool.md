@@ -1543,10 +1543,15 @@ class ReefFish {
     this.depth = 0.15 + Math.random() * 0.2;
     this.depthAlpha = 1 - this.depth * 0.3;
 
-    // Bright blue with slight per-fish variation
-    const bj = () => Math.round((Math.random() - 0.5) * 15);
-    this.color = `rgb(${50+bj()},${120+bj()},${210+bj()})`;
-    this.bellyColor = `rgb(${100+bj()},${170+bj()},${240+bj()})`;
+    // Vibrant tang blue, ~10% chance of red
+    const bj = () => Math.round((Math.random() - 0.5) * 12);
+    if (Math.random() < 0.1) {
+      this.color = `rgb(${200+bj()},${45+bj()},${35+bj()})`;
+      this.bellyColor = `rgb(${230+bj()},${90+bj()},${70+bj()})`;
+    } else {
+      this.color = `rgb(${20+bj()},${80+bj()},${245+bj()})`;
+      this.bellyColor = `rgb(${60+bj()},${140+bj()},${255})`;
+    }
 
     this._phaseOffset = Math.random() * Math.PI * 2;
     this._joints = [];
