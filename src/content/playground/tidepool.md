@@ -21,7 +21,7 @@ A rocky tidepool. Schools of tiny fish dart through the current - but something 
 <button id="fullscreen-btn" class="pool-tool pool-fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
 </button>
-<button id="fs-close-btn" class="pool-tool pool-fs-close" title="Exit fullscreen" aria-label="Exit fullscreen" hidden>
+<button id="fs-close-btn" class="pool-tool pool-fs-close hidden" title="Exit fullscreen" aria-label="Exit fullscreen" hidden>
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
 <div id="sound-hint" class="pool-hint" hidden>No audio? Check your phone's silent mode switch</div>
@@ -867,7 +867,7 @@ class Fish {
     // Apply boids - cohesion dominates for tight real-looking schools
     const schoolWeight = this.distracted ? 0.3 : 1;
     if (sepCount > 0) { this.vx += sepX * 0.07; this.vy += sepY * 0.07; }
-    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.07 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.07 * schoolWeight; }
+    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.10 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.10 * schoolWeight; }
     if (cohCount > 0) {
       let cx = cohX / cohCount, cy = cohY / cohCount;
       // Push cohesion target well clear of reefs so the school doesn't orbit them
@@ -891,19 +891,8 @@ class Fish {
           cy = rf.y + (bdy / bDist) * baseClear;
         }
       }
-      // Rounded school shape: stronger lateral pull than fore/aft pull
-      // Fish to the side of center get pulled harder, fish ahead/behind less
-      const toCx = cx - this.x, toCy = cy - this.y;
-      const headingX = Math.cos(this.angle), headingY = Math.sin(this.angle);
-      // Dot product: positive = center is ahead, negative = behind
-      const toCDist = Math.sqrt(toCx * toCx + toCy * toCy) || 1;
-      const foreAft = (toCx * headingX + toCy * headingY) / toCDist;
-      // Cross product magnitude: how far to the side the center is
-      const lateral = Math.abs(toCx * headingY - toCy * headingX) / toCDist;
-      // Boost lateral cohesion, dampen fore-aft to prevent elongation
-      const cohStr = 0.008 + lateral * 0.006 - Math.max(0, foreAft) * 0.003;
-      this.vx += toCx * cohStr * schoolWeight;
-      this.vy += toCy * cohStr * schoolWeight;
+      this.vx += (cx - this.x) * 0.006 * schoolWeight;
+      this.vy += (cy - this.y) * 0.006 * schoolWeight;
     }
 
     // Gentle centering during first few seconds
@@ -2449,16 +2438,25 @@ function jitterTunaColor(base) {
 const fishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
 const fish = [];
 // Spawn all fish immediately inside the viewport in school clusters
+// Pre-pick cluster centers and shared headings per school
+let schoolClusters = [];
+function pickSchoolClusters() {
+  schoolClusters = schoolColors.map(() => ({
+    x: w * (0.15 + Math.random() * 0.7),
+    y: h * (0.15 + Math.random() * 0.7),
+    angle: Math.random() * Math.PI * 2,
+  }));
+}
+pickSchoolClusters();
 function spawnAllFish(count) {
   for (let i = 0; i < count; i++) {
     const school = i % schoolColors.length;
-    // Each school clusters in a random area of the viewport
-    const clusterX = w * (0.15 + (school * 0.2) % 0.7 + Math.random() * 0.15);
-    const clusterY = h * (0.15 + Math.random() * 0.7);
+    const cluster = schoolClusters[school];
     const f = new Fish();
-    f.x = clusterX + (Math.random() - 0.5) * 60;
-    f.y = clusterY + (Math.random() - 0.5) * 60;
-    f.angle = Math.random() * Math.PI * 2;
+    // Tight cluster around the school center, shared heading with jitter
+    f.x = cluster.x + (Math.random() - 0.5) * 40;
+    f.y = cluster.y + (Math.random() - 0.5) * 40;
+    f.angle = cluster.angle + (Math.random() - 0.5) * 0.4;
     f.vx = Math.cos(f.angle) * f.speed;
     f.vy = Math.sin(f.angle) * f.speed;
     f.school = school;
@@ -2943,10 +2941,11 @@ regenerateWorld = function() {
   spawnKelp();
   for (let i = 0; i < 60; i++) { for (const p of plants) p.update(0.016, i * 16); }
 
-  // Fish — spawn all immediately inside viewport
+  // Fish — spawn all immediately in school clusters
   basePop = Math.min(500, Math.max(80, Math.floor((w * h) / 400)));
   popTarget = basePop * (0.7 + Math.random() * 0.3);
   const newFishCount = Math.min(500, Math.max(120, Math.floor((w * h) / 400)));
+  pickSchoolClusters();
   spawnAllFish(newFishCount);
   // Refresh school entry points for later arrivals
   for (let i = 0; i < schoolEntries.length; i++) {
