@@ -1809,6 +1809,10 @@ class Predator {
     this._swimSmooth = 0.3;
     this._renderAngle = this.angle;
     this._spawnFrames = 30; // frames of strong straightening at spawn
+    // Head-snap: occasional quick direction change
+    this._snapTimer = 5 + Math.random() * 12;
+    this._snapAngle = 0;
+    this._snapping = false;
   }
 
   update(dt, smallFish, time) {
@@ -2085,19 +2089,41 @@ class Predator {
       }
     }
 
+    // Head-snap — occasional sharp direction change when cruising
+    this._snapTimer -= dt;
+    if (this._snapTimer <= 0 && !this.target) {
+      this._snapping = true;
+      // Snap 40-90 degrees to one side
+      this._snapAngle = this.angle + (Math.random() < 0.5 ? 1 : -1) * (0.7 + Math.random() * 0.9);
+      this._snapTimer = 8 + Math.random() * 20;
+    }
+    if (this._snapping) {
+      // Steer velocity toward snap angle quickly
+      const snapSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+      this.vx += (Math.cos(this._snapAngle) * snapSpeed - this.vx) * 0.08;
+      this.vy += (Math.sin(this._snapAngle) * snapSpeed - this.vy) * 0.08;
+      // Done snapping once heading is close
+      let snapDiff = this._snapAngle - this.angle;
+      while (snapDiff > Math.PI) snapDiff -= Math.PI * 2;
+      while (snapDiff < -Math.PI) snapDiff += Math.PI * 2;
+      if (Math.abs(snapDiff) < 0.15) this._snapping = false;
+    }
+
     const targetAngle = Math.atan2(this.vy, this.vx);
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
     // Sluggish turns when full, snappier as hunger builds
     const turnMult = 0.4 + this.hunger * 0.6;
-    const maxTurn = (0.12 + currentSpeed * 0.12) * turnMult;
+    // Snap turns get extra turn rate so the head whips fast
+    const snapBoost = this._snapping ? 2.0 : 1.0;
+    const maxTurn = (0.12 + currentSpeed * 0.12) * turnMult * snapBoost;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
     // Smooth render angle — body follows heading
     let rDiff = this.angle - this._renderAngle;
     while (rDiff > Math.PI) rDiff -= Math.PI * 2;
     while (rDiff < -Math.PI) rDiff += Math.PI * 2;
-    this._renderAngle += rDiff * 0.16;
+    this._renderAngle += rDiff * (this._snapping ? 0.3 : 0.16);
 
     // Joint chain — plant-style verlet with heavy damping, no hard bend clamping
     // Body straightens naturally over time through rest-position pull
