@@ -1051,6 +1051,7 @@ class Fish {
     }
 
     // Predator avoidance — only react to aggressive movement, fear scales with distance
+    let panicSprint = false; // last-ditch escape mode
     for (const pred of predators) {
       const predSpeed = Math.sqrt(pred.vx * pred.vx + pred.vy * pred.vy);
       const predAggression = predSpeed / (pred.baseSpeed * viewScale);
@@ -1076,7 +1077,16 @@ class Fish {
           this.fleeing = true;
           this.fleeTimer = beingChased ? 1.2 : 0.3 + fear * 0.5;
         }
-        if (beingChased && pDist < fleeRange * 0.4) {
+        // Last-ditch panic — predator is RIGHT there, fish goes berserk
+        if (beingChased && pDist < 30 * viewScale) {
+          panicSprint = true;
+          // Violent erratic jinking — sharp random direction changes each frame
+          const despAngle = fleeAngle + (Math.random() - 0.5) * 3.0;
+          this.vx += Math.cos(despAngle) * scaledSpeed * 1.2;
+          this.vy += Math.sin(despAngle) * scaledSpeed * 1.2;
+          this.fleeing = true;
+          this.fleeTimer = 1.5;
+        } else if (beingChased && pDist < fleeRange * 0.4) {
           const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
           this.vx += Math.cos(dartAngle) * scaledSpeed * 0.5;
           this.vy += Math.sin(dartAngle) * scaledSpeed * 0.5;
@@ -1103,7 +1113,8 @@ class Fish {
       if (pred.target === this) { beingHunted = true; break; }
     }
     let targetSpeed;
-    if (beingHunted) targetSpeed = scaledSpeed * 2.2; // panic sprint
+    if (panicSprint) targetSpeed = scaledSpeed * 3.0; // last-ditch desperate burst
+    else if (beingHunted) targetSpeed = scaledSpeed * 2.2; // panic sprint
     else if (this.fleeing) targetSpeed = scaledSpeed * 1.6;
     else if (this.idle) targetSpeed = scaledSpeed * 0.7;
     else targetSpeed = scaledSpeed * 1.0;
@@ -2072,6 +2083,7 @@ class Predator {
     // Tail flick on burst — brief powerful lateral tail sweep
     this._burstFlick = 0; // 0 = no flick, decays from 1.0
     this._burstFlickDir = 1; // which side the tail kicks to
+    this._retargetCooldown = 0; // pause between giving up and picking a new target
 
     const numJoints = 12;
     this._jointCount = numJoints;
@@ -2144,28 +2156,32 @@ class Predator {
         if (d2 < 300 * 300) { crowdX += f.x; crowdY += f.y; crowdN++; }
       }
 
-      // Target management — once chasing, commit for a while
+      // Target management — commit hard to chases, don't give up easily
       if (this.target && !smallFish.includes(this.target)) this.target = null;
-      // Only give up on a chase after sustained pursuit (not randomly)
       if (this.target) {
         const td = Math.sqrt((this.target.x - this.x) ** 2 + (this.target.y - this.y) ** 2);
-        // Give up if target got too far away (it escaped)
-        if (td > 200 * viewScale) {
+        // Only give up if target is very far — shark-like persistence
+        if (td > 300 * viewScale) {
           this.target = null;
-          this.burstTimer = 0; // stop chasing, catch breath
+          this.burstTimer = 0;
+          // Brief cooldown before picking a new target
+          this._retargetCooldown = 1.5 + Math.random() * 2;
         }
       }
 
+      // Retarget cooldown — don't instantly lock onto something new after giving up
+      if (this._retargetCooldown > 0) this._retargetCooldown -= dt;
+
       // Pick a target: prefer isolated fish ahead of us, not too close (need a chase)
-      if (!this.target && Math.random() < 0.03) { // don't retarget every frame
+      if (!this.target && (this._retargetCooldown || 0) <= 0 && Math.random() < 0.03) {
         let best = null;
         let bestScore = Infinity;
         for (const f of getNeighbors(this.x, this.y)) {
           const dx = f.x - this.x, dy = f.y - this.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist > 180 * viewScale || dist < 30 * viewScale) continue;
+          if (dist > 220 * viewScale || dist < 25 * viewScale) continue;
           const ahead = dx * cosA + dy * sinA;
-          if (ahead < 0) continue;
+          if (ahead < -20) continue; // allow slightly behind too
           let nearbyFriends = 0;
           for (const other of getNeighbors(f.x, f.y)) {
             if (other === f) continue;
@@ -2176,43 +2192,55 @@ class Predator {
           const score = dist + isolationBonus;
           if (score < bestScore) { bestScore = score; best = f; }
         }
-        if (best) this.target = best;
+        if (best) {
+          this.target = best;
+          // Initial attack dash — burst toward the target with tail flick
+          this.burstTimer = 0.4;
+          this._burstFlick = 0.8;
+          this._burstFlickDir = Math.random() < 0.5 ? 1 : -1;
+        }
       }
 
       if (this.target) {
-        // Barracuda strike — explosive acceleration, lock on hard
+        // Shark-like pursuit — relentless, adjusts course, multiple attack dashes
         const dx = this.target.x - this.x, dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const pursuitAngle = Math.atan2(dy, dx);
 
-        // Explosive ramp: slow far out, then rockets in
-        const closeness = Math.max(0, 1 - dist / (180 * viewScale));
-        const chaseSpeed = this.baseSpeed * (2.5 + closeness * 2.0) * viewScale;
-        const steer = 0.05 + closeness * 0.12;
+        // Aggressive ramp: faster base chase, harder steering at close range
+        const closeness = Math.max(0, 1 - dist / (220 * viewScale));
+        const chaseSpeed = this.baseSpeed * (2.8 + closeness * 2.5) * viewScale;
+        const steer = 0.06 + closeness * 0.15;
         this.vx += (Math.cos(pursuitAngle) * chaseSpeed - this.vx) * steer;
         this.vy += (Math.sin(pursuitAngle) * chaseSpeed - this.vy) * steer;
 
-        // Final lunge — burst of raw speed with tail flick
-        if (dist < 50 * viewScale && this.burstTimer <= 0) {
-          this.burstTimer = 0.6;
+        // Attack dashes — repeated lunges, not just one final burst
+        // Can miss and re-commit, like a shark making multiple passes
+        if (dist < 60 * viewScale && this.burstTimer <= 0) {
+          this.burstTimer = 0.5 + Math.random() * 0.3;
           this._burstFlick = 1.0;
           this._burstFlickDir = Math.random() < 0.5 ? 1 : -1;
         }
+        // After a burst ends, brief pause then re-engage if still close
+        if (this.burstTimer <= 0 && dist < 100 * viewScale && Math.random() < 0.02) {
+          this.burstTimer = 0.3;
+          this._burstFlick = 0.6;
+          this._burstFlickDir = -this._burstFlickDir;
+        }
       } else if (crowdN > 0) {
-        // Barely drifting in the general direction of fish — not committed
+        // Cruising toward fish — more purposeful than before
         const cx = crowdX / crowdN, cy = crowdY / crowdN;
         const toSchoolAngle = Math.atan2(cy - this.y, cx - this.x);
-        const steer = 0.005 + urgency * 0.008;
-        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 0.6 * viewScale - this.vx) * steer;
-        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 0.6 * viewScale - this.vy) * steer;
+        const steer = 0.008 + urgency * 0.012;
+        this.vx += (Math.cos(toSchoolAngle) * this.baseSpeed * 0.8 * viewScale - this.vx) * steer;
+        this.vy += (Math.sin(toSchoolAngle) * this.baseSpeed * 0.8 * viewScale - this.vy) * steer;
       }
 
-      // Catch — only the locked target, must be very close and predator moving fast
+      // Catch — must be very close and moving fast, but fish can dodge
       let prey = null;
       if (this.target) {
         const td = Math.sqrt((this.target.x - mouthX) ** 2 + (this.target.y - mouthY) ** 2);
         const mySpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        // Must be right on top of it AND moving fast (barracuda strike speed)
         if (td < 10 && mySpeed > this.baseSpeed * 2.5 * viewScale) prey = this.target;
       }
       if (prey) {
@@ -2492,13 +2520,14 @@ class Predator {
       spineY[i] = this._joints[i].y;
       const tw = i / segs;
       let hw;
-      if (tw < 0.06) hw = tw / 0.06 * this.bodyWidth * 0.4;
-      else if (tw < 0.2) hw = this.bodyWidth * (0.4 + (tw - 0.06) / 0.14 * 0.6);
-      else if (tw < 0.55) hw = this.bodyWidth * (1 - (tw - 0.2) / 0.35 * 0.15);
+      if (tw < 0.03) hw = tw / 0.03 * this.bodyWidth * 0.15; // sharp pointed snout
+      else if (tw < 0.1) hw = this.bodyWidth * (0.15 + (tw - 0.03) / 0.07 * 0.35);
+      else if (tw < 0.22) hw = this.bodyWidth * (0.5 + (tw - 0.1) / 0.12 * 0.5);
+      else if (tw < 0.55) hw = this.bodyWidth * (1 - (tw - 0.22) / 0.33 * 0.15);
       else hw = this.bodyWidth * 0.85 * Math.pow(1 - (tw - 0.55) / 0.45, 1.3);
-      widths[i] = Math.max(hw, 0.2);
+      widths[i] = Math.max(hw, 0.15);
     }
-    widths[0] = this.bodyWidth * 0.4;
+    widths[0] = this.bodyWidth * 0.12; // needle-like nose tip
 
     // Compute perpendiculars and outline in world space
     ctx.save();
