@@ -835,7 +835,7 @@ class Fish {
     let alignX = 0, alignY = 0, alignCount = 0;
     let cohX = 0, cohY = 0, cohCount = 0;
 
-    const headX = Math.cos(this.angle), headY = Math.sin(this.angle);
+    const hdX = Math.cos(this.angle), hdY = Math.sin(this.angle);
     for (const other of getNeighbors(this.x, this.y)) {
       if (other === this) continue;
       const sameSchool = other.school === this.school;
@@ -846,7 +846,7 @@ class Fish {
       if (dist < this.separationDist && dist > 0.1) {
         // Taper: stronger separation from neighbors ahead, weaker behind
         // Creates a pointed front and wider back
-        const ahead = (dx * headX + dy * headY) / dist; // -1 behind, +1 ahead
+        const ahead = (dx * hdX + dy * hdY) / dist; // -1 behind, +1 ahead
         const taperMul = 1 + ahead * 0.4 * this._taperStrength;
         sepX -= (dx / dist) * taperMul;
         sepY -= (dy / dist) * taperMul;
