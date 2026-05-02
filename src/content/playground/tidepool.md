@@ -1952,59 +1952,81 @@ class Predator {
     ctx.stroke();
     ctx.globalAlpha = 1;
 
-    // Dorsal fin (single fin along the spine, visible from above)
+    // Dorsal fin — centered ridge along the spine (top-down view)
     const dStart = Math.round(segs * 0.15), dEnd = Math.round(segs * 0.45);
     ctx.beginPath();
-    ctx.moveTo(spineX[dStart], spineY[dStart]);
+    // Trace one side of the ridge
     for (let i = dStart; i <= dEnd; i++) {
       const t = (i - dStart) / (dEnd - dStart);
-      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 1.5;
+      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 0.5;
       const nx2 = -(spineY[Math.min(i+1, segs)] - spineY[Math.max(i-1, 0)]);
       const ny2 = spineX[Math.min(i+1, segs)] - spineX[Math.max(i-1, 0)];
       const nL = Math.sqrt(nx2 * nx2 + ny2 * ny2) || 1;
       ctx.lineTo(spineX[i] + (nx2/nL)*finH, spineY[i] + (ny2/nL)*finH);
     }
-    ctx.lineTo(spineX[dEnd], spineY[dEnd]);
+    // Trace the other side back
+    for (let i = dEnd; i >= dStart; i--) {
+      const t = (i - dStart) / (dEnd - dStart);
+      const finH = Math.sin(t * Math.PI) * this.bodyWidth * 0.5;
+      const nx2 = -(spineY[Math.min(i+1, segs)] - spineY[Math.max(i-1, 0)]);
+      const ny2 = spineX[Math.min(i+1, segs)] - spineX[Math.max(i-1, 0)];
+      const nL = Math.sqrt(nx2 * nx2 + ny2 * ny2) || 1;
+      ctx.lineTo(spineX[i] - (nx2/nL)*finH, spineY[i] - (ny2/nL)*finH);
+    }
     ctx.closePath();
     ctx.fillStyle = `rgb(${cr-15},${cg-15},${cb-10})`;
     ctx.globalAlpha = 0.7;
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // Pectoral fins (front side fins) — drawn on top of body
-    const pIdx = Math.round(segs * 0.2);
-    const finLen = totalLen * 0.12;
+    // Pectoral fins (front side fins) — triangular, stick out sideways
+    const pIdx = Math.round(segs * 0.22);
+    const pFinLen = totalLen * 0.15;
     for (const side of [-1, 1]) {
-      const bx = side === 1 ? rightX[pIdx] : leftX[pIdx];
-      const by = side === 1 ? rightY[pIdx] : leftY[pIdx];
-      const bodyDir = Math.atan2(spineY[pIdx]-spineY[pIdx+1], spineX[pIdx]-spineX[pIdx+1]);
-      const tipX = bx + Math.cos(bodyDir + side * 0.8) * finLen;
-      const tipY = by + Math.sin(bodyDir + side * 0.8) * finLen;
+      // Base points: two spots along the body edge
+      const b1i = pIdx, b2i = Math.min(pIdx + 2, segs);
+      const b1x = side === 1 ? rightX[b1i] : leftX[b1i];
+      const b1y = side === 1 ? rightY[b1i] : leftY[b1i];
+      const b2x = side === 1 ? rightX[b2i] : leftX[b2i];
+      const b2y = side === 1 ? rightY[b2i] : leftY[b2i];
+      // Tip: perpendicular outward from spine + angled backward
+      const nx = -(spineY[pIdx+1] - spineY[pIdx]);
+      const ny = spineX[pIdx+1] - spineX[pIdx];
+      const nL = Math.sqrt(nx*nx + ny*ny) || 1;
+      const backDir = Math.atan2(spineY[pIdx+1]-spineY[pIdx], spineX[pIdx+1]-spineX[pIdx]);
+      const tipX = spineX[pIdx] + (nx/nL)*pFinLen*side + Math.cos(backDir)*pFinLen*0.5;
+      const tipY = spineY[pIdx] + (ny/nL)*pFinLen*side + Math.sin(backDir)*pFinLen*0.5;
       ctx.beginPath();
-      ctx.moveTo(bx, by);
-      ctx.quadraticCurveTo(tipX, tipY, bx + Math.cos(bodyDir) * finLen * 0.4, by + Math.sin(bodyDir) * finLen * 0.4);
+      ctx.moveTo(b1x, b1y);
+      ctx.quadraticCurveTo(tipX, tipY, b2x, b2y);
       ctx.closePath();
       ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
-      ctx.globalAlpha = 0.6;
+      ctx.globalAlpha = 0.55;
       ctx.fill();
       ctx.globalAlpha = 1;
     }
 
-    // Pelvic fins (rear side fins) — drawn on top of body
+    // Pelvic fins (rear side fins) — smaller version
     const pvIdx = Math.round(segs * 0.55);
     const pvFinLen = totalLen * 0.08;
     for (const side of [-1, 1]) {
-      const bx = side === 1 ? rightX[pvIdx] : leftX[pvIdx];
-      const by = side === 1 ? rightY[pvIdx] : leftY[pvIdx];
-      const bodyDir = Math.atan2(spineY[pvIdx]-spineY[pvIdx+1], spineX[pvIdx]-spineX[pvIdx+1]);
-      const tipX = bx + Math.cos(bodyDir + side * 0.7) * pvFinLen;
-      const tipY = by + Math.sin(bodyDir + side * 0.7) * pvFinLen;
+      const b1i = pvIdx, b2i = Math.min(pvIdx + 2, segs);
+      const b1x = side === 1 ? rightX[b1i] : leftX[b1i];
+      const b1y = side === 1 ? rightY[b1i] : leftY[b1i];
+      const b2x = side === 1 ? rightX[b2i] : leftX[b2i];
+      const b2y = side === 1 ? rightY[b2i] : leftY[b2i];
+      const nx = -(spineY[pvIdx+1] - spineY[pvIdx]);
+      const ny = spineX[pvIdx+1] - spineX[pvIdx];
+      const nL = Math.sqrt(nx*nx + ny*ny) || 1;
+      const backDir = Math.atan2(spineY[pvIdx+1]-spineY[pvIdx], spineX[pvIdx+1]-spineX[pvIdx]);
+      const tipX = spineX[pvIdx] + (nx/nL)*pvFinLen*side + Math.cos(backDir)*pvFinLen*0.5;
+      const tipY = spineY[pvIdx] + (ny/nL)*pvFinLen*side + Math.sin(backDir)*pvFinLen*0.5;
       ctx.beginPath();
-      ctx.moveTo(bx, by);
-      ctx.quadraticCurveTo(tipX, tipY, bx + Math.cos(bodyDir) * pvFinLen * 0.35, by + Math.sin(bodyDir) * pvFinLen * 0.35);
+      ctx.moveTo(b1x, b1y);
+      ctx.quadraticCurveTo(tipX, tipY, b2x, b2y);
       ctx.closePath();
       ctx.fillStyle = `rgb(${cr-10},${cg-10},${cb-10})`;
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.45;
       ctx.fill();
       ctx.globalAlpha = 1;
     }
