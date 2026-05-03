@@ -768,7 +768,7 @@ function spawnWash() {
   washWaves.push({
     x: startX, y: startY,
     angle,
-    speed: (0.8 + intensity * 2) * (w / initialW),
+    speed: (1.2 + intensity * 3) * (w / initialW),
     width: (15 + intensity * 40) * viewScale,
     strength: 0.1 + intensity * 0.6,
     life: 1,
