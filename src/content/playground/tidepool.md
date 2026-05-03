@@ -4332,25 +4332,25 @@ function draw(time) {
     ctx.restore();
   }
 
-  // DOF haze — downsample to 1/4 res for performance, blur, composite back
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const dofScale = 0.25;
-  const dofW = Math.max(1, Math.floor(canvas.width * dofScale));
-  const dofH = Math.max(1, Math.floor(canvas.height * dofScale));
-  if (blurCanvas.width !== dofW || blurCanvas.height !== dofH) {
-    blurCanvas.width = dofW;
-    blurCanvas.height = dofH;
-  }
-  blurCtx.clearRect(0, 0, dofW, dofH);
-  blurCtx.filter = 'blur(4px)';
-  blurCtx.drawImage(canvas, 0, 0, dofW, dofH);
-  ctx.save();
-  ctx.globalAlpha = 0.35;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.imageSmoothingEnabled = true;
-  ctx.drawImage(blurCanvas, 0, 0, canvas.width, canvas.height);
-  ctx.restore();
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // DOF haze — disabled for performance testing
+  // const dpr = Math.min(2, window.devicePixelRatio || 1);
+  // const dofScale = 0.25;
+  // const dofW = Math.max(1, Math.floor(canvas.width * dofScale));
+  // const dofH = Math.max(1, Math.floor(canvas.height * dofScale));
+  // if (blurCanvas.width !== dofW || blurCanvas.height !== dofH) {
+  //   blurCanvas.width = dofW;
+  //   blurCanvas.height = dofH;
+  // }
+  // blurCtx.clearRect(0, 0, dofW, dofH);
+  // blurCtx.filter = 'blur(4px)';
+  // blurCtx.drawImage(canvas, 0, 0, dofW, dofH);
+  // ctx.save();
+  // ctx.globalAlpha = 0.35;
+  // ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // ctx.imageSmoothingEnabled = true;
+  // ctx.drawImage(blurCanvas, 0, 0, canvas.width, canvas.height);
+  // ctx.restore();
+  // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   requestAnimationFrame(draw);
 }
