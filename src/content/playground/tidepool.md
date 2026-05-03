@@ -2922,22 +2922,27 @@ function traceFishShadow(sCtx, f) {
 
 // Draw all fish shadows at once: batch onto offscreen canvas, blur once, composite
 function drawAllFishShadows(ctx, drawables) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
   // Size shadow canvas to match main canvas
   if (shadowCanvas.width !== ctx.canvas.width || shadowCanvas.height !== ctx.canvas.height) {
     shadowCanvas.width = ctx.canvas.width;
     shadowCanvas.height = ctx.canvas.height;
   }
+  shadowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   shadowCtx.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
   shadowCtx.fillStyle = 'rgb(0, 0, 0)';
   for (const d of drawables) {
     if (d.type === 'fish') traceFishShadow(shadowCtx, d.obj);
   }
-  // Single blur pass over all shadows at once
+  // Composite blurred shadow layer — reset transform so drawImage maps 1:1 pixels
   ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.filter = 'blur(7px)';
   ctx.globalAlpha = 0.14;
   ctx.drawImage(shadowCanvas, 0, 0);
   ctx.restore();
+  // Restore DPR transform for subsequent drawing
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 const fishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
