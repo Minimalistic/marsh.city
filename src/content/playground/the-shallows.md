@@ -671,7 +671,7 @@ canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = f
 
 const ripples = [];
 
-// Wave current - oscillates back and forth like real tidepool wash
+// Wave current - oscillates back and forth like real shallow water wash
 const tide = { angle: 0, strength: 0 };
 const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
@@ -1279,7 +1279,7 @@ class Fish {
       }
     }
 
-    // Speed management - tidepool fish dart and zip, quick speed changes
+    // Speed management - fish dart and zip, quick speed changes
     // Check if actively being chased by a predator
     let beingHunted = false;
     for (const pred of predators) {
@@ -1400,7 +1400,7 @@ class Fish {
     const headY = Math.sin(this.angle);
     const fwdSpeed = this.vx * headX + this.vy * headY;
     const latSpeed = this.vx * (-headY) + this.vy * headX;
-    // Kill sideways drift aggressively - tidepool fish dart forward
+    // Kill sideways drift aggressively - fish dart forward
     this.vx -= (-headY) * latSpeed * 0.7;
     this.vy -= headX * latSpeed * 0.7;
     // Prevent backward movement
@@ -1583,7 +1583,7 @@ class Fish {
       let lx = jx * cosH - jy * sinH;
       let ly = jx * sinH + jy * cosH;
 
-      // Subtle tail-driven undulation - tidepool fish are rigid-bodied
+      // Subtle tail-driven undulation - these fish are rigid-bodied
       if (i > 0) {
         const t = i / segs;
         // Only the rear 40% moves appreciably
@@ -3802,7 +3802,7 @@ function draw(time) {
     }
   }
 
-  // Clear - bright tropical tidepool water (cached gradient)
+  // Clear - bright tropical shallow water (cached gradient)
   ctx.fillStyle = bgGradient;
   ctx.fillRect(0, 0, w, h);
 
