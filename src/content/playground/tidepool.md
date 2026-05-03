@@ -1130,20 +1130,27 @@ class Fish {
 
       // Passive avoidance — fish always steer clear of the big fish
       // Even a slow-cruising predator is something small fish don't want to be near
-      const comfortZone = 90 * viewScale; // wide berth radius
+      const comfortZone = 140 * viewScale; // wide berth radius
       if (pDist < comfortZone && pDist > 0.1) {
         const avoidance = 1 - pDist / comfortZone;
         const pushAngle = Math.atan2(pdy, pdx);
-        // Gentle but firm — stronger the closer they are
-        const pushForce = avoidance * avoidance * 0.08 * viewScale;
+        // Strong immediate push — fish don't let predator get close
+        const pushForce = avoidance * avoidance * 0.2 * viewScale;
         this.vx += Math.cos(pushAngle) * pushForce;
         this.vy += Math.sin(pushAngle) * pushForce;
       }
 
-      // Active flee — triggered by aggressive movement or being targeted
-      if (!beingChased && predAggression < 1.2) continue;
+      // Check if predator is heading toward this fish (in its path)
+      const predHeading = Math.atan2(pred.vy, pred.vx);
+      const angleToFish = Math.atan2(-pdy, -pdx);
+      let headingDiff = Math.abs(predHeading - angleToFish);
+      if (headingDiff > Math.PI) headingDiff = Math.PI * 2 - headingDiff;
+      const inPath = headingDiff < 0.8; // within ~45° of predator's heading
+
+      // Active flee — triggered by aggressive movement, being targeted, or in predator's path
+      if (!beingChased && !inPath && predAggression < 1.2) continue;
       // Flee range scales with how aggressively the predator is moving
-      const baseRange = beingChased ? 200 : 60 + predAggression * 50;
+      const baseRange = beingChased ? 250 : inPath ? 160 : 60 + predAggression * 50;
       const fleeRange = baseRange * viewScale;
       if (pDist < fleeRange && pDist > 0.1) {
         const proximity = 1 - pDist / fleeRange;
@@ -1151,26 +1158,26 @@ class Fish {
         const fear = proximity * proximity;
         const fleeAngle = Math.atan2(pdy, pdx);
         const jinkAngle = fleeAngle + (Math.random() - 0.5) * (0.8 + fear * 1.5);
-        const force = beingChased ? (0.4 * fear + 0.15) : (0.12 * fear);
+        const force = beingChased ? (0.6 * fear + 0.25) : inPath ? (0.3 * fear + 0.1) : (0.12 * fear);
         this.vx += Math.cos(jinkAngle) * force * viewScale;
         this.vy += Math.sin(jinkAngle) * force * viewScale;
-        if (fear > 0.15) {
+        if (fear > 0.1) {
           this.fleeing = true;
-          this.fleeTimer = beingChased ? 1.2 : 0.3 + fear * 0.5;
+          this.fleeTimer = beingChased ? 1.5 : 0.4 + fear * 0.7;
         }
         // Last-ditch panic — predator is RIGHT there, fish goes berserk
-        if (beingChased && pDist < 30 * viewScale) {
+        if ((beingChased || inPath) && pDist < 40 * viewScale) {
           panicSprint = true;
           // Violent erratic jinking — sharp random direction changes each frame
           const despAngle = fleeAngle + (Math.random() - 0.5) * 3.0;
-          this.vx += Math.cos(despAngle) * scaledSpeed * 1.2;
-          this.vy += Math.sin(despAngle) * scaledSpeed * 1.2;
+          this.vx += Math.cos(despAngle) * scaledSpeed * 1.8;
+          this.vy += Math.sin(despAngle) * scaledSpeed * 1.8;
           this.fleeing = true;
-          this.fleeTimer = 1.5;
+          this.fleeTimer = 1.8;
         } else if (beingChased && pDist < fleeRange * 0.4) {
           const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
-          this.vx += Math.cos(dartAngle) * scaledSpeed * 0.5;
-          this.vy += Math.sin(dartAngle) * scaledSpeed * 0.5;
+          this.vx += Math.cos(dartAngle) * scaledSpeed * 0.8;
+          this.vy += Math.sin(dartAngle) * scaledSpeed * 0.8;
           this.distracted = true;
           this.distractTimer = 1.5 + Math.random() * 2;
         }
@@ -1194,9 +1201,9 @@ class Fish {
       if (pred.target === this) { beingHunted = true; break; }
     }
     let targetSpeed;
-    if (panicSprint) targetSpeed = scaledSpeed * 3.0; // last-ditch desperate burst
-    else if (beingHunted) targetSpeed = scaledSpeed * 2.2; // panic sprint
-    else if (this.fleeing) targetSpeed = scaledSpeed * 1.6;
+    if (panicSprint) targetSpeed = scaledSpeed * 4.0; // last-ditch desperate burst
+    else if (beingHunted) targetSpeed = scaledSpeed * 3.0; // panic sprint
+    else if (this.fleeing) targetSpeed = scaledSpeed * 2.2;
     else if (this.idle) targetSpeed = scaledSpeed * 0.7;
     else targetSpeed = scaledSpeed * 1.0;
 
@@ -2308,8 +2315,8 @@ class Predator {
         if (best) {
           this.target = best;
           // Initial attack dash — burst toward the target with tail flick
-          this.burstTimer = 0.4;
-          this._burstFlick = 0.8;
+          this.burstTimer = 0.7;
+          this._burstFlick = 1.0;
           this._burstFlickDir = Math.random() < 0.5 ? 1 : -1;
         }
       }
@@ -2330,7 +2337,7 @@ class Predator {
         // Attack dashes — repeated lunges, not just one final burst
         // Can miss and re-commit, like a shark making multiple passes
         if (dist < 60 * viewScale && this.burstTimer <= 0) {
-          this.burstTimer = 0.5 + Math.random() * 0.3;
+          this.burstTimer = 0.7 + Math.random() * 0.4;
           this._burstFlick = 1.0;
           this._burstFlickDir = Math.random() < 0.5 ? 1 : -1;
         }
@@ -2403,7 +2410,7 @@ class Predator {
 
     const predScale = viewScale;
     let targetSpeed;
-    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 4.0 * predScale; this.burstTimer -= dt; }
+    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 7.0 * predScale; this.burstTimer -= dt; }
     else if (this.target) targetSpeed = this.baseSpeed * (1.75 + this.hunger * 0.7) * predScale;
     else if (this.hunting) targetSpeed = this.baseSpeed * (0.35 + this.hunger * 0.28) * predScale;
     // Hovering — barracuda idles almost motionless, barely drifting
@@ -2870,10 +2877,10 @@ stampCanvas.width = STAMP_SIZE;
 stampCanvas.height = STAMP_SIZE;
 const stampCtx = stampCanvas.getContext('2d');
 const sg = stampCtx.createRadialGradient(STAMP_SIZE/2, STAMP_SIZE/2, 0, STAMP_SIZE/2, STAMP_SIZE/2, STAMP_SIZE/2);
-sg.addColorStop(0, 'rgba(0, 0, 0, 0.018)');
-sg.addColorStop(0.2, 'rgba(0, 0, 0, 0.012)');
-sg.addColorStop(0.45, 'rgba(0, 0, 0, 0.006)');
-sg.addColorStop(0.7, 'rgba(0, 0, 0, 0.002)');
+sg.addColorStop(0, 'rgba(0, 0, 0, 0.013)');
+sg.addColorStop(0.2, 'rgba(0, 0, 0, 0.008)');
+sg.addColorStop(0.45, 'rgba(0, 0, 0, 0.004)');
+sg.addColorStop(0.7, 'rgba(0, 0, 0, 0.001)');
 sg.addColorStop(1, 'rgba(0, 0, 0, 0)');
 stampCtx.fillStyle = sg;
 stampCtx.fillRect(0, 0, STAMP_SIZE, STAMP_SIZE);
