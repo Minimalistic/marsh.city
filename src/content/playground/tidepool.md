@@ -2846,12 +2846,12 @@ class Predator {
   }
 }
 
-// Tuna palette — dark blue backs with lighter bellies
+// Tuna palette — dark muted backs with lighter bellies
 const schoolColors = [
-  { color: 'rgb(35, 70, 145)', belly: 'rgb(160, 190, 225)' },     // deep steel blue
-  { color: 'rgb(25, 80, 140)', belly: 'rgb(150, 195, 230)' },     // ocean blue
-  { color: 'rgb(45, 65, 135)', belly: 'rgb(170, 192, 228)' },     // slate blue
-  { color: 'rgb(20, 85, 155)', belly: 'rgb(145, 200, 235)' },     // cobalt
+  { color: 'rgb(30, 50, 85)', belly: 'rgb(130, 155, 185)' },      // dark steel
+  { color: 'rgb(25, 55, 80)', belly: 'rgb(120, 160, 190)' },      // deep slate
+  { color: 'rgb(35, 45, 78)', belly: 'rgb(140, 158, 182)' },      // charcoal blue
+  { color: 'rgb(22, 58, 88)', belly: 'rgb(125, 165, 195)' },      // dark teal
 ];
 // Per-fish color jitter so individuals aren't clones
 function jitterTunaColor(base) {
