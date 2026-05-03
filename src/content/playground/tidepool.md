@@ -4367,6 +4367,36 @@ function draw(time) {
   }
   ctx.restore();
 
+  // Wave hint patches — subtle bright bands drifting across the surface
+  // Like light refracting through gentle ocean swells passing overhead
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  for (let i = 0; i < 5; i++) {
+    const phase = time * 0.00008 + i * 1.7;
+    const drift = time * 0.00003 * (0.8 + i * 0.15);
+    // Each patch fades in and out on a slow cycle
+    const life = Math.sin(phase) * 0.5 + 0.5;
+    if (life < 0.15) continue; // skip when too faint
+    const fade = (life - 0.15) / 0.85;
+    const alpha = fade * fade * 0.04;
+    // Elongated patches that drift with the wave angle
+    const wx = w * 0.1 + ((drift * w * 3 + i * w * 0.6) % (w * 1.4)) - w * 0.2;
+    const wy = h * 0.15 + Math.sin(phase * 1.3 + i * 2.3) * h * 0.7;
+    const wLen = 80 + Math.sin(phase * 0.7) * 40; // length along wave direction
+    const wWid = 20 + Math.sin(phase * 1.1 + i) * 10; // narrow cross-section
+    ctx.save();
+    ctx.translate(wx, wy);
+    ctx.rotate(waveBaseAngle + Math.sin(phase + i) * 0.15);
+    const wg = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+    wg.addColorStop(0, `rgba(180, 230, 240, ${alpha})`);
+    wg.addColorStop(0.5, `rgba(160, 220, 230, ${alpha * 0.5})`);
+    wg.addColorStop(1, 'rgba(160, 220, 230, 0)');
+    ctx.scale(wLen, wWid);
+    ctx.fillStyle = wg;
+    ctx.fillRect(-1, -1, 2, 2);
+    ctx.restore();
+  }
+  ctx.restore();
 
   // Reef structures - waterline effects then above-water crown
   for (const rf of reefs) {
