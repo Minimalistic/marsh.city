@@ -4275,7 +4275,9 @@ function draw(time) {
   for (const p of plants) drawables.push({ y: p.y, type: 'plant', obj: p });
   for (const d of debris) drawables.push({ y: d.y, type: 'debris', obj: d });
   for (const s of starfish) drawables.push({ y: s.y, type: 'starfish', obj: s });
-  drawables.sort((a, b) => a.y - b.y);
+  // Layer priority: bottom-dwellers first, then fish on top
+  const layerOrder = { plant: 0, debris: 0, starfish: 0, fish: 1 };
+  drawables.sort((a, b) => (layerOrder[a.type] - layerOrder[b.type]) || (a.y - b.y));
 
   // Batch all fish shadows into offscreen canvas, blur once, composite
   drawAllFishShadows(ctx, drawables);
