@@ -2236,7 +2236,7 @@ class Predator {
 
     this.len = (52 + Math.random() * 19.5) * (w < 500 ? 0.8 : 1);
     this.bodyWidth = this.len * 0.055; // sleek barracuda profile
-    this.speed = 0.5 + Math.random() * 0.3;
+    this.speed = 0.7 + Math.random() * 0.4;
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
@@ -2472,12 +2472,12 @@ class Predator {
     if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 7.0 * predScale; this.burstTimer -= dt; }
     else if (this.target) targetSpeed = this.baseSpeed * (1.75 + this.hunger * 0.7) * predScale;
     else if (this.hunting) targetSpeed = this.baseSpeed * (0.35 + this.hunger * 0.28) * predScale;
-    // Hovering — barracuda idles almost motionless, barely drifting
-    else targetSpeed = this.baseSpeed * (0.09 + this.hunger * 0.26) * predScale;
+    // Hovering — slow deliberate cruise, not motionless
+    else targetSpeed = this.baseSpeed * (0.3 + this.hunger * 0.3) * predScale;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     // Slow to change speed when well-fed, responsive when hungry/hunting
-    const accelRate = this.hunting ? 0.1 : 0.03 + this.hunger * 0.05;
+    const accelRate = this.hunting ? 0.15 : 0.06 + this.hunger * 0.07;
     if (currentSpeed > 0.01) {
       const desired = currentSpeed + (targetSpeed - currentSpeed) * accelRate;
       this.vx *= desired / currentSpeed;
@@ -2615,10 +2615,10 @@ class Predator {
     let rDiff = this.angle - this._renderAngle;
     while (rDiff > Math.PI) rDiff -= Math.PI * 2;
     while (rDiff < -Math.PI) rDiff += Math.PI * 2;
-    this._renderAngle += rDiff * (this._snapping ? 0.3 : 0.16);
+    this._renderAngle += rDiff * (this._snapping ? 0.45 : 0.28);
 
     // Decay burst tail flick
-    if (this._burstFlick > 0) this._burstFlick = Math.max(0, this._burstFlick - dt * 4);
+    if (this._burstFlick > 0) this._burstFlick = Math.max(0, this._burstFlick - dt * 7);
 
     // Joint chain — plant-style verlet with heavy damping, no hard bend clamping
     // Body straightens naturally over time through rest-position pull
@@ -2631,10 +2631,9 @@ class Predator {
       const velX = curr.x - curr.px, velY = curr.y - curr.py;
       curr.px = curr.x; curr.py = curr.y;
       const t = j / this._jointCount;
-      // Drag — very stiff at snout, loosens toward tail
-      // First 3 joints (head/snout) are nearly rigid
-      const headStiff = j <= 3 ? 0.85 : 0.65;
-      const drag = headStiff - t * 0.15;
+      // Drag — stiff at snout, loosens toward tail. Lower = springs back faster
+      const headStiff = j <= 3 ? 0.75 : 0.45;
+      const drag = headStiff - t * 0.1;
       curr.x += velX * drag;
       curr.y += velY * drag;
       // Burst tail flick — rear 40% of body gets a sharp lateral kick
@@ -2655,7 +2654,7 @@ class Predator {
       const speedFactor = Math.min(1, currentSpeed / (this.baseSpeed * 2));
       const spawnBoost = this._spawnFrames > 0 ? 0.15 : 0;
       const headBoost = j <= 3 ? 0.05 : 0;
-      const straighten = (0.001 + speedFactor * 0.004 + spawnBoost + headBoost) * (1 - t * 0.5);
+      const straighten = (0.008 + speedFactor * 0.015 + spawnBoost + headBoost) * (1 - t * 0.4);
       curr.x += (restX - curr.x) * straighten;
       curr.y += (restY - curr.y) * straighten;
       // Distance constraint
