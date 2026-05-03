@@ -903,7 +903,7 @@ class Fish {
         const cdx = cx - (rf.x + rf.crownOffX), cdy = cy - (rf.y + rf.crownOffY);
         const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
         const cAngle = Math.atan2(cdy, cdx);
-        const clearR = rf.radiusAt(cAngle, rf.crownRadii) * 2.5;
+        const clearR = rf.radiusAt(cAngle, rf.crownRadii) * 3.2;
         if (cDist < clearR && cDist > 0.1) {
           cx = rf.x + rf.crownOffX + (cdx / cDist) * clearR;
           cy = rf.y + rf.crownOffY + (cdy / cDist) * clearR;
@@ -1196,8 +1196,8 @@ class Fish {
         }
         // Radial push outward regardless of heading - prevents orbit lock
         const prox = 1 - rDist / baseSense;
-        if (prox > 0.15) {
-          const outward = (prox - 0.15) * 0.1;
+        if (prox > 0.05) {
+          const outward = (prox - 0.05) * 0.22;
           this.vx += (rdx / rDist) * outward;
           this.vy += (rdy / rDist) * outward;
         }
@@ -1219,8 +1219,8 @@ class Fish {
         }
         // Radial push outward from crown
         const prox = 1 - cDist / crownSense;
-        if (prox > 0.15) {
-          const outward = (prox - 0.15) * 0.12;
+        if (prox > 0.05) {
+          const outward = (prox - 0.05) * 0.25;
           this.vx += (cdx / cDist) * outward;
           this.vy += (cdy / cDist) * outward;
         }
