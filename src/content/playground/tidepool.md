@@ -3579,7 +3579,7 @@ function draw(time) {
   for (const p of plants) p.update(dt, time);
   for (const f of fish) {
     if (f.speed < 0.5) continue;
-    for (const p of plants) p.displace(f.x, f.y, 20 * f.scale, f.speed * 0.1);
+    for (const p of plants) p.displace(f.x, f.y, 12 * f.scale, f.speed * 0.035);
   }
   for (const pred of predators) {
     for (const p of plants) p.displace(pred.x, pred.y, 35, pred.speed * 0.2);
