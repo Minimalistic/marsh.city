@@ -943,7 +943,13 @@ class Fish {
     }
 
     // Apply boids — alignment-first so merging schools match heading before clustering
-    const schoolWeight = this.distracted ? 0.3 : 1;
+    // Stragglers tighten up when predator is nearby — safety in numbers
+    let predNearby = false;
+    for (const pred of predators) {
+      const pdx = this.x - pred.x, pdy = this.y - pred.y;
+      if (pdx * pdx + pdy * pdy < 250 * 250 * viewScale * viewScale) { predNearby = true; break; }
+    }
+    const schoolWeight = (this.distracted && !predNearby) ? 0.3 : 1;
     // Separation weaker in dense school centers — fish stack at different depths
     const density = Math.min(1, cohCount / 10); // 0 = edge/alone, 1 = deep in pack
     const densityJitter = 0.65 + this._phaseOffset % 1 * 0.15; // per-fish variation
