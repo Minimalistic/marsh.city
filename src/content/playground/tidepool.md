@@ -701,9 +701,9 @@ for (let i = 0; i < cloudCount; i++) {
   clouds.push({
     x: w / 2 + windCos * along - windSin * across,
     y: h / 2 + windSin * along + windCos * across,
-    speed: 12 + Math.random() * 10,
+    speed: (12 + Math.random() * 10) * 1.5,
     drift: cloudWind.angle + (Math.random() - 0.5) * 0.3,
-    size: 0.35 + Math.random() * 0.29,
+    size: (0.35 + Math.random() * 0.29) * 3,
     opacity: 0.08 + Math.random() * 0.06,
     phase: Math.random() * Math.PI * 2,
     subBlobs,
@@ -2938,7 +2938,7 @@ function drawAllFishShadows(ctx, drawables) {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.filter = 'blur(7px)';
-  ctx.globalAlpha = 0.14;
+  ctx.globalAlpha = 0.785;
   ctx.drawImage(shadowCanvas, 0, 0);
   ctx.restore();
   // Restore DPR transform for subsequent drawing
