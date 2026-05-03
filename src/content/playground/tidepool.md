@@ -673,26 +673,28 @@ const ripples = [];
 const tide = { angle: 0, strength: 0 };
 const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
-// Cloud shadows — large soft blobs that drift across the scene
-// Each cloud is 2-3 overlapping circles for organic blobby shape
+// Cloud shadows — large soft blobs that drift linearly across the scene
+// Shared wind direction with slight per-cloud variation; wrap around edges
+const cloudWind = { angle: Math.random() * Math.PI * 2 }; // wind blows this direction
 const clouds = [];
 for (let i = 0; i < 5; i++) {
-  const basePhase = Math.random() * Math.PI * 2;
   const lobes = 2 + Math.floor(Math.random() * 2); // 2-3 sub-blobs per cloud
   const subBlobs = [];
   for (let j = 0; j < lobes; j++) {
     subBlobs.push({
-      ox: (Math.random() - 0.5) * 0.4,  // offset from cloud center (fraction of radius)
+      ox: (Math.random() - 0.5) * 0.4,
       oy: (Math.random() - 0.5) * 0.3,
-      scale: 0.6 + Math.random() * 0.5,  // size relative to cloud radius
+      scale: 0.6 + Math.random() * 0.5,
     });
   }
   clouds.push({
-    phase: basePhase,
-    driftX: 0.000035 + Math.random() * 0.000045,  // lazy but visible drift
-    driftY: 0.000018 + Math.random() * 0.000030,
-    size: 0.25 + Math.random() * 0.2,              // fraction of min(w,h)
-    opacity: 0.08 + Math.random() * 0.06,           // peak shadow darkness
+    x: Math.random() * w,   // current position — updated each frame
+    y: Math.random() * h,
+    speed: 12 + Math.random() * 10,                // px/sec — lazy drift
+    drift: cloudWind.angle + (Math.random() - 0.5) * 0.3, // slight angle variation per cloud
+    size: 0.25 + Math.random() * 0.2,
+    opacity: 0.08 + Math.random() * 0.06,
+    phase: Math.random() * Math.PI * 2,            // for breathing animation
     subBlobs,
   });
 }
@@ -2959,7 +2961,7 @@ class Frond {
       const taper = Math.pow(1 - t, 0.6);
       this.branchData.push({ t, lenScale: (0.7 + Math.random() * 0.3) * taper, leaflets: Math.max(1, Math.floor((2 + Math.random() * 3) * taper)) });
     }
-    this.segCount = 6;
+    this.segCount = 10;
     this.segs = [];
     for (let i = 0; i <= this.segCount; i++) {
       const t = i / this.segCount;
@@ -3312,6 +3314,8 @@ regenerateWorld = function() {
 
   // Vortices
   for (const v of vortices) { v.x = Math.random() * w; v.y = Math.random() * h; }
+  // Reposition clouds within new bounds
+  for (const c of clouds) { c.x = Math.random() * w; c.y = Math.random() * h; }
 
   settleTime = 0;
 };
@@ -3478,9 +3482,16 @@ function draw(time) {
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
   for (const cloud of clouds) {
-    // Slow drift across the scene — each cloud on its own trajectory
-    const cx = w * (0.5 + Math.sin(time * cloud.driftX + cloud.phase) * 0.55);
-    const cy = h * (0.5 + Math.cos(time * cloud.driftY + cloud.phase * 1.4) * 0.45);
+    // Linear drift — move along wind direction, wrap around edges
+    cloud.x += Math.cos(cloud.drift) * cloud.speed * dt;
+    cloud.y += Math.sin(cloud.drift) * cloud.speed * dt;
+    const margin = Math.min(w, h) * cloud.size * 1.5; // wrap with enough buffer to avoid pop
+    if (cloud.x > w + margin) cloud.x = -margin;
+    if (cloud.x < -margin) cloud.x = w + margin;
+    if (cloud.y > h + margin) cloud.y = -margin;
+    if (cloud.y < -margin) cloud.y = h + margin;
+    const cx = cloud.x;
+    const cy = cloud.y;
     const baseR = Math.min(w, h) * cloud.size;
     // Each cloud is several overlapping soft circles for organic blobby shape
     for (const lobe of cloud.subBlobs) {
