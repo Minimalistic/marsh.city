@@ -2862,7 +2862,7 @@ function jitterTunaColor(base) {
 // Fish shadow — large gradient stamps drawn directly at full resolution
 // No offscreen canvas, no blur filter — the stamp IS the softness
 // Light from upper-right, so shadow falls down and to the left
-const shadowOffX = -8, shadowOffY = 10;
+const shadowOffX = -3, shadowOffY = 4;
 // Pre-rendered radial gradient stamp — created once, reused every frame
 const STAMP_SIZE = 128;
 const stampCanvas = document.createElement('canvas');
@@ -2887,6 +2887,7 @@ function drawAllFishShadows(ctx, drawables) {
     if (!joints || joints.length < 3) continue;
     const segs = joints.length;
     const bw = f.bodyWidth * 21;
+    const squash = 0.33; // perpendicular compression — skinnier shadow
     for (let i = 0; i < segs; i++) {
       const t = i / (segs - 1);
       let r;
@@ -2895,10 +2896,20 @@ function drawAllFishShadows(ctx, drawables) {
       else if (t < 0.6) r = bw * (1 - (t - 0.3) / 0.3 * 0.15);
       else r = bw * 0.85 * (1 - (t - 0.6) / 0.4);
       if (r < 1) continue;
-      ctx.drawImage(stampCanvas,
-        joints[i].x + shadowOffX - r,
-        joints[i].y + shadowOffY - r,
-        r * 2, r * 2);
+      // Get spine direction at this joint for ellipse orientation
+      let dx, dy;
+      if (i === 0) { dx = joints[0].x - joints[1].x; dy = joints[0].y - joints[1].y; }
+      else if (i === segs - 1) { dx = joints[i-1].x - joints[i].x; dy = joints[i-1].y - joints[i].y; }
+      else { dx = joints[i-1].x - joints[i+1].x; dy = joints[i-1].y - joints[i+1].y; }
+      const angle = Math.atan2(dy, dx);
+      const jx = joints[i].x + shadowOffX;
+      const jy = joints[i].y + shadowOffY;
+      ctx.save();
+      ctx.translate(jx, jy);
+      ctx.rotate(angle);
+      ctx.scale(1, squash);
+      ctx.drawImage(stampCanvas, -r, -r, r * 2, r * 2);
+      ctx.restore();
     }
   }
   ctx.restore();
