@@ -4174,7 +4174,7 @@ function draw(time) {
   }
 
   // DOF haze — downsample to 1/4 res for performance, blur, composite back
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
   const dofScale = 0.25;
   const dofW = Math.max(1, Math.floor(canvas.width * dofScale));
   const dofH = Math.max(1, Math.floor(canvas.height * dofScale));
