@@ -2859,26 +2859,84 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
-// Fish shadow — soft ellipse cast below each fish
-function drawFishShadow(ctx, f) {
-  const shadowOffY = f.len * 0.30; // offset "down" (15% closer)
-  const sx = f.len * 2.2;   // buttery wide spread
-  const sy = f.bodyWidth * 10; // big perpendicular spread
+// Fish shadow — body-contour shadow that bends with the spine
+// Light from upper-right, so shadow falls down and to the left
+const shadowOffX = -4, shadowOffY = 5;
+// Offscreen canvas for batch-blurring all shadows once per frame
+const shadowCanvas = document.createElement('canvas');
+const shadowCtx = shadowCanvas.getContext('2d');
+
+// Build body-contour shadow path for one fish onto the shadow buffer
+function traceFishShadow(sCtx, f) {
+  const joints = f._joints;
+  const segs = joints.length - 1;
+  if (segs < 2) return;
+
+  // Generic fusiform width profile, slightly wider than body for penumbra
+  const bw = f.bodyWidth * 1.3;
+  const ws = new Array(segs + 1);
+  for (let i = 0; i <= segs; i++) {
+    const tw = i / segs;
+    let hw;
+    if (tw < 0.1) hw = tw / 0.1 * bw * 0.4;
+    else if (tw < 0.3) hw = bw * (0.4 + (tw - 0.1) / 0.2 * 0.6);
+    else if (tw < 0.6) hw = bw * (1 - (tw - 0.3) / 0.3 * 0.2);
+    else hw = bw * 0.8 * Math.pow(1 - (tw - 0.6) / 0.4, 1.5);
+    ws[i] = Math.max(hw, 0.15);
+  }
+  ws[0] = bw * 0.35;
+
+  // Outline from world-space joints + light offset
+  const rX = new Array(segs + 1), rY = new Array(segs + 1);
+  const lX = new Array(segs + 1), lY = new Array(segs + 1);
+  const jx = new Array(segs + 1), jy = new Array(segs + 1);
+  for (let i = 0; i <= segs; i++) {
+    jx[i] = joints[i].x + shadowOffX;
+    jy[i] = joints[i].y + shadowOffY;
+    let nx, ny;
+    if (i === 0) { nx = -(jy[1] - jy[0]); ny = jx[1] - jx[0]; }
+    else if (i === segs) { nx = -(jy[i] - jy[i-1]); ny = jx[i] - jx[i-1]; }
+    else { nx = -(jy[i+1] - jy[i-1]); ny = jx[i+1] - jx[i-1]; }
+    const nLen = Math.sqrt(nx * nx + ny * ny) || 1;
+    nx /= nLen; ny /= nLen;
+    rX[i] = jx[i] + nx * ws[i]; rY[i] = jy[i] + ny * ws[i];
+    lX[i] = jx[i] - nx * ws[i]; lY[i] = jy[i] - ny * ws[i];
+  }
+
+  sCtx.beginPath();
+  sCtx.moveTo(jx[0], jy[0]);
+  sCtx.lineTo(rX[0], rY[0]);
+  for (let i = 0; i < segs; i++) {
+    sCtx.quadraticCurveTo(rX[i], rY[i], (rX[i]+rX[i+1])*0.5, (rY[i]+rY[i+1])*0.5);
+  }
+  sCtx.lineTo(rX[segs], rY[segs]);
+  sCtx.lineTo(jx[segs], jy[segs]);
+  sCtx.lineTo(lX[segs], lY[segs]);
+  for (let i = segs; i > 0; i--) {
+    sCtx.quadraticCurveTo(lX[i], lY[i], (lX[i]+lX[i-1])*0.5, (lY[i]+lY[i-1])*0.5);
+  }
+  sCtx.lineTo(lX[0], lY[0]);
+  sCtx.closePath();
+  sCtx.fill();
+}
+
+// Draw all fish shadows at once: batch onto offscreen canvas, blur once, composite
+function drawAllFishShadows(ctx, drawables) {
+  // Size shadow canvas to match main canvas
+  if (shadowCanvas.width !== ctx.canvas.width || shadowCanvas.height !== ctx.canvas.height) {
+    shadowCanvas.width = ctx.canvas.width;
+    shadowCanvas.height = ctx.canvas.height;
+  }
+  shadowCtx.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
+  shadowCtx.fillStyle = 'rgb(0, 0, 0)';
+  for (const d of drawables) {
+    if (d.type === 'fish') traceFishShadow(shadowCtx, d.obj);
+  }
+  // Single blur pass over all shadows at once
   ctx.save();
-  ctx.translate(f.x, f.y + shadowOffY);
-  ctx.rotate(f._renderAngle);
-  ctx.scale(sx, sy);
-  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
-  grad.addColorStop(0, 'rgba(0, 0, 0, 0.10)');
-  grad.addColorStop(0.15, 'rgba(0, 0, 0, 0.07)');
-  grad.addColorStop(0.35, 'rgba(0, 0, 0, 0.04)');
-  grad.addColorStop(0.6, 'rgba(0, 0, 0, 0.015)');
-  grad.addColorStop(0.85, 'rgba(0, 0, 0, 0.004)');
-  grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(0, 0, 1, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.filter = 'blur(7px)';
+  ctx.globalAlpha = 0.14;
+  ctx.drawImage(shadowCanvas, 0, 0);
   ctx.restore();
 }
 
@@ -4122,6 +4180,10 @@ function draw(time) {
   for (const d of debris) drawables.push({ y: d.y, type: 'debris', obj: d });
   for (const s of starfish) drawables.push({ y: s.y, type: 'starfish', obj: s });
   drawables.sort((a, b) => a.y - b.y);
+
+  // Batch all fish shadows into offscreen canvas, blur once, composite
+  drawAllFishShadows(ctx, drawables);
+
   for (const d of drawables) {
     if (d.type === 'plant') {
       d.obj.draw(ctx, time);
@@ -4136,8 +4198,6 @@ function draw(time) {
       d.obj.draw(ctx);
       ctx.restore();
     } else {
-      // Shadow first, then the fish on top
-      drawFishShadow(ctx, d.obj);
       ctx.save();
       ctx.globalAlpha = d.obj.depthAlpha;
       d.obj.draw(ctx);
