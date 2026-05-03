@@ -833,7 +833,7 @@ class Fish {
     // Smoothed swim intensity for animation - avoids jerky transitions
     this._swimSmooth = 0.5;
     // Chain of world-space joint positions - body trails behind head
-    const numJoints = 16;
+    const numJoints = 10;
     this._jointCount = numJoints;
     this._segLen = this.len / numJoints;
     this._joints = [];
@@ -2959,7 +2959,7 @@ class Frond {
       const taper = Math.pow(1 - t, 0.6);
       this.branchData.push({ t, lenScale: (0.7 + Math.random() * 0.3) * taper, leaflets: Math.max(1, Math.floor((2 + Math.random() * 3) * taper)) });
     }
-    this.segCount = 8;
+    this.segCount = 6;
     this.segs = [];
     for (let i = 0; i <= this.segCount; i++) {
       const t = i / this.segCount;
