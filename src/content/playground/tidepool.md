@@ -710,6 +710,18 @@ for (let i = 0; i < cloudCount; i++) {
   });
 }
 
+// Sunlight check — returns 0 (full shadow) to 1 (full sun) at a point
+function getSunlight(px, py) {
+  let shadow = 0;
+  for (const c of clouds) {
+    const dx = px - c.x, dy = py - c.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const r = Math.min(w, h) * c.size;
+    if (dist < r) shadow = Math.max(shadow, (1 - dist / r) * c.opacity * 8);
+  }
+  return Math.max(0, 1 - shadow);
+}
+
 // Turbulence - drifting vortices that create local flow variation
 const vortices = [];
 for (let i = 0; i < 5; i++) {
@@ -837,6 +849,10 @@ class Fish {
     // Bite lunge animation
     this._biting = false;
     this._biteTimer = 0;
+    // Sun glint
+    this._glint = 0;        // countdown timer, >0 means glinting
+    this._glintSeg = 0;     // which spine segment caught the light
+    this._prevAngle = this.angle;
     // Distraction - sometimes fish wander off from the school
     this.distracted = Math.random() < 0.08;
     this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
@@ -1599,6 +1615,38 @@ class Fish {
       );
       ctx.fillStyle = '#222';
       ctx.fill();
+    }
+
+    // Sun glint — rare bright flash when fish twists in sunlight
+    let angleDelta = this.angle - this._prevAngle;
+    while (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
+    while (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
+    this._prevAngle = this.angle;
+    const turning = Math.abs(angleDelta) > 0.03;
+    const active = this.speed > 1.2 || turning || this.fleeing || this._biting;
+    this._glint -= 0.016; // roughly 1 frame at 60fps
+    if (this._glint <= 0 && active && Math.random() < 0.008) {
+      const sun = getSunlight(this.x, this.y);
+      if (sun > 0.5) {
+        this._glint = 0.06 + Math.random() * 0.06; // 60-120ms flash
+        this._glintSeg = 1 + Math.floor(Math.random() * (segs - 2));
+      }
+    }
+    if (this._glint > 0) {
+      const gi = this._glintSeg;
+      const gx = spineX[gi], gy = spineY[gi];
+      const gr = widths[gi] * 1.8;
+      const gAlpha = Math.min(1, this._glint * 12); // fast fade
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = gAlpha * 0.7;
+      const gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      gg.addColorStop(0, 'rgba(255, 255, 240, 1)');
+      gg.addColorStop(0.4, 'rgba(220, 240, 255, 0.5)');
+      gg.addColorStop(1, 'rgba(200, 230, 255, 0)');
+      ctx.fillStyle = gg;
+      ctx.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
+      ctx.restore();
     }
 
     ctx.restore();
