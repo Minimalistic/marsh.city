@@ -2862,8 +2862,8 @@ function jitterTunaColor(base) {
 // Fish shadow — gradient stamps along spine at 1/8 res + stackable blur passes
 // Light from upper-right, so shadow falls down and to the left
 const shadowOffX = -4, shadowOffY = 5;
-const SHADOW_SCALE = 0.125;
-const SHADOW_BLUR_PX = 6; // blur radius on the low-res canvas (amplified by upscale)
+const SHADOW_SCALE = 0.35;
+const SHADOW_BLUR_PX = 12; // blur radius on the low-res canvas (amplified by upscale)
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
 // Second buffer for shadow blur pass (separate from DOF blurCanvas)
