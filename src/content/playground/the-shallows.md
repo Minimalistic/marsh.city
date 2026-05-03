@@ -1,9 +1,9 @@
 ---
-title: Tidepool
-description: Schools of tiny fish dodge a lurking predator in a shallow tidepool.
+title: The Shallows
+description: A living canvas of schooling fish, drifting clouds, and a patient predator in warm tropical water.
 ---
 
-A rocky tidepool. Schools of tiny fish dart through the current - but something larger is cruising among them.
+Warm water over sand and rock. A school of tuna moves as one - splitting around obstacles, merging back together, scattering when something bigger passes through.
 
 <div id="pool-container" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;">
 <canvas id="pool" style="width:100%;height:100%;display:block;background:#1a6b7a;"></canvas>
@@ -3024,7 +3024,7 @@ function drawAllFishShadows(ctx, drawables) {
   const scale = dpr * SHADOW_SCALE;
   shadowCtx.setTransform(scale, 0, 0, scale, 0, 0);
   shadowCtx.clearRect(0, 0, sw / scale, sh / scale);
-  // Stamp gradient dots at each joint — no transforms, just positioned drawImage
+  // Stamp gradient dots at each joint
   for (const d of drawables) {
     if (d.type !== 'fish') continue;
     const f = d.obj;
@@ -3032,6 +3032,8 @@ function drawAllFishShadows(ctx, drawables) {
     if (!joints || joints.length < 3) continue;
     const segs = joints.length;
     const bw = f.bodyWidth * 1.8;
+    // Big fish: elongate stamps along spine so they blend into one shadow
+    const isBig = f.len > 40;
     for (let i = 0; i < segs; i++) {
       const t = i / (segs - 1);
       let r;
@@ -3040,10 +3042,24 @@ function drawAllFishShadows(ctx, drawables) {
       else if (t < 0.6) r = bw * (1 - (t - 0.3) / 0.3 * 0.2);
       else r = bw * 0.8 * (1 - (t - 0.6) / 0.4);
       if (r < 0.3) continue;
-      shadowCtx.drawImage(shadowDot,
-        joints[i].x + shadowOffX - r,
-        joints[i].y + shadowOffY - r,
-        r * 2, r * 2);
+      if (isBig) {
+        // Elongate along spine direction — only for predator (few joints, low cost)
+        let dx, dy;
+        if (i === 0) { dx = joints[0].x - joints[1].x; dy = joints[0].y - joints[1].y; }
+        else if (i === segs - 1) { dx = joints[i-1].x - joints[i].x; dy = joints[i-1].y - joints[i].y; }
+        else { dx = joints[i-1].x - joints[i+1].x; dy = joints[i-1].y - joints[i+1].y; }
+        const angle = Math.atan2(dy, dx);
+        shadowCtx.save();
+        shadowCtx.translate(joints[i].x + shadowOffX, joints[i].y + shadowOffY);
+        shadowCtx.rotate(angle);
+        shadowCtx.drawImage(shadowDot, -r * 1.8, -r, r * 3.6, r * 2);
+        shadowCtx.restore();
+      } else {
+        shadowCtx.drawImage(shadowDot,
+          joints[i].x + shadowOffX - r,
+          joints[i].y + shadowOffY - r,
+          r * 2, r * 2);
+      }
     }
   }
   // Single blur pass on the half-res canvas
