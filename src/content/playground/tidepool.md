@@ -609,7 +609,7 @@ canvas.addEventListener('mousedown', e => {
   const my = (e.clientY - rect.top) / rect.height * h;
   if (activeTool === 'food') {
     // Drop food where clicked - if on a rock it'll roll down into the water
-    const b = 25 + Math.floor(Math.random() * 6);
+    const b = 250 + Math.floor(Math.random() * 60);
     let onRock = false;
     for (const rf of reefs) {
       const cdx = mx - (rf.x + rf.crownOffX), cdy = my - (rf.y + rf.crownOffY);
@@ -641,7 +641,7 @@ canvas.addEventListener('touchstart', e => {
   mouse.down = true;
   mouse.speed = 0;
   if (activeTool === 'food') {
-    const b2 = 25 + Math.floor(Math.random() * 6);
+    const b2 = 250 + Math.floor(Math.random() * 60);
     let onRock2 = false;
     for (const rf of reefs) {
       const cdx = mouse.x - (rf.x + rf.crownOffX), cdy = mouse.y - (rf.y + rf.crownOffY);
@@ -824,6 +824,9 @@ class Fish {
     // Eating pause
     this.eating = false;
     this.eatTimer = 0;
+    // Bite lunge animation
+    this._biting = false;
+    this._biteTimer = 0;
     // Distraction - sometimes fish wander off from the school
     this.distracted = Math.random() < 0.08;
     this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
@@ -962,9 +965,16 @@ class Fish {
     // Food attraction - skip while chewing (fish swims away to digest)
     const mouthX = this.x + Math.cos(this.angle) * this.len * 0.5;
     const mouthY = this.y + Math.sin(this.angle) * this.len * 0.5;
-    const foodRange = 300;
+    // Bite lunge animation - brief dart forward then pull back
+    if (this._biting) {
+      this._biteTimer -= dt;
+      if (this._biteTimer <= 0) this._biting = false;
+    }
+
+    const foodRange = 400;
     let closestFood = null;
     let closestFoodDist = foodRange;
+    // Only skip food search during the brief post-bite pullback, not a long chew
     if (this.eating) { closestFood = null; closestFoodDist = Infinity; }
     for (const fp of foodPellets) {
       if (this.eating) break;
@@ -983,7 +993,7 @@ class Fish {
       while (headingDiff < -Math.PI) headingDiff += Math.PI * 2;
       const angleMismatch = Math.abs(headingDiff);
 
-      // Food overrides idle and distraction - fish care about food
+      // Food overrides idle and distraction - fish get excited about food
       this.idle = false;
       this.idleTimer = 3;
       this.distracted = false;
@@ -993,24 +1003,30 @@ class Fish {
       const biteDist = 6;
       if (closestFoodDist < eatDist && angleMismatch < 0.8) {
         // Close and roughly facing food - slow to nibble
-        this.vx *= 0.9;
-        this.vy *= 0.9;
+        this.vx *= 0.85;
+        this.vy *= 0.85;
         if (closestFoodDist < biteDist && angleMismatch < 0.6 && !this.eating) {
           closestFood.bites--;
           // Visible size reduction - food gets eaten away
-          closestFood.size *= 0.88;
-          closestFood.vx += Math.cos(this.angle) * 0.2;
-          closestFood.vy += Math.sin(this.angle) * 0.2;
+          closestFood.size *= 0.97;
+          // Bump the food on bite
+          closestFood.vx += Math.cos(this.angle) * 0.6;
+          closestFood.vy += Math.sin(this.angle) * 0.6;
+          // Peck lunge - dart forward then brief pullback
+          this._biting = true;
+          this._biteTimer = 0.12;
+          this.vx += Math.cos(this.angle) * 1.5;
+          this.vy += Math.sin(this.angle) * 1.5;
           this.eating = true;
-          this.eatTimer = 1.5 + Math.random() * 2.5; // swim away to chew
-          // Scatter fragments frequently - food breaks apart
-          if (Math.random() < 0.5 && closestFood.size > 0.8) {
+          this.eatTimer = 0.3 + Math.random() * 0.5; // quick pullback, come right back
+          // Scatter fragments occasionally - food breaks apart
+          if (Math.random() < 0.3 && closestFood.size > 0.8) {
             const fragAngle = Math.random() * Math.PI * 2;
             foodPellets.push({
               x: closestFood.x + Math.cos(fragAngle) * 3,
               y: closestFood.y + Math.sin(fragAngle) * 3,
               size: closestFood.size * (0.2 + Math.random() * 0.2),
-              bites: 1 + Math.floor(Math.random() * 3),
+              bites: 5 + Math.floor(Math.random() * 10),
               vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.5),
               vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
             });
@@ -1018,14 +1034,13 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Steer toward food with some randomness — pass-by approach, not perfect orbit
+        // Steer toward food eagerly - stronger pull the closer they get
         const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.04 + proximity * 0.06;
+        const steerWeight = 0.08 + proximity * 0.12;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        // Add a random wobble so fish don't all converge on the same arc
-        const wobble = (Math.sin(this._phaseOffset + Date.now() * 0.001) * 0.3);
-        const desiredVx = Math.cos(foodAngle + wobble) * scaledSpeed;
-        const desiredVy = Math.sin(foodAngle + wobble) * scaledSpeed;
+        const wobble = (Math.sin(this._phaseOffset + Date.now() * 0.001) * 0.2);
+        const desiredVx = Math.cos(foodAngle + wobble) * scaledSpeed * 1.2;
+        const desiredVy = Math.sin(foodAngle + wobble) * scaledSpeed * 1.2;
         this.vx += (desiredVx - this.vx) * steerWeight;
         this.vy += (desiredVy - this.vy) * steerWeight;
       }
