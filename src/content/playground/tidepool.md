@@ -2870,7 +2870,7 @@ function jitterTunaColor(base) {
 // Circles follow spine joints so shadow bends with fish — no transforms needed
 const shadowOffX = -8, shadowOffY = 12;
 const SHADOW_SCALE = 0.5;
-const SHADOW_BLUR = 8; // px on half-res canvas = ~16px effective
+const SHADOW_BLUR = 16; // px on half-res canvas = ~32px effective
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
 const shadowBlurCanvas = document.createElement('canvas');
