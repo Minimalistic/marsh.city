@@ -1430,6 +1430,26 @@ class Fish {
       this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
       this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
     }
+    // Hard collision — fish can never be inside a reef crown
+    for (const rf of reefs) {
+      if (rf.submerged) continue;
+      const cdx = this.x - (rf.x + rf.crownOffX);
+      const cdy = this.y - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.3;
+      if (cDist < crownR && cDist > 0.1) {
+        // Push to crown edge + small buffer
+        this.x = rf.x + rf.crownOffX + (cdx / cDist) * (crownR + 2);
+        this.y = rf.y + rf.crownOffY + (cdy / cDist) * (crownR + 2);
+        // Deflect velocity outward
+        const dot = this.vx * (cdx / cDist) + this.vy * (cdy / cDist);
+        if (dot < 0) {
+          this.vx -= (cdx / cDist) * dot * 1.5;
+          this.vy -= (cdy / cDist) * dot * 1.5;
+        }
+      }
+    }
     // Reef collision - pure gradient, no hard snaps
     for (const rf of reefs) {
       if (rf.submerged) continue;
