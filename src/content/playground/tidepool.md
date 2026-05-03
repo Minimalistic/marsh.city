@@ -940,7 +940,10 @@ class Fish {
 
     // Apply boids — alignment-first so merging schools match heading before clustering
     const schoolWeight = this.distracted ? 0.3 : 1;
-    if (sepCount > 0) { this.vx += sepX * 0.07; this.vy += sepY * 0.07; }
+    // Separation weaker in dense school centers — fish stack at different depths
+    const density = Math.min(1, cohCount / 12); // 0 = edge/alone, 1 = deep in pack
+    const sepStr = 0.07 * (1 - density * 0.55); // 0.07 at edge, ~0.03 at center
+    if (sepCount > 0) { this.vx += sepX * sepStr; this.vy += sepY * sepStr; }
     // Measure heading agreement — how aligned are nearby fish with this one?
     let headingAgreement = 1; // 1 = perfect agreement, 0 = opposing
     if (alignCount > 0) {
