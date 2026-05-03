@@ -2503,7 +2503,7 @@ class Predator {
             vx: Math.cos(a) * spd + this.vx * 0.3,
             vy: Math.sin(a) * spd + this.vy * 0.3,
             type: 'blood', life: 1, maxLife: 1.5 + Math.random() * 1.5,
-            size: 2 + Math.random() * 4,
+            size: 1.4 + Math.random() * 2.8,
           });
         }
         for (let k = 0; k < 8; k++) {
@@ -3745,7 +3745,7 @@ function draw(time) {
             foamBits.push({
               x: rf.x + rf.crownOffX + Math.cos(edgeAngle) * spawnR,
               y: rf.y + rf.crownOffY + Math.sin(edgeAngle) * spawnR,
-              size: (0.3 + Math.random() * 1.4) * viewScale,
+              size: (0.2 + Math.random() * 1.0) * viewScale,
               vx: Math.cos(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
               vy: Math.sin(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
               life: 1,
@@ -4113,7 +4113,7 @@ function draw(time) {
           foamBits.push({
             x: ww.x - cosA * Math.random() * 10 + (-sinA) * lateral,
             y: ww.y - sinA * Math.random() * 10 + cosA * lateral,
-            size: (0.15 + Math.random() * 0.8) * viewScale,
+            size: (0.1 + Math.random() * 0.56) * viewScale,
             vx: 0, vy: 0,
             life: 1,
             maxLife: 8 + Math.random() * 16,
