@@ -1346,17 +1346,19 @@ class Fish {
       const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
       const crownSense = Math.max(crownR * 2.45, crownR + fishLen5);
       if (cDist < crownSense && cDist > 0.1) {
-        const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
-        if (approach > 0.0) {
-          const prox = 1 - cDist / crownSense;
-          const urgency = prox * prox * prox * approach;
-          const cross = this.vx * cdy - this.vy * cdx;
-          reefSteer += (cross >= 0 ? 1 : -1) * urgency * 0.25;
-        }
-        // Radial push outward from crown
         const prox = 1 - cDist / crownSense;
+        // Urgency ramps hard at close range — gentle far out, desperate near rock
+        const closeBoost = prox > 0.6 ? 1 + (prox - 0.6) * 8 : 1; // 1x→4.2x near surface
+        const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
+        if (approach > -0.3) {
+          const aw = Math.max(0, approach + 0.3);
+          const urgency = prox * prox * prox * aw * closeBoost;
+          const cross = this.vx * cdy - this.vy * cdx;
+          reefSteer += (cross >= 0 ? 1 : -1) * urgency * 0.35;
+        }
+        // Radial push outward from crown — exponential near rock face
         if (prox > 0.05) {
-          const outward = (prox - 0.05) * 0.25;
+          const outward = (prox - 0.05) * 0.3 * closeBoost;
           this.vx += (cdx / cDist) * outward;
           this.vy += (cdy / cDist) * outward;
         }
@@ -1387,7 +1389,7 @@ class Fish {
 
     // Apply accumulated steering to heading and rebuild velocity along new heading
     if (Math.abs(reefSteer) > 0.001) {
-      const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer));
+      const clampedSteer = Math.max(-0.25, Math.min(0.25, reefSteer));
       this.angle += clampedSteer;
       this.vx = Math.cos(this.angle) * spd;
       this.vy = Math.sin(this.angle) * spd;
