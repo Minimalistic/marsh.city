@@ -2886,7 +2886,7 @@ function drawAllFishShadows(ctx, drawables) {
     const joints = f._joints;
     if (!joints || joints.length < 3) continue;
     const segs = joints.length;
-    const bw = f.bodyWidth * 7;
+    const bw = f.bodyWidth * 21;
     for (let i = 0; i < segs; i++) {
       const t = i / (segs - 1);
       let r;
