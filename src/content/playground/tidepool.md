@@ -673,6 +673,30 @@ const ripples = [];
 const tide = { angle: 0, strength: 0 };
 const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
+// Cloud shadows — large soft blobs that drift across the scene
+// Each cloud is 2-3 overlapping circles for organic blobby shape
+const clouds = [];
+for (let i = 0; i < 5; i++) {
+  const basePhase = Math.random() * Math.PI * 2;
+  const lobes = 2 + Math.floor(Math.random() * 2); // 2-3 sub-blobs per cloud
+  const subBlobs = [];
+  for (let j = 0; j < lobes; j++) {
+    subBlobs.push({
+      ox: (Math.random() - 0.5) * 0.4,  // offset from cloud center (fraction of radius)
+      oy: (Math.random() - 0.5) * 0.3,
+      scale: 0.6 + Math.random() * 0.5,  // size relative to cloud radius
+    });
+  }
+  clouds.push({
+    phase: basePhase,
+    driftX: 0.000008 + Math.random() * 0.000012,  // very slow drift speeds
+    driftY: 0.000004 + Math.random() * 0.000008,
+    size: 0.25 + Math.random() * 0.2,              // fraction of min(w,h)
+    opacity: 0.08 + Math.random() * 0.06,           // peak shadow darkness
+    subBlobs,
+  });
+}
+
 // Turbulence - drifting vortices that create local flow variation
 const vortices = [];
 for (let i = 0; i < 5; i++) {
@@ -3447,6 +3471,59 @@ function draw(time) {
     ctx.restore();
   }
 
+  // Cloud shadows — drifting patches of shade across the water
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  for (const cloud of clouds) {
+    // Slow drift across the scene — each cloud on its own trajectory
+    const cx = w * (0.5 + Math.sin(time * cloud.driftX + cloud.phase) * 0.55);
+    const cy = h * (0.5 + Math.cos(time * cloud.driftY + cloud.phase * 1.4) * 0.45);
+    const baseR = Math.min(w, h) * cloud.size;
+    // Each cloud is several overlapping soft circles for organic blobby shape
+    for (const lobe of cloud.subBlobs) {
+      const lx = cx + lobe.ox * baseR;
+      const ly = cy + lobe.oy * baseR;
+      const lr = baseR * lobe.scale;
+      // Gentle size breathing so edges aren't static
+      const breathe = 1 + Math.sin(time * 0.00015 + cloud.phase + lobe.ox * 5) * 0.06;
+      const r = lr * breathe;
+      const sg = ctx.createRadialGradient(lx, ly, 0, lx, ly, r);
+      // multiply blend: rgb(255,255,255) = no change, darker = shadow
+      const shade = Math.round(255 * (1 - cloud.opacity));
+      sg.addColorStop(0, `rgb(${shade}, ${shade + 4}, ${shade + 6})`); // slight cool tint in shadow core
+      sg.addColorStop(0.6, `rgb(${shade + 20}, ${shade + 22}, ${shade + 24})`);
+      sg.addColorStop(1, 'rgb(255, 255, 255)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(lx - r, ly - r, r * 2, r * 2);
+    }
+  }
+  ctx.restore();
+
+  // Sun spots — bright warm patches where light bleeds through cloud gaps
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  // 4 sun spots, each drifts independently and pulses in/out
+  for (let i = 0; i < 4; i++) {
+    const phase = time * 0.00005 + i * 1.7;
+    const wave = Math.sin(phase) * 0.5 + 0.5;
+    // Only visible when "sun is out" for this patch — threshold creates on/off feel
+    const fade = Math.max(0, (wave - 0.4) / 0.6);
+    if (fade < 0.01) continue;
+    const intensity = fade * fade * 0.09;
+    // Drift position — different trajectory than clouds so they don't track together
+    const sx = w * (0.15 + i * 0.22) + Math.sin(time * 0.000025 + i * 2.1) * w * 0.18;
+    const sy = h * (0.2 + i * 0.18) + Math.cos(time * 0.00002 + i * 1.3) * h * 0.18;
+    const sr = Math.min(w, h) * (0.15 + Math.sin(time * 0.00008 + i) * 0.04);
+    const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+    sg.addColorStop(0, `rgba(220, 240, 200, ${intensity})`);       // warm bright center
+    sg.addColorStop(0.3, `rgba(190, 230, 210, ${intensity * 0.7})`);
+    sg.addColorStop(0.7, `rgba(160, 220, 200, ${intensity * 0.3})`);
+    sg.addColorStop(1, 'rgba(160, 220, 200, 0)');
+    ctx.fillStyle = sg;
+    ctx.fillRect(sx - sr, sy - sr, sr * 2, sr * 2);
+  }
+  ctx.restore();
+
   // Reef structures - underwater base (drawn under fish)
   for (const rf of reefs) {
     ctx.save();
@@ -3950,39 +4027,23 @@ function draw(time) {
   // Kelp base stems — always drawn on top so fish never clip behind roots
   for (const p of plants) p.drawBase(ctx);
 
-  // Caustics - light refracting through water surface
-  for (let i = 0; i < 5; i++) {
-    const cx = w * 0.3 + Math.sin(time * 0.00012 + i * 1.3) * w * 0.35;
-    const cy = h * 0.3 + Math.cos(time * 0.00016 + i * 1.9) * h * 0.35;
-    const cr = 40 + Math.sin(time * 0.0003 + i) * 20;
+  // Caustics — light ripple patterns refracting through water surface
+  // More visible in sunlit areas, dimmed under cloud shadow
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  for (let i = 0; i < 7; i++) {
+    const cx = w * 0.2 + Math.sin(time * 0.00014 + i * 1.3) * w * 0.6;
+    const cy = h * 0.2 + Math.cos(time * 0.00018 + i * 1.9) * h * 0.6;
+    // Caustics shimmer — size oscillates for a rippling net effect
+    const cr = 30 + Math.sin(time * 0.0004 + i * 0.8) * 18 + Math.sin(time * 0.00073 + i * 2.1) * 10;
+    const shimmer = 0.5 + Math.sin(time * 0.0006 + i * 1.1) * 0.5; // 0-1 brightness pulse
+    const baseAlpha = 0.03 + shimmer * 0.05;
     const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
-    cg.addColorStop(0, 'rgba(120, 210, 220, 0.06)');
+    cg.addColorStop(0, `rgba(140, 225, 235, ${baseAlpha})`);
+    cg.addColorStop(0.5, `rgba(120, 210, 220, ${baseAlpha * 0.4})`);
     cg.addColorStop(1, 'rgba(120, 210, 220, 0)');
     ctx.fillStyle = cg;
     ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
-  }
-
-  // Cloud break light — broad warm patches that fade in and out like sun emerging from clouds
-  ctx.save();
-  ctx.globalCompositeOperation = 'screen';
-  for (let i = 0; i < 3; i++) {
-    // Each patch has its own slow cycle — phase-offset so they don't all peak together
-    const cycle = time * 0.00004 + i * 2.3;
-    const wave = Math.sin(cycle) * 0.5 + 0.5; // 0 to 1
-    // Sharp threshold — sun is either behind cloud or not, with soft transitions
-    const fade = Math.max(0, (wave - 0.55) / 0.45); // dead below 0.55, ramps 0.55-1.0
-    if (fade < 0.01) continue;
-    const opacity = fade * fade * 0.07; // quadratic ease-in, subtle peak
-    // Drift slowly across the view
-    const cx = w * (0.2 + i * 0.3) + Math.sin(time * 0.00003 + i * 1.7) * w * 0.15;
-    const cy = h * (0.3 + i * 0.15) + Math.cos(time * 0.000025 + i * 2.4) * h * 0.15;
-    const r = Math.min(w, h) * (0.3 + i * 0.08);
-    const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    sg.addColorStop(0, `rgba(200, 230, 210, ${opacity})`);
-    sg.addColorStop(0.4, `rgba(170, 215, 195, ${opacity * 0.6})`);
-    sg.addColorStop(1, 'rgba(170, 215, 195, 0)');
-    ctx.fillStyle = sg;
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
   }
   ctx.restore();
 
