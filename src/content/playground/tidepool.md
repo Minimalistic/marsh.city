@@ -2870,10 +2870,10 @@ stampCanvas.width = STAMP_SIZE;
 stampCanvas.height = STAMP_SIZE;
 const stampCtx = stampCanvas.getContext('2d');
 const sg = stampCtx.createRadialGradient(STAMP_SIZE/2, STAMP_SIZE/2, 0, STAMP_SIZE/2, STAMP_SIZE/2, STAMP_SIZE/2);
-sg.addColorStop(0, 'rgba(0, 0, 0, 0.18)');
-sg.addColorStop(0.25, 'rgba(0, 0, 0, 0.12)');
-sg.addColorStop(0.5, 'rgba(0, 0, 0, 0.06)');
-sg.addColorStop(0.75, 'rgba(0, 0, 0, 0.02)');
+sg.addColorStop(0, 'rgba(0, 0, 0, 0.07)');
+sg.addColorStop(0.2, 'rgba(0, 0, 0, 0.05)');
+sg.addColorStop(0.45, 'rgba(0, 0, 0, 0.025)');
+sg.addColorStop(0.7, 'rgba(0, 0, 0, 0.008)');
 sg.addColorStop(1, 'rgba(0, 0, 0, 0)');
 stampCtx.fillStyle = sg;
 stampCtx.fillRect(0, 0, STAMP_SIZE, STAMP_SIZE);
@@ -2886,7 +2886,7 @@ function drawAllFishShadows(ctx, drawables) {
     const joints = f._joints;
     if (!joints || joints.length < 3) continue;
     const segs = joints.length;
-    const bw = f.bodyWidth * 4;
+    const bw = f.bodyWidth * 7;
     for (let i = 0; i < segs; i++) {
       const t = i / (segs - 1);
       let r;
