@@ -689,8 +689,8 @@ for (let i = 0; i < 5; i++) {
   }
   clouds.push({
     phase: basePhase,
-    driftX: 0.000008 + Math.random() * 0.000012,  // very slow drift speeds
-    driftY: 0.000004 + Math.random() * 0.000008,
+    driftX: 0.000035 + Math.random() * 0.000045,  // lazy but visible drift
+    driftY: 0.000018 + Math.random() * 0.000030,
     size: 0.25 + Math.random() * 0.2,              // fraction of min(w,h)
     opacity: 0.08 + Math.random() * 0.06,           // peak shadow darkness
     subBlobs,
@@ -3796,12 +3796,12 @@ function draw(time) {
         ww.blobs.push({
           x: ww.x - cosA * behind + (-sinA) * lateral,
           y: ww.y - sinA * behind + cosA * lateral,
-          size: (0.4 + Math.pow(Math.random(), 2) * 3.5) * viewScale,
-          elongX: 0.7 + Math.random() * 1.3,
-          elongY: 0.5 + Math.random() * 0.7,
+          size: (0.3 + Math.pow(Math.random(), 2) * 2.0) * viewScale,
+          elongX: 0.7 + Math.random() * 1.0,
+          elongY: 0.5 + Math.random() * 0.5,
           rot: Math.random() * Math.PI,
           age: 0,
-          maxAge: 4 + Math.random() * 5,
+          maxAge: 5 + Math.random() * 6,
         });
       }
     }
@@ -3871,9 +3871,13 @@ function draw(time) {
       b.rot += (flow.fx * 0.08 + Math.sin(b.age * 3 + b.rot) * 0.04) * turb;
       // Elongation stretches and morphs with turbulence
       const stretch = 1 + turb * Math.sin(b.age * 2.5 + b.x * 0.1) * 0.6;
-      const shrink = 0.3 + life * 0.7;
+      // Shrink only in the last 30% of life — stays near full size, then melts away
+      const shrink = life < 0.3 ? 0.3 + (life / 0.3) * 0.7 : 1.0;
+      // Fade: hold steady then ease out in final 40% — no abrupt pop
+      const alpha = life < 0.4 ? (life / 0.4) * (life / 0.4) * 0.22 : 0.22;
+      if (alpha < 0.003) { ww.blobs.splice(i, 1); continue; }
       ctx.save();
-      ctx.globalAlpha = life * 0.22;
+      ctx.globalAlpha = alpha;
       ctx.translate(b.x, b.y);
       ctx.rotate(b.rot);
       ctx.beginPath();
