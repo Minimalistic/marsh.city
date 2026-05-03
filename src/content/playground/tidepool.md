@@ -2859,12 +2859,16 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
-// Fish shadow — gradient stamps along spine drawn at low res for cheap soft blur
+// Fish shadow — gradient stamps along spine at 1/8 res + stackable blur passes
 // Light from upper-right, so shadow falls down and to the left
 const shadowOffX = -4, shadowOffY = 5;
-const SHADOW_SCALE = 0.014;
+const SHADOW_SCALE = 0.125;
+const SHADOW_BLUR_PASSES = 3; // each pass spreads further; cheap at low res
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
+// Second buffer for ping-pong blur
+const blurCanvas = document.createElement('canvas');
+const blurCtx = blurCanvas.getContext('2d');
 // Pre-rendered radial gradient stamp — created once, reused every frame
 const STAMP_SIZE = 64;
 const stampCanvas = document.createElement('canvas');
@@ -2886,6 +2890,8 @@ function drawAllFishShadows(ctx, drawables) {
   if (shadowCanvas.width !== sw || shadowCanvas.height !== sh) {
     shadowCanvas.width = sw;
     shadowCanvas.height = sh;
+    blurCanvas.width = sw;
+    blurCanvas.height = sh;
   }
   const scale = dpr * SHADOW_SCALE;
   shadowCtx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -2905,19 +2911,38 @@ function drawAllFishShadows(ctx, drawables) {
       else if (t < 0.6) r = bw * (1 - (t - 0.3) / 0.3 * 0.15);
       else r = bw * 0.85 * (1 - (t - 0.6) / 0.4);
       if (r < 0.5) continue;
-      // Stamp the pre-rendered gradient circle at each joint
       const sx = joints[i].x + shadowOffX - r;
       const sy = joints[i].y + shadowOffY - r;
       shadowCtx.drawImage(stampCanvas, sx, sy, r * 2, r * 2);
     }
   }
-  // Composite: upscale from low res creates additional soft blur on top of gradient
+  // Stackable blur: ping-pong between two canvases at low res — very cheap
+  // Each pass shrinks to half then stretches back, doubling blur radius
+  let src = shadowCanvas, dst = blurCanvas;
+  for (let p = 0; p < SHADOW_BLUR_PASSES; p++) {
+    const dCtx = dst.getContext('2d');
+    dCtx.clearRect(0, 0, dst.width, dst.height);
+    dCtx.imageSmoothingEnabled = true;
+    dCtx.imageSmoothingQuality = 'high';
+    // Shrink to half
+    const hw = Math.ceil(sw / 2), hh = Math.ceil(sh / 2);
+    dCtx.drawImage(src, 0, 0, hw, hh);
+    // Stretch back to full — bilinear interpolation = blur
+    dCtx.clearRect(0, 0, dst.width, dst.height);
+    dCtx.drawImage(src, 0, 0, src.width, src.height, 0, 0, hw, hh);
+    const sCtx = src.getContext('2d');
+    sCtx.clearRect(0, 0, src.width, src.height);
+    sCtx.imageSmoothingEnabled = true;
+    sCtx.imageSmoothingQuality = 'high';
+    sCtx.drawImage(dst, 0, 0, hw, hh, 0, 0, src.width, src.height);
+  }
+  // Composite blurred shadow layer onto main canvas
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalAlpha = 0.13;
+  ctx.globalAlpha = 0.15;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(shadowCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.drawImage(src, 0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
