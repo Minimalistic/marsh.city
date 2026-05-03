@@ -676,10 +676,16 @@ const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
 // Cloud shadows — large soft blobs that drift linearly across the scene
 // Shared wind direction with slight per-cloud variation; wrap around edges
-const cloudWind = { angle: Math.random() * Math.PI * 2 }; // wind blows this direction
+const cloudWind = { angle: Math.random() * Math.PI * 2 };
+const cloudCount = 8;
 const clouds = [];
-for (let i = 0; i < 5; i++) {
-  const lobes = 2 + Math.floor(Math.random() * 2); // 2-3 sub-blobs per cloud
+// Stagger clouds along the wind axis so they're evenly spaced in the
+// "incoming" direction — continuous stream, not a clump that drifts away
+const windCos = Math.cos(cloudWind.angle);
+const windSin = Math.sin(cloudWind.angle);
+const maxDim = Math.max(w, h);
+for (let i = 0; i < cloudCount; i++) {
+  const lobes = 2 + Math.floor(Math.random() * 2);
   const subBlobs = [];
   for (let j = 0; j < lobes; j++) {
     subBlobs.push({
@@ -688,14 +694,18 @@ for (let i = 0; i < 5; i++) {
       scale: 0.6 + Math.random() * 0.5,
     });
   }
+  // Space clouds along the wind direction across 3x the viewport so
+  // there's always another one coming into view
+  const along = (i / cloudCount) * maxDim * 3 - maxDim * 0.5;
+  const across = (Math.random() - 0.5) * maxDim * 1.2;
   clouds.push({
-    x: Math.random() * w,   // current position — updated each frame
-    y: Math.random() * h,
-    speed: 12 + Math.random() * 10,                // px/sec — lazy drift
-    drift: cloudWind.angle + (Math.random() - 0.5) * 0.3, // slight angle variation per cloud
-    size: 0.25 + Math.random() * 0.2,
+    x: w / 2 + windCos * along - windSin * across,
+    y: h / 2 + windSin * along + windCos * across,
+    speed: 12 + Math.random() * 10,
+    drift: cloudWind.angle + (Math.random() - 0.5) * 0.3,
+    size: 0.22 + Math.random() * 0.18,
     opacity: 0.08 + Math.random() * 0.06,
-    phase: Math.random() * Math.PI * 2,            // for breathing animation
+    phase: Math.random() * Math.PI * 2,
     subBlobs,
   });
 }
@@ -3331,7 +3341,7 @@ regenerateWorld = function() {
   // Vortices
   for (const v of vortices) { v.x = Math.random() * w; v.y = Math.random() * h; }
   // Reposition clouds within new bounds
-  for (const c of clouds) { c.x = Math.random() * w; c.y = Math.random() * h; }
+  for (const c of clouds) { c.x *= sx; c.y *= sy; }
 
   settleTime = 0;
 };
