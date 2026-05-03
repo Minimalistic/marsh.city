@@ -2932,7 +2932,7 @@ function drawAllFishShadows(ctx, drawables) {
   // Composite to main canvas
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalAlpha = 0.09;
+  ctx.globalAlpha = 0.18;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(shadowBlurCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
