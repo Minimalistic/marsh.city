@@ -455,7 +455,7 @@ let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
 // More fish on larger viewports - scales aggressively with area
-const initialFishCount = Math.min(228, Math.max(55, Math.floor(initialArea / 1155)));
+const initialFishCount = Math.min(171, Math.max(55, Math.floor(initialArea / 1540)));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -479,7 +479,7 @@ function rescaleAll(oldW, oldH) {
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
   // Update organic population base for new viewport size
-  const newBasePop = Math.min(228, Math.max(36, Math.floor((w * h) / 1155)));
+  const newBasePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
   const popRatio = newBasePop / Math.max(1, basePop);
   popTarget = Math.max(newBasePop * 0.35, Math.min(newBasePop * 1.3, popTarget * popRatio));
   basePop = newBasePop;
@@ -494,6 +494,7 @@ function rescaleAll(oldW, oldH) {
     const entry = schoolEntries[school];
     const f = new Fish(entry);
     f.school = school;
+    f.colorType = school;
     f.color = jitterTunaColor(schoolColors[school].color);
     f.bellyColor = jitterTunaColor(schoolColors[school].belly);
     fish.push(f);
@@ -828,7 +829,9 @@ class Fish {
     this.len = (12.5 + Math.random() * 6.25) * this.scale * sizeVar;
     this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
 
-    // Color assigned per school (set after construction)
+    // Color type = palette index (determines which fish school together)
+    // School ID is legacy — colorType drives flocking now
+    this.colorType = 0;
     this.school = 0;
     this.color = 'rgb(168, 195, 220)';
     this.bellyColor = 'rgb(233, 241, 249)';
@@ -893,7 +896,7 @@ class Fish {
 
     for (const other of getNeighbors(this.x, this.y)) {
       if (other === this) continue;
-      const sameSchool = other.school === this.school;
+      const sameSchool = other.colorType === this.colorType;
       const dx = other.x - this.x;
       const dy = other.y - this.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -2942,7 +2945,7 @@ function drawAllFishShadows(ctx, drawables) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-const fishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
+const fishCount = Math.min(171, Math.max(55, Math.floor((w * h) / 1540)));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
@@ -2965,7 +2968,7 @@ const predators = [];
 const predatorCount = w * h > 600000 ? 2 : 1;
 for (let i = 0; i < predatorCount; i++) predators.push(new Predator());
 // Organic population — wanders around a midpoint, fish come and go
-let basePop = Math.min(228, Math.max(36, Math.floor((w * h) / 1155)));
+let basePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
 let popTarget = basePop * (0.7 + Math.random() * 0.3); // start a little varied
 let popDriftTimer = 10 + Math.random() * 20; // time until next target shift
 let schoolArrivalTimer = 15 + Math.random() * 30; // next wave of newcomers
@@ -3449,9 +3452,9 @@ regenerateWorld = function() {
   spawnStarfish();
 
   // Fish — swim in from edges
-  basePop = Math.min(228, Math.max(36, Math.floor((w * h) / 1155)));
+  basePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
   popTarget = basePop * (0.7 + Math.random() * 0.3);
-  const newFishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
+  const newFishCount = Math.min(171, Math.max(55, Math.floor((w * h) / 1540)));
   fishToSpawn = newFishCount;
   fishSpawned = 0;
   spawnTimer = 0;
@@ -3521,6 +3524,7 @@ function draw(time) {
       for (let b = 0; b < batchSize; b++) {
         const f = new Fish(entry);
         f.school = school;
+        f.colorType = school;
         f.color = jitterTunaColor(schoolColors[school].color);
         f.bellyColor = jitterTunaColor(schoolColors[school].belly);
         fish.push(f);
@@ -4156,6 +4160,7 @@ function draw(time) {
     for (let i = 0; i < waveSize; i++) {
       const nf = new Fish({ x: ex, y: ey, angle: ea });
       nf.school = school;
+      nf.colorType = school;
       nf.color = jitterTunaColor(schoolColors[school].color);
       nf.bellyColor = jitterTunaColor(schoolColors[school].belly);
       fish.push(nf);
@@ -4172,6 +4177,7 @@ function draw(time) {
       const entry = schoolEntries[school];
       const f = new Fish(entry);
       f.school = school;
+      f.colorType = school;
       f.color = jitterTunaColor(schoolColors[school].color);
       f.bellyColor = jitterTunaColor(schoolColors[school].belly);
       fish.push(f);
