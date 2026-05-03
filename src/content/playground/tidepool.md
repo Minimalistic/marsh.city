@@ -2862,17 +2862,18 @@ function jitterTunaColor(base) {
 // Fish shadow — soft ellipse cast below each fish
 function drawFishShadow(ctx, f) {
   const shadowOffY = f.len * 0.30; // offset "down" (15% closer)
-  const sx = f.len * 1.6;   // ultra-wide shadow spread
-  const sy = f.bodyWidth * 7; // tall perpendicular spread
+  const sx = f.len * 2.2;   // buttery wide spread
+  const sy = f.bodyWidth * 10; // big perpendicular spread
   ctx.save();
   ctx.translate(f.x, f.y + shadowOffY);
   ctx.rotate(f._renderAngle);
   ctx.scale(sx, sy);
   const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
-  grad.addColorStop(0, 'rgba(0, 0, 0, 0.06)');
-  grad.addColorStop(0.2, 'rgba(0, 0, 0, 0.04)');
-  grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.02)');
-  grad.addColorStop(0.8, 'rgba(0, 0, 0, 0.005)');
+  grad.addColorStop(0, 'rgba(0, 0, 0, 0.10)');
+  grad.addColorStop(0.15, 'rgba(0, 0, 0, 0.07)');
+  grad.addColorStop(0.35, 'rgba(0, 0, 0, 0.04)');
+  grad.addColorStop(0.6, 'rgba(0, 0, 0, 0.015)');
+  grad.addColorStop(0.85, 'rgba(0, 0, 0, 0.004)');
   grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = grad;
   ctx.beginPath();
