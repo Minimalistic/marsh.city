@@ -455,7 +455,7 @@ let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
 // More fish on larger viewports - scales aggressively with area
-const initialFishCount = Math.min(325, Math.max(78, Math.floor(initialArea / 808)));
+const initialFishCount = Math.min(228, Math.max(55, Math.floor(initialArea / 1155)));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -479,7 +479,7 @@ function rescaleAll(oldW, oldH) {
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
   // Update organic population base for new viewport size
-  const newBasePop = Math.min(325, Math.max(52, Math.floor((w * h) / 808)));
+  const newBasePop = Math.min(228, Math.max(36, Math.floor((w * h) / 1155)));
   const popRatio = newBasePop / Math.max(1, basePop);
   popTarget = Math.max(newBasePop * 0.35, Math.min(newBasePop * 1.3, popTarget * popRatio));
   basePop = newBasePop;
@@ -2785,7 +2785,7 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
-const fishCount = Math.min(325, Math.max(78, Math.floor((w * h) / 808)));
+const fishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
@@ -2808,7 +2808,7 @@ const predators = [];
 const predatorCount = w * h > 600000 ? 2 : 1;
 for (let i = 0; i < predatorCount; i++) predators.push(new Predator());
 // Organic population — wanders around a midpoint, fish come and go
-let basePop = Math.min(325, Math.max(52, Math.floor((w * h) / 808)));
+let basePop = Math.min(228, Math.max(36, Math.floor((w * h) / 1155)));
 let popTarget = basePop * (0.7 + Math.random() * 0.3); // start a little varied
 let popDriftTimer = 10 + Math.random() * 20; // time until next target shift
 let schoolArrivalTimer = 15 + Math.random() * 30; // next wave of newcomers
@@ -3292,9 +3292,9 @@ regenerateWorld = function() {
   spawnStarfish();
 
   // Fish — swim in from edges
-  basePop = Math.min(325, Math.max(52, Math.floor((w * h) / 808)));
+  basePop = Math.min(228, Math.max(36, Math.floor((w * h) / 1155)));
   popTarget = basePop * (0.7 + Math.random() * 0.3);
-  const newFishCount = Math.min(325, Math.max(78, Math.floor((w * h) / 808)));
+  const newFishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
   fishToSpawn = newFishCount;
   fishSpawned = 0;
   spawnTimer = 0;
