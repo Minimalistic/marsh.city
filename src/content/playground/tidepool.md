@@ -2859,81 +2859,50 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
-// Fish shadow — gradient stamps along spine at 1/8 res + stackable blur passes
+// Fish shadow — large gradient stamps drawn directly at full resolution
+// No offscreen canvas, no blur filter — the stamp IS the softness
 // Light from upper-right, so shadow falls down and to the left
 const shadowOffX = -4, shadowOffY = 5;
-const SHADOW_SCALE = 0.35;
-const SHADOW_BLUR_PX = 12; // blur radius on the low-res canvas (amplified by upscale)
-const shadowCanvas = document.createElement('canvas');
-const shadowCtx = shadowCanvas.getContext('2d');
-// Second buffer for shadow blur pass (separate from DOF blurCanvas)
-const shadowBlurCanvas = document.createElement('canvas');
-const shadowBlurCtx = shadowBlurCanvas.getContext('2d');
 // Pre-rendered radial gradient stamp — created once, reused every frame
-const STAMP_SIZE = 64;
+const STAMP_SIZE = 128;
 const stampCanvas = document.createElement('canvas');
 stampCanvas.width = STAMP_SIZE;
 stampCanvas.height = STAMP_SIZE;
 const stampCtx = stampCanvas.getContext('2d');
 const sg = stampCtx.createRadialGradient(STAMP_SIZE/2, STAMP_SIZE/2, 0, STAMP_SIZE/2, STAMP_SIZE/2, STAMP_SIZE/2);
-sg.addColorStop(0, 'rgba(0, 0, 0, 1)');
-sg.addColorStop(0.3, 'rgba(0, 0, 0, 0.7)');
-sg.addColorStop(0.6, 'rgba(0, 0, 0, 0.3)');
+sg.addColorStop(0, 'rgba(0, 0, 0, 0.18)');
+sg.addColorStop(0.25, 'rgba(0, 0, 0, 0.12)');
+sg.addColorStop(0.5, 'rgba(0, 0, 0, 0.06)');
+sg.addColorStop(0.75, 'rgba(0, 0, 0, 0.02)');
 sg.addColorStop(1, 'rgba(0, 0, 0, 0)');
 stampCtx.fillStyle = sg;
 stampCtx.fillRect(0, 0, STAMP_SIZE, STAMP_SIZE);
 
 function drawAllFishShadows(ctx, drawables) {
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const sw = Math.ceil(ctx.canvas.width * SHADOW_SCALE);
-  const sh = Math.ceil(ctx.canvas.height * SHADOW_SCALE);
-  if (shadowCanvas.width !== sw || shadowCanvas.height !== sh) {
-    shadowCanvas.width = sw;
-    shadowCanvas.height = sh;
-    shadowBlurCanvas.width = sw;
-    shadowBlurCanvas.height = sh;
-  }
-  const scale = dpr * SHADOW_SCALE;
-  shadowCtx.setTransform(scale, 0, 0, scale, 0, 0);
-  shadowCtx.clearRect(0, 0, sw / scale, sh / scale);
+  ctx.save();
   for (const d of drawables) {
     if (d.type !== 'fish') continue;
     const f = d.obj;
     const joints = f._joints;
     if (!joints || joints.length < 3) continue;
+    // Stamp every 3rd joint — overlapping large stamps merge smoothly
     const segs = joints.length;
-    const bw = f.bodyWidth * 2.2;
-    for (let i = 0; i < segs; i++) {
+    const bw = f.bodyWidth * 4;
+    for (let i = 0; i < segs; i += 3) {
       const t = i / (segs - 1);
       let r;
       if (t < 0.1) r = t / 0.1 * bw * 0.5;
       else if (t < 0.3) r = bw * (0.5 + (t - 0.1) / 0.2 * 0.5);
       else if (t < 0.6) r = bw * (1 - (t - 0.3) / 0.3 * 0.15);
       else r = bw * 0.85 * (1 - (t - 0.6) / 0.4);
-      if (r < 0.5) continue;
-      const sx = joints[i].x + shadowOffX - r;
-      const sy = joints[i].y + shadowOffY - r;
-      shadowCtx.drawImage(stampCanvas, sx, sy, r * 2, r * 2);
+      if (r < 1) continue;
+      ctx.drawImage(stampCanvas,
+        joints[i].x + shadowOffX - r,
+        joints[i].y + shadowOffY - r,
+        r * 2, r * 2);
     }
   }
-  // Blur pass: draw shadow canvas onto separate blur canvas with CSS filter
-  shadowBlurCtx.save();
-  shadowBlurCtx.setTransform(1, 0, 0, 1, 0, 0);
-  shadowBlurCtx.clearRect(0, 0, shadowBlurCanvas.width, shadowBlurCanvas.height);
-  shadowBlurCtx.filter = `blur(${SHADOW_BLUR_PX}px)`;
-  shadowBlurCtx.drawImage(shadowCanvas, 0, 0);
-  shadowBlurCtx.restore();
-  // Composite blurred shadow layer onto main canvas
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.filter = 'none';
-  ctx.globalAlpha = 0.15;
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(shadowBlurCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
-  // Restore DPR transform (save/restore resets it)
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 const fishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
