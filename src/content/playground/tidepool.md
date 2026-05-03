@@ -703,7 +703,7 @@ for (let i = 0; i < cloudCount; i++) {
     y: h / 2 + windSin * along + windCos * across,
     speed: 12 + Math.random() * 10,
     drift: cloudWind.angle + (Math.random() - 0.5) * 0.3,
-    size: 0.22 + Math.random() * 0.18,
+    size: 0.35 + Math.random() * 0.29,
     opacity: 0.08 + Math.random() * 0.06,
     phase: Math.random() * Math.PI * 2,
     subBlobs,
