@@ -925,12 +925,26 @@ class Fish {
       this.distractTimer = this.distracted ? 1.5 + Math.random() * 3 : 12 + Math.random() * 25;
     }
 
-    // Apply boids - cohesion dominates for tight real-looking schools
+    // Apply boids — alignment-first so merging schools match heading before clustering
     const schoolWeight = this.distracted ? 0.3 : 1;
     if (sepCount > 0) { this.vx += sepX * 0.07; this.vy += sepY * 0.07; }
-    if (alignCount > 0) { this.vx += (alignX / alignCount - this.vx) * 0.12 * schoolWeight; this.vy += (alignY / alignCount - this.vy) * 0.12 * schoolWeight; }
+    // Measure heading agreement — how aligned are nearby fish with this one?
+    let headingAgreement = 1; // 1 = perfect agreement, 0 = opposing
+    if (alignCount > 0) {
+      const avgVx = alignX / alignCount, avgVy = alignY / alignCount;
+      const avgSpd = Math.sqrt(avgVx * avgVx + avgVy * avgVy) || 0.01;
+      const mySpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+      // Dot product of normalized headings: 1 = same dir, -1 = opposite
+      headingAgreement = Math.max(0, (this.vx * avgVx + this.vy * avgVy) / (mySpd * avgSpd));
+      // Alignment force: stronger when headings disagree (merging), normal when aligned
+      const alignStr = headingAgreement < 0.7 ? 0.22 : 0.12;
+      this.vx += (avgVx - this.vx) * alignStr * schoolWeight;
+      this.vy += (avgVy - this.vy) * alignStr * schoolWeight;
+    }
     if (cohCount > 0) {
       let cx = cohX / cohCount, cy = cohY / cohCount;
+      // Suppress cohesion when headings disagree — don't pull fish head-on into each other
+      const cohDampen = headingAgreement < 0.5 ? 0.2 : headingAgreement < 0.8 ? 0.6 : 1;
       // Push cohesion target well clear of reefs so the school doesn't orbit them
       for (const rf of reefs) {
         if (rf.submerged) continue;
@@ -963,8 +977,8 @@ class Fish {
       const lateral = Math.abs(toCx * headingY - toCy * headingX) / toCDist;
       // Boost lateral cohesion, dampen fore-aft to prevent elongation
       const cohStr = 0.005 + lateral * 0.004 - Math.max(0, foreAft) * 0.002;
-      this.vx += toCx * cohStr * schoolWeight;
-      this.vy += toCy * cohStr * schoolWeight;
+      this.vx += toCx * cohStr * schoolWeight * cohDampen;
+      this.vy += toCy * cohStr * schoolWeight * cohDampen;
     }
 
     // Gentle centering during first few seconds
