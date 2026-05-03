@@ -1172,10 +1172,10 @@ class Fish {
         // Last-ditch panic — predator is RIGHT there, fish goes berserk
         if ((beingChased || inPath) && pDist < 40 * viewScale) {
           panicSprint = true;
-          // Violent erratic jinking — sharp random direction changes each frame
-          const despAngle = fleeAngle + (Math.random() - 0.5) * 3.0;
-          this.vx += Math.cos(despAngle) * scaledSpeed * 1.8;
-          this.vy += Math.sin(despAngle) * scaledSpeed * 1.8;
+          // Instant velocity snap away — no gradual acceleration
+          const despAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
+          this.vx = Math.cos(despAngle) * scaledSpeed * 3.5;
+          this.vy = Math.sin(despAngle) * scaledSpeed * 3.5;
           this.fleeing = true;
           this.fleeTimer = 1.8;
         } else if (beingChased && pDist < fleeRange * 0.4) {
@@ -1213,7 +1213,9 @@ class Fish {
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.15;
+      // Ramp up fast when fleeing, smooth when cruising
+      const accel = (panicSprint || beingHunted) ? 0.6 : this.fleeing ? 0.4 : 0.15;
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * accel;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
       this.vy *= ratio;
