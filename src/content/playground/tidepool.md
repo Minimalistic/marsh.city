@@ -583,8 +583,8 @@ rebuildGrid();
 let mouse = { x: -1000, y: -1000, prevX: -1000, prevY: -1000, active: false, speed: 0, down: false };
 canvas.addEventListener('mouseenter', e => {
   const rect = canvas.getBoundingClientRect();
-  mouse.x = e.clientX - rect.left;
-  mouse.y = e.clientY - rect.top;
+  mouse.x = (e.clientX - rect.left) / rect.width * w;
+  mouse.y = (e.clientY - rect.top) / rect.height * h;
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
   mouse.active = true;
@@ -594,8 +594,8 @@ canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
-  mouse.x = e.clientX - rect.left;
-  mouse.y = e.clientY - rect.top;
+  mouse.x = (e.clientX - rect.left) / rect.width * w;
+  mouse.y = (e.clientY - rect.top) / rect.height * h;
   if (!mouse.active) { mouse.prevX = mouse.x; mouse.prevY = mouse.y; }
   mouse.active = true;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
@@ -605,8 +605,8 @@ canvas.addEventListener('mousedown', e => {
   e.preventDefault();
   mouse.down = true;
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+  const mx = (e.clientX - rect.left) / rect.width * w;
+  const my = (e.clientY - rect.top) / rect.height * h;
   if (activeTool === 'food') {
     // Drop food where clicked - if on a rock it'll roll down into the water
     const b = 25 + Math.floor(Math.random() * 6);
@@ -632,8 +632,9 @@ canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const rect = canvas.getBoundingClientRect();
   const t = e.touches[0];
-  mouse.x = t.clientX - rect.left;
-  mouse.y = t.clientY - rect.top;
+  // Scale touch point from CSS rect space to logical canvas space (w, h)
+  mouse.x = (t.clientX - rect.left) / rect.width * w;
+  mouse.y = (t.clientY - rect.top) / rect.height * h;
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
   mouse.active = true;
@@ -661,8 +662,8 @@ canvas.addEventListener('touchmove', e => {
   const t = e.touches[0];
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
-  mouse.x = t.clientX - rect.left;
-  mouse.y = t.clientY - rect.top;
+  mouse.x = (t.clientX - rect.left) / rect.width * w;
+  mouse.y = (t.clientY - rect.top) / rect.height * h;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
 }, { passive: false });
 canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
