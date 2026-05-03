@@ -871,6 +871,10 @@ class Fish {
     this.leaving = false;
     // Fixed phase offset for undulation desync (not position-based)
     this._phaseOffset = Math.random() * Math.PI * 20;
+    // Course-correction twitch — individual fidgety heading adjustments
+    this._twitchTimer = 1 + Math.random() * 3; // time until next twitch
+    this._twitchRate = 1.5 + Math.random() * 4; // seconds between twitches (varies per fish)
+    this._twitchMag = 0.08 + Math.random() * 0.15; // how sharp the turn is (radians)
     // Smoothed render angle — prevents tail flicker from heading jitter
     this._renderAngle = this.angle;
     // Smoothed swim intensity for animation - avoids jerky transitions
@@ -1251,6 +1255,19 @@ class Fish {
     if (this.idleTimer <= 0) {
       this.idle = !this.idle;
       this.idleTimer = this.idle ? 1 + Math.random() * 2 : 8 + Math.random() * 15;
+    }
+
+    // Course-correction twitch — quick heading flick, like real fish do
+    if (!this.fleeing && !panicSprint && !this.eating) {
+      this._twitchTimer -= dt;
+      if (this._twitchTimer <= 0) {
+        const twitchAngle = (Math.random() - 0.5) * 2 * this._twitchMag;
+        const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+        const newAngle = Math.atan2(this.vy, this.vx) + twitchAngle;
+        this.vx = Math.cos(newAngle) * spd;
+        this.vy = Math.sin(newAngle) * spd;
+        this._twitchTimer = this._twitchRate * (0.6 + Math.random() * 0.8);
+      }
     }
 
     // Speed management - tidepool fish dart and zip, quick speed changes
