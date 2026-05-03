@@ -2885,10 +2885,9 @@ function drawAllFishShadows(ctx, drawables) {
     const f = d.obj;
     const joints = f._joints;
     if (!joints || joints.length < 3) continue;
-    // Stamp every 3rd joint — overlapping large stamps merge smoothly
     const segs = joints.length;
     const bw = f.bodyWidth * 4;
-    for (let i = 0; i < segs; i += 3) {
+    for (let i = 0; i < segs; i++) {
       const t = i / (segs - 1);
       let r;
       if (t < 0.1) r = t / 0.1 * bw * 0.5;
