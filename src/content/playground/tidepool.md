@@ -2863,7 +2863,7 @@ function jitterTunaColor(base) {
 // Light from upper-right, so shadow falls down and to the left
 const shadowOffX = -4, shadowOffY = 5;
 // Low-res offscreen canvas — drawing at 1/4 scale then upscaling = free blur
-const SHADOW_SCALE = 0.25;
+const SHADOW_SCALE = 0.125;
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
 
