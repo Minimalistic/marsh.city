@@ -2437,10 +2437,19 @@ class Predator {
         const dist = Math.sqrt(dx * dx + dy * dy);
         const pursuitAngle = Math.atan2(dy, dx);
 
+        // Detect orbiting: target is close but at a steep angle to our heading
+        const headCos = Math.cos(this.angle), headSin = Math.sin(this.angle);
+        const ahead = (dx * headCos + dy * headSin) / (dist || 1);
+        // If close and target is behind/beside us, we've overshot — abandon
+        if (dist < 80 * viewScale && ahead < 0.1) {
+          this.target = null;
+          this.burstTimer = 0;
+          this._retargetCooldown = 1.0 + Math.random() * 1.5;
+        } else {
         // Aggressive ramp: faster base chase, harder steering at close range
         const closeness = Math.max(0, 1 - dist / (220 * viewScale));
         const chaseSpeed = this.baseSpeed * (2.8 + closeness * 2.5) * viewScale;
-        const steer = 0.06 + closeness * 0.15;
+        const steer = 0.08 + closeness * 0.2;
         this.vx += (Math.cos(pursuitAngle) * chaseSpeed - this.vx) * steer;
         this.vy += (Math.sin(pursuitAngle) * chaseSpeed - this.vy) * steer;
 
@@ -2457,6 +2466,7 @@ class Predator {
           this._burstFlick = 0.6;
           this._burstFlickDir = -this._burstFlickDir;
         }
+        } // end else (not orbiting)
       } else if (crowdN > 0) {
         // Cruising toward fish — more purposeful than before
         const cx = crowdX / crowdN, cy = crowdY / crowdN;
