@@ -806,7 +806,7 @@ class Fish {
       else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
       else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
     }
-    this.speed = (0.6 + Math.random() * 1.4) * 0.56; // calm cruising, flee multipliers handle bursts
+    this.speed = (0.6 + Math.random() * 1.4) * 0.56; // calm cruising — stragglers get slowed after sociability is set
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
@@ -838,10 +838,18 @@ class Fish {
 
     // Per-fish comfort distance from rocks - some swim closer than others
     this.rockComfort = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
-    // Schooling parameters - tight cohesive schools like real fish
+    // Sociability — ~15% are stragglers who drift from the school
+    this.sociability = Math.random() < 0.15 ? 0.15 + Math.random() * 0.25 : 0.7 + Math.random() * 0.3;
+    // Stragglers: shorter sensing range, weaker schooling pull
     this.separationDist = (12 + Math.random() * 5) * this.scale;
-    this.alignDist = 150 * this.scale;
-    this.cohesionDist = 200 * this.scale;
+    this.alignDist = 150 * this.scale * this.sociability;
+    this.cohesionDist = 200 * this.scale * this.sociability;
+
+    // Stragglers are slower and wander more
+    if (this.sociability < 0.5) {
+      this.speed *= 0.65 + this.sociability * 0.4;
+      this.baseSpeed = this.speed;
+    }
 
     // Flee state
     this.fleeing = false;
@@ -918,11 +926,16 @@ class Fish {
       }
     }
 
-    // Distraction toggle - rare wandering, fish mostly stay with school
+    // Distraction toggle — stragglers wander more often and longer
     this.distractTimer -= dt;
     if (this.distractTimer <= 0) {
       this.distracted = !this.distracted;
-      this.distractTimer = this.distracted ? 1.5 + Math.random() * 3 : 12 + Math.random() * 25;
+      if (this.sociability < 0.5) {
+        // Stragglers: long wanders, short school stints
+        this.distractTimer = this.distracted ? 4 + Math.random() * 8 : 3 + Math.random() * 8;
+      } else {
+        this.distractTimer = this.distracted ? 1.5 + Math.random() * 3 : 12 + Math.random() * 25;
+      }
     }
 
     // Apply boids — alignment-first so merging schools match heading before clustering
