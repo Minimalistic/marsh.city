@@ -2866,60 +2866,71 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
-// Fish shadow — large gradient stamps drawn directly at full resolution
-// No offscreen canvas, no blur filter — the stamp IS the softness
-// Light from upper-right, so shadow falls down and to the left
+// Fish shadow — solid circles on half-res offscreen canvas, blur once, composite once
+// Circles follow spine joints so shadow bends with fish — no transforms needed
 const shadowOffX = -3, shadowOffY = 4;
-// Pre-rendered radial gradient stamp — created once, reused every frame
-const STAMP_SIZE = 128;
-const stampCanvas = document.createElement('canvas');
-stampCanvas.width = STAMP_SIZE;
-stampCanvas.height = STAMP_SIZE;
-const stampCtx = stampCanvas.getContext('2d');
-const sg = stampCtx.createRadialGradient(STAMP_SIZE/2, STAMP_SIZE/2, 0, STAMP_SIZE/2, STAMP_SIZE/2, STAMP_SIZE/2);
-sg.addColorStop(0, 'rgba(0, 0, 0, 0.013)');
-sg.addColorStop(0.2, 'rgba(0, 0, 0, 0.008)');
-sg.addColorStop(0.45, 'rgba(0, 0, 0, 0.004)');
-sg.addColorStop(0.7, 'rgba(0, 0, 0, 0.001)');
-sg.addColorStop(1, 'rgba(0, 0, 0, 0)');
-stampCtx.fillStyle = sg;
-stampCtx.fillRect(0, 0, STAMP_SIZE, STAMP_SIZE);
+const SHADOW_SCALE = 0.5;
+const SHADOW_BLUR = 8; // px on half-res canvas = ~16px effective
+const shadowCanvas = document.createElement('canvas');
+const shadowCtx = shadowCanvas.getContext('2d');
+const shadowBlurCanvas = document.createElement('canvas');
+const shadowBlurCtx = shadowBlurCanvas.getContext('2d');
+// Set blur filter once — never changes
+shadowBlurCtx.filter = `blur(${SHADOW_BLUR}px)`;
 
 function drawAllFishShadows(ctx, drawables) {
-  ctx.save();
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const sw = Math.ceil(ctx.canvas.width * SHADOW_SCALE);
+  const sh = Math.ceil(ctx.canvas.height * SHADOW_SCALE);
+  if (shadowCanvas.width !== sw || shadowCanvas.height !== sh) {
+    shadowCanvas.width = sw;
+    shadowCanvas.height = sh;
+    shadowBlurCanvas.width = sw;
+    shadowBlurCanvas.height = sh;
+    // Re-set filter after resize (resize clears context state)
+    shadowBlurCtx.filter = `blur(${SHADOW_BLUR}px)`;
+  }
+  const scale = dpr * SHADOW_SCALE;
+  shadowCtx.setTransform(scale, 0, 0, scale, 0, 0);
+  shadowCtx.clearRect(0, 0, sw / scale, sh / scale);
+  // Batch all fish shadows as simple arc() calls — no transforms per joint
+  shadowCtx.fillStyle = '#000';
+  shadowCtx.beginPath();
   for (const d of drawables) {
     if (d.type !== 'fish') continue;
     const f = d.obj;
     const joints = f._joints;
     if (!joints || joints.length < 3) continue;
     const segs = joints.length;
-    const bw = f.bodyWidth * 21;
-    const squash = 0.33; // perpendicular compression — skinnier shadow
+    const bw = f.bodyWidth * 1.8;
     for (let i = 0; i < segs; i++) {
       const t = i / (segs - 1);
       let r;
-      if (t < 0.1) r = t / 0.1 * bw * 0.5;
-      else if (t < 0.3) r = bw * (0.5 + (t - 0.1) / 0.2 * 0.5);
-      else if (t < 0.6) r = bw * (1 - (t - 0.3) / 0.3 * 0.15);
-      else r = bw * 0.85 * (1 - (t - 0.6) / 0.4);
-      if (r < 1) continue;
-      // Get spine direction at this joint for ellipse orientation
-      let dx, dy;
-      if (i === 0) { dx = joints[0].x - joints[1].x; dy = joints[0].y - joints[1].y; }
-      else if (i === segs - 1) { dx = joints[i-1].x - joints[i].x; dy = joints[i-1].y - joints[i].y; }
-      else { dx = joints[i-1].x - joints[i+1].x; dy = joints[i-1].y - joints[i+1].y; }
-      const angle = Math.atan2(dy, dx);
+      if (t < 0.1) r = t / 0.1 * bw * 0.4;
+      else if (t < 0.3) r = bw * (0.4 + (t - 0.1) / 0.2 * 0.6);
+      else if (t < 0.6) r = bw * (1 - (t - 0.3) / 0.3 * 0.2);
+      else r = bw * 0.8 * (1 - (t - 0.6) / 0.4);
+      if (r < 0.3) continue;
+      // moveTo before arc avoids stray lines between disconnected circles
       const jx = joints[i].x + shadowOffX;
       const jy = joints[i].y + shadowOffY;
-      ctx.save();
-      ctx.translate(jx, jy);
-      ctx.rotate(angle);
-      ctx.scale(1, squash);
-      ctx.drawImage(stampCanvas, -r, -r, r * 2, r * 2);
-      ctx.restore();
+      shadowCtx.moveTo(jx + r, jy);
+      shadowCtx.arc(jx, jy, r, 0, Math.PI * 2);
     }
   }
+  shadowCtx.fill();
+  // Single blur pass on the half-res canvas
+  shadowBlurCtx.clearRect(0, 0, sw, sh);
+  shadowBlurCtx.drawImage(shadowCanvas, 0, 0);
+  // Composite to main canvas
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 0.09;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(shadowBlurCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 const fishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
