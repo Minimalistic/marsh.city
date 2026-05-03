@@ -1280,8 +1280,8 @@ class Fish {
     if (panicSprint) targetSpeed = scaledSpeed * 4.0; // last-ditch desperate burst
     else if (beingHunted) targetSpeed = scaledSpeed * 3.0; // panic sprint
     else if (this.fleeing) targetSpeed = scaledSpeed * 2.2;
-    else if (this.idle) targetSpeed = scaledSpeed * 0.7;
-    else targetSpeed = scaledSpeed * 1.0;
+    else if (this.idle) targetSpeed = scaledSpeed * 0.9;
+    else targetSpeed = scaledSpeed * 1.3;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
