@@ -880,7 +880,7 @@ class Fish {
     // Smoothed swim intensity for animation - avoids jerky transitions
     this._swimSmooth = 0.5;
     // Chain of world-space joint positions - body trails behind head
-    const numJoints = 10;
+    const numJoints = 7;
     this._jointCount = numJoints;
     this._segLen = this.len / numJoints;
     this._joints = [];
