@@ -2866,17 +2866,29 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
-// Fish shadow — solid circles on half-res offscreen canvas, blur once, composite once
+// Fish shadow — gradient stamps on half-res canvas, blur once, composite once
 // Circles follow spine joints so shadow bends with fish — no transforms needed
 const shadowOffX = -8, shadowOffY = 12;
 const SHADOW_SCALE = 0.5;
-const SHADOW_BLUR = 16; // px on half-res canvas = ~32px effective
+const SHADOW_BLUR = 10; // px on half-res canvas = ~20px effective
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
 const shadowBlurCanvas = document.createElement('canvas');
 const shadowBlurCtx = shadowBlurCanvas.getContext('2d');
-// Set blur filter once — never changes
 shadowBlurCtx.filter = `blur(${SHADOW_BLUR}px)`;
+// Pre-rendered gradient dot — soft falloff baked in, blur spreads it further
+const SDOT = 64;
+const shadowDot = document.createElement('canvas');
+shadowDot.width = SDOT;
+shadowDot.height = SDOT;
+const sdCtx = shadowDot.getContext('2d');
+const sdg = sdCtx.createRadialGradient(SDOT/2, SDOT/2, 0, SDOT/2, SDOT/2, SDOT/2);
+sdg.addColorStop(0, 'rgba(0, 0, 0, 0.6)');
+sdg.addColorStop(0.3, 'rgba(0, 0, 0, 0.3)');
+sdg.addColorStop(0.6, 'rgba(0, 0, 0, 0.1)');
+sdg.addColorStop(1, 'rgba(0, 0, 0, 0)');
+sdCtx.fillStyle = sdg;
+sdCtx.fillRect(0, 0, SDOT, SDOT);
 
 function drawAllFishShadows(ctx, drawables) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -2887,15 +2899,12 @@ function drawAllFishShadows(ctx, drawables) {
     shadowCanvas.height = sh;
     shadowBlurCanvas.width = sw;
     shadowBlurCanvas.height = sh;
-    // Re-set filter after resize (resize clears context state)
     shadowBlurCtx.filter = `blur(${SHADOW_BLUR}px)`;
   }
   const scale = dpr * SHADOW_SCALE;
   shadowCtx.setTransform(scale, 0, 0, scale, 0, 0);
   shadowCtx.clearRect(0, 0, sw / scale, sh / scale);
-  // Batch all fish shadows as simple arc() calls — no transforms per joint
-  shadowCtx.fillStyle = '#000';
-  shadowCtx.beginPath();
+  // Stamp gradient dots at each joint — no transforms, just positioned drawImage
   for (const d of drawables) {
     if (d.type !== 'fish') continue;
     const f = d.obj;
@@ -2911,14 +2920,12 @@ function drawAllFishShadows(ctx, drawables) {
       else if (t < 0.6) r = bw * (1 - (t - 0.3) / 0.3 * 0.2);
       else r = bw * 0.8 * (1 - (t - 0.6) / 0.4);
       if (r < 0.3) continue;
-      // moveTo before arc avoids stray lines between disconnected circles
-      const jx = joints[i].x + shadowOffX;
-      const jy = joints[i].y + shadowOffY;
-      shadowCtx.moveTo(jx + r, jy);
-      shadowCtx.arc(jx, jy, r, 0, Math.PI * 2);
+      shadowCtx.drawImage(shadowDot,
+        joints[i].x + shadowOffX - r,
+        joints[i].y + shadowOffY - r,
+        r * 2, r * 2);
     }
   }
-  shadowCtx.fill();
   // Single blur pass on the half-res canvas
   shadowBlurCtx.clearRect(0, 0, sw, sh);
   shadowBlurCtx.drawImage(shadowCanvas, 0, 0);
