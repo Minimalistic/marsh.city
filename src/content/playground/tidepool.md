@@ -2866,9 +2866,9 @@ const SHADOW_SCALE = 0.125;
 const SHADOW_BLUR_PX = 6; // blur radius on the low-res canvas (amplified by upscale)
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
-// Second buffer for blur pass
-const blurCanvas = document.createElement('canvas');
-const blurCtx = blurCanvas.getContext('2d');
+// Second buffer for shadow blur pass (separate from DOF blurCanvas)
+const shadowBlurCanvas = document.createElement('canvas');
+const shadowBlurCtx = shadowBlurCanvas.getContext('2d');
 // Pre-rendered radial gradient stamp — created once, reused every frame
 const STAMP_SIZE = 64;
 const stampCanvas = document.createElement('canvas');
@@ -2890,8 +2890,8 @@ function drawAllFishShadows(ctx, drawables) {
   if (shadowCanvas.width !== sw || shadowCanvas.height !== sh) {
     shadowCanvas.width = sw;
     shadowCanvas.height = sh;
-    blurCanvas.width = sw;
-    blurCanvas.height = sh;
+    shadowBlurCanvas.width = sw;
+    shadowBlurCanvas.height = sh;
   }
   const scale = dpr * SHADOW_SCALE;
   shadowCtx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -2916,20 +2916,23 @@ function drawAllFishShadows(ctx, drawables) {
       shadowCtx.drawImage(stampCanvas, sx, sy, r * 2, r * 2);
     }
   }
-  // Blur pass: draw shadow canvas onto blur canvas with CSS filter
-  // At 1/8 res this is a tiny image so filter is cheap
-  blurCtx.clearRect(0, 0, blurCanvas.width, blurCanvas.height);
-  blurCtx.filter = `blur(${SHADOW_BLUR_PX}px)`;
-  blurCtx.drawImage(shadowCanvas, 0, 0);
-  blurCtx.filter = 'none';
+  // Blur pass: draw shadow canvas onto separate blur canvas with CSS filter
+  shadowBlurCtx.save();
+  shadowBlurCtx.setTransform(1, 0, 0, 1, 0, 0);
+  shadowBlurCtx.clearRect(0, 0, shadowBlurCanvas.width, shadowBlurCanvas.height);
+  shadowBlurCtx.filter = `blur(${SHADOW_BLUR_PX}px)`;
+  shadowBlurCtx.drawImage(shadowCanvas, 0, 0);
+  shadowBlurCtx.restore();
   // Composite blurred shadow layer onto main canvas
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.filter = 'none';
   ctx.globalAlpha = 0.15;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(blurCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.drawImage(shadowBlurCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
+  // Restore DPR transform (save/restore resets it)
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
