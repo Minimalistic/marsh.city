@@ -998,23 +998,19 @@ class Fish {
       // cross: signed lateral offset from school centerline
       const cross = (toCx * schHy - toCy * schHx) / toCDist;
       // Along-track pull toward center (gentle, keeps school compact)
-      const alongStr = 0.004;
+      const alongStr = 0.0052;
       const alongX = schHx * foreAft * toCDist * alongStr;
       const alongY = schHy * foreAft * toCDist * alongStr;
       // Cross-track pull toward centerline — stronger at front and back (teardrop)
-      // Fish ahead of center: strong compression. Behind: moderate. At center: light.
       const absForeAft = Math.abs(foreAft);
       const absCross = Math.abs(cross);
       let crossStr;
       if (foreAft > 0.3) {
-        // Ahead of center — compress hard laterally to form pointed front
-        crossStr = 0.012 + absForeAft * 0.008;
+        crossStr = 0.016 + absForeAft * 0.01;
       } else if (foreAft < -0.3) {
-        // Behind center — moderate compression for tapered tail
-        crossStr = 0.007 + absForeAft * 0.004;
+        crossStr = 0.009 + absForeAft * 0.005;
       } else {
-        // Middle — light lateral pull, widest part of the school
-        crossStr = 0.004 + absCross * 0.002;
+        crossStr = 0.005 + absCross * 0.003;
       }
       // Cross-track force: perpendicular to school heading, toward centerline
       const crossForceX = -schHy * cross * toCDist * crossStr;
