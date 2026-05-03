@@ -3793,14 +3793,15 @@ function draw(time) {
 
   // Draw wash wave fronts - foam shed behind the wave, not in front
   for (const ww of washWaves) {
-    if (ww.life <= 0) continue;
     if (!ww.blobs) ww.blobs = [];
-    // Continuously spawn foam at the wave front - scales with viewport
     const cosA = Math.cos(ww.angle);
     const sinA = Math.sin(ww.angle);
     const span = Math.max(w, h) * 1.2;
-    const foamCount = Math.ceil(4 * viewScale);
-    if (ww.life > 0.1) {
+    const alive = ww.life > 0.1; // wave front still active (not just lingering foam)
+
+    // Spawn foam only while the wave front is still active
+    if (alive) {
+      const foamCount = Math.ceil(4 * viewScale);
       for (let i = 0; i < foamCount; i++) {
         const lateral = (Math.random() - 0.5) * span;
         const behind = Math.random() * 5 * viewScale;
@@ -3815,56 +3816,59 @@ function draw(time) {
           maxAge: 5 + Math.random() * 6,
         });
       }
-    }
-    // Shed tiny foam bits into the water (cap at 150)
-    if (ww.life > 0.1 && foamBits.length < 250) {
-      for (let i = 0; i < 2; i++) {
-        const lateral = (Math.random() - 0.5) * span;
-        foamBits.push({
-          x: ww.x - cosA * Math.random() * 10 + (-sinA) * lateral,
-          y: ww.y - sinA * Math.random() * 10 + cosA * lateral,
-          size: (0.15 + Math.random() * 0.8) * viewScale,
-          vx: 0, vy: 0,
-          life: 1,
-          maxLife: 8 + Math.random() * 16,
-        });
+      // Shed tiny foam bits into the water (cap at 250)
+      if (foamBits.length < 250) {
+        for (let i = 0; i < 2; i++) {
+          const lateral = (Math.random() - 0.5) * span;
+          foamBits.push({
+            x: ww.x - cosA * Math.random() * 10 + (-sinA) * lateral,
+            y: ww.y - sinA * Math.random() * 10 + cosA * lateral,
+            size: (0.15 + Math.random() * 0.8) * viewScale,
+            vx: 0, vy: 0,
+            life: 1,
+            maxLife: 8 + Math.random() * 16,
+          });
+        }
       }
     }
 
-    // Draw wave front - 4 continuous turbulent lines at different offsets
-    const perpX = -sinA;
-    const perpY = cosA;
-    if (!ww.seed) ww.seed = Math.random() * 100;
-    const t = ww.traveled * 0.02;
-    const lines = [
-      { behind: 0, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
-      { behind: 4 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 1.3 },
-      { behind: 9 * viewScale, thick: 0.8 * viewScale, alpha: 0.12, freq: 0.8 },
-      { behind: 15 * viewScale, thick: 0.5 * viewScale, alpha: 0.07, freq: 1.6 },
-    ];
-    for (const ln of lines) {
-      ctx.beginPath();
-      const step = 3;
-      let first = true;
-      for (let pos = -span; pos <= span; pos += step) {
-        const f = ln.freq;
-        const vs = viewScale;
-        const offset = (Math.sin(pos * 0.015 * f + t * 0.6 + ww.seed) * 10
-                     + Math.sin(pos * 0.04 * f + t * 1.1 + ww.seed * 2.3) * 5
-                     + Math.sin(pos * 0.11 * f + t * 2.3 + ww.seed * 4.7) * 2.5
-                     + Math.sin(pos * 0.23 * f + t * 3.1 + ww.seed * 7) * 1) * vs;
-        const px = ww.x + perpX * pos + cosA * (offset - ln.behind);
-        const py = ww.y + perpY * pos + sinA * (offset - ln.behind);
-        if (first) { ctx.moveTo(px, py); first = false; }
-        else ctx.lineTo(px, py);
+    // Draw wave front lines only while active
+    if (alive) {
+      const perpX = -sinA;
+      const perpY = cosA;
+      if (!ww.seed) ww.seed = Math.random() * 100;
+      const t = ww.traveled * 0.02;
+      const lines = [
+        { behind: 0, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
+        { behind: 4 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 1.3 },
+        { behind: 9 * viewScale, thick: 0.8 * viewScale, alpha: 0.12, freq: 0.8 },
+        { behind: 15 * viewScale, thick: 0.5 * viewScale, alpha: 0.07, freq: 1.6 },
+      ];
+      for (const ln of lines) {
+        ctx.beginPath();
+        const step = 3;
+        let first = true;
+        for (let pos = -span; pos <= span; pos += step) {
+          const f = ln.freq;
+          const vs = viewScale;
+          // Higher base frequency so the wave reads as choppy texture, not a diagonal lean
+          const offset = (Math.sin(pos * 0.04 * f + t * 0.6 + ww.seed) * 6
+                       + Math.sin(pos * 0.09 * f + t * 1.1 + ww.seed * 2.3) * 4
+                       + Math.sin(pos * 0.18 * f + t * 2.3 + ww.seed * 4.7) * 2
+                       + Math.sin(pos * 0.35 * f + t * 3.1 + ww.seed * 7) * 1) * vs;
+          const px = ww.x + perpX * pos + cosA * (offset - ln.behind);
+          const py = ww.y + perpY * pos + sinA * (offset - ln.behind);
+          if (first) { ctx.moveTo(px, py); first = false; }
+          else ctx.lineTo(px, py);
       }
-      ctx.globalAlpha = ww.life * ln.alpha;
-      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineWidth = ln.thick;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
-    }
+        ctx.globalAlpha = ww.life * ln.alpha;
+        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        ctx.lineWidth = ln.thick;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+    } // end if (alive) — blob drawing continues below for lingering foam
 
     // Update and draw blobs - drift with current and turbulence, fade out
     for (let i = ww.blobs.length - 1; i >= 0; i--) {
