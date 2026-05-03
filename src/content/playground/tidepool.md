@@ -736,7 +736,7 @@ const washWaves = [];
 let washTimer = 8 + Math.random() * 10;
 
 function spawnWash() {
-  const angle = waveBaseAngle + (Math.random() - 0.5) * 0.15;
+  const angle = waveBaseAngle + (Math.random() - 0.5) * 0.06;
   const startX = w / 2 - Math.cos(angle) * w * 0.7;
   const startY = h / 2 - Math.sin(angle) * h * 0.7;
   // Highly varied intensity - some are strong and fast, some barely there
