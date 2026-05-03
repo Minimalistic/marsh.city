@@ -2859,52 +2859,59 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
-// Fish shadow — circles along spine drawn at low res for cheap soft blur
+// Fish shadow — gradient stamps along spine drawn at low res for cheap soft blur
 // Light from upper-right, so shadow falls down and to the left
 const shadowOffX = -4, shadowOffY = 5;
-// Low-res offscreen canvas — drawing at 1/4 scale then upscaling = free blur
-const SHADOW_SCALE = 0.125;
+const SHADOW_SCALE = 0.042;
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
+// Pre-rendered radial gradient stamp — created once, reused every frame
+const STAMP_SIZE = 64;
+const stampCanvas = document.createElement('canvas');
+stampCanvas.width = STAMP_SIZE;
+stampCanvas.height = STAMP_SIZE;
+const stampCtx = stampCanvas.getContext('2d');
+const sg = stampCtx.createRadialGradient(STAMP_SIZE/2, STAMP_SIZE/2, 0, STAMP_SIZE/2, STAMP_SIZE/2, STAMP_SIZE/2);
+sg.addColorStop(0, 'rgba(0, 0, 0, 1)');
+sg.addColorStop(0.3, 'rgba(0, 0, 0, 0.7)');
+sg.addColorStop(0.6, 'rgba(0, 0, 0, 0.3)');
+sg.addColorStop(1, 'rgba(0, 0, 0, 0)');
+stampCtx.fillStyle = sg;
+stampCtx.fillRect(0, 0, STAMP_SIZE, STAMP_SIZE);
 
 function drawAllFishShadows(ctx, drawables) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  // Shadow canvas at 1/4 logical resolution
   const sw = Math.ceil(ctx.canvas.width * SHADOW_SCALE);
   const sh = Math.ceil(ctx.canvas.height * SHADOW_SCALE);
   if (shadowCanvas.width !== sw || shadowCanvas.height !== sh) {
     shadowCanvas.width = sw;
     shadowCanvas.height = sh;
   }
-  // Scale so we can use logical coords directly
   const scale = dpr * SHADOW_SCALE;
   shadowCtx.setTransform(scale, 0, 0, scale, 0, 0);
   shadowCtx.clearRect(0, 0, sw / scale, sh / scale);
-  shadowCtx.fillStyle = 'rgba(0, 0, 0, 1)';
   for (const d of drawables) {
     if (d.type !== 'fish') continue;
     const f = d.obj;
     const joints = f._joints;
     if (!joints || joints.length < 3) continue;
-    // Draw circles along spine — shadow follows bends naturally
     const segs = joints.length;
     const bw = f.bodyWidth * 2.2;
     for (let i = 0; i < segs; i++) {
       const t = i / (segs - 1);
-      // Width profile: tapers at head and tail, widest at 30%
       let r;
       if (t < 0.1) r = t / 0.1 * bw * 0.5;
       else if (t < 0.3) r = bw * (0.5 + (t - 0.1) / 0.2 * 0.5);
       else if (t < 0.6) r = bw * (1 - (t - 0.3) / 0.3 * 0.15);
       else r = bw * 0.85 * (1 - (t - 0.6) / 0.4);
       if (r < 0.5) continue;
-      // Constant world-space offset regardless of fish direction
-      shadowCtx.beginPath();
-      shadowCtx.arc(joints[i].x + shadowOffX, joints[i].y + shadowOffY, r, 0, Math.PI * 2);
-      shadowCtx.fill();
+      // Stamp the pre-rendered gradient circle at each joint
+      const sx = joints[i].x + shadowOffX - r;
+      const sy = joints[i].y + shadowOffY - r;
+      shadowCtx.drawImage(stampCanvas, sx, sy, r * 2, r * 2);
     }
   }
-  // Composite: upscale from 1/4 res creates the soft blur effect
+  // Composite: upscale from low res creates additional soft blur on top of gradient
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 0.13;
