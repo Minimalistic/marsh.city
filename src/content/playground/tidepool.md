@@ -3066,9 +3066,45 @@ const fish = [];
 let fishToSpawn = fishCount;
 let fishSpawned = 0;
 let spawnTimer = 0;
-// Pre-plan school entry points: each school enters from a different edge
-const schoolEntries = schoolColors.map((_, si) => {
-  const edge = si % 4;
+// Pre-plan spawn waves — varied count, sizes, edges, and timing
+function makeSpawnWaves(total, vw, vh) {
+  const waves = [];
+  const waveCount = 2 + Math.floor(Math.random() * 5); // 2-6 waves
+  // Sometimes one big wave dominates, sometimes evenly split
+  const shares = [];
+  let shareSum = 0;
+  for (let i = 0; i < waveCount; i++) {
+    const s = 0.3 + Math.random() * 1.7;
+    shares.push(s);
+    shareSum += s;
+  }
+  // Pick 1-2 edges to favor, but allow others
+  const favoredEdge = Math.floor(Math.random() * 4);
+  const secondEdge = (favoredEdge + 1 + Math.floor(Math.random() * 3)) % 4;
+  let spawned = 0;
+  for (let i = 0; i < waveCount; i++) {
+    const count = i < waveCount - 1
+      ? Math.max(2, Math.round((shares[i] / shareSum) * total))
+      : total - spawned;
+    if (count <= 0) continue;
+    // 60% chance favored edge, 25% second edge, 15% random
+    const r = Math.random();
+    const edge = r < 0.6 ? favoredEdge : r < 0.85 ? secondEdge : Math.floor(Math.random() * 4);
+    const margin = 80 + Math.random() * 40;
+    let x, y, angle;
+    if (edge === 0) { x = -margin; y = vh * 0.1 + Math.random() * vh * 0.8; angle = (Math.random() - 0.5) * 0.5; }
+    else if (edge === 1) { x = vw + margin; y = vh * 0.1 + Math.random() * vh * 0.8; angle = Math.PI + (Math.random() - 0.5) * 0.5; }
+    else if (edge === 2) { x = vw * 0.1 + Math.random() * vw * 0.8; y = -margin; angle = Math.PI / 2 + (Math.random() - 0.5) * 0.5; }
+    else { x = vw * 0.1 + Math.random() * vw * 0.8; y = vh + margin; angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.5; }
+    waves.push({ x, y, angle, count, delay: i * (0.3 + Math.random() * 0.8) });
+    spawned += count;
+  }
+  return waves;
+}
+let spawnWaves = makeSpawnWaves(fishCount, w, h);
+// Legacy entry points for trickle respawns
+const schoolEntries = schoolColors.map(() => {
+  const edge = Math.floor(Math.random() * 4);
   const margin = 80 + Math.random() * 40;
   let x, y, angle;
   if (edge === 0) { x = -margin; y = h * 0.2 + Math.random() * h * 0.6; angle = (Math.random() - 0.5) * 0.5; }
@@ -3570,18 +3606,8 @@ regenerateWorld = function() {
   basePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
   popTarget = basePop * (0.7 + Math.random() * 0.3);
   const newFishCount = Math.min(171, Math.max(55, Math.floor((w * h) / 1540)));
-  fishToSpawn = newFishCount;
-  fishSpawned = 0;
+  spawnWaves = makeSpawnWaves(newFishCount, w, h);
   spawnTimer = 0;
-  // Refresh school entry points
-  for (let i = 0; i < schoolEntries.length; i++) {
-    const edge = i % 4;
-    const margin = 80 + Math.random() * 40;
-    if (edge === 0) { schoolEntries[i] = { x: -margin, y: h*0.2+Math.random()*h*0.6, angle: (Math.random()-0.5)*0.5 }; }
-    else if (edge === 1) { schoolEntries[i] = { x: w+margin, y: h*0.2+Math.random()*h*0.6, angle: Math.PI+(Math.random()-0.5)*0.5 }; }
-    else if (edge === 2) { schoolEntries[i] = { x: w*0.2+Math.random()*w*0.6, y: -margin, angle: Math.PI/2+(Math.random()-0.5)*0.5 }; }
-    else { schoolEntries[i] = { x: w*0.2+Math.random()*w*0.6, y: h+margin, angle: -Math.PI/2+(Math.random()-0.5)*0.5 }; }
-  }
 
   // Predators
   const predCount = w * h > 600000 ? 2 : 1;
@@ -3628,23 +3654,25 @@ function draw(time) {
   lastTime = time;
   if (settleTime > 0) settleTime -= dt;
 
-  // Spawn fish as school groups swimming in from edges
-  if (fishSpawned < fishToSpawn) {
+  // Spawn fish as staggered waves swimming in from edges
+  if (spawnWaves.length > 0) {
     spawnTimer += dt;
-    while (spawnTimer >= 0.15 && fishSpawned < fishToSpawn) {
-      spawnTimer -= 0.15;
-      const batchSize = Math.min(2 + Math.floor(Math.random() * 3), fishToSpawn - fishSpawned);
-      const school = fishSpawned % schoolColors.length;
-      const entry = schoolEntries[school];
+    for (let wi = spawnWaves.length - 1; wi >= 0; wi--) {
+      const wave = spawnWaves[wi];
+      if (spawnTimer < wave.delay) continue;
+      // Spawn a batch from this wave each tick
+      const batchSize = Math.min(3 + Math.floor(Math.random() * 4), wave.count);
+      const school = Math.floor(Math.random() * schoolColors.length);
       for (let b = 0; b < batchSize; b++) {
-        const f = new Fish(entry);
+        const f = new Fish(wave);
         f.school = school;
         f.colorType = school;
         f.color = jitterTunaColor(schoolColors[school].color);
         f.bellyColor = jitterTunaColor(schoolColors[school].belly);
         fish.push(f);
-        fishSpawned++;
       }
+      wave.count -= batchSize;
+      if (wave.count <= 0) spawnWaves.splice(wi, 1);
     }
   }
 
