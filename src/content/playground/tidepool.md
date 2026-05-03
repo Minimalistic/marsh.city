@@ -703,7 +703,7 @@ for (let i = 0; i < cloudCount; i++) {
     y: h / 2 + windSin * along + windCos * across,
     speed: (12 + Math.random() * 10) * 1.5,
     drift: cloudWind.angle + (Math.random() - 0.5) * 0.3,
-    size: (0.35 + Math.random() * 0.29) * 3,
+    size: (0.35 + Math.random() * 0.29) * 1.73,
     opacity: 0.08 + Math.random() * 0.06,
     phase: Math.random() * Math.PI * 2,
     subBlobs,
@@ -2859,90 +2859,44 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
-// Fish shadow — body-contour shadow that bends with the spine
+// Fish shadow — soft radial gradient per fish, additive when schooling
 // Light from upper-right, so shadow falls down and to the left
 const shadowOffX = -4, shadowOffY = 5;
-// Offscreen canvas for batch-blurring all shadows once per frame
-const shadowCanvas = document.createElement('canvas');
-const shadowCtx = shadowCanvas.getContext('2d');
 
-// Build body-contour shadow path for one fish onto the shadow buffer
-function traceFishShadow(sCtx, f) {
-  const joints = f._joints;
-  const segs = joints.length - 1;
-  if (segs < 2) return;
-
-  // Generic fusiform width profile, slightly wider than body for penumbra
-  const bw = f.bodyWidth * 1.3;
-  const ws = new Array(segs + 1);
-  for (let i = 0; i <= segs; i++) {
-    const tw = i / segs;
-    let hw;
-    if (tw < 0.1) hw = tw / 0.1 * bw * 0.4;
-    else if (tw < 0.3) hw = bw * (0.4 + (tw - 0.1) / 0.2 * 0.6);
-    else if (tw < 0.6) hw = bw * (1 - (tw - 0.3) / 0.3 * 0.2);
-    else hw = bw * 0.8 * Math.pow(1 - (tw - 0.6) / 0.4, 1.5);
-    ws[i] = Math.max(hw, 0.15);
-  }
-  ws[0] = bw * 0.35;
-
-  // Outline from world-space joints + light offset
-  const rX = new Array(segs + 1), rY = new Array(segs + 1);
-  const lX = new Array(segs + 1), lY = new Array(segs + 1);
-  const jx = new Array(segs + 1), jy = new Array(segs + 1);
-  for (let i = 0; i <= segs; i++) {
-    jx[i] = joints[i].x + shadowOffX;
-    jy[i] = joints[i].y + shadowOffY;
-    let nx, ny;
-    if (i === 0) { nx = -(jy[1] - jy[0]); ny = jx[1] - jx[0]; }
-    else if (i === segs) { nx = -(jy[i] - jy[i-1]); ny = jx[i] - jx[i-1]; }
-    else { nx = -(jy[i+1] - jy[i-1]); ny = jx[i+1] - jx[i-1]; }
-    const nLen = Math.sqrt(nx * nx + ny * ny) || 1;
-    nx /= nLen; ny /= nLen;
-    rX[i] = jx[i] + nx * ws[i]; rY[i] = jy[i] + ny * ws[i];
-    lX[i] = jx[i] - nx * ws[i]; lY[i] = jy[i] - ny * ws[i];
-  }
-
-  sCtx.beginPath();
-  sCtx.moveTo(jx[0], jy[0]);
-  sCtx.lineTo(rX[0], rY[0]);
-  for (let i = 0; i < segs; i++) {
-    sCtx.quadraticCurveTo(rX[i], rY[i], (rX[i]+rX[i+1])*0.5, (rY[i]+rY[i+1])*0.5);
-  }
-  sCtx.lineTo(rX[segs], rY[segs]);
-  sCtx.lineTo(jx[segs], jy[segs]);
-  sCtx.lineTo(lX[segs], lY[segs]);
-  for (let i = segs; i > 0; i--) {
-    sCtx.quadraticCurveTo(lX[i], lY[i], (lX[i]+lX[i-1])*0.5, (lY[i]+lY[i-1])*0.5);
-  }
-  sCtx.lineTo(lX[0], lY[0]);
-  sCtx.closePath();
-  sCtx.fill();
-}
-
-// Draw all fish shadows at once: batch onto offscreen canvas, blur once, composite
+// Draw all fish shadows directly — one radial gradient ellipse each
+// No offscreen canvas or blur filter needed; gradients overlap additively
 function drawAllFishShadows(ctx, drawables) {
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  // Size shadow canvas to match main canvas
-  if (shadowCanvas.width !== ctx.canvas.width || shadowCanvas.height !== ctx.canvas.height) {
-    shadowCanvas.width = ctx.canvas.width;
-    shadowCanvas.height = ctx.canvas.height;
-  }
-  shadowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  shadowCtx.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
-  shadowCtx.fillStyle = 'rgb(0, 0, 0)';
-  for (const d of drawables) {
-    if (d.type === 'fish') traceFishShadow(shadowCtx, d.obj);
-  }
-  // Composite blurred shadow layer — reset transform so drawImage maps 1:1 pixels
   ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.filter = 'blur(7px)';
-  ctx.globalAlpha = 0.785;
-  ctx.drawImage(shadowCanvas, 0, 0);
+  for (const d of drawables) {
+    if (d.type !== 'fish') continue;
+    const f = d.obj;
+    const joints = f._joints;
+    if (!joints || joints.length < 3) continue;
+    // Shadow center at fish midpoint, offset by light direction
+    const mid = Math.floor(joints.length * 0.35);
+    const cx = joints[mid].x + shadowOffX;
+    const cy = joints[mid].y + shadowOffY;
+    // Shadow size: elongated ellipse, larger than body for soft penumbra
+    const rx = f.len * 0.55;
+    const ry = f.bodyWidth * 3.5;
+    // Align ellipse with fish heading
+    const dx = joints[0].x - joints[joints.length - 1].x;
+    const dy = joints[0].y - joints[joints.length - 1].y;
+    const angle = Math.atan2(dy, dx);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    // Radial gradient from dark center to transparent edge
+    const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+    gr.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
+    gr.addColorStop(0.4, 'rgba(0, 0, 0, 0.08)');
+    gr.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.scale(rx, ry);
+    ctx.fillStyle = gr;
+    ctx.fillRect(-1, -1, 2, 2);
+    ctx.restore();
+  }
   ctx.restore();
-  // Restore DPR transform for subsequent drawing
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 const fishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
