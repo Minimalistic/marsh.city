@@ -830,8 +830,8 @@ class Fish {
 
     // Color assigned per school (set after construction)
     this.school = 0;
-    this.color = 'rgb(120, 150, 173)';
-    this.bellyColor = 'rgb(195, 215, 230)';
+    this.color = 'rgb(168, 195, 220)';
+    this.bellyColor = 'rgb(233, 241, 249)';
 
     // Per-fish comfort distance from rocks - some swim closer than others
     this.rockComfort = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
@@ -2848,10 +2848,10 @@ class Predator {
 
 // Tuna palette — steel-blue backs with lighter bellies
 const schoolColors = [
-  { color: 'rgb(113, 150, 188)', belly: 'rgb(210, 230, 240)' },   // steel blue
-  { color: 'rgb(105, 165, 180)', belly: 'rgb(203, 238, 250)' },   // deep teal
-  { color: 'rgb(120, 143, 177)', belly: 'rgb(218, 227, 240)' },   // slate
-  { color: 'rgb(108, 173, 195)', belly: 'rgb(195, 233, 255)' },   // ocean blue
+  { color: 'rgb(158, 195, 225)', belly: 'rgb(238, 247, 252)' },   // steel blue
+  { color: 'rgb(147, 206, 218)', belly: 'rgb(237, 251, 255)' },   // deep teal
+  { color: 'rgb(168, 188, 220)', belly: 'rgb(245, 249, 252)' },   // slate
+  { color: 'rgb(151, 214, 233)', belly: 'rgb(233, 249, 255)' },   // ocean blue
 ];
 // Per-fish color jitter so individuals aren't clones
 function jitterTunaColor(base) {
