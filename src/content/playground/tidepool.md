@@ -1193,15 +1193,20 @@ class Fish {
       const beingChased = pred.target === this;
 
       // Passive avoidance — fish always steer clear of the big fish
-      // Even a slow-cruising predator is something small fish don't want to be near
-      const comfortZone = 140 * viewScale; // wide berth radius
+      // Wide detection radius — fish react well before predator is close
+      const comfortZone = 220 * viewScale;
       if (pDist < comfortZone && pDist > 0.1) {
         const avoidance = 1 - pDist / comfortZone;
         const pushAngle = Math.atan2(pdy, pdx);
-        // Strong immediate push — fish don't let predator get close
-        const pushForce = avoidance * avoidance * 0.2 * viewScale;
+        // Cubic falloff — gentle at edge, sharp ramp as predator closes in
+        const pushForce = avoidance * avoidance * avoidance * 0.6 * viewScale;
         this.vx += Math.cos(pushAngle) * pushForce;
         this.vy += Math.sin(pushAngle) * pushForce;
+        // Any fish within comfort zone starts fleeing
+        if (avoidance > 0.2) {
+          this.fleeing = true;
+          this.fleeTimer = Math.max(this.fleeTimer, 0.3 + avoidance * 0.5);
+        }
       }
 
       // Check if predator is heading toward this fish (in its path)
@@ -1209,35 +1214,32 @@ class Fish {
       const angleToFish = Math.atan2(-pdy, -pdx);
       let headingDiff = Math.abs(predHeading - angleToFish);
       if (headingDiff > Math.PI) headingDiff = Math.PI * 2 - headingDiff;
-      const inPath = headingDiff < 0.8; // within ~45° of predator's heading
+      const inPath = headingDiff < 1.0; // within ~57° of predator's heading
 
-      // Active flee — triggered by aggressive movement, being targeted, or in predator's path
-      if (!beingChased && !inPath && predAggression < 1.2) continue;
-      // Flee range scales with how aggressively the predator is moving
-      const baseRange = beingChased ? 250 : inPath ? 160 : 60 + predAggression * 50;
+      // Active flee — always triggered near predator, path, or chased
+      if (!beingChased && !inPath && predAggression < 0.8) continue;
+      const baseRange = beingChased ? 300 : inPath ? 220 : 100 + predAggression * 60;
       const fleeRange = baseRange * viewScale;
       if (pDist < fleeRange && pDist > 0.1) {
         const proximity = 1 - pDist / fleeRange;
-        // Fear scales with proximity squared — distant fish barely notice
         const fear = proximity * proximity;
         const fleeAngle = Math.atan2(pdy, pdx);
-        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (0.8 + fear * 1.5);
-        const force = beingChased ? (0.6 * fear + 0.25) : inPath ? (0.3 * fear + 0.1) : (0.12 * fear);
+        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (0.6 + fear * 1.2);
+        const force = beingChased ? (0.8 * fear + 0.35) : inPath ? (0.5 * fear + 0.15) : (0.2 * fear);
         this.vx += Math.cos(jinkAngle) * force * viewScale;
         this.vy += Math.sin(jinkAngle) * force * viewScale;
-        if (fear > 0.1) {
+        if (fear > 0.05) {
           this.fleeing = true;
-          this.fleeTimer = beingChased ? 1.5 : 0.4 + fear * 0.7;
+          this.fleeTimer = beingChased ? 1.8 : 0.5 + fear * 0.8;
         }
-        // Last-ditch panic — predator is RIGHT there, fish goes berserk
-        if ((beingChased || inPath) && pDist < 40 * viewScale) {
+        // Panic snap — predator is dangerously close, instant velocity override
+        if ((beingChased || inPath) && pDist < 70 * viewScale) {
           panicSprint = true;
-          // Instant velocity snap away — no gradual acceleration
-          const despAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
-          this.vx = Math.cos(despAngle) * scaledSpeed * 3.5;
-          this.vy = Math.sin(despAngle) * scaledSpeed * 3.5;
+          const despAngle = fleeAngle + (Math.random() - 0.5) * 1.5;
+          this.vx = Math.cos(despAngle) * scaledSpeed * 4.0;
+          this.vy = Math.sin(despAngle) * scaledSpeed * 4.0;
           this.fleeing = true;
-          this.fleeTimer = 1.8;
+          this.fleeTimer = 2.0;
         } else if (beingChased && pDist < fleeRange * 0.4) {
           const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
           this.vx += Math.cos(dartAngle) * scaledSpeed * 0.8;
