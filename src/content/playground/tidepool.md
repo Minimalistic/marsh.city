@@ -2932,11 +2932,12 @@ for (let i = 0; i < satelliteCount; i++) {
   }
 }
 
-// Reef fish — 0-3 bright blue fish per reef
+// Reef fish — 2-5 total bright tangs spread across reefs
 const reefFish = [];
-for (const rf of reefs) {
-  const count = Math.floor(Math.random() * 4); // 0 to 3
-  for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
+const totalTangs = 2 + Math.floor(Math.random() * 4); // 2 to 5
+for (let i = 0; i < totalTangs; i++) {
+  const rf = reefs[Math.floor(Math.random() * reefs.length)];
+  reefFish.push(new ReefFish(rf));
 }
 
 // Kelp fronds — grow upward from seafloor, slight perspective tilt
@@ -3266,10 +3267,11 @@ regenerateWorld = function() {
       reefs.push(sr);
     }
   }
-  // Reef fish
-  for (const rf of reefs) {
-    const count = Math.floor(Math.random() * 4);
-    for (let i = 0; i < count; i++) reefFish.push(new ReefFish(rf));
+  // Reef fish — 2-5 total
+  const totalTangs2 = 2 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < totalTangs2; i++) {
+    const rf = reefs[Math.floor(Math.random() * reefs.length)];
+    reefFish.push(new ReefFish(rf));
   }
 
   // Debris
@@ -3383,7 +3385,8 @@ function draw(time) {
     ww.y += Math.sin(ww.angle) * ww.speed;
     ww.traveled += ww.speed;
     ww.life = 1 - ww.traveled / ww.maxTravel;
-    if (ww.life <= 0) { washWaves.splice(i, 1); continue; }
+    // Don't remove dead waves until their foam blobs have faded out
+    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0)) { washWaves.splice(i, 1); continue; }
     // Push things in the wave's path
     const pushForce = ww.strength * ww.life;
     const cosA = Math.cos(ww.angle);
@@ -3798,7 +3801,7 @@ function draw(time) {
           elongY: 0.5 + Math.random() * 0.7,
           rot: Math.random() * Math.PI,
           age: 0,
-          maxAge: 2 + Math.random() * 3,
+          maxAge: 4 + Math.random() * 5,
         });
       }
     }
