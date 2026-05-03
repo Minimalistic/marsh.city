@@ -879,6 +879,7 @@ class Fish {
   }
 
   update(dt, fish, time) {
+    this._drawTime = time;
     // After grabbing food, fish swims away to "chew" before coming back
     if (this.eating) {
       this.eatTimer -= dt;
@@ -1064,7 +1065,7 @@ class Fish {
         const proximity = 1 - closestFoodDist / foodRange;
         const steerWeight = 0.08 + proximity * 0.12;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        const wobble = (Math.sin(this._phaseOffset + Date.now() * 0.001) * 0.2);
+        const wobble = (Math.sin(this._phaseOffset + time * 0.001) * 0.2);
         const desiredVx = Math.cos(foodAngle + wobble) * scaledSpeed * 1.2;
         const desiredVy = Math.sin(foodAngle + wobble) * scaledSpeed * 1.2;
         this.vx += (desiredVx - this.vx) * steerWeight;
@@ -1459,7 +1460,7 @@ class Fish {
     const si = this._swimSmooth;
 
     // Undulation phase — moderate speed, capped so it can't flicker
-    const phase = Date.now() * 0.0002 * (0.4 + si * 0.4) + this._phaseOffset;
+    const phase = this._drawTime * 0.0002 * (0.4 + si * 0.4) + this._phaseOffset;
 
     // Build spine from world-space joints, using smoothed render angle
     const cosH = Math.cos(-this._renderAngle), sinH = Math.sin(-this._renderAngle);
@@ -2225,6 +2226,7 @@ class Predator {
   }
 
   update(dt, smallFish, time) {
+    this._drawTime = time;
     this.hunger = Math.min(1, this.hunger + dt * this._hungerRate);
 
     if (this.digestTimer > 0) {
@@ -2685,7 +2687,7 @@ class Predator {
     }
 
     // Barracuda coloring — iridescent blue-green, slight shimmer
-    const shimmer = Math.sin(Date.now() * 0.0008 + this._phaseOffset) * 8;
+    const shimmer = Math.sin(this._drawTime * 0.0008 + this._phaseOffset) * 8;
     const cr = Math.round(55 + shimmer * 0.3);
     const cg = Math.round(95 + shimmer);
     const cb = Math.round(100 + shimmer * 0.7);
@@ -3475,6 +3477,34 @@ regenerateWorld = function() {
   settleTime = 0;
 };
 
+// Cached background gradient — never changes, created once
+const bgGradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+bgGradient.addColorStop(0, '#2a8a9a');
+bgGradient.addColorStop(0.6, '#1e7585');
+bgGradient.addColorStop(1, '#156068');
+
+// Pre-rendered sand patches — static geometry, rendered once to offscreen canvas
+const sandCanvas = document.createElement('canvas');
+sandCanvas.width = canvas.width;
+sandCanvas.height = canvas.height;
+const sandCtx = sandCanvas.getContext('2d');
+const sandDpr = Math.min(2, window.devicePixelRatio || 1);
+sandCtx.setTransform(sandDpr, 0, 0, sandDpr, 0, 0);
+for (const r of rocks) {
+  sandCtx.save();
+  sandCtx.translate(r.x, r.y);
+  sandCtx.rotate(r.angle);
+  const sg = sandCtx.createRadialGradient(0, 0, 0, 0, 0, r.size);
+  sg.addColorStop(0, `rgba(200, 190, 160, ${r.brightness})`);
+  sg.addColorStop(0.6, `rgba(190, 180, 150, ${r.brightness * 0.5})`);
+  sg.addColorStop(1, 'rgba(190, 180, 150, 0)');
+  sandCtx.fillStyle = sg;
+  sandCtx.beginPath();
+  sandCtx.ellipse(0, 0, r.size, r.size * r.elongation, 0, 0, Math.PI * 2);
+  sandCtx.fill();
+  sandCtx.restore();
+}
+
 function draw(time) {
   const dt = Math.min((time - lastTime) / 1000, 0.05);
   lastTime = time;
@@ -3609,29 +3639,16 @@ function draw(time) {
     }
   }
 
-  // Clear - bright tropical tidepool water
-  const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-  gradient.addColorStop(0, '#2a8a9a');
-  gradient.addColorStop(0.6, '#1e7585');
-  gradient.addColorStop(1, '#156068');
-  ctx.fillStyle = gradient;
+  // Clear - bright tropical tidepool water (cached gradient)
+  ctx.fillStyle = bgGradient;
   ctx.fillRect(0, 0, w, h);
 
-  // Sand patches — soft lighter spots on the seafloor
-  for (const r of rocks) {
-    ctx.save();
-    ctx.translate(r.x, r.y);
-    ctx.rotate(r.angle);
-    const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, r.size);
-    sg.addColorStop(0, `rgba(200, 190, 160, ${r.brightness})`);
-    sg.addColorStop(0.6, `rgba(190, 180, 150, ${r.brightness * 0.5})`);
-    sg.addColorStop(1, 'rgba(190, 180, 150, 0)');
-    ctx.fillStyle = sg;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r.size, r.size * r.elongation, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
+  // Sand patches — pre-rendered to offscreen canvas once
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(sandCanvas, 0, 0);
+  ctx.restore();
+  ctx.setTransform(Math.min(2, window.devicePixelRatio || 1), 0, 0, Math.min(2, window.devicePixelRatio || 1), 0, 0);
 
   // Cloud shadows — drifting patches of shade across the water
   ctx.save();
