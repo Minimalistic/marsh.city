@@ -2862,7 +2862,7 @@ function jitterTunaColor(base) {
 // Fish shadow — gradient stamps along spine drawn at low res for cheap soft blur
 // Light from upper-right, so shadow falls down and to the left
 const shadowOffX = -4, shadowOffY = 5;
-const SHADOW_SCALE = 0.042;
+const SHADOW_SCALE = 0.014;
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
 // Pre-rendered radial gradient stamp — created once, reused every frame
