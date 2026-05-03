@@ -2859,6 +2859,26 @@ function jitterTunaColor(base) {
   const j = () => Math.round((Math.random() - 0.5) * 12); // +/- 6
   return `rgb(${m[0]+j()},${m[1]+j()},${m[2]+j()})`;
 }
+// Fish shadow — soft ellipse cast below each fish
+function drawFishShadow(ctx, f) {
+  const shadowOffY = f.len * 0.35; // offset "down" (further from viewer)
+  const sx = f.len * 0.45;  // shadow half-width along body axis
+  const sy = f.bodyWidth * 1.8; // shadow half-height perpendicular
+  ctx.save();
+  ctx.translate(f.x, f.y + shadowOffY);
+  ctx.rotate(f._renderAngle);
+  ctx.scale(sx, sy);
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+  grad.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
+  grad.addColorStop(0.6, 'rgba(0, 0, 0, 0.06)');
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 const fishCount = Math.min(228, Math.max(55, Math.floor((w * h) / 1155)));
 const fish = [];
 // Fish swim in as school groups from edges
@@ -4113,6 +4133,8 @@ function draw(time) {
       d.obj.draw(ctx);
       ctx.restore();
     } else {
+      // Shadow first, then the fish on top
+      drawFishShadow(ctx, d.obj);
       ctx.save();
       ctx.globalAlpha = d.obj.depthAlpha;
       d.obj.draw(ctx);
