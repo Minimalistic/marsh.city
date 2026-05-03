@@ -896,7 +896,7 @@ class Fish {
 
     for (const other of getNeighbors(this.x, this.y)) {
       if (other === this) continue;
-      const sameSchool = other.colorType === this.colorType;
+      const sameSchool = true; // all tuna school together
       const dx = other.x - this.x;
       const dy = other.y - this.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
