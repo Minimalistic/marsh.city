@@ -2863,10 +2863,10 @@ function jitterTunaColor(base) {
 // Light from upper-right, so shadow falls down and to the left
 const shadowOffX = -4, shadowOffY = 5;
 const SHADOW_SCALE = 0.125;
-const SHADOW_BLUR_PASSES = 3; // each pass spreads further; cheap at low res
+const SHADOW_BLUR_PX = 6; // blur radius on the low-res canvas (amplified by upscale)
 const shadowCanvas = document.createElement('canvas');
 const shadowCtx = shadowCanvas.getContext('2d');
-// Second buffer for ping-pong blur
+// Second buffer for blur pass
 const blurCanvas = document.createElement('canvas');
 const blurCtx = blurCanvas.getContext('2d');
 // Pre-rendered radial gradient stamp — created once, reused every frame
@@ -2916,33 +2916,19 @@ function drawAllFishShadows(ctx, drawables) {
       shadowCtx.drawImage(stampCanvas, sx, sy, r * 2, r * 2);
     }
   }
-  // Stackable blur: ping-pong between two canvases at low res — very cheap
-  // Each pass shrinks to half then stretches back, doubling blur radius
-  let src = shadowCanvas, dst = blurCanvas;
-  for (let p = 0; p < SHADOW_BLUR_PASSES; p++) {
-    const dCtx = dst.getContext('2d');
-    dCtx.clearRect(0, 0, dst.width, dst.height);
-    dCtx.imageSmoothingEnabled = true;
-    dCtx.imageSmoothingQuality = 'high';
-    // Shrink to half
-    const hw = Math.ceil(sw / 2), hh = Math.ceil(sh / 2);
-    dCtx.drawImage(src, 0, 0, hw, hh);
-    // Stretch back to full — bilinear interpolation = blur
-    dCtx.clearRect(0, 0, dst.width, dst.height);
-    dCtx.drawImage(src, 0, 0, src.width, src.height, 0, 0, hw, hh);
-    const sCtx = src.getContext('2d');
-    sCtx.clearRect(0, 0, src.width, src.height);
-    sCtx.imageSmoothingEnabled = true;
-    sCtx.imageSmoothingQuality = 'high';
-    sCtx.drawImage(dst, 0, 0, hw, hh, 0, 0, src.width, src.height);
-  }
+  // Blur pass: draw shadow canvas onto blur canvas with CSS filter
+  // At 1/8 res this is a tiny image so filter is cheap
+  blurCtx.clearRect(0, 0, blurCanvas.width, blurCanvas.height);
+  blurCtx.filter = `blur(${SHADOW_BLUR_PX}px)`;
+  blurCtx.drawImage(shadowCanvas, 0, 0);
+  blurCtx.filter = 'none';
   // Composite blurred shadow layer onto main canvas
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 0.15;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(src, 0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.drawImage(blurCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
