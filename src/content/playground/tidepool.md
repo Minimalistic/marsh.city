@@ -2862,7 +2862,7 @@ function jitterTunaColor(base) {
 // Fish shadow — large gradient stamps drawn directly at full resolution
 // No offscreen canvas, no blur filter — the stamp IS the softness
 // Light from upper-right, so shadow falls down and to the left
-const shadowOffX = -4, shadowOffY = 5;
+const shadowOffX = -8, shadowOffY = 10;
 // Pre-rendered radial gradient stamp — created once, reused every frame
 const STAMP_SIZE = 128;
 const stampCanvas = document.createElement('canvas');
