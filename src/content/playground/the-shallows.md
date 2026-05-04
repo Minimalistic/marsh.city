@@ -5366,7 +5366,7 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcl = reefClamp(px, py);
-        trPts.push({ x: tcl.x, y: tcl.y, hidden: tcl.hidden });
+        trPts.push({ x: tcl.x, y: tcl.y });
       }
       // Draw continuous curve — wraps around rocks
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
@@ -5404,7 +5404,7 @@ function draw(time) {
       return push;
     }
 
-    // Wave wraps around rocks: points inside crown push to edge, tracing contour
+    // Wave wraps around rocks: points inside crown or in wave-shadow get clamped
     function reefClamp(px, py) {
       const pad = 4 * viewScale;
       for (const rf of reefs) {
@@ -5412,34 +5412,46 @@ function draw(time) {
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
         const relX = px - cx, relY = py - cy;
         const dist = Math.sqrt(relX * relX + relY * relY);
+        const along = relX * cosA + relY * sinA;
+        const lateral = relX * (-sinA) + relY * cosA;
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
-        // Inside crown: push outward to nearest edge (wrap around rock)
+        // Inside crown: push outward to nearest edge (wrap)
         if (dist < edge && dist > 0.1) {
-          const wx = cx + (relX / dist) * edge;
-          const wy = cy + (relY / dist) * edge;
-          return { x: wx, y: wy, hidden: false, stretch: 0 };
+          return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge };
         }
 
-        // Behind the rock: teardrop convergence, dampens quickly with distance
-        const along = relX * cosA + relY * sinA;
-        const lateral = relX * (-sinA) + relY * cosA;
+        // In the wave-shadow: past the rock AND within the rock's lateral width
+        // These points would have passed through — clamp to the rock's side edge
         if (along > 0 && Math.abs(lateral) < rf.crownR + pad) {
-          const taperLen = rf.crownR * 3.5; // closes faster
+          // Find the edge of the crown at this lateral position (side edge)
+          const sideAngle = Math.atan2(lateral, 0) + (along > 0 ? ww.angle : ww.angle + Math.PI);
+          const sideEdge = rf.radiusAt(sideAngle, rf.crownRadii) + pad;
+
+          // Teardrop: shadow narrows with distance behind rock
+          const taperLen = rf.crownR * 3.5;
           const taperT = Math.min(1, along / taperLen);
-          const shadowWidth = (rf.crownR + pad) * Math.pow(1 - taperT, 1.5); // faster narrowing
+          const shadowWidth = (rf.crownR + pad) * Math.pow(1 - taperT, 1.5);
+
           if (Math.abs(lateral) < shadowWidth) {
-            const pinStrength = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
-            const centerX = cx + cosA * along;
-            const centerY = cy + sinA * along;
-            const bx = px * (1 - pinStrength * 0.6) + centerX * pinStrength * 0.6;
-            const by = py * (1 - pinStrength * 0.6) + centerY * pinStrength * 0.6;
-            return { x: bx, y: by, hidden: false, stretch: 0 };
+            // Clamp to the side edge on whichever side this point is on
+            const sideDir = lateral >= 0 ? 1 : -1;
+            // Edge point: on the crown perimeter at the side facing this point
+            const edgeAngle = Math.atan2(sideDir * cosA, -sideDir * sinA) + ww.angle;
+            const eR = rf.radiusAt(edgeAngle, rf.crownRadii) + pad;
+            const edgeX = cx + Math.cos(edgeAngle) * eR;
+            const edgeY = cy + Math.sin(edgeAngle) * eR;
+
+            // Blend from edge (pinned) to free position based on taper
+            const pin = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
+            const bx = px * (1 - pin) + edgeX * pin;
+            const by = py * (1 - pin) + edgeY * pin;
+            return { x: bx, y: by };
           }
         }
       }
-      return { x: px, y: py, hidden: false, stretch: 0 };
+      return { x: px, y: py };
     }
 
     // Wave light band — screen-mode gradient showing the wave crest catching light
@@ -6094,7 +6106,7 @@ function draw(time) {
   for (const ww of washWaves) {
     const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
     const span = Math.max(w, h) * 1.2;
-    // Wrap around rocks: push to edge, teardrop convergence behind
+    // Wrap + wave-shadow detection — same logic as first pass
     const _pad = 4 * viewScale;
     function clampPt(px, py) {
       for (const rf of reefs) {
@@ -6102,23 +6114,27 @@ function draw(time) {
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
         const relX = px - cx, relY = py - cy;
         const dist = Math.sqrt(relX * relX + relY * relY);
-        const angle = Math.atan2(relY, relX);
-        const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
-        if (dist < edge && dist > 0.1) return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, hidden: false };
         const along = relX * cosA + relY * sinA;
         const lateral = relX * (-sinA) + relY * cosA;
+        const angle = Math.atan2(relY, relX);
+        const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
+        if (dist < edge && dist > 0.1) return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge };
         if (along > 0 && Math.abs(lateral) < rf.crownR + _pad) {
           const taperLen = rf.crownR * 3.5;
           const taperT = Math.min(1, along / taperLen);
           const shadowWidth = (rf.crownR + _pad) * Math.pow(1 - taperT, 1.5);
           if (Math.abs(lateral) < shadowWidth) {
+            const sideDir = lateral >= 0 ? 1 : -1;
+            const edgeAngle = Math.atan2(sideDir * cosA, -sideDir * sinA) + ww.angle;
+            const eR = rf.radiusAt(edgeAngle, rf.crownRadii) + _pad;
+            const edgeX = cx + Math.cos(edgeAngle) * eR;
+            const edgeY = cy + Math.sin(edgeAngle) * eR;
             const pin = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
-            const centerX = cx + cosA * along, centerY = cy + sinA * along;
-            return { x: px * (1 - pin * 0.6) + centerX * pin * 0.6, y: py * (1 - pin * 0.6) + centerY * pin * 0.6, hidden: false };
+            return { x: px * (1 - pin) + edgeX * pin, y: py * (1 - pin) + edgeY * pin };
           }
         }
       }
-      return { x: px, y: py, hidden: false };
+      return { x: px, y: py };
     }
     const alive = ww.life > 0.1;
     // Trail lines
