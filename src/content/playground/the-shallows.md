@@ -1385,11 +1385,11 @@ class Fish {
       if (pred.target === this) { beingHunted = true; break; }
     }
     let targetSpeed;
-    if (panicSprint) targetSpeed = scaledSpeed * 6.05; // explosive burst
-    else if (beingHunted) targetSpeed = scaledSpeed * 4.95; // full flight
-    else if (this.fleeing) targetSpeed = scaledSpeed * 3.3; // alarmed dash
-    else if (this.idle) targetSpeed = scaledSpeed * 1.08;
-    else targetSpeed = scaledSpeed * 1.56;
+    if (panicSprint) targetSpeed = scaledSpeed * 5.57; // explosive burst
+    else if (beingHunted) targetSpeed = scaledSpeed * 4.55; // full flight
+    else if (this.fleeing) targetSpeed = scaledSpeed * 3.04; // alarmed dash
+    else if (this.idle) targetSpeed = scaledSpeed * 0.99;
+    else targetSpeed = scaledSpeed * 1.44;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
