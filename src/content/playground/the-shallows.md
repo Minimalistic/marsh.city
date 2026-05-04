@@ -862,6 +862,8 @@ class Fish {
     this._glint = 0;        // countdown timer, >0 means glinting
     this._glintSeg = 0;     // which spine segment caught the light
     this._prevAngle = this.angle;
+    // Belly flash — rare bright flash when fish turns sharply, exposing its side
+    this._bellyFlash = 0;
     // Distraction - sometimes fish wander off from the school
     this.distracted = Math.random() < 0.08;
     this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
@@ -1760,6 +1762,31 @@ class Fish {
       gg.addColorStop(1, 'rgba(200, 230, 255, 0)');
       ctx.fillStyle = gg;
       ctx.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
+      ctx.restore();
+    }
+
+    // Belly flash — sharp turn exposes the fish's side, catching bright light
+    this._bellyFlash -= 0.016;
+    if (this._bellyFlash <= 0 && Math.abs(angleDelta) > 0.08 && Math.random() < 0.03) {
+      this._bellyFlash = 0.1 + Math.random() * 0.08; // 100-180ms flash
+    }
+    if (this._bellyFlash > 0) {
+      const flashAlpha = Math.min(1, this._bellyFlash * 8) * 0.5;
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = flashAlpha;
+      // Flash covers the mid-body (segments 1 through ~60%)
+      const from = 1, to = Math.floor(segs * 0.6);
+      ctx.beginPath();
+      ctx.moveTo(spineX[from], spineY[from]);
+      for (let si = from; si <= to; si++) {
+        ctx.lineTo(spineX[si], spineY[si]);
+      }
+      ctx.lineWidth = widths[Math.floor(segs * 0.3)] * 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = 'rgba(255, 255, 245, 1)';
+      ctx.stroke();
       ctx.restore();
     }
 
