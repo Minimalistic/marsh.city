@@ -5283,9 +5283,9 @@ function draw(time) {
     ctx.fill();
   }
 
-  // Fade wave trail canvas — old wave positions slowly disappear
+  // Fade wave trail canvas — old wave positions disappear quickly
   waveTrailCtx.globalCompositeOperation = 'destination-out';
-  waveTrailCtx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+  waveTrailCtx.fillStyle = 'rgba(0, 0, 0, 0.18)';
   waveTrailCtx.fillRect(0, 0, w, h);
   waveTrailCtx.globalCompositeOperation = 'source-over';
 
