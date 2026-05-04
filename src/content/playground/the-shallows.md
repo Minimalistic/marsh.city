@@ -1349,23 +1349,20 @@ class Fish {
       const baseR = rf.radiusAt(bAngle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
       const baseSense = Math.max(baseR * 4, baseR + fishLen5 * 2);
       if (rDist < baseSense && rDist > 0.1) {
-        const prox = 1 - rDist / baseSense;
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
         if (approach > 0.0) {
-          // Tangent steering — arc around the rock, not 90° cut
+          const prox = 1 - rDist / baseSense;
           const cross = this.vx * rdy - this.vy * rdx;
           const side = cross >= 0 ? 1 : -1;
-          // Tangent: perpendicular to the radial direction, on the chosen side
-          const tanX = -rdy / rDist * side, tanY = rdx / rDist * side;
-          // Blend between current heading and tangent based on urgency
+          // Steer toward tangent — proportional to how head-on the approach is
+          // Head-on (approach~1) = strong steer, glancing (approach~0) = gentle curve
           const urgency = prox * prox * approach;
-          const blend = Math.min(0.3, urgency * 0.15);
-          this.vx += tanX * spd * blend;
-          this.vy += tanY * spd * blend;
+          reefSteer += side * urgency * 0.15;
         }
-        // Gentle radial push — only when close
-        if (prox > 0.2) {
-          const outward = (prox - 0.2) * 0.18;
+        // Radial push outward — always active, ramps with proximity
+        const prox = 1 - rDist / baseSense;
+        if (prox > 0.05) {
+          const outward = (prox - 0.05) * 0.25;
           this.vx += (rdx / rDist) * outward;
           this.vy += (rdy / rDist) * outward;
         }
@@ -1379,22 +1376,18 @@ class Fish {
       const crownSense = Math.max(crownR * 5, crownR + fishLen5 * 2);
       if (cDist < crownSense && cDist > 0.1) {
         const prox = 1 - cDist / crownSense;
-        const closeBoost = prox > 0.6 ? 1 + (prox - 0.6) * 8 : 1;
+        const closeBoost = prox > 0.5 ? 1 + (prox - 0.5) * 6 : 1;
         const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
         if (approach > -0.3) {
           const aw = Math.max(0, approach + 0.3);
-          // Tangent steering around the crown
           const cross = this.vx * cdy - this.vy * cdx;
           const side = cross >= 0 ? 1 : -1;
-          const tanX = -cdy / cDist * side, tanY = cdx / cDist * side;
           const urgency = prox * prox * aw * closeBoost;
-          const blend = Math.min(0.5, urgency * 0.25);
-          this.vx += tanX * spd * blend;
-          this.vy += tanY * spd * blend;
+          reefSteer += side * urgency * 0.4;
         }
-        // Radial push outward from crown — only when close
-        if (prox > 0.15) {
-          const outward = (prox - 0.15) * 0.25 * closeBoost;
+        // Strong radial push from crown — emergency avoidance
+        if (prox > 0.05) {
+          const outward = (prox - 0.05) * 0.35 * closeBoost;
           this.vx += (cdx / cDist) * outward;
           this.vy += (cdy / cDist) * outward;
         }
