@@ -732,7 +732,7 @@ const ripples = [];
 const tide = { angle: 0, strength: 0 };
 // School waypoint — a drifting target that gently pulls the school across the viewport
 const schoolWP = { x: w * 0.5, y: h * 0.5, timer: 15 + Math.random() * 20 };
-const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
+const waveBaseAngle = 0; // always left-to-right
 
 // Cloud shadows — large soft blobs that drift linearly across the scene
 // Shared wind direction with slight per-cloud variation; wrap around edges
