@@ -1169,14 +1169,18 @@ class Fish {
       this.distracted = false;
       this.distractTimer = 5;
 
-      const eatDist = 8;
       const biteDist = 4;
-      if (closestFoodDist < eatDist) {
-        // Close to food — slow down and actively turn to face it
-        this.vx *= 0.82;
-        this.vy *= 0.82;
-        // Rotate toward the food so the fish can line up for a bite
-        const turnToFood = Math.max(-0.2, Math.min(0.2, headingDiff));
+      // Per-fish accuracy — some nail it, some overshoot and circle back
+      const accuracy = 0.4 + (this._phaseOffset % 1) * 0.6; // 0.4-1.0
+      const eatDist = 6 + accuracy * 4; // accurate fish slow down earlier (6-10)
+      if (closestFoodDist < eatDist && angleMismatch < 1.2) {
+        // Approaching food — brake proportional to accuracy
+        const brake = 0.75 + accuracy * 0.15; // 0.75-0.90 (inaccurate fish barely slow)
+        this.vx *= brake;
+        this.vy *= brake;
+        // Turn toward food - accurate fish turn tighter
+        const turnRate = 0.2 + accuracy * 0.25;
+        const turnToFood = Math.max(-turnRate, Math.min(turnRate, headingDiff));
         this.angle += turnToFood * 0.4;
         this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
@@ -1208,6 +1212,13 @@ class Fish {
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
+      } else if (closestFoodDist < eatDist && angleMismatch >= 1.2) {
+        // Too misaligned to eat — fly-by, swing around for another pass
+        // Just steer gently, don't brake — fish overshoots naturally
+        const flybySteer = Math.max(-0.08, Math.min(0.08, headingDiff));
+        this.angle += flybySteer;
+        this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
       } else {
         // Steer toward food eagerly — swift dart, no hesitation
         const proximity = 1 - closestFoodDist / foodRange;
@@ -1401,8 +1412,12 @@ class Fish {
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      // Near-instant acceleration when life is at stake
-      const accel = (panicSprint || beingHunted) ? 0.85 : this.fleeing ? 0.6 : 0.15;
+      // Fast transitions between states - snappy acceleration and deceleration
+      let accel;
+      if (panicSprint || beingHunted) accel = 0.85; // explosive
+      else if (this.fleeing) accel = 0.6; // alarmed burst
+      else if (currentSpeed > targetSpeed * 1.5) accel = 0.35; // coming down from flee - quick settle
+      else accel = 0.25; // normal cruising adjustments
       const desired = currentSpeed + (targetSpeed - currentSpeed) * accel;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
