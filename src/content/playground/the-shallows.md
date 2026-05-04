@@ -4955,10 +4955,25 @@ function draw(time) {
       if (Math.abs(erDist - crEdge) < er.r * 1.5) {
         for (let ring = 0; ring < 2; ring++) {
           const rPhase = t * (0.6 + ring * 0.2) + er.ox * 0.1 + er.oy * 0.1;
-          const rOffset = er.r * (1.2 + ring * 0.8) + Math.sin(rPhase) * 1.5;
+          const baseR = er.r * (1.2 + ring * 0.8) + Math.sin(rPhase) * 1.5;
+          // Wave distortion: compress on incoming side, stretch on outgoing
+          const ringSteps = 24;
           ctx.beginPath();
-          ctx.arc(er.ox, er.oy, rOffset, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(180, 210, 225, ${0.1 - ring * 0.035})`;
+          for (let si = 0; si <= ringSteps; si++) {
+            const a = (si / ringSteps) * Math.PI * 2;
+            const dirX = Math.cos(a), dirY = Math.sin(a);
+            // How much this point faces the wave: +1 = incoming, -1 = outgoing
+            const facing = dirX * waveHitCos + dirY * waveHitSin;
+            // Compress incoming side, stretch outgoing side, scaled by wave boost
+            const distort = waveBoost * (ring + 1) * 2.5;
+            const r = baseR - facing * distort;
+            const px = er.ox + dirX * r;
+            const py = er.oy + dirY * r;
+            if (si === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.strokeStyle = `rgba(180, 210, 225, ${0.1 - ring * 0.035 + waveBoost * 0.04})`;
           ctx.lineWidth = 0.8 - ring * 0.2;
           ctx.stroke();
         }
