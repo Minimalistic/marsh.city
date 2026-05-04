@@ -2409,7 +2409,7 @@ class Predator {
     this.y = h * (0.2 + Math.random() * 0.6);
     this.angle = Math.random() * Math.PI * 2;
 
-    this.len = (52 + Math.random() * 19.5) * (w < 500 ? 0.8 : 1);
+    this.len = (31 + Math.random() * 12) * (w < 500 ? 0.8 : 1);
     this.bodyWidth = this.len * 0.055; // sleek barracuda profile
     this.speed = 0.7 + Math.random() * 0.4;
     this.baseSpeed = this.speed;
