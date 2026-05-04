@@ -5629,9 +5629,9 @@ function draw(time) {
         }
 
         // Macro distortion: broad rubber-band stretch around collision points
-        // Much wider influence than micro drag — bends the whole wave shape
-        const macroSpread = Math.ceil(140 * viewScale / 4); // ~140px influence radius
-        const macroStrength = 35 * viewScale;
+        // Very wide influence — bends the entire wave shape smoothly
+        const macroSpread = Math.ceil(1120 * viewScale / 4); // ~1120px influence radius
+        const macroStrength = 45 * viewScale;
         const macro = new Float32Array(pts.length);
         for (let i = 0; i < pts.length; i++) {
           if (!pts[i].hit) continue;
