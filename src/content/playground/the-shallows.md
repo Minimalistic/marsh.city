@@ -3956,17 +3956,29 @@ function draw(time) {
       Math.round(cm0[1] * 0.4 + 150 * 0.6),
       Math.round(cm0[2] * 0.4 + 120 * 0.6),
     ];
+    // Average radius for blending toward circle (eroded underwater)
+    const avgBaseR = rf.baseRadii.reduce((a, b) => a + b, 0) / rf.baseRadii.length;
     const layers = 6;
     for (let layer = 0; layer < layers; layer++) {
       const scale = (1.2 - (layer / layers) * 0.7) * 1.5; // 1.8 outer to 0.75 inner
       const alpha = (layer / (layers - 1)) * 0.25; // 0 outer to 0.25 inner
+      // Outer layers blend toward circle — deeper water = more eroded/smooth
+      const smooth = 1 - layer / (layers - 1); // 1 at outermost, 0 at innermost
       ctx.beginPath();
-      ctx.moveTo(rf.baseShape[0].x * scale, rf.baseShape[0].y * scale);
-      for (let i = 0; i < rf.baseShape.length; i++) {
-        const next = rf.baseShape[(i + 1) % rf.baseShape.length];
-        const mx = (rf.baseShape[i].x + next.x) * 0.5 * scale;
-        const my = (rf.baseShape[i].y + next.y) * 0.5 * scale;
-        ctx.quadraticCurveTo(rf.baseShape[i].x * scale, rf.baseShape[i].y * scale, mx, my);
+      const n = rf.baseShape.length;
+      // Compute smoothed points — blend between original shape and circle
+      const pts = rf.baseShape.map((p, i) => {
+        const r = rf.baseRadii[i];
+        const blended = r * (1 - smooth * 0.7) + avgBaseR * smooth * 0.7;
+        const a = Math.atan2(p.y, p.x);
+        return { x: Math.cos(a) * blended * scale, y: Math.sin(a) * blended * scale };
+      });
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < n; i++) {
+        const next = pts[(i + 1) % n];
+        const mx = (pts[i].x + next.x) * 0.5;
+        const my = (pts[i].y + next.y) * 0.5;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
       }
       ctx.closePath();
       ctx.fillStyle = `rgba(${cm[0]},${cm[1]},${cm[2]},${alpha})`;
