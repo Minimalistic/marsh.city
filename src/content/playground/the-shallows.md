@@ -4189,20 +4189,19 @@ function draw(time) {
       }
     }
 
-    // Wave front particles — dense dots along the wave front in erratic rows
+    // Wave particles: immediate-mode front (draw-and-forget) + persistent trails
     if (!ww.particles) ww.particles = [];
     if (!ww.seed) ww.seed = Math.random() * 100;
     const perpX = -sinA;
     const perpY = cosA;
 
-    // Quick reef check for a single point — only used at spawn time
+    // Quick reef check — only at spawn/draw time, not per-frame updates
     function ptInReef(px, py) {
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
         const dx = px - cx, dy = py - cy;
         const distSq = dx * dx + dy * dy;
-        // Fast reject before sqrt — crownR is max radius
         if (distSq > (rf.crownR + 5) * (rf.crownR + 5)) continue;
         const dist = Math.sqrt(distSq);
         const angle = Math.atan2(dy, dx);
@@ -4211,41 +4210,38 @@ function draw(time) {
       return false;
     }
 
-    // Spawn front particles while wave is alive
+    // Draw leading edge immediately — no state, no accumulation
     if (alive) {
-      // 4 rows of particles at different distances behind the front
+      ctx.fillStyle = 'rgba(200, 230, 245, 1)';
+      // Dense rows at the wave front, each with decreasing density/brightness
       const rows = [
-        { behind: 0, count: Math.ceil(18 * viewScale), alpha: 0.4, size: 1.8 },
-        { behind: 4 * viewScale, count: Math.ceil(12 * viewScale), alpha: 0.25, size: 1.3 },
-        { behind: 10 * viewScale, count: Math.ceil(8 * viewScale), alpha: 0.15, size: 1.0 },
-        { behind: 18 * viewScale, count: Math.ceil(5 * viewScale), alpha: 0.08, size: 0.7 },
+        { behind: 0, count: Math.ceil(70 * viewScale), alpha: 0.45, sizeMin: 1.0, sizeMax: 2.5, spread: 3 },
+        { behind: 3 * viewScale, count: Math.ceil(50 * viewScale), alpha: 0.30, sizeMin: 0.8, sizeMax: 2.0, spread: 5 },
+        { behind: 7 * viewScale, count: Math.ceil(30 * viewScale), alpha: 0.18, sizeMin: 0.5, sizeMax: 1.5, spread: 8 },
+        { behind: 13 * viewScale, count: Math.ceil(18 * viewScale), alpha: 0.10, sizeMin: 0.3, sizeMax: 1.0, spread: 12 },
+        { behind: 20 * viewScale, count: Math.ceil(10 * viewScale), alpha: 0.05, sizeMin: 0.2, sizeMax: 0.8, spread: 16 },
       ];
       for (const row of rows) {
+        const rowAlpha = row.alpha * ww.life;
         for (let i = 0; i < row.count; i++) {
           const lateral = (Math.random() - 0.5) * span;
-          const jitterAlong = (Math.random() - 0.5) * 6 * viewScale;
-          const jitterLat = (Math.random() - 0.5) * 4 * viewScale;
-          const px = ww.x + perpX * (lateral + jitterLat) - cosA * (row.behind + jitterAlong);
-          const py = ww.y + perpY * (lateral + jitterLat) - sinA * (row.behind + jitterAlong);
+          const jAlong = (Math.random() - 0.5) * row.spread * viewScale;
+          const px = ww.x + perpX * lateral - cosA * (row.behind + jAlong);
+          const py = ww.y + perpY * lateral - sinA * (row.behind + jAlong);
           if (ptInReef(px, py)) continue;
-          ww.particles.push({
-            x: px, y: py,
-            // Drift slowly in wave direction + slight lateral wander
-            vx: cosA * ww.speed * (0.05 + Math.random() * 0.1) + (Math.random() - 0.5) * 0.3,
-            vy: sinA * ww.speed * (0.05 + Math.random() * 0.1) + (Math.random() - 0.5) * 0.3,
-            size: (row.size * (0.5 + Math.random() * 0.8)) * viewScale,
-            alpha: row.alpha * (0.5 + Math.random() * 0.5) * ww.life,
-            life: 1,
-            maxLife: 1.5 + Math.random() * 3.5,
-          });
+          const size = (row.sizeMin + Math.random() * (row.sizeMax - row.sizeMin)) * viewScale;
+          ctx.globalAlpha = rowAlpha * (0.4 + Math.random() * 0.6);
+          ctx.beginPath();
+          ctx.arc(px, py, size, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
-      // Trail clusters — shed periodically behind the wave
+      // Trail clusters — shed periodically, these DO persist
       if (!ww._nextTrail) ww._nextTrail = 15 + Math.random() * 25;
       if (ww.traveled > ww._nextTrail) {
         ww._nextTrail = ww.traveled + 20 + Math.random() * 40;
-        const clusterCount = Math.ceil((8 + Math.random() * 10) * viewScale);
+        const clusterCount = Math.ceil((12 + Math.random() * 12) * viewScale);
         for (let i = 0; i < clusterCount; i++) {
           const lateral = (Math.random() - 0.5) * span * 0.9;
           const behind = (5 + Math.random() * 15) * viewScale;
@@ -4256,8 +4252,8 @@ function draw(time) {
             x: px, y: py,
             vx: cosA * ww.speed * (0.02 + Math.random() * 0.06) + (Math.random() - 0.5) * 0.2,
             vy: sinA * ww.speed * (0.02 + Math.random() * 0.06) + (Math.random() - 0.5) * 0.2,
-            size: (0.4 + Math.random() * 1.0) * viewScale,
-            alpha: (0.06 + Math.random() * 0.1) * ww.life,
+            size: (0.3 + Math.random() * 1.0) * viewScale,
+            alpha: (0.06 + Math.random() * 0.12) * ww.life,
             life: 1,
             maxLife: 2.5 + Math.random() * 4,
           });
@@ -4265,8 +4261,7 @@ function draw(time) {
       }
     }
 
-    // Update and draw wave particles
-    // Batch all particles into a single path for performance
+    // Update and draw persistent trail particles
     ctx.fillStyle = 'rgba(200, 230, 245, 1)';
     for (let pi = ww.particles.length - 1; pi >= 0; pi--) {
       const p = ww.particles[pi];
@@ -4274,7 +4269,6 @@ function draw(time) {
       if (p.life <= 0) { ww.particles.splice(pi, 1); continue; }
       p.x += p.vx;
       p.y += p.vy;
-      // Slow down gently
       p.vx *= 0.995;
       p.vy *= 0.995;
       const fade = p.life < 0.4 ? p.life / 0.4 : 1;
