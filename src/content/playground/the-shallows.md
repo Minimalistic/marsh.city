@@ -882,6 +882,8 @@ const washWaves = [];
 let washTimer = 8 + Math.random() * 10;
 // Splash ripples — arc-shaped wave lines that radiate from rocks after wave impact
 const splashRipples = [];
+// Reef cling lines — wave remnants snagged on rocks, stretch and fade
+const reefClings = [];
 
 function spawnWash() {
   const angle = waveBaseAngle + (Math.random() - 0.5) * 0.06;
@@ -4885,7 +4887,7 @@ function draw(time) {
         }
       }
     }
-    // Waves hitting reefs: spawn foam and trigger ripple boost
+    // Waves hitting reefs: heavy splash spray + ripple boost + cling remnants
     for (const rf of reefs) {
       if (rf.submerged) continue;
       const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
@@ -4895,34 +4897,53 @@ function draw(time) {
           rf._waveHit = ww.strength;
           rf._waveAngle = ww.angle;
           rf._waveTime = time;
-          // Track impact for ongoing ripple emission — delay before first ripple
           rf._splashEmit = ww.strength;
           rf._splashAngle = ww.angle + Math.PI;
-          rf._splashTimer = -0.75; // 0.75s delay before ripples start
+          rf._splashTimer = -0.75;
           rf._splashNext = 0;
-          rf._splashFirst = true; // first burst is thickest
+          rf._splashFirst = true;
+          // Spawn reef cling remnants
+          const cx2 = rf.x + rf.crownOffX, cy2 = rf.y + rf.crownOffY;
+          const clingCount = 2 + Math.floor(Math.random() * 2);
+          for (let ci = 0; ci < clingCount; ci++) {
+            const aAngle = ww.angle + Math.PI + (Math.random() - 0.5) * 1.2;
+            const edgeR2 = rf.radiusAt(aAngle, rf.crownRadii);
+            reefClings.push({
+              ax: cx2 + Math.cos(aAngle) * (edgeR2 + 3),
+              ay: cy2 + Math.sin(aAngle) * (edgeR2 + 3),
+              waveAngle: ww.angle, stretch: 0,
+              speed: ww.speed * 0.5, life: 1,
+              maxLife: 3 + Math.random() * 3,
+              thick: (1.0 + Math.random() * 0.6) * viewScale,
+              alpha: ww.strength * (0.2 + Math.random() * 0.15),
+              seed: Math.random() * 100,
+              arcSpread: 0.3 + Math.random() * 0.3,
+            });
+          }
         }
-        const splashCount = Math.ceil(3 * viewScale);
-        if (foamBits.length < 210) {
+        // Heavy splash spray — obscures the wave line at the rock boundary
+        const splashCount = Math.ceil(8 * viewScale);
+        if (foamBits.length < 300) {
+          const hitDir = Math.atan2(-sinA, -cosA); // direction wave came from
           for (let si = 0; si < splashCount; si++) {
-            // Wide angular spread around the hit side for scattered spray
-            const edgeAngle = Math.atan2(-sinA, -cosA) + (Math.random() - 0.5) * Math.PI * 1.4;
+            // Concentrated around the hit side with wide scatter
+            const edgeAngle = hitDir + (Math.random() - 0.5) * Math.PI * 1.6;
             const crownEdgeR = rf.radiusAt(edgeAngle, rf.crownRadii);
-            // Scatter position: offset randomly from the crown edge
-            const spawnR = crownEdgeR * (0.7 + Math.random() * 0.6);
-            const scatter = (Math.random() - 0.5) * 12 * viewScale; // lateral scatter
+            const spawnR = crownEdgeR * (0.8 + Math.random() * 0.5);
+            const scatter = (Math.random() - 0.5) * 18 * viewScale;
             const perpAngle = edgeAngle + Math.PI * 0.5;
-            // Random velocity direction — spray fans out chaotically
-            const velAngle = edgeAngle + (Math.random() - 0.5) * 1.5;
-            const velMag = (0.3 + Math.random() * 0.8) * pushForce * 0.3;
+            const velAngle = edgeAngle + (Math.random() - 0.5) * 1.8;
+            const velMag = (0.2 + Math.random() * 0.6) * pushForce * 0.35;
+            // Mix of sizes — some big splashes, lots of fine spray
+            const isBig = Math.random() < 0.25;
             foamBits.push({
               x: rf.x + rf.crownOffX + Math.cos(edgeAngle) * spawnR + Math.cos(perpAngle) * scatter,
               y: rf.y + rf.crownOffY + Math.sin(edgeAngle) * spawnR + Math.sin(perpAngle) * scatter,
-              size: (0.15 + Math.random() * 0.8) * viewScale,
-              vx: Math.cos(velAngle) * velMag + (Math.random() - 0.5) * 0.3,
-              vy: Math.sin(velAngle) * velMag + (Math.random() - 0.5) * 0.3,
+              size: (isBig ? (0.6 + Math.random() * 1.2) : (0.1 + Math.random() * 0.5)) * viewScale,
+              vx: Math.cos(velAngle) * velMag + (Math.random() - 0.5) * 0.4,
+              vy: Math.sin(velAngle) * velMag + (Math.random() - 0.5) * 0.4,
               life: 1,
-              maxLife: 6 + Math.random() * 12,
+              maxLife: isBig ? (4 + Math.random() * 8) : (3 + Math.random() * 10),
             });
           }
         }
@@ -5524,6 +5545,40 @@ function draw(time) {
   ctx.globalAlpha = 1;
 
   _measure('foam+waves');
+
+  // Reef cling lines — wave remnants snagged on rocks, stretching and fading
+  for (let i = reefClings.length - 1; i >= 0; i--) {
+    const cl = reefClings[i];
+    cl.life -= dt / cl.maxLife;
+    if (cl.life <= 0) { reefClings.splice(i, 1); continue; }
+    cl.stretch += cl.speed;
+    cl.speed *= 0.975;
+    const clAge = (1 - cl.life) * cl.maxLife;
+    const clFadeIn = Math.min(1, clAge / 0.3);
+    const fadeAlpha = clFadeIn * clFadeIn * cl.life * cl.life * cl.alpha;
+    if (fadeAlpha < 0.003) { reefClings.splice(i, 1); continue; }
+    const cosW = Math.cos(cl.waveAngle), sinW = Math.sin(cl.waveAngle);
+    const perpW = { x: -sinW, y: cosW };
+    const arcHalf = cl.arcSpread * cl.stretch * 0.3;
+    ctx.beginPath();
+    let first = true;
+    for (let si = 0; si <= 8; si++) {
+      const t2 = si / 8;
+      const lateral = (t2 - 0.5) * 2 * arcHalf;
+      const stretchFactor = 1 - Math.abs(t2 - 0.5) * 0.6;
+      const wobble = Math.sin(lateral * 0.3 + cl.seed) * 2 * cl.life;
+      const px = cl.ax + cosW * (cl.stretch * stretchFactor + wobble) + perpW.x * lateral;
+      const py = cl.ay + sinW * (cl.stretch * stretchFactor + wobble) + perpW.y * lateral;
+      if (first) { ctx.moveTo(px, py); first = false; }
+      else ctx.lineTo(px, py);
+    }
+    ctx.globalAlpha = fadeAlpha;
+    ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+    ctx.lineWidth = cl.thick * cl.life;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 
   // Ongoing splash emission — reefs spawn ripples after 0.25s delay, then decay
   for (const rf of reefs) {
