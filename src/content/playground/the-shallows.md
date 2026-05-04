@@ -3446,29 +3446,32 @@ class Seagull {
     const bankShift = this._bank * 2;
     const wingFwd = bl * 0.2;
 
-    const flapT = this.flapping ? Math.sin(this.wingPhase) : 0; // -1 to 1
+    // Elbow leads, tips follow with a phase delay (~quarter cycle behind)
+    // This creates the wave/whip motion along the wing
+    const elbowT = this.flapping ? Math.sin(this.wingPhase) : 0;
+    const tipT = this.flapping ? Math.sin(this.wingPhase - Math.PI * 0.4) : 0; // delayed
 
     // Inner wing: shoulder to elbow (~40%), outer: elbow to tip (~60%)
     const innerLen = fullHalf * 0.4;
     const outerLen = fullHalf * 0.6;
 
-    // Elbow: locked lateral distance, but sweeps fore/aft with flap
-    // downstroke: elbow pushes forward (bird pulls wings forward on power stroke)
-    // upstroke: elbow pulls back (wings fold back on recovery)
-    const elbowShift = flapT * innerLen * 0.03; // lateral — near zero
-    const elbowSweep = flapT * bl * 0.06; // fore/aft — forward on downstroke
+    // Elbow motion (from above):
+    // Up (elbowT < 0): scales larger (angled toward viewer), pulls slightly closer to body
+    // Down (elbowT > 0): scales smaller (angled away), pushes slightly further from body
+    const elbowShift = elbowT * innerLen * 0.06; // slight in/out
+    const elbowSweep = elbowT * bl * 0.04; // subtle fore/aft
 
-    // Inner wing chord (apparent width from above):
-    const innerChordScale = 1 - flapT * 0.1;
+    // Inner wing chord — wider on upstroke (wing angled toward us)
+    const innerChordScale = 1 - elbowT * 0.12;
 
-    // Outer wing: tips follow the elbow sweep with a lag/amplification
-    // downstroke: tips extend outward and sweep forward (following elbow)
-    // upstroke: tips fold inward and trail back behind the elbow
-    const outerReach = outerLen * (1 + flapT * 0.1);
-    const outerSweepBack = -flapT * bl * 0.12; // amplified version of elbow sweep
+    // Tips follow with delay — same logic but using tipT
+    // Up (tipT < 0): tips pull inward and back
+    // Down (tipT > 0): tips extend outward and forward slightly
+    const outerReach = outerLen * (1 + tipT * 0.1);
+    const outerSweepBack = -tipT * bl * 0.1;
 
     // Tip taper
-    const tipTaper = bl * (0.02 + (1 - flapT) * 0.006);
+    const tipTaper = bl * (0.02 + (1 - tipT) * 0.006);
 
     const sides = [];
     for (const side of [-1, 1]) {
