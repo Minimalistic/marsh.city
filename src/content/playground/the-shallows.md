@@ -601,7 +601,11 @@ function populateGrid(fishArr) {
     if (spatialGrid[idx]) spatialGrid[idx].push(f);
   }
 }
-function* getNeighbors(fx, fy) {
+// Pre-allocated neighbor buffers — avoids generator overhead
+// _nbBuf1 exists for the one nested call site (predator isolation check)
+const _nbBuf0 = [], _nbBuf1 = [];
+function _fillNeighbors(fx, fy, buf) {
+  buf.length = 0;
   const col = Math.max(0, Math.min(gridCols - 1, Math.floor(fx / GRID_CELL)));
   const row = Math.max(0, Math.min(gridRows - 1, Math.floor(fy / GRID_CELL)));
   for (let dr = -1; dr <= 1; dr++) {
@@ -609,11 +613,14 @@ function* getNeighbors(fx, fy) {
       const r = row + dr, c = col + dc;
       if (r >= 0 && r < gridRows && c >= 0 && c < gridCols) {
         const cell = spatialGrid[r * gridCols + c];
-        for (let i = 0; i < cell.length; i++) yield cell[i];
+        for (let i = 0; i < cell.length; i++) buf.push(cell[i]);
       }
     }
   }
+  return buf;
 }
+function getNeighbors(fx, fy) { return _fillNeighbors(fx, fy, _nbBuf0); }
+function getNeighborsInner(fx, fy) { return _fillNeighbors(fx, fy, _nbBuf1); }
 rebuildGrid();
 
 // Coordinate transform — accounts for CSS rotation in portrait fullscreen
@@ -2591,7 +2598,9 @@ class Predator {
           const ahead = dx * cosA + dy * sinA;
           if (ahead < -20) continue; // allow slightly behind too
           let nearbyFriends = 0;
-          for (const other of getNeighbors(f.x, f.y)) {
+          const _inner = getNeighborsInner(f.x, f.y);
+          for (let ni = 0; ni < _inner.length; ni++) {
+            const other = _inner[ni];
             if (other === f) continue;
             const odx = other.x - f.x, ody = other.y - f.y;
             if (odx * odx + ody * ody < 30 * 30) nearbyFriends++;
@@ -4094,8 +4103,16 @@ function rebuildSandCanvas() {
 }
 rebuildSandCanvas();
 
+// FPS counter — rolling average over 60 frames
+let _fpsFrames = 0, _fpsLast = 0, _fpsDisplay = 0;
 function draw(time) {
   requestAnimationFrame(draw);
+  _fpsFrames++;
+  if (time - _fpsLast >= 1000) {
+    _fpsDisplay = Math.round(_fpsFrames * 1000 / (time - _fpsLast));
+    _fpsFrames = 0;
+    _fpsLast = time;
+  }
   try {
   // Fixed dt — simulation always runs at 1/60s regardless of actual framerate
   const dt = 1 / 60;
@@ -5318,6 +5335,15 @@ function draw(time) {
   // ctx.drawImage(blurCanvas, 0, 0, canvas.width, canvas.height);
   // ctx.restore();
   // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // FPS overlay
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(4, h - 22, 52, 18);
+  ctx.fillStyle = _fpsDisplay >= 55 ? '#8f8' : _fpsDisplay >= 30 ? '#ff8' : '#f88';
+  ctx.font = '11px monospace';
+  ctx.fillText(`${_fpsDisplay} fps`, 8, h - 8);
+  ctx.restore();
 
   } catch(e) { console.error('Draw error:', e); }
 }
