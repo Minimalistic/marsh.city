@@ -5267,7 +5267,9 @@ function draw(time) {
       if (tr.life <= 0) { ww.trails.splice(ti, 1); continue; }
       tr.x += cosA * tr.driftSpeed;
       tr.y += sinA * tr.driftSpeed;
-      tr.driftSpeed *= 0.985; // momentum decays — trail slows quickly
+      // Decays toward a minimum — never fully stalls, keeps drifting with wave
+      const minDrift = (tr._minDrift || (tr._minDrift = tr.driftSpeed * 0.15));
+      tr.driftSpeed = minDrift + (tr.driftSpeed - minDrift) * 0.985;
       const trAlpha = tr.life * tr.life * tr.alpha;
       if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
       const perpX = -sinA, perpY = cosA;
