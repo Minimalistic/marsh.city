@@ -4343,7 +4343,9 @@ function draw(time) {
       _cloudCanvas.width = cw; _cloudCanvas.height = ch;
     }
     _cloudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    _cloudCtx.clearRect(0, 0, w, h);
+    // Fill with white — identity for multiply blend, avoids hard dark edges
+    _cloudCtx.fillStyle = 'rgb(255,255,255)';
+    _cloudCtx.fillRect(0, 0, w, h);
     for (const cloud of clouds) {
       const cx = cloud.x, cy = cloud.y;
       const baseR = Math.min(w, h) * cloud.size;
