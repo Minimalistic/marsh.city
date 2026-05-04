@@ -4546,9 +4546,8 @@ function draw(time) {
       const t = time * 0.0012;
       const lines = [
         { behind: 0, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
-        { behind: 4 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 1.3 },
-        { behind: 9 * viewScale, thick: 0.8 * viewScale, alpha: 0.12, freq: 0.8 },
-        { behind: 15 * viewScale, thick: 0.5 * viewScale, alpha: 0.07, freq: 1.6 },
+        { behind: 6 * viewScale, thick: 1.0 * viewScale, alpha: 0.18, freq: 1.1 },
+        { behind: 14 * viewScale, thick: 0.5 * viewScale, alpha: 0.08, freq: 1.5 },
       ];
       for (const ln of lines) {
         ctx.beginPath();
@@ -4838,7 +4837,7 @@ function draw(time) {
     }
 
     // Waterline ripples — more rings radiating outward, chaotic with currents
-    const ringCount = 5 + Math.ceil(waveBoost * 4); // 5 base, up to 9 during wave
+    const ringCount = 4 + Math.ceil(waveBoost * 3); // 4 base, up to 7 during wave
     for (let ring = 0; ring < ringCount; ring++) {
       const ringPhase = t * (0.5 + ring * 0.12) + ring * 1.7;
       const baseOffset = ring * 2.5 + Math.sin(ringPhase) * 2;
