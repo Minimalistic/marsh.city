@@ -2567,7 +2567,7 @@ class Predator {
             x: mx + Math.cos(a) * 3, y: my + Math.sin(a) * 3,
             vx: Math.cos(a) * spd + this.vx * 0.15,
             vy: Math.sin(a) * spd + this.vy * 0.15,
-            type: 'scale', life: 1, maxLife: 3 + Math.random() * 4,
+            type: 'scale', life: 1, maxLife: 15 + Math.random() * 15,
             size: tiny ? 0.08 + Math.random() * 0.15 : 0.2 + Math.random() * 0.6,
             color: 'rgb(160,170,180)',
             sparkle: Math.random() * Math.PI * 2,
@@ -2734,7 +2734,7 @@ class Predator {
             x: catchX + Math.cos(a) * 4, y: catchY + Math.sin(a) * 4,
             vx: Math.cos(a) * spd + this.vx * 0.15,
             vy: Math.sin(a) * spd + this.vy * 0.15,
-            type: 'scale', life: 1, maxLife: 3 + Math.random() * 5,
+            type: 'scale', life: 1, maxLife: 15 + Math.random() * 15,
             size: tiny ? 0.08 + Math.random() * 0.15 : 0.25 + Math.random() * 0.75, color: preyColor,
             sparkle: Math.random() * Math.PI * 2,
             _freq: 4 + Math.random() * 3, _f1: 1.8 + Math.random() * 1.2, _f2: 0.5 + Math.random() * 0.6,
@@ -4633,26 +4633,33 @@ function draw(time) {
       ctx.fillStyle = `rgba(210, 240, 245, ${alpha * 0.6})`;
       ctx.fill();
     } else {
-      // Scale glitter — tiny flecks that flutter on/off as they tumble through water
-      kp.sparkle += dt * (kp._freq || 5);
-      // Flutter: per-particle frequency variation so they don't sync up
+      // Scale glitter — flutter slows as the scale settles in the water
+      const age = 1 - kp.life; // 0 = fresh, 1 = end of life
+      // Flutter rate decays over time — energetic tumble fades to lazy drift
+      const freqDecay = 1 - age * 0.7; // slows to 30% of initial rate
+      kp.sparkle += dt * (kp._freq || 5) * freqDecay;
       const tumble = Math.sin(kp.sparkle * (kp._f1 || 2.3)) * Math.sin(kp.sparkle * (kp._f2 || 0.7));
-      const visible = tumble > -0.3; // dark ~30% of the time — tumbled away from light
+      // Older scales spend more time dark — they settle flat and catch light less often
+      const darkThresh = -0.3 - age * 0.4; // -0.3 when fresh, -0.7 when old
+      const visible = tumble > darkThresh;
       if (!visible) continue;
-      const glint = Math.max(0, tumble);
-      // Hold full size for first 70% of life, then shrink
-      const sizeCurve = kp.life > 0.3 ? 1 : kp.life / 0.3;
-      const alpha = sizeCurve * glint * 0.8;
+      const glint = Math.max(0, tumble - darkThresh) / (1 - darkThresh);
+      // Size expands gently over time — waterlogged scale spreads in the current
+      const expand = 1 + age * 0.8; // up to 1.8x original size
+      // Opacity fades very gradually — barely noticeable per-second, long slow dissolve
+      const fadeCurve = kp.life > 0.15 ? 1 - (1 - kp.life) * 0.3 : kp.life / 0.15;
+      const alpha = fadeCurve * glint * 0.7;
       if (alpha < 0.01) continue;
+      const drawR = kp.size * expand * fadeCurve;
       ctx.beginPath();
-      ctx.arc(kp.x, kp.y, kp.size * sizeCurve, 0, Math.PI * 2);
+      ctx.arc(kp.x, kp.y, drawR, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(220, 230, 240, ${alpha})`;
       ctx.fill();
       // Colored reflection from prey's scales
-      if (alpha > 0.15) {
+      if (alpha > 0.12) {
         ctx.beginPath();
-        ctx.arc(kp.x, kp.y, kp.size * sizeCurve * 0.6, 0, Math.PI * 2);
-        ctx.fillStyle = kp.color.replace('rgb', 'rgba').replace(')', `,${alpha * 0.4})`);
+        ctx.arc(kp.x, kp.y, drawR * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = kp.color.replace('rgb', 'rgba').replace(')', `,${alpha * 0.35})`);
         ctx.fill();
       }
     }
