@@ -5360,7 +5360,7 @@ function draw(time) {
       if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
       const perpX = -sinA, perpY = cosA;
       const t2 = time * 0.0012;
-      const step = 8;
+      const step = 4;
       const trPts = [];
       for (let pos = -span; pos <= span; pos += step) {
         const f = tr.freq;
@@ -5496,7 +5496,7 @@ function draw(time) {
         { behind: 20 * viewScale, thick: 0.4 * viewScale, alpha: 0.05, freq: 1.1, speed: 1.1 },
       ];
       for (const ln of lines) {
-        const step = 8;
+        const step = 4;
         const pts = [];
         for (let pos = -span; pos <= span; pos += step) {
           const f = ln.freq;
@@ -6180,7 +6180,7 @@ function draw(time) {
       if (trAlpha < 0.003) continue;
       const perpX = -sinA, perpY = cosA;
       const t2 = time * 0.0012;
-      const step = 8;
+      const step = 4;
       const trPts = [];
       for (let pos = -span; pos <= span; pos += step) {
         const f = tr.freq, vs = viewScale;
@@ -6218,7 +6218,7 @@ function draw(time) {
         { behind: 4 * viewScale, thick: 3.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
       ];
       for (const ln of lines) {
-        const step = 8;
+        const step = 4;
         const pts = [];
         for (let pos = -span; pos <= span; pos += step) {
           const f = ln.freq, vs = viewScale, ts = ln.speed;
