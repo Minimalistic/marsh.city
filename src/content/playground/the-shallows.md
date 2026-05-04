@@ -4626,6 +4626,7 @@ regenerateWorld = function() {
   // Rebuild cached render assets for new viewport size
   rebuildBgGradient();
   rebuildSandCanvas();
+  resizeWaveTrail();
 };
 
 // Background gradient — recreated on resize
@@ -4637,6 +4638,16 @@ function rebuildBgGradient() {
   bgGradient.addColorStop(1, '#156068');
 }
 rebuildBgGradient();
+
+// Wave ghost trail canvas — frame-persistence for wispy wave traces
+const waveTrailCanvas = document.createElement('canvas');
+const waveTrailCtx = waveTrailCanvas.getContext('2d');
+function resizeWaveTrail() {
+  waveTrailCanvas.width = canvas.width;
+  waveTrailCanvas.height = canvas.height;
+  waveTrailCtx.setTransform(Math.min(2, window.devicePixelRatio || 1), 0, 0, Math.min(2, window.devicePixelRatio || 1), 0, 0);
+}
+resizeWaveTrail();
 
 // Pre-rendered sand patches — rebuilt on resize
 const sandCanvas = document.createElement('canvas');
@@ -5272,6 +5283,12 @@ function draw(time) {
     ctx.fill();
   }
 
+  // Fade wave trail canvas — old wave positions slowly disappear
+  waveTrailCtx.globalCompositeOperation = 'destination-out';
+  waveTrailCtx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+  waveTrailCtx.fillRect(0, 0, w, h);
+  waveTrailCtx.globalCompositeOperation = 'source-over';
+
   // Draw wash wave fronts - foam shed behind the wave, not in front
   for (const ww of washWaves) {
     if (!ww.blobs) ww.blobs = [];
@@ -5390,14 +5407,14 @@ function draw(time) {
         trPts[i].y -= sinA * pull;
       }
 
-      ctx.globalAlpha = trAlpha;
-      ctx.lineWidth = tr.thick * tr.life;
-      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(trPts[0].x, trPts[0].y);
-      for (let i = 1; i < trPts.length; i++) ctx.lineTo(trPts[i].x, trPts[i].y);
-      ctx.stroke();
+      waveTrailCtx.globalAlpha = trAlpha;
+      waveTrailCtx.lineWidth = tr.thick * tr.life;
+      waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      waveTrailCtx.lineCap = 'butt'; waveTrailCtx.lineJoin = 'round';
+      waveTrailCtx.beginPath();
+      waveTrailCtx.moveTo(trPts[0].x, trPts[0].y);
+      for (let i = 1; i < trPts.length; i++) waveTrailCtx.lineTo(trPts[i].x, trPts[i].y);
+      waveTrailCtx.stroke();
     }
 
     // Wave wraps around rocks: inside points clamp to upstream face only,
@@ -5577,40 +5594,16 @@ function draw(time) {
         isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
 
-        // Ghost trails: wispy faded copies trailing behind the wave front
-        // Only for the 3 main visible lines (alpha >= 0.4)
-        if (ln.alpha >= 0.4) {
-          const ghosts = [
-            { dist: 6 * viewScale, alpha: 0.18, width: 1.3 },
-            { dist: 14 * viewScale, alpha: 0.10, width: 1.6 },
-            { dist: 24 * viewScale, alpha: 0.05, width: 2.0 },
-            { dist: 38 * viewScale, alpha: 0.025, width: 2.5 },
-          ];
-          ctx.lineCap = 'butt';
-          ctx.lineJoin = 'round';
-          ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-          for (const gh of ghosts) {
-            ctx.globalAlpha = baseAlpha * gh.alpha;
-            ctx.lineWidth = ln.thick * gh.width;
-            ctx.beginPath();
-            ctx.moveTo(pts[0].x - cosA * gh.dist, pts[0].y - sinA * gh.dist);
-            for (let i = 1; i < pts.length; i++) {
-              ctx.lineTo(pts[i].x - cosA * gh.dist, pts[i].y - sinA * gh.dist);
-            }
-            ctx.stroke();
-          }
-        }
-
-        // Main line
-        ctx.globalAlpha = baseAlpha;
-        ctx.lineWidth = ln.thick;
-        ctx.lineCap = 'butt';
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.stroke();
+        // Draw wave lines to trail canvas (frame-persistence creates ghost effect)
+        waveTrailCtx.globalAlpha = baseAlpha;
+        waveTrailCtx.lineWidth = ln.thick;
+        waveTrailCtx.lineCap = 'butt';
+        waveTrailCtx.lineJoin = 'round';
+        waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        waveTrailCtx.beginPath();
+        waveTrailCtx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) waveTrailCtx.lineTo(pts[i].x, pts[i].y);
+        waveTrailCtx.stroke();
       }
     } // end if (alive) — blob drawing continues below for lingering foam
 
@@ -5669,6 +5662,9 @@ function draw(time) {
     ctx.fill();
   }
   ctx.globalAlpha = 1;
+
+  // Composite wave trail canvas onto main — persistent ghost traces
+  ctx.drawImage(waveTrailCanvas, 0, 0, w, h);
 
   _measure('foam+waves');
 
@@ -6297,14 +6293,14 @@ function draw(time) {
         trPts[i].y -= sinA * pull;
       }
 
-      ctx.globalAlpha = trAlpha;
-      ctx.lineWidth = tr.thick * tr.life;
-      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(trPts[0].x, trPts[0].y);
-      for (let i = 1; i < trPts.length; i++) ctx.lineTo(trPts[i].x, trPts[i].y);
-      ctx.stroke();
+      waveTrailCtx.globalAlpha = trAlpha;
+      waveTrailCtx.lineWidth = tr.thick * tr.life;
+      waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      waveTrailCtx.lineCap = 'butt'; waveTrailCtx.lineJoin = 'round';
+      waveTrailCtx.beginPath();
+      waveTrailCtx.moveTo(trPts[0].x, trPts[0].y);
+      for (let i = 1; i < trPts.length; i++) waveTrailCtx.lineTo(trPts[i].x, trPts[i].y);
+      waveTrailCtx.stroke();
     }
     // Wave front lines
     if (alive) {
@@ -6366,40 +6362,20 @@ function draw(time) {
         isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
 
-        // Ghost trails for main visible lines
-        if (ln.alpha >= 0.4) {
-          const ghosts = [
-            { dist: 6 * viewScale, alpha: 0.18, width: 1.3 },
-            { dist: 14 * viewScale, alpha: 0.10, width: 1.6 },
-            { dist: 24 * viewScale, alpha: 0.05, width: 2.0 },
-            { dist: 38 * viewScale, alpha: 0.025, width: 2.5 },
-          ];
-          ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
-          ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-          for (const gh of ghosts) {
-            ctx.globalAlpha = baseAlpha * gh.alpha;
-            ctx.lineWidth = ln.thick * gh.width;
-            ctx.beginPath();
-            ctx.moveTo(pts[0].x - cosA * gh.dist, pts[0].y - sinA * gh.dist);
-            for (let i = 1; i < pts.length; i++) {
-              ctx.lineTo(pts[i].x - cosA * gh.dist, pts[i].y - sinA * gh.dist);
-            }
-            ctx.stroke();
-          }
-        }
-
-        ctx.globalAlpha = baseAlpha;
-        ctx.lineWidth = ln.thick;
-        ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
-        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.stroke();
+        waveTrailCtx.globalAlpha = baseAlpha;
+        waveTrailCtx.lineWidth = ln.thick;
+        waveTrailCtx.lineCap = 'butt'; waveTrailCtx.lineJoin = 'round';
+        waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        waveTrailCtx.beginPath();
+        waveTrailCtx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) waveTrailCtx.lineTo(pts[i].x, pts[i].y);
+        waveTrailCtx.stroke();
       }
     }
   }
   ctx.globalAlpha = 1;
+  // Composite wave trail over reefs (second pass lines)
+  ctx.drawImage(waveTrailCanvas, 0, 0, w, h);
 
   _mark('reefs');
   // Reef structures - waterline effects then above-water crown
