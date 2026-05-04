@@ -328,12 +328,7 @@ function handleFSChange() {
   inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
   fsCloseBtn.hidden = !inFullscreen;
   fsBtn.hidden = inFullscreen;
-  // Resize canvas + rescale entity positions — no world regeneration
-  setTimeout(() => {
-    const oldW = w, oldH = h;
-    ({ w, h } = resize());
-    if (w !== oldW || h !== oldH) { rescaleAll(oldW, oldH); rebuildGrid(); }
-  }, 100);
+  // Don't resize canvas or regenerate — CSS scales the existing pixels
   showUI();
 }
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
