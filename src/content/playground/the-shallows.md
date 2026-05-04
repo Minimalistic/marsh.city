@@ -3452,21 +3452,20 @@ class Seagull {
     // Elbow stays mostly at same distance from body:
     // upstroke (flapT<0): pulls slightly inward, appears wider (angled toward viewer)
     // downstroke (flapT>0): pushes slightly outward, appears narrower
-    const elbowShift = flapT * innerLen * 0.08;
+    // Elbow barely moves — locked distance from body
+    const elbowShift = flapT * innerLen * 0.03;
 
     // Inner wing chord (apparent width from above):
-    // upstroke: wing angled up toward viewer = appears wider
-    // downstroke: wing angled down away = appears narrower
-    const innerChordScale = 1 - flapT * 0.15; // 1.15 up, 0.85 down
+    const innerChordScale = 1 - flapT * 0.1; // 1.1 up, 0.9 down
 
-    // Outer wing from elbow to tip:
-    // upstroke: tips fold inward + sweep back (shorter apparent reach, pulled back)
-    // downstroke: tips extend outward + push slightly forward (longer reach)
-    const outerReach = outerLen * (1 + flapT * 0.2); // 0.8 up, 1.2 down
-    const outerSweepBack = -flapT * bl * 0.12; // positive=back on upstroke
+    // Outer wing: tips do the moving, elbow stays put
+    // upstroke: tips fold inward + sweep back
+    // downstroke: tips extend slightly outward + sweep forward
+    const outerReach = outerLen * (1 + flapT * 0.1); // 0.9 up, 1.1 down
+    const outerSweepBack = -flapT * bl * 0.08; // tips pull back on upstroke
 
-    // Tip taper — tips shrink on downstroke (angled away), widen on upstroke
-    const tipTaper = bl * (0.02 + (1 - flapT) * 0.008); // convergence amount
+    // Tip taper — tips shrink on downstroke, widen on upstroke
+    const tipTaper = bl * (0.02 + (1 - flapT) * 0.006);
 
     const sides = [];
     for (const side of [-1, 1]) {
