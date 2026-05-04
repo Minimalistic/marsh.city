@@ -5234,7 +5234,7 @@ function draw(time) {
           freq: tmpl.freq,
           life: 1,
           maxLife: 5 + Math.random() * 7,
-          driftSpeed: ww.speed * (0.05 + Math.random() * 0.1),
+          driftSpeed: ww.speed * (0.4 + Math.random() * 0.3), // starts with wave momentum
         });
       }
     }
@@ -5245,6 +5245,7 @@ function draw(time) {
       if (tr.life <= 0) { ww.trails.splice(ti, 1); continue; }
       tr.x += cosA * tr.driftSpeed;
       tr.y += sinA * tr.driftSpeed;
+      tr.driftSpeed *= 0.985; // momentum decays — trail slows quickly
       const trAlpha = tr.life * tr.life * tr.alpha;
       if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
       const perpX = -sinA, perpY = cosA;
@@ -5255,9 +5256,9 @@ function draw(time) {
       for (let pos = -span; pos <= span; pos += step) {
         const f = tr.freq;
         const vs = viewScale;
-        const offset = (Math.sin(pos * 0.04 * f + t2 * 3.1 + tr.seed) * 6
-                     + Math.sin(pos * 0.09 * f + t2 * 5.7 + tr.seed * 2.3) * 4
-                     + Math.sin(pos * 0.18 * f + t2 * 9.3 + tr.seed * 4.7) * 2) * vs;
+        const offset = (Math.sin(pos * 0.04 * f + tr.seed) * (3 + Math.sin(t2 * 3.1 + tr.seed) * 3)
+                     + Math.sin(pos * 0.09 * f + tr.seed * 2.3) * (2 + Math.sin(t2 * 5.7 + tr.seed * 1.7) * 2)
+                     + Math.sin(pos * 0.18 * f + tr.seed * 4.7) * (1 + Math.sin(t2 * 9.3 + tr.seed * 3.1) * 1)) * vs;
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const deflect = reefDeflect(px, py);
@@ -5314,13 +5315,14 @@ function draw(time) {
         for (let pos = -span; pos <= span; pos += step) {
           const f = ln.freq;
           const vs = viewScale;
-          const ts = ln.speed; // per-line animation speed
-          // More varied, faster-evolving wave shapes
-          const offset = (Math.sin(pos * 0.04 * f + t * 3.1 * ts + ww.seed) * 6
-                       + Math.sin(pos * 0.09 * f + t * 5.7 * ts + ww.seed * 2.3) * 4
-                       + Math.sin(pos * 0.18 * f + t * 9.3 * ts + ww.seed * 4.7) * 2.5
-                       + Math.sin(pos * 0.35 * f + t * 14 * ts + ww.seed * 7) * 1.5
-                       + Math.sin(pos * 0.07 * f + t * 18 * ts + ww.seed * 11) * 1.5) * vs;
+          const ts = ln.speed;
+          // Standing-wave pattern: spatial shape modulated by time, no diagonal travel
+          // Each harmonic's amplitude pulses independently over time
+          const offset = (Math.sin(pos * 0.04 * f + ww.seed) * (3 + Math.sin(t * 3.1 * ts + ww.seed) * 3)
+                       + Math.sin(pos * 0.09 * f + ww.seed * 2.3) * (2 + Math.sin(t * 5.7 * ts + ww.seed * 1.7) * 2)
+                       + Math.sin(pos * 0.18 * f + ww.seed * 4.7) * (1.2 + Math.sin(t * 9.3 * ts + ww.seed * 3.1) * 1.3)
+                       + Math.sin(pos * 0.35 * f + ww.seed * 7) * (0.7 + Math.sin(t * 14 * ts + ww.seed * 5.3) * 0.8)
+                       + Math.sin(pos * 0.07 * f + ww.seed * 11) * (0.8 + Math.sin(t * 18 * ts + ww.seed * 8.1) * 0.7)) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const deflect = reefDeflect(px, py);
