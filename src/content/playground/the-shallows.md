@@ -5585,18 +5585,23 @@ function draw(time) {
           const cl = reefClamp(px, py, ln.behind / viewScale * 0.4);
           pts.push({ x: cl.x, y: cl.y, hit: !!cl.hit });
           // Emit contact splashes where the primary wave line touches rock
-          if (isFirstLine && cl.hit && contactSplashes.length < 500 && Math.random() < 0.6) {
-            const sprayAngle = Math.atan2(cl.ny, cl.nx) + (Math.random() - 0.5) * 1.6;
-            const spd = (2.5 + Math.random() * 5) * viewScale * ww.strength;
-            contactSplashes.push({
-              x: cl.x, y: cl.y,
-              vx: Math.cos(sprayAngle) * spd + cosA * ww.speed * 0.4,
-              vy: Math.sin(sprayAngle) * spd + sinA * ww.speed * 0.4,
-              size: (0.5 + Math.random() * 2.5) * viewScale,
-              life: 1,
-              maxLife: 0.5 + Math.random() * 1.0,
-              drag: 0.90 + Math.random() * 0.05,
-            });
+          // More splash when wave hits head-on, less when parallel/grazing
+          if (isFirstLine && cl.hit && contactSplashes.length < 600) {
+            const headOn = Math.abs(cl.nx * (-cosA) + cl.ny * (-sinA)); // 1=head-on, 0=parallel
+            const spawnChance = 0.75 * (0.3 + headOn * 0.7); // head-on: 75%, parallel: ~22%
+            if (Math.random() < spawnChance) {
+              const sprayAngle = Math.atan2(cl.ny, cl.nx) + (Math.random() - 0.5) * 1.6;
+              const spd = (2.5 + Math.random() * 5.5) * viewScale * ww.strength * (0.5 + headOn * 0.5);
+              contactSplashes.push({
+                x: cl.x, y: cl.y,
+                vx: Math.cos(sprayAngle) * spd + cosA * ww.speed * 0.4,
+                vy: Math.sin(sprayAngle) * spd + sinA * ww.speed * 0.4,
+                size: (0.5 + Math.random() * 2.8) * viewScale * (0.6 + headOn * 0.4),
+                life: 1,
+                maxLife: 0.5 + Math.random() * 1.0,
+                drag: 0.90 + Math.random() * 0.05,
+              });
+            }
           }
         }
         // Post-rock drag: points near rock contacts get pulled backward (against wave travel)
