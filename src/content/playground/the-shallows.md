@@ -4720,7 +4720,7 @@ function rebuildSandCanvas() {
     const prox = rockProximity(midX, midY);
     // Far from rocks: thicker (blurrier), near rocks: thinner (sharper)
     const blurScale = 1 + (1 - prox) * 3; // 1× near rocks, 4× far away
-    const ridgeThick = (3.6 + Math.sin(seed * 2.3) * 1.5) * viewScale * blurScale;
+    const ridgeThick = (6 + Math.sin(seed * 2.3) * 2.5) * viewScale * blurScale;
 
     // Build points with per-point proximity for alpha falloff along the line
     const pts = [];
@@ -4787,16 +4787,20 @@ function rebuildSandCanvas() {
   // Gaussian blur via circular offset samples (no grid artifacts)
   sandCtx.save();
   sandCtx.setTransform(1, 0, 0, 1, 0, 0);
-  const blurR = Math.ceil(20 * viewScale * dpr);
-  // Center draw + concentric ring samples
+  const blurR = Math.ceil(30 * viewScale * dpr);
+  // Center draw + 3 concentric rings for smooth diffusion
   const samples = [
     [0, 0],
-    ...Array.from({ length: 8 }, (_, i) => {
-      const a = (i / 8) * Math.PI * 2;
-      return [Math.cos(a) * blurR * 0.5, Math.sin(a) * blurR * 0.5];
+    ...Array.from({ length: 6 }, (_, i) => {
+      const a = (i / 6) * Math.PI * 2;
+      return [Math.cos(a) * blurR * 0.3, Math.sin(a) * blurR * 0.3];
     }),
-    ...Array.from({ length: 12 }, (_, i) => {
-      const a = (i / 12) * Math.PI * 2 + 0.3;
+    ...Array.from({ length: 10 }, (_, i) => {
+      const a = (i / 10) * Math.PI * 2 + 0.25;
+      return [Math.cos(a) * blurR * 0.65, Math.sin(a) * blurR * 0.65];
+    }),
+    ...Array.from({ length: 14 }, (_, i) => {
+      const a = (i / 14) * Math.PI * 2 + 0.5;
       return [Math.cos(a) * blurR, Math.sin(a) * blurR];
     }),
   ];
