@@ -3448,8 +3448,8 @@ class Seagull {
 
     // Elbow leads, tips follow with a phase delay (~quarter cycle behind)
     // This creates the wave/whip motion along the wing
-    const elbowT = this.flapping ? Math.sin(this.wingPhase) : 0;
-    const tipT = this.flapping ? Math.sin(this.wingPhase - Math.PI * 0.4) : 0; // delayed
+    const elbowT = this.flapping ? -Math.sin(this.wingPhase) : 0;
+    const tipT = this.flapping ? -Math.sin(this.wingPhase - Math.PI * 0.4) : 0;
 
     // Inner wing: shoulder to elbow (~40%), outer: elbow to tip (~60%)
     const innerLen = fullHalf * 0.4;
