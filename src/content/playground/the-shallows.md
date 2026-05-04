@@ -5284,10 +5284,12 @@ function draw(time) {
   }
 
   // Fade wave trail canvas — old wave positions disappear quickly
-  waveTrailCtx.globalCompositeOperation = 'destination-out';
-  waveTrailCtx.fillStyle = 'rgba(0, 0, 0, 0.18)';
-  waveTrailCtx.fillRect(0, 0, w, h);
-  waveTrailCtx.globalCompositeOperation = 'source-over';
+  // Use globalAlpha trick to avoid sub-pixel rounding that prevents full fade-out
+  waveTrailCtx.save();
+  waveTrailCtx.globalAlpha = 0.78; // multiply existing content by 78% each frame
+  waveTrailCtx.globalCompositeOperation = 'copy';
+  waveTrailCtx.drawImage(waveTrailCanvas, 0, 0);
+  waveTrailCtx.restore();
 
   // Draw wash wave fronts - foam shed behind the wave, not in front
   for (const ww of washWaves) {
@@ -5368,11 +5370,11 @@ function draw(time) {
       if (tr.life <= 0) { ww.trails.splice(ti, 1); continue; }
       tr.x += cosA * tr.driftSpeed;
       tr.y += sinA * tr.driftSpeed;
-      // Decays toward a minimum — keeps drifting visibly until death
-      const minDrift = (tr._minDrift || (tr._minDrift = tr.driftSpeed * 0.3));
-      tr.driftSpeed = minDrift + (tr.driftSpeed - minDrift) * 0.97;
+      // Decays toward a high minimum — must keep moving visibly until death
+      const minDrift = (tr._minDrift || (tr._minDrift = tr.driftSpeed * 0.5));
+      tr.driftSpeed = minDrift + (tr.driftSpeed - minDrift) * 0.96;
       const trAlpha = tr.life * tr.life * tr.life * tr.alpha; // cubic fade
-      if (trAlpha < 0.005) { ww.trails.splice(ti, 1); continue; }
+      if (trAlpha < 0.008) { ww.trails.splice(ti, 1); continue; }
       const perpX = -sinA, perpY = cosA;
       const t2 = time * 0.0012;
       const step = 4;
@@ -5407,7 +5409,7 @@ function draw(time) {
         trPts[i].y -= sinA * pull;
       }
 
-      waveTrailCtx.globalAlpha = trAlpha;
+      waveTrailCtx.globalAlpha = trAlpha * 0.5;
       waveTrailCtx.lineWidth = tr.thick * tr.life;
       waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
       waveTrailCtx.lineCap = 'butt'; waveTrailCtx.lineJoin = 'round';
@@ -5594,7 +5596,7 @@ function draw(time) {
         const baseAlpha = ww.life * ln.alpha;
 
         // Draw wave lines to trail canvas (frame-persistence creates ghost effect)
-        waveTrailCtx.globalAlpha = baseAlpha;
+        waveTrailCtx.globalAlpha = baseAlpha * 0.5;
         waveTrailCtx.lineWidth = ln.thick;
         waveTrailCtx.lineCap = 'butt';
         waveTrailCtx.lineJoin = 'round';
@@ -6289,7 +6291,7 @@ function draw(time) {
         trPts[i].y -= sinA * pull;
       }
 
-      waveTrailCtx.globalAlpha = trAlpha;
+      waveTrailCtx.globalAlpha = trAlpha * 0.5;
       waveTrailCtx.lineWidth = tr.thick * tr.life;
       waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
       waveTrailCtx.lineCap = 'butt'; waveTrailCtx.lineJoin = 'round';
@@ -6358,7 +6360,7 @@ function draw(time) {
         isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
 
-        waveTrailCtx.globalAlpha = baseAlpha;
+        waveTrailCtx.globalAlpha = baseAlpha * 0.5;
         waveTrailCtx.lineWidth = ln.thick;
         waveTrailCtx.lineCap = 'butt'; waveTrailCtx.lineJoin = 'round';
         waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
