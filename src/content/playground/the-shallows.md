@@ -614,23 +614,45 @@ function* getNeighbors(fx, fy) {
 }
 rebuildGrid();
 
+// Coordinate transform — accounts for CSS rotation in portrait fullscreen
+function screenToCanvas(clientX, clientY) {
+  const rotated = poolContainer.classList.contains('fs-rotated');
+  const rect = canvas.getBoundingClientRect();
+  if (rotated) {
+    // Container is rotated 90° CW: screen X → canvas Y, screen Y → canvas X (inverted)
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const rx = clientX - cx, ry = clientY - cy;
+    // Undo the 90° rotation: (rx, ry) → (ry, -rx)
+    const ux = ry, uy = -rx;
+    return {
+      x: (ux / (rect.height / 2) * 0.5 + 0.5) * w,
+      y: (uy / (rect.width / 2) * 0.5 + 0.5) * h,
+    };
+  }
+  return {
+    x: (clientX - rect.left) / rect.width * w,
+    y: (clientY - rect.top) / rect.height * h,
+  };
+}
+
 // Mouse
 let mouse = { x: -1000, y: -1000, prevX: -1000, prevY: -1000, active: false, speed: 0, down: false };
 canvas.addEventListener('mouseenter', e => {
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = (e.clientX - rect.left) / rect.width * w;
-  mouse.y = (e.clientY - rect.top) / rect.height * h;
+  const p = screenToCanvas(e.clientX, e.clientY);
+  mouse.x = p.x;
+  mouse.y = p.y;
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
   mouse.active = true;
   mouse.speed = 0;
 });
 canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
+  const p = screenToCanvas(e.clientX, e.clientY);
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
-  mouse.x = (e.clientX - rect.left) / rect.width * w;
-  mouse.y = (e.clientY - rect.top) / rect.height * h;
+  mouse.x = p.x;
+  mouse.y = p.y;
   if (!mouse.active) { mouse.prevX = mouse.x; mouse.prevY = mouse.y; }
   mouse.active = true;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
@@ -639,9 +661,9 @@ canvas.addEventListener('mouseleave', () => { mouse.active = false; mouse.down =
 canvas.addEventListener('mousedown', e => {
   e.preventDefault();
   mouse.down = true;
-  const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) / rect.width * w;
-  const my = (e.clientY - rect.top) / rect.height * h;
+  const p = screenToCanvas(e.clientX, e.clientY);
+  const mx = p.x;
+  const my = p.y;
   if (activeTool === 'food') {
     // Drop food where clicked - if on a rock it'll roll down into the water
     const b = 250 + Math.floor(Math.random() * 60);
@@ -665,11 +687,10 @@ canvas.addEventListener('mouseup', () => { mouse.down = false; });
 // Touch
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
   const t = e.touches[0];
-  // Scale touch point from CSS rect space to logical canvas space (w, h)
-  mouse.x = (t.clientX - rect.left) / rect.width * w;
-  mouse.y = (t.clientY - rect.top) / rect.height * h;
+  const p = screenToCanvas(t.clientX, t.clientY);
+  mouse.x = p.x;
+  mouse.y = p.y;
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
   mouse.active = true;
@@ -693,12 +714,12 @@ canvas.addEventListener('touchstart', e => {
 }, { passive: false });
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
   const t = e.touches[0];
+  const p = screenToCanvas(t.clientX, t.clientY);
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
-  mouse.x = (t.clientX - rect.left) / rect.width * w;
-  mouse.y = (t.clientY - rect.top) / rect.height * h;
+  mouse.x = p.x;
+  mouse.y = p.y;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
 }, { passive: false });
 canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
