@@ -5366,22 +5366,20 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcl = reefClamp(px, py);
-        trPts.push({ x: tcl.x, y: tcl.y });
+        trPts.push({ x: tcl.x, y: tcl.y, dim: tcl.dim });
       }
-      // Draw continuous curve — wraps around rocks
+      // Draw per-segment with dimming near rocks
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineWidth = tr.thick * tr.life;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.globalAlpha = trAlpha;
-      ctx.beginPath();
-      if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
-      for (let i = 1; i < trPts.length - 1; i++) {
-        const mx = (trPts[i].x + trPts[i + 1].x) * 0.5;
-        const my = (trPts[i].y + trPts[i + 1].y) * 0.5;
-        ctx.quadraticCurveTo(trPts[i].x, trPts[i].y, mx, my);
+      for (let i = 0; i < trPts.length - 1; i++) {
+        const segDim = Math.min(trPts[i].dim, trPts[i + 1].dim);
+        ctx.globalAlpha = trAlpha * segDim;
+        ctx.lineWidth = tr.thick * tr.life * segDim;
+        ctx.beginPath();
+        ctx.moveTo(trPts[i].x, trPts[i].y);
+        ctx.lineTo(trPts[i + 1].x, trPts[i + 1].y);
+        ctx.stroke();
       }
-      if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
-      ctx.stroke();
     }
 
     // Wave-reef interaction: push wave line points backward around above-water reefs
@@ -5417,41 +5415,34 @@ function draw(time) {
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
-        // Inside crown: push outward to nearest edge (wrap)
+        // Inside crown: push outward to nearest edge (wrap), heavily dimmed
         if (dist < edge && dist > 0.1) {
-          return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge };
+          return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, dim: 0.15 };
         }
 
         // In the wave-shadow: past the rock AND within the rock's lateral width
-        // These points would have passed through — clamp to the rock's side edge
         if (along > 0 && Math.abs(lateral) < rf.crownR + pad) {
-          // Find the edge of the crown at this lateral position (side edge)
-          const sideAngle = Math.atan2(lateral, 0) + (along > 0 ? ww.angle : ww.angle + Math.PI);
-          const sideEdge = rf.radiusAt(sideAngle, rf.crownRadii) + pad;
-
-          // Teardrop: shadow narrows with distance behind rock
           const taperLen = rf.crownR * 3.5;
           const taperT = Math.min(1, along / taperLen);
           const shadowWidth = (rf.crownR + pad) * Math.pow(1 - taperT, 1.5);
 
           if (Math.abs(lateral) < shadowWidth) {
-            // Clamp to the side edge on whichever side this point is on
             const sideDir = lateral >= 0 ? 1 : -1;
-            // Edge point: on the crown perimeter at the side facing this point
             const edgeAngle = Math.atan2(sideDir * cosA, -sideDir * sinA) + ww.angle;
             const eR = rf.radiusAt(edgeAngle, rf.crownRadii) + pad;
             const edgeX = cx + Math.cos(edgeAngle) * eR;
             const edgeY = cy + Math.sin(edgeAngle) * eR;
 
-            // Blend from edge (pinned) to free position based on taper
             const pin = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
             const bx = px * (1 - pin) + edgeX * pin;
             const by = py * (1 - pin) + edgeY * pin;
-            return { x: bx, y: by };
+            // Heavily dimmed in shadow, recovers as taper closes
+            const dim = 0.15 + taperT * 0.85;
+            return { x: bx, y: by, dim };
           }
         }
       }
-      return { x: px, y: py };
+      return { x: px, y: py, dim: 1 };
     }
 
     // Wave light band — barrel gradient spanning the full wave width
@@ -5517,24 +5508,22 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const cl = reefClamp(px, py);
-          pts.push({ x: cl.x, y: cl.y });
+          pts.push({ x: cl.x, y: cl.y, dim: cl.dim });
         }
-        // Draw continuous smooth curve — wraps around rocks
+        // Draw per-segment with dimming near rocks
         const baseAlpha = ww.life * ln.alpha;
-        ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        ctx.globalAlpha = baseAlpha;
-        ctx.beginPath();
-        if (pts.length > 0) ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length - 1; i++) {
-          const mx = (pts[i].x + pts[i + 1].x) * 0.5;
-          const my = (pts[i].y + pts[i + 1].y) * 0.5;
-          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const segDim = Math.min(pts[i].dim, pts[i + 1].dim);
+          ctx.globalAlpha = baseAlpha * segDim;
+          ctx.lineWidth = ln.thick * segDim;
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+          ctx.stroke();
         }
-        if (pts.length > 1) ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-        ctx.stroke();
       }
     } // end if (alive) — blob drawing continues below for lingering foam
 
@@ -6123,7 +6112,7 @@ function draw(time) {
         const lateral = relX * (-sinA) + relY * cosA;
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
-        if (dist < edge && dist > 0.1) return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge };
+        if (dist < edge && dist > 0.1) return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, dim: 0.15 };
         if (along > 0 && Math.abs(lateral) < rf.crownR + _pad) {
           const taperLen = rf.crownR * 3.5;
           const taperT = Math.min(1, along / taperLen);
@@ -6135,11 +6124,12 @@ function draw(time) {
             const edgeX = cx + Math.cos(edgeAngle) * eR;
             const edgeY = cy + Math.sin(edgeAngle) * eR;
             const pin = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
-            return { x: px * (1 - pin) + edgeX * pin, y: py * (1 - pin) + edgeY * pin };
+            const dim = 0.15 + taperT * 0.85;
+            return { x: px * (1 - pin) + edgeX * pin, y: py * (1 - pin) + edgeY * pin, dim };
           }
         }
       }
-      return { x: px, y: py };
+      return { x: px, y: py, dim: 1 };
     }
     const alive = ww.life > 0.1;
     // Trail lines
@@ -6159,21 +6149,19 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcp = clampPt(px, py);
-        trPts.push({ x: tcp.x, y: tcp.y });
+        trPts.push({ x: tcp.x, y: tcp.y, dim: tcp.dim });
       }
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineWidth = tr.thick * tr.life;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.globalAlpha = trAlpha;
-      ctx.beginPath();
-      if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
-      for (let j = 1; j < trPts.length - 1; j++) {
-        const mx = (trPts[j].x + trPts[j + 1].x) * 0.5;
-        const my = (trPts[j].y + trPts[j + 1].y) * 0.5;
-        ctx.quadraticCurveTo(trPts[j].x, trPts[j].y, mx, my);
+      for (let j = 0; j < trPts.length - 1; j++) {
+        const sd = Math.min(trPts[j].dim, trPts[j + 1].dim);
+        ctx.globalAlpha = trAlpha * sd;
+        ctx.lineWidth = tr.thick * tr.life * sd;
+        ctx.beginPath();
+        ctx.moveTo(trPts[j].x, trPts[j].y);
+        ctx.lineTo(trPts[j + 1].x, trPts[j + 1].y);
+        ctx.stroke();
       }
-      if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
-      ctx.stroke();
     }
     // Wave front lines
     if (alive) {
@@ -6196,22 +6184,20 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const fcp = clampPt(px, py);
-          pts.push({ x: fcp.x, y: fcp.y });
+          pts.push({ x: fcp.x, y: fcp.y, dim: fcp.dim });
         }
         const baseAlpha = ww.life * ln.alpha;
-        ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        ctx.globalAlpha = baseAlpha;
-        ctx.beginPath();
-        if (pts.length > 0) ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length - 1; i++) {
-          const mx = (pts[i].x + pts[i + 1].x) * 0.5;
-          const my = (pts[i].y + pts[i + 1].y) * 0.5;
-          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const sd = Math.min(pts[i].dim, pts[i + 1].dim);
+          ctx.globalAlpha = baseAlpha * sd;
+          ctx.lineWidth = ln.thick * sd;
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+          ctx.stroke();
         }
-        if (pts.length > 1) ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-        ctx.stroke();
       }
     }
   }
