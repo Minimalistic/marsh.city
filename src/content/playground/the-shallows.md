@@ -5628,6 +5628,28 @@ function draw(time) {
           pts[i].y -= sinA * pull;
         }
 
+        // Macro distortion: broad rubber-band stretch around collision points
+        // Much wider influence than micro drag — bends the whole wave shape
+        const macroSpread = Math.ceil(140 * viewScale / 4); // ~140px influence radius
+        const macroStrength = 35 * viewScale;
+        const macro = new Float32Array(pts.length);
+        for (let i = 0; i < pts.length; i++) {
+          if (!pts[i].hit) continue;
+          for (let d = 1; d <= macroSpread; d++) {
+            // Smooth bell curve falloff (approximated cosine)
+            const t = d / macroSpread;
+            const ease = 0.5 + 0.5 * Math.cos(t * Math.PI); // 1 at center, 0 at edge
+            if (i - d >= 0) macro[i - d] = Math.max(macro[i - d], ease);
+            if (i + d < pts.length) macro[i + d] = Math.max(macro[i + d], ease);
+          }
+        }
+        for (let i = 0; i < pts.length; i++) {
+          if (pts[i].hit || macro[i] < 0.01) continue;
+          const pull = macro[i] * macroStrength * ww.strength;
+          pts[i].x -= cosA * pull;
+          pts[i].y -= sinA * pull;
+        }
+
         isFirstLine = false;
         // Fade in over first 10% of travel so waves don't pop in at full brightness
         const waveProgress = 1 - ww.life;
@@ -6417,6 +6439,25 @@ function draw(time) {
         for (let i = 0; i < pts.length; i++) {
           if (pts[i].hit || drag[i] < 0.01) continue;
           const pull = drag[i] * dragStrength * ww.strength;
+          pts[i].x -= cosA * pull;
+          pts[i].y -= sinA * pull;
+        }
+        // Macro rubber-band distortion
+        const macroSpread = Math.ceil(140 * viewScale / 4);
+        const macroStrength = 35 * viewScale;
+        const macro = new Float32Array(pts.length);
+        for (let i = 0; i < pts.length; i++) {
+          if (!pts[i].hit) continue;
+          for (let d = 1; d <= macroSpread; d++) {
+            const t = d / macroSpread;
+            const ease = 0.5 + 0.5 * Math.cos(t * Math.PI);
+            if (i - d >= 0) macro[i - d] = Math.max(macro[i - d], ease);
+            if (i + d < pts.length) macro[i + d] = Math.max(macro[i + d], ease);
+          }
+        }
+        for (let i = 0; i < pts.length; i++) {
+          if (pts[i].hit || macro[i] < 0.01) continue;
+          const pull = macro[i] * macroStrength * ww.strength;
           pts[i].x -= cosA * pull;
           pts[i].y -= sinA * pull;
         }
