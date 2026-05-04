@@ -1012,7 +1012,7 @@ class Fish {
       // cross: signed lateral offset from school centerline
       const cross = (toCx * schHy - toCy * schHx) / toCDist;
       // Along-track pull toward center (gentle, keeps school compact)
-      const alongStr = 0.0052;
+      const alongStr = 0.0062;
       const alongX = schHx * foreAft * toCDist * alongStr;
       const alongY = schHy * foreAft * toCDist * alongStr;
       // Cross-track pull toward centerline — stronger at front and back (teardrop)
@@ -1020,11 +1020,11 @@ class Fish {
       const absCross = Math.abs(cross);
       let crossStr;
       if (foreAft > 0.3) {
-        crossStr = 0.016 + absForeAft * 0.01;
+        crossStr = 0.019 + absForeAft * 0.012;
       } else if (foreAft < -0.3) {
-        crossStr = 0.009 + absForeAft * 0.005;
+        crossStr = 0.011 + absForeAft * 0.006;
       } else {
-        crossStr = 0.005 + absCross * 0.003;
+        crossStr = 0.006 + absCross * 0.0036;
       }
       // Cross-track force: perpendicular to school heading, toward centerline
       const crossForceX = -schHy * cross * toCDist * crossStr;
@@ -1289,8 +1289,8 @@ class Fish {
     if (panicSprint) targetSpeed = scaledSpeed * 4.0; // last-ditch desperate burst
     else if (beingHunted) targetSpeed = scaledSpeed * 3.0; // panic sprint
     else if (this.fleeing) targetSpeed = scaledSpeed * 2.2;
-    else if (this.idle) targetSpeed = scaledSpeed * 0.9;
-    else targetSpeed = scaledSpeed * 1.3;
+    else if (this.idle) targetSpeed = scaledSpeed * 1.08;
+    else targetSpeed = scaledSpeed * 1.56;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
