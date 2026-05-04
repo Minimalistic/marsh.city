@@ -1137,7 +1137,7 @@ class Fish {
       if (this._biteTimer <= 0) this._biting = false;
     }
 
-    const foodRange = 400;
+    const foodRange = 700;
     let closestFood = null;
     let closestFoodDist = foodRange;
     // Skip food when fleeing, eating (post-bite pullback), or fearful
