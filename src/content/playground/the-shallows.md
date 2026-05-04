@@ -3920,7 +3920,7 @@ function spawnStarfish() {
 }
 spawnStarfish();
 
-let lastTime = 0;
+let lastTime = -1;
 let waveTime = 0;
 let settleTime = 0;
 
@@ -4125,10 +4125,14 @@ rebuildSandCanvas();
 function draw(time) {
   requestAnimationFrame(draw);
   try {
-  // Fixed dt — simulation always runs at 1/60s regardless of actual framerate
-  const dt = 1 / 60;
+  // Fixed timestep — skip frames on high-refresh displays to lock at ~60fps
+  if (lastTime < 0) { lastTime = time; return; }
+  const elapsed = time - lastTime;
+  if (elapsed < 14) return; // skip if <14ms since last tick (120Hz+ displays)
   lastTime = time;
-  if (settleTime > 0) settleTime -= dt;
+  // Scale dt by actual elapsed time so slow frames catch up naturally
+  // Clamped to avoid spiral of death on tab-switch or long pauses
+  const dt = Math.min(elapsed / 1000, 1 / 20);
 
   // Spawn fish as staggered waves swimming in from edges
   if (spawnWaves.length > 0) {
