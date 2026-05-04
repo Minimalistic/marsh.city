@@ -5663,9 +5663,6 @@ function draw(time) {
   }
   ctx.globalAlpha = 1;
 
-  // Composite wave trail canvas onto main — persistent ghost traces
-  ctx.drawImage(waveTrailCanvas, 0, 0, w, h);
-
   _measure('foam+waves');
 
   // Reef cling lines — wave remnants snagged on rocks, stretching and fading
