@@ -5359,7 +5359,7 @@ function draw(time) {
           alpha: tmpl.alpha * (0.6 + Math.random() * 0.4),
           freq: tmpl.freq,
           life: 1,
-          maxLife: 3.75 + Math.random() * 5.25,
+          maxLife: 5.6 + Math.random() * 7.9,
           driftSpeed: ww.speed * (0.4 + Math.random() * 0.3),
         });
       }
