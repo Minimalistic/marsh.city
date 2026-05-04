@@ -5992,6 +5992,150 @@ function draw(time) {
   }
   ctx.restore();
 
+  // Second pass: re-draw foam, ripples, and wave lines on top of fish/kelp/starfish
+  // Foam bits overlay
+  for (const fb of foamBits) {
+    const sizeCurve = fb.life > 0.6 ? 1 - (1 - fb.life) * 0.3 : Math.pow(fb.life / 0.6, 1.5);
+    const drawSize = fb.size * sizeCurve;
+    if (drawSize < 0.05) continue;
+    const alpha = fb.life * fb.life * fb.life * 0.35;
+    if (alpha < 0.003) continue;
+    ctx.beginPath();
+    ctx.arc(fb.x, fb.y, drawSize, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 225, 235, ${alpha})`;
+    ctx.fill();
+  }
+  // Wave blob overlay (per-wave foam blobs)
+  for (const ww of washWaves) {
+    if (ww.blobs) {
+      for (const b of ww.blobs) {
+        const life = 1 - b.age / b.maxAge;
+        if (life <= 0) continue;
+        const shrink = life < 0.3 ? 0.3 + (life / 0.3) * 0.7 : 1.0;
+        const alpha = life < 0.4 ? (life / 0.4) * (life / 0.4) * 0.22 : 0.22;
+        if (alpha < 0.003) continue;
+        const turb = life * life;
+        const stretch = 1 + turb * Math.sin(b.age * 2.5 + b.x * 0.1) * 0.6;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(b.x, b.y);
+        ctx.rotate(b.rot);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, b.size * b.elongX * shrink * stretch, b.size * b.elongY * shrink / stretch, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(210, 230, 240, 1)';
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+  // Wave front lines + trails overlay
+  // This makes waves visually overlap everything except reef crowns and birds
+  for (const ww of washWaves) {
+    const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
+    const span = Math.max(w, h) * 1.2;
+    const alive = ww.life > 0.1;
+    // Trail lines
+    for (const tr of ww.trails) {
+      if (tr.life <= 0) continue;
+      const trAlpha = tr.life * tr.life * tr.alpha;
+      if (trAlpha < 0.003) continue;
+      const perpX = -sinA, perpY = cosA;
+      const t2 = time * 0.0012;
+      const step = 8;
+      const trPts = [];
+      for (let pos = -span; pos <= span; pos += step) {
+        const f = tr.freq, vs = viewScale;
+        const offset = (Math.sin(pos * 0.025 * f + tr.seed) * (3 + Math.sin(t2 * 2.5 + tr.seed) * 2.5)
+                     + Math.sin(pos * 0.055 * f + tr.seed * 2.3) * (2 + Math.sin(t2 * 4.3 + tr.seed * 1.7) * 1.5)
+                     + Math.sin(pos * 0.012 * f + tr.seed * 5.1) * (1.5 + Math.sin(t2 * 6.5 + tr.seed * 3.1) * 1)) * vs;
+        let px = tr.x + perpX * pos + cosA * offset;
+        let py = tr.y + perpY * pos + sinA * offset;
+        for (const rf of reefs) {
+          if (rf.submerged) continue;
+          const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+          const dx = px - cx, dy = py - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 0.1) continue;
+          const angle = Math.atan2(dy, dx);
+          const edge = rf.radiusAt(angle, rf.crownRadii) + 5 * viewScale;
+          if (dist < edge) { px = cx + (dx / dist) * edge; py = cy + (dy / dist) * edge; }
+        }
+        trPts.push({ x: px, y: py });
+      }
+      ctx.beginPath();
+      if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
+      for (let j = 1; j < trPts.length - 1; j++) {
+        const mx = (trPts[j].x + trPts[j + 1].x) * 0.5;
+        const my = (trPts[j].y + trPts[j + 1].y) * 0.5;
+        ctx.quadraticCurveTo(trPts[j].x, trPts[j].y, mx, my);
+      }
+      if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
+      ctx.globalAlpha = trAlpha;
+      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      ctx.lineWidth = tr.thick * tr.life;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+    // Wave front lines
+    if (alive) {
+      const perpX = -sinA, perpY = cosA;
+      const t = time * 0.0012;
+      if (!ww.seed) ww.seed = Math.random() * 100;
+      const lines = [
+        { behind: 0, thick: 4.5 * viewScale, alpha: 1.0, freq: 1.6, speed: 1.8 },
+        { behind: 2 * viewScale, thick: 3.0 * viewScale, alpha: 0.4, freq: 1.0, speed: 1.0 },
+        { behind: 4 * viewScale, thick: 3.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
+      ];
+      for (const ln of lines) {
+        const step = 8;
+        const pts = [];
+        for (let pos = -span; pos <= span; pos += step) {
+          const f = ln.freq, vs = viewScale, ts = ln.speed;
+          const offset = (Math.sin(pos * 0.025 * f + ww.seed) * (4 + Math.sin(t * 2.5 * ts + ww.seed) * 3)
+                       + Math.sin(pos * 0.055 * f + ww.seed * 2.3) * (2.5 + Math.sin(t * 4.3 * ts + ww.seed * 1.7) * 2)
+                       + Math.sin(pos * 0.012 * f + ww.seed * 5.1) * (2 + Math.sin(t * 6.5 * ts + ww.seed * 3.9) * 1.5)) * vs;
+          let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
+          let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
+          let insideReef = false;
+          for (const rf of reefs) {
+            if (rf.submerged) continue;
+            const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+            const dx = px - cx, dy = py - cy;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx);
+            const edge = rf.radiusAt(angle, rf.crownRadii);
+            if (dist < edge + 3 * viewScale) { insideReef = true; break; }
+          }
+          pts.push({ x: px, y: py, visible: !insideReef });
+        }
+        const baseAlpha = ww.life * ln.alpha;
+        ctx.lineWidth = ln.thick; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        let runStart = -1;
+        for (let i = 0; i <= pts.length; i++) {
+          const vis = i < pts.length && pts[i].visible;
+          if (vis && runStart < 0) runStart = i;
+          if (!vis && runStart >= 0) {
+            ctx.beginPath();
+            ctx.moveTo(pts[runStart].x, pts[runStart].y);
+            for (let j = runStart + 1; j < i; j++) {
+              if (j < i - 1) {
+                const mx = (pts[j].x + pts[j + 1].x) * 0.5;
+                const my = (pts[j].y + pts[j + 1].y) * 0.5;
+                ctx.quadraticCurveTo(pts[j].x, pts[j].y, mx, my);
+              } else ctx.lineTo(pts[j].x, pts[j].y);
+            }
+            ctx.globalAlpha = baseAlpha;
+            ctx.stroke();
+            runStart = -1;
+          }
+        }
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+
   _mark('reefs');
   // Reef structures - waterline effects then above-water crown
   for (const rf of reefs) {
