@@ -3453,11 +3453,11 @@ class Seagull {
     const outerLen = fullHalf * 0.6;
 
     // Elbow moves in/out with flap (visible lateral motion from above)
-    const elbowShift = flapT * innerLen * 0.2; // 20% of inner length
+    const elbowShift = flapT * innerLen * 0.4; // 40% of inner length
     // Outer wing sweeps back on upstroke, extends forward on downstroke
-    const outerSweep = -flapT * bl * 0.08;
-    // Outer wing also folds inward slightly on upstroke
-    const outerFold = -flapT * outerLen * 0.15;
+    const outerSweep = -flapT * bl * 0.16;
+    // Outer wing also folds inward on upstroke
+    const outerFold = -flapT * outerLen * 0.3;
 
     const sides = [];
     for (const side of [-1, 1]) {
