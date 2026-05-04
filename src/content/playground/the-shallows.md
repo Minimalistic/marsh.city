@@ -1174,16 +1174,8 @@ class Fish {
       const accuracy = 0.4 + (this._phaseOffset % 1) * 0.6; // 0.4-1.0
       const eatDist = 6 + accuracy * 4; // accurate fish slow down earlier (6-10)
       if (closestFoodDist < eatDist && angleMismatch < 1.2) {
-        // Near food — steer toward it via velocity, let the turn rate limiter handle banking
+        // Near food — steer toward it, maintain speed, arc in
         const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        // Gentle brake only when very close and well-aligned
-        if (closestFoodDist < biteDist * 2 && angleMismatch < 0.5) {
-          const brakeBase = 0.82 + accuracy * 0.1;
-          const brake = Math.pow(brakeBase, dt * 60);
-          this.vx *= brake;
-          this.vy *= brake;
-        }
-        // Steer toward food by blending desired direction into velocity
         const steer = (0.15 + accuracy * 0.15) * dt * 60;
         const foodVx = Math.cos(desiredAngle) * curSpd;
         const foodVy = Math.sin(desiredAngle) * curSpd;
@@ -1534,39 +1526,32 @@ class Fish {
       this.angle = Math.atan2(this.vy, this.vx);
     }
 
-    // Fish swim forward — lateral motion absorbed into banking turns
+    // Fish always swim forward — never stall, never pivot in place
     const headX = Math.cos(this.angle);
     const headY = Math.sin(this.angle);
     const fwdSpeed = this.vx * headX + this.vy * headY;
     const latSpeed = this.vx * (-headY) + this.vy * headX;
-    // Dampen lateral drift — but allow some for banking feel
-    const latDamp = Math.pow(0.4, dt * 60); // ~60% kill per frame at 60fps
+    // Dampen lateral drift gently — keep some for banking arcs
+    const latDamp = Math.pow(0.5, dt * 60);
     this.vx -= (-headY) * latSpeed * (1 - latDamp);
     this.vy -= headX * latSpeed * (1 - latDamp);
-    // Backward momentum → banking turn instead of hard stop
+    // Backward momentum → banking arc, never a stop
     if (fwdSpeed < 0) {
-      // Convert backward energy into a tight arc — pick the direction we're already drifting
-      const turnSign = latSpeed > 0 ? 1 : -1;
+      const turnSign = latSpeed > 0 ? 1 : latSpeed < 0 ? -1 : (Math.random() < 0.5 ? 1 : -1);
       const backwardEnergy = Math.abs(fwdSpeed);
-      // Kill backward component
-      this.vx -= headX * fwdSpeed * 0.9;
-      this.vy -= headY * fwdSpeed * 0.9;
-      // Inject that energy as a lateral kick to bank the turn
-      this.vx += (-headY) * turnSign * backwardEnergy * 0.6;
-      this.vy += headX * turnSign * backwardEnergy * 0.6;
+      // Remove backward, convert fully to lateral for a tight arc
+      this.vx -= headX * fwdSpeed;
+      this.vy -= headY * fwdSpeed;
+      this.vx += (-headY) * turnSign * backwardEnergy * 0.8;
+      this.vy += headX * turnSign * backwardEnergy * 0.8;
     }
-    // Enforce minimum forward speed — strong enough to prevent stalling
-    const minFwd = scaledSpeed * 0.6;
+    // Hard floor: fish ALWAYS move forward at base speed minimum — no exceptions
+    const minFwd = scaledSpeed * 0.8;
     const fwdNow = this.vx * headX + this.vy * headY;
     if (fwdNow < minFwd) {
-      this.vx += headX * (minFwd - fwdNow) * 0.5;
-      this.vy += headY * (minFwd - fwdNow) * 0.5;
+      this.vx += headX * (minFwd - fwdNow);
+      this.vy += headY * (minFwd - fwdNow);
     }
-
-    // Drag - smooths out micro-jitter (dt-independent)
-    const drag = Math.pow(0.99, dt * 60);
-    this.vx *= drag;
-    this.vy *= drag;
 
     // Soft return from offscreen — unless this fish is leaving
     if (!this.leaving) {
@@ -1641,13 +1626,13 @@ class Fish {
       }
     }
 
-    // Angle tracks velocity direction — fish bank into turns, never pivot
+    // Angle tracks velocity direction — fish arc, never pivot
     const targetAngle = Math.atan2(this.vy, this.vx);
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    // Turn rate: always meaningful minimum, faster fish turn wider arcs
-    const maxTurn = (0.15 + currentSpeed * 0.06) * dt * 60;
+    // Fast turn rate — fish are agile, quick banking arcs
+    const maxTurn = (0.2 + currentSpeed * 0.08) * dt * 60;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
     // Smooth render angle — body visuals lag slightly behind physics heading
     let renderDiff = this.angle - this._renderAngle;
