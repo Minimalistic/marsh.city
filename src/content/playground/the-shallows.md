@@ -4128,13 +4128,34 @@ function rebuildSandCanvas() {
 }
 rebuildSandCanvas();
 
-// FPS counter — rolling average over 60 frames
+// FPS counter + section profiler
 let _fpsFrames = 0, _fpsLast = 0, _fpsDisplay = 0;
+const _prof = {}; // section name → accumulated ms this second
+const _profDisplay = {}; // snapshot shown on screen
+let _profWorst = ''; // worst section this second
+let _profWorstMs = 0;
+function _mark(name) { _prof[name] = performance.now(); }
+function _measure(name) {
+  const elapsed = performance.now() - (_prof[name] || 0);
+  _prof[name] = (_prof['_acc_' + name] || 0) + elapsed;
+  _prof['_acc_' + name] = _prof[name];
+}
 function draw(time) {
   requestAnimationFrame(draw);
   _fpsFrames++;
   if (time - _fpsLast >= 1000) {
     _fpsDisplay = Math.round(_fpsFrames * 1000 / (time - _fpsLast));
+    // Snapshot profiler data — find worst section
+    _profWorst = ''; _profWorstMs = 0;
+    for (const k of Object.keys(_prof)) {
+      if (k.startsWith('_acc_')) {
+        const name = k.slice(5);
+        const avg = _prof[k] / _fpsFrames;
+        _profDisplay[name] = avg;
+        if (avg > _profWorstMs) { _profWorstMs = avg; _profWorst = name; }
+        _prof[k] = 0;
+      }
+    }
     _fpsFrames = 0;
     _fpsLast = time;
   }
@@ -4468,6 +4489,7 @@ function draw(time) {
     if (d.y < 0) d.y = h; if (d.y > h) d.y = 0;
   }
 
+  _mark('foam+waves');
   // Update and draw floating foam bits — drift with current, slowly shrink and fade
   for (let i = foamBits.length - 1; i >= 0; i--) {
     const fb = foamBits[i];
@@ -4835,6 +4857,7 @@ function draw(time) {
   }
   ctx.globalAlpha = 1;
 
+  _measure('foam+waves');
   // Update ripples
   for (let i = ripples.length - 1; i >= 0; i--) {
     const r = ripples[i];
@@ -5053,12 +5076,15 @@ function draw(time) {
   }
 
   // Update and draw fish + predators + reef fish
+  _mark('fishUpdate');
   populateGrid(fish); // rebuild spatial grid for O(n) neighbor queries
   for (const f of fish) f.update(dt, fish, time);
   for (const rf of reefFish) rf.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
   for (const s of starfish) s.update(dt, time);
+  _measure('fishUpdate');
   // Draw debris as a simple batch — no y-sorting needed for sub-pixel dots
+  _mark('debris');
   for (let di = 0; di < debris.length; di++) {
     const d = debris[di];
     ctx.beginPath();
@@ -5067,6 +5093,7 @@ function draw(time) {
     ctx.fill();
   }
 
+  _measure('debris');
   // Draw swimmers and plants interleaved by y-position (top-down perspective)
   // Items higher on screen (lower y) are "further back" and drawn first
   const drawables = [];
@@ -5080,8 +5107,11 @@ function draw(time) {
   drawables.sort((a, b) => (layerOrder[a.type] - layerOrder[b.type]) || (a.y - b.y));
 
   // Batch all fish shadows into offscreen canvas, blur once, composite
+  _mark('shadows');
   drawAllFishShadows(ctx, drawables);
+  _measure('shadows');
 
+  _mark('fishDraw');
   for (const d of drawables) {
     if (d.type === 'plant') {
       d.obj.draw(ctx, time);
@@ -5098,6 +5128,7 @@ function draw(time) {
     }
   }
 
+  _measure('fishDraw');
   // Kelp base stems — always drawn on top so fish never clip behind roots
   for (const p of plants) p.drawBase(ctx);
 
@@ -5155,6 +5186,7 @@ function draw(time) {
   }
   ctx.restore();
 
+  _mark('reefs');
   // Reef structures - waterline effects then above-water crown
   for (const rf of reefs) {
     if (rf.submerged) continue; // fully underwater, no crown to draw
@@ -5361,6 +5393,7 @@ function draw(time) {
     ctx.restore();
   }
 
+  _measure('reefs');
   // DOF haze — disabled for performance testing
   // const dpr = Math.min(2, window.devicePixelRatio || 1);
   // const dofScale = 0.25;
@@ -5381,13 +5414,22 @@ function draw(time) {
   // ctx.restore();
   // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  // FPS overlay
+  // FPS + profiler overlay
   ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.fillRect(4, h - 22, 52, 18);
+  const _profKeys = Object.keys(_profDisplay);
+  const _profH = 14 + _profKeys.length * 12;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(4, h - _profH - 8, 130, _profH + 4);
+  ctx.font = '10px monospace';
   ctx.fillStyle = _fpsDisplay >= 55 ? '#8f8' : _fpsDisplay >= 30 ? '#ff8' : '#f88';
-  ctx.font = '11px monospace';
-  ctx.fillText(`${_fpsDisplay} fps`, 8, h - 8);
+  ctx.fillText(`${_fpsDisplay} fps`, 8, h - _profH + 2);
+  let _py = h - _profH + 14;
+  for (const k of _profKeys) {
+    const ms = _profDisplay[k];
+    ctx.fillStyle = k === _profWorst ? '#f88' : ms > 3 ? '#ff8' : '#aaa';
+    ctx.fillText(`${k}: ${ms.toFixed(1)}ms`, 8, _py);
+    _py += 12;
+  }
   ctx.restore();
 
   } catch(e) { console.error('Draw error:', e); }
