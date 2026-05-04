@@ -3884,6 +3884,25 @@ function rebuildSandCanvas() {
     sandCtx.fill();
     sandCtx.restore();
   }
+  // Submerged edge rocks — baked into sand layer for zero per-frame cost
+  for (const rf of reefs) {
+    for (const er of rf.edgeRocks) {
+      if (er.aboveWater) continue;
+      sandCtx.beginPath();
+      for (let vi = 0; vi <= er.verts.length; vi++) {
+        const v = er.verts[vi % er.verts.length];
+        const px = rf.x + er.ox + Math.cos(v.a) * v.r * er.r;
+        const py = rf.y + er.oy + Math.sin(v.a) * v.r * er.r;
+        if (vi === 0) sandCtx.moveTo(px, py);
+        else sandCtx.lineTo(px, py);
+      }
+      sandCtx.closePath();
+      sandCtx.fillStyle = er.color;
+      sandCtx.globalAlpha = 0.6;
+      sandCtx.fill();
+      sandCtx.globalAlpha = 1;
+    }
+  }
   // Seabed pebbles — small irregular gray rocks baked into the sand layer
   for (const sr of seabedRocks) {
     sandCtx.beginPath();
@@ -4882,23 +4901,7 @@ function draw(time) {
     sheenGrad.addColorStop(0, 'rgba(180, 230, 240, 0.1)');
     sheenGrad.addColorStop(1, 'rgba(180, 230, 240, 0)');
 
-    // Submerged edge rocks — drawn under the crown so they peek out at edges
-    for (const er of rf.edgeRocks) {
-      if (er.aboveWater) continue;
-      ctx.beginPath();
-      for (let vi = 0; vi <= er.verts.length; vi++) {
-        const v = er.verts[vi % er.verts.length];
-        const px = er.ox + Math.cos(v.a) * v.r * er.r;
-        const py = er.oy + Math.sin(v.a) * v.r * er.r;
-        if (vi === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.fillStyle = er.color;
-      ctx.globalAlpha = 0.6;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
+    // Submerged edge rocks are baked into sand canvas
 
     // Crown shape - the dry rock poking out of the water
     ctx.beginPath();
@@ -4930,7 +4933,7 @@ function draw(time) {
         ctx.fill();
       }
     }
-    // Above-water edge rocks — sit on top of the crown, breaking up the silhouette
+    // Above-water edge rocks — fill only, no outline
     for (const er of rf.edgeRocks) {
       if (!er.aboveWater) continue;
       ctx.beginPath();
@@ -4944,9 +4947,22 @@ function draw(time) {
       ctx.closePath();
       ctx.fillStyle = er.color;
       ctx.fill();
-      ctx.strokeStyle = er.rimColor;
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
+      // Waterline ripples around edge rocks that straddle the water
+      const erDist = Math.sqrt(er.ox * er.ox + er.oy * er.oy);
+      const crAngle = Math.atan2(er.oy - rf.crownOffY, er.ox - rf.crownOffX);
+      const crEdge = rf.radiusAt(crAngle, rf.crownRadii);
+      // Only ripple rocks near the crown edge (within 1.5x their radius of the waterline)
+      if (Math.abs(erDist - crEdge) < er.r * 1.5) {
+        for (let ring = 0; ring < 2; ring++) {
+          const rPhase = t * (0.6 + ring * 0.2) + er.ox * 0.1 + er.oy * 0.1;
+          const rOffset = er.r * (1.2 + ring * 0.8) + Math.sin(rPhase) * 1.5;
+          ctx.beginPath();
+          ctx.arc(er.ox, er.oy, rOffset, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(180, 210, 225, ${0.1 - ring * 0.035})`;
+          ctx.lineWidth = 0.8 - ring * 0.2;
+          ctx.stroke();
+        }
+      }
     }
     // Grass tufts — small blades swaying on the rock surface
     const sway = time * 0.001;
