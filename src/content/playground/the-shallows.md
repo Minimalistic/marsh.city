@@ -3467,28 +3467,30 @@ class Seagull {
       ? 0.75 + Math.cos(this.wingPhase) * 0.25
       : 1.0;
 
-    const halfSpan = this.wingspan * 0.5 * wingSpread;
+    const halfSpan = this.wingspan * 0.5 * wingSpread * 0.85; // 15% smaller wings
     const bl = this.bodyLen;
 
     // Wing dihedral — slight V angle from banking
     const bankShift = this._bank * 2;
+    // Wing attachment shifted 20% forward along body
+    const wingFwd = bl * 0.2;
 
-    // Wings — swept-back shape, wider at base, tapered to tips
+    // Wings — swept-back shape, attach forward on body, overlap torso
     for (const side of [-1, 1]) {
       ctx.beginPath();
-      // Wing root (at body)
-      ctx.moveTo(bl * 0.1, side * bl * 0.12);
-      // Leading edge — sweeps back slightly
+      // Wing root — inward to overlap body
+      ctx.moveTo(bl * 0.1 + wingFwd, side * bl * 0.06);
+      // Leading edge — sweeps back
       ctx.quadraticCurveTo(
-        -bl * 0.05, side * halfSpan * 0.5 + bankShift * side,
-        -bl * 0.15, side * halfSpan + bankShift * side
+        -bl * 0.05 + wingFwd, side * halfSpan * 0.5 + bankShift * side,
+        -bl * 0.15 + wingFwd, side * halfSpan + bankShift * side
       );
       // Wing tip (rounded)
-      ctx.lineTo(-bl * 0.3, side * halfSpan + bankShift * side);
+      ctx.lineTo(-bl * 0.3 + wingFwd, side * halfSpan + bankShift * side);
       // Trailing edge — curves back to body
       ctx.quadraticCurveTo(
-        -bl * 0.15, side * halfSpan * 0.5 + bankShift * side,
-        -bl * 0.35, side * bl * 0.1
+        -bl * 0.15 + wingFwd, side * halfSpan * 0.5 + bankShift * side,
+        -bl * 0.35 + wingFwd, side * bl * 0.06
       );
       ctx.closePath();
 
@@ -3502,15 +3504,15 @@ class Seagull {
 
       // Dark wing tips — black primary feathers
       ctx.beginPath();
-      ctx.moveTo(-bl * 0.05, side * halfSpan * 0.75 + bankShift * side);
+      ctx.moveTo(-bl * 0.05 + wingFwd, side * halfSpan * 0.75 + bankShift * side);
       ctx.quadraticCurveTo(
-        -bl * 0.1, side * halfSpan * 0.88 + bankShift * side,
-        -bl * 0.15, side * halfSpan + bankShift * side
+        -bl * 0.1 + wingFwd, side * halfSpan * 0.88 + bankShift * side,
+        -bl * 0.15 + wingFwd, side * halfSpan + bankShift * side
       );
-      ctx.lineTo(-bl * 0.3, side * halfSpan + bankShift * side);
+      ctx.lineTo(-bl * 0.3 + wingFwd, side * halfSpan + bankShift * side);
       ctx.quadraticCurveTo(
-        -bl * 0.2, side * halfSpan * 0.82 + bankShift * side,
-        -bl * 0.15, side * halfSpan * 0.72 + bankShift * side
+        -bl * 0.2 + wingFwd, side * halfSpan * 0.82 + bankShift * side,
+        -bl * 0.15 + wingFwd, side * halfSpan * 0.72 + bankShift * side
       );
       ctx.closePath();
       ctx.fillStyle = 'rgba(35, 40, 45, 0.8)';
@@ -3534,15 +3536,34 @@ class Seagull {
     ctx.fillStyle = 'rgba(240, 242, 245, 0.9)';
     ctx.fill();
 
-    // Tail feathers — small V behind body
+    // Tail feathers — fanned out, 5% longer
+    ctx.beginPath();
+    // Center spine of tail
+    ctx.moveTo(-bl * 0.3, 0);
+    // Fan out to 5 feather tips
+    ctx.lineTo(-bl * 0.55, bl * 0.12);
+    ctx.quadraticCurveTo(-bl * 0.5, bl * 0.06, -bl * 0.55, bl * 0.03);
+    ctx.lineTo(-bl * 0.48, 0);
+    ctx.lineTo(-bl * 0.55, -bl * 0.03);
+    ctx.quadraticCurveTo(-bl * 0.5, -bl * 0.06, -bl * 0.55, -bl * 0.12);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(175, 182, 190, 0.85)';
+    ctx.fill();
+    // Feather separation lines
+    ctx.strokeStyle = 'rgba(140, 150, 160, 0.3)';
+    ctx.lineWidth = 0.4;
     ctx.beginPath();
     ctx.moveTo(-bl * 0.32, 0);
-    ctx.lineTo(-bl * 0.52, bl * 0.06);
-    ctx.lineTo(-bl * 0.45, 0);
-    ctx.lineTo(-bl * 0.52, -bl * 0.06);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(180, 185, 190, 0.8)';
-    ctx.fill();
+    ctx.lineTo(-bl * 0.55, bl * 0.12);
+    ctx.moveTo(-bl * 0.32, 0);
+    ctx.lineTo(-bl * 0.55, bl * 0.03);
+    ctx.moveTo(-bl * 0.32, 0);
+    ctx.lineTo(-bl * 0.48, 0);
+    ctx.moveTo(-bl * 0.32, 0);
+    ctx.lineTo(-bl * 0.55, -bl * 0.03);
+    ctx.moveTo(-bl * 0.32, 0);
+    ctx.lineTo(-bl * 0.55, -bl * 0.12);
+    ctx.stroke();
 
     ctx.restore();
   }
@@ -5858,7 +5879,14 @@ function draw(time) {
   _debugEl.hidden = !debugVisible;
   if (debugVisible && _fpsLast > 0) {
     const fpsColor = _fpsDisplay >= 55 ? '#8f8' : _fpsDisplay >= 30 ? '#ff8' : '#f88';
-    let txt = `<span style="color:${fpsColor}">${_fpsDisplay} fps</span>  fish:${fish.length}  gulls:${seagulls.length}`;
+    // Entity counts by type
+    let txt = `<span style="color:${fpsColor}">${_fpsDisplay} fps</span>`;
+    txt += `\ntuna:${fish.length}  reef:${reefFish.length}  predator:${predators.length}`;
+    txt += `\nstarfish:${starfish.length}  gulls:${seagulls.length}  kelp:${plants.length}`;
+    txt += `\ndebris:${debris.length}  foam:${foamBits.length}  waves:${washWaves.length}`;
+    txt += `\nripples:${ripples.length}  scales:${killFx.length}  food:${foodPellets.length}`;
+    txt += `\nreefs:${reefs.length}  rocks:${rocks.length}  pebbles:${seabedRocks.length}`;
+    // Section profiler
     const _profKeys = Object.keys(_profDisplay);
     for (const k of _profKeys) {
       const ms = _profDisplay[k];
