@@ -5489,7 +5489,6 @@ function draw(time) {
 
         // Shadow zone: downstream of rock, within its lateral width
         const along = relX * cosA + relY * sinA; // positive = downstream
-        const lateral = relX * (-sinA) + relY * cosA;
         if (along > 0) {
           const taperLen = rf.crownR * 4;
           const taperT = Math.min(1, along / taperLen); // 0 at rock → 1 at taper end
@@ -6284,7 +6283,6 @@ function draw(time) {
         }
         // Shadow zone
         const along = relX * cosA + relY * sinA;
-        const lateral = relX * (-sinA) + relY * cosA;
         if (along > 0) {
           const taperLen = rf.crownR * 4;
           const taperT = Math.min(1, along / taperLen);
