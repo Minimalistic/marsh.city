@@ -3470,8 +3470,8 @@ class Seagull {
 
     // Elbow leads, tips follow with a phase delay (~quarter cycle behind)
     // This creates the wave/whip motion along the wing
-    const elbowT = this.flapping ? -Math.sin(this.wingPhase) : 0;
-    const tipT = this.flapping ? -Math.sin(this.wingPhase - Math.PI * 0.4) : 0;
+    const elbowT = this.flapping ? Math.sin(this.wingPhase) : 0;
+    const tipT = this.flapping ? Math.sin(this.wingPhase - Math.PI * 0.4) : 0;
 
     // Inner wing: shoulder to elbow (~40%), outer: elbow to tip (~60%)
     const innerLen = fullHalf * 0.4;
@@ -3497,7 +3497,7 @@ class Seagull {
 
     // Bank tilt — inner wing foreshortens, outer wing extends
     // _bank is positive when turning right (side=1 is inner), negative for left
-    const bankScale = (this._bank + this._turbBank) * 0.875;
+    const bankScale = (this._bank + this._turbBank) * 0.744;
 
     const sides = [];
     for (const side of [-1, 1]) {
@@ -3539,7 +3539,7 @@ class Seagull {
     ctx.translate(this.x + this._turbX, this.y + this._turbY);
     ctx.rotate(this._renderAngle + this._turbAngle);
     // Body shifts laterally into the turn (bird leans into it)
-    ctx.translate(0, (this._bank + this._turbBank) * this.bodyLen * 0.105);
+    ctx.translate(0, (this._bank + this._turbBank) * this.bodyLen * 0.089);
 
     const bl = this.bodyLen;
     const wings = this._wingGeometry();
