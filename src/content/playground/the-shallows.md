@@ -4197,18 +4197,44 @@ function draw(time) {
     const pushForce = ww.strength * ww.life;
     const cosA = Math.cos(ww.angle);
     const sinA = Math.sin(ww.angle);
+    // Fish: strong push at wave front, turbulence jitter, gentle trailing wash
+    const waveZone = ww.width * 3; // influence zone extends well behind the front
     for (const f of fish) {
       const rel = (f.x - ww.x) * cosA + (f.y - ww.y) * sinA;
-      if (rel > -5 && rel < ww.width) {
-        f.vx += cosA * pushForce * 0.025;
-        f.vy += sinA * pushForce * 0.025;
+      if (rel > -10 && rel < waveZone) {
+        // Intensity peaks at the wave front (rel ≈ 0), tapers behind
+        let intensity;
+        if (rel < 0) {
+          intensity = 1 + rel / 10; // ramp up just ahead of front
+        } else if (rel < ww.width) {
+          intensity = 1 - (rel / ww.width) * 0.4; // strong through the front band
+        } else {
+          // Trailing wash — gentle push that fades with distance behind
+          intensity = 0.6 * (1 - (rel - ww.width) / (waveZone - ww.width));
+        }
+        intensity = Math.max(0, intensity);
+        const force = pushForce * intensity;
+        // Forward push — wave shoves fish in its travel direction
+        f.vx += cosA * force * 0.08;
+        f.vy += sinA * force * 0.08;
+        // Lateral turbulence at the front — fish get jostled sideways
+        if (rel < ww.width * 1.5) {
+          const jitter = force * 0.04 * intensity;
+          f.vx += (Math.random() - 0.5) * jitter;
+          f.vy += (Math.random() - 0.5) * jitter;
+        }
       }
     }
     for (const pred of predators) {
       const rel = (pred.x - ww.x) * cosA + (pred.y - ww.y) * sinA;
-      if (rel > -5 && rel < ww.width) {
-        pred.vx += cosA * pushForce * 0.015;
-        pred.vy += sinA * pushForce * 0.015;
+      if (rel > -10 && rel < waveZone) {
+        let intensity;
+        if (rel < 0) intensity = 1 + rel / 10;
+        else if (rel < ww.width) intensity = 1 - (rel / ww.width) * 0.4;
+        else intensity = 0.6 * (1 - (rel - ww.width) / (waveZone - ww.width));
+        intensity = Math.max(0, intensity);
+        pred.vx += cosA * pushForce * intensity * 0.04;
+        pred.vy += sinA * pushForce * intensity * 0.04;
       }
     }
     for (const d of debris) {
