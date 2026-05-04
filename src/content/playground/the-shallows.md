@@ -820,9 +820,8 @@ let washTimer = 8 + Math.random() * 10;
 
 function spawnWash() {
   const angle = waveBaseAngle + (Math.random() - 0.5) * 0.06;
-  const diag = Math.sqrt(w * w + h * h) * 0.55;
-  const startX = w / 2 - Math.cos(angle) * diag;
-  const startY = h / 2 - Math.sin(angle) * diag;
+  const startX = w / 2 - Math.cos(angle) * w * 0.7;
+  const startY = h / 2 - Math.sin(angle) * h * 0.7;
   // Highly varied intensity - some are strong and fast, some barely there
   const intensity = Math.pow(Math.random(), 0.7); // skewed toward weaker
   washWaves.push({
@@ -833,7 +832,7 @@ function spawnWash() {
     strength: 0.1 + intensity * 0.6,
     life: 1,
     traveled: 0,
-    maxTravel: Math.sqrt(w * w + h * h) * 1.4, // diagonal needs more travel
+    maxTravel: Math.max(w, h) * 1.4,
   });
 }
 
@@ -914,7 +913,7 @@ class Fish {
     // Flee state
     this.fleeing = false;
     this.fleeTimer = 0;
-    // Eating cooldown — after grabbing a bite, fish dashes away briefly
+    // Eating pause
     this.eating = false;
     this.eatTimer = 0;
     // Bite lunge animation
@@ -960,7 +959,7 @@ class Fish {
 
   update(dt, fish, time) {
     this._drawTime = time;
-    // After grabbing a bite, fish dashes away then circles back
+    // After grabbing food, fish swims away to "chew" before coming back
     if (this.eating) {
       this.eatTimer -= dt;
       if (this.eatTimer <= 0) this.eating = false;
@@ -1143,7 +1142,7 @@ class Fish {
     const foodRange = 700;
     let closestFood = null;
     let closestFoodDist = foodRange;
-    // Skip food when fleeing or eating (post-bite dash away)
+    // Skip food when fleeing, eating (post-bite pullback), or fearful
     if (this.eating || this.fleeing) { closestFood = null; closestFoodDist = Infinity; }
     for (const fp of foodPellets) {
       if (this.eating || this.fleeing) break;
@@ -1168,48 +1167,58 @@ class Fish {
       this.distracted = false;
       this.distractTimer = 5;
 
-      // Steer toward food at full cruise — no braking, just redirect
-      const proximity = 1 - closestFoodDist / foodRange;
-      const steerWeight = 0.12 + proximity * 0.4; // stronger steering when close
-      const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-      const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.1;
-      const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.06;
-      const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
-      const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
-      this.vx += (desiredVx - this.vx) * steerWeight;
-      this.vy += (desiredVy - this.vy) * steerWeight;
-
-      // Drive-by bite — grab food while cruising past
-      const biteDist = 5;
-      if (closestFoodDist < biteDist && angleMismatch < 1.0 && !this.eating) {
-        closestFood.bites -= 2;
-        closestFood.size *= 0.93;
-        closestFood.vx += Math.cos(this.angle) * 0.08;
-        closestFood.vy += Math.sin(this.angle) * 0.08;
-        this._biting = true;
-        this._biteTimer = 0.1;
-        // Sharp veer after grabbing — keep speed, just change heading
-        const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        const turnDir = Math.random() < 0.5 ? 1 : -1;
-        this.angle += (0.6 + Math.random() * 1.2) * turnDir;
-        this.vx = Math.cos(this.angle) * spd * 1.3; // slight burst on bite
-        this.vy = Math.sin(this.angle) * spd * 1.3;
-        // Brief cooldown then circle back
-        this.eating = true;
-        this.eatTimer = 0.2 + Math.random() * 0.3;
-        // Scatter fragments occasionally
-        if (Math.random() < 0.3 && closestFood.size > 0.8) {
-          const fragAngle = Math.random() * Math.PI * 2;
-          foodPellets.push({
-            x: closestFood.x + Math.cos(fragAngle) * 3,
-            y: closestFood.y + Math.sin(fragAngle) * 3,
-            size: Math.max(0.3, closestFood.size * (0.4 + Math.random() * 0.3)),
-            bites: 2 + Math.floor(Math.random() * 3),
-            vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.5),
-            vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
-          });
+      const eatDist = 8;
+      const biteDist = 4;
+      if (closestFoodDist < eatDist) {
+        // Close to food — slow down and actively turn to face it
+        this.vx *= 0.82;
+        this.vy *= 0.82;
+        // Rotate toward the food so the fish can line up for a bite
+        const turnToFood = Math.max(-0.2, Math.min(0.2, headingDiff));
+        this.angle += turnToFood * 0.4;
+        this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating) {
+          closestFood.bites -= 2;
+          // Visible size reduction - food gets eaten away fast
+          closestFood.size *= 0.93;
+          // Gentle nudge on bite — food barely moves
+          closestFood.vx += Math.cos(this.angle) * 0.1;
+          closestFood.vy += Math.sin(this.angle) * 0.1;
+          // Peck lunge - dart forward then brief pullback
+          this._biting = true;
+          this._biteTimer = 0.12;
+          this.vx += Math.cos(this.angle) * 0.8;
+          this.vy += Math.sin(this.angle) * 0.8;
+          this.eating = true;
+          this.eatTimer = 0.3 + Math.random() * 0.5; // quick pullback, come right back
+          // Scatter fragments occasionally - food breaks apart
+          if (Math.random() < 0.3 && closestFood.size > 0.8) {
+            const fragAngle = Math.random() * Math.PI * 2;
+            foodPellets.push({
+              x: closestFood.x + Math.cos(fragAngle) * 3,
+              y: closestFood.y + Math.sin(fragAngle) * 3,
+              size: Math.max(0.3, closestFood.size * (0.4 + Math.random() * 0.3)),
+              bites: 2 + Math.floor(Math.random() * 3),
+              vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.5),
+              vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
+            });
+          }
+          if (closestFood.bites <= 0) closestFood.size = 0;
         }
-        if (closestFood.bites <= 0) closestFood.size = 0;
+      } else {
+        // Steer toward food eagerly — overrides schooling at close range
+        const proximity = 1 - closestFoodDist / foodRange;
+        const steerWeight = 0.15 + proximity * 0.35;
+        const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
+        // Per-fish approach offset — mild spread so they don't all pile from one side
+        const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
+        const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
+        const foodSpeed = scaledSpeed * (0.5 + (1 - proximity) * 0.4); // slow as they get closer
+        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
+        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * foodSpeed;
+        this.vx += (desiredVx - this.vx) * steerWeight;
+        this.vy += (desiredVy - this.vy) * steerWeight;
       }
     }
 
@@ -3863,7 +3872,7 @@ function spawnStarfish() {
 }
 spawnStarfish();
 
-let lastTime = -1;
+let lastTime = 0;
 let waveTime = 0;
 let settleTime = 0;
 
@@ -4068,14 +4077,10 @@ rebuildSandCanvas();
 function draw(time) {
   requestAnimationFrame(draw);
   try {
-  // Fixed timestep — skip frames on high-refresh displays to lock at ~60fps
-  if (lastTime < 0) { lastTime = time; return; }
-  const elapsed = time - lastTime;
-  if (elapsed < 14) return; // skip if <14ms since last tick (120Hz+ displays)
+  // Fixed dt — simulation always runs at 1/60s regardless of actual framerate
+  const dt = 1 / 60;
   lastTime = time;
-  // Scale dt by actual elapsed time so slow frames catch up naturally
-  // Clamped to avoid spiral of death on tab-switch or long pauses
-  const dt = Math.min(elapsed / 1000, 1 / 20);
+  if (settleTime > 0) settleTime -= dt;
 
   // Spawn fish as staggered waves swimming in from edges
   if (spawnWaves.length > 0) {
@@ -4148,10 +4153,9 @@ function draw(time) {
   // Update wash waves - push fish and debris as they pass
   for (let i = washWaves.length - 1; i >= 0; i--) {
     const ww = washWaves[i];
-    const step = ww.speed * dt * 60; // normalize to original 60fps-based speed
-    ww.x += Math.cos(ww.angle) * step;
-    ww.y += Math.sin(ww.angle) * step;
-    ww.traveled += step;
+    ww.x += Math.cos(ww.angle) * ww.speed;
+    ww.y += Math.sin(ww.angle) * ww.speed;
+    ww.traveled += ww.speed;
     ww.life = 1 - ww.traveled / ww.maxTravel;
     // Don't remove dead waves until their foam blobs have faded out
     if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0) && (!ww.trails || ww.trails.length === 0)) { washWaves.splice(i, 1); continue; }
@@ -4562,7 +4566,7 @@ function draw(time) {
     if (!ww.blobs) ww.blobs = [];
     const cosA = Math.cos(ww.angle);
     const sinA = Math.sin(ww.angle);
-    const span = Math.sqrt(w * w + h * h) * 0.7; // half-diagonal + margin for angled waves
+    const span = Math.max(w, h) * 1.2;
     const alive = ww.life > 0.1; // wave front still active (not just lingering foam)
 
     // Spawn foam only while the wave front is still active
@@ -4765,17 +4769,6 @@ function draw(time) {
       ctx.stroke();
     }
     if (r.radius >= r.maxRadius || r.opacity < 0.01) ripples.splice(i, 1);
-  }
-
-  // Drag-to-tap — continuous ripples while dragging in observe mode
-  if (mouse.down && mouse.active && activeTool !== 'food') {
-    if (!window._tapDragTimer) window._tapDragTimer = 0;
-    window._tapDragTimer -= dt;
-    if (window._tapDragTimer <= 0) {
-      window._tapDragTimer = 0.12; // ripple every ~120ms
-      ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 90 * viewScale, opacity: 0.35 });
-      tapVoids.push({ x: mouse.x, y: mouse.y, radius: 45 * viewScale, life: 1, maxLife: 2 + Math.random() * 1.5 });
-    }
   }
 
   // Decay tap voids
