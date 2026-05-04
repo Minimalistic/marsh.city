@@ -1140,10 +1140,10 @@ class Fish {
     const foodRange = 400;
     let closestFood = null;
     let closestFoodDist = foodRange;
-    // Only skip food search during the brief post-bite pullback, not a long chew
-    if (this.eating) { closestFood = null; closestFoodDist = Infinity; }
+    // Skip food when fleeing, eating (post-bite pullback), or fearful
+    if (this.eating || this.fleeing) { closestFood = null; closestFoodDist = Infinity; }
     for (const fp of foodPellets) {
-      if (this.eating) break;
+      if (this.eating || this.fleeing) break;
       if (fp.bites <= 0) continue;
       const fdx = fp.x - mouthX;
       const fdy = fp.y - mouthY;
@@ -1212,7 +1212,7 @@ class Fish {
         // Per-fish approach offset — mild spread so they don't all pile from one side
         const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
         const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
-        const foodSpeed = scaledSpeed * (1.0 + proximity * 0.3);
+        const foodSpeed = scaledSpeed * (0.5 + (1 - proximity) * 0.4); // slow as they get closer
         const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
         const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * foodSpeed;
         this.vx += (desiredVx - this.vx) * steerWeight;
