@@ -3310,7 +3310,7 @@ class Seagull {
     else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
     else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
 
-    this.speed = (1.0 + Math.random() * 0.5) * viewScale;
+    this.speed = (0.7 + Math.random() * 0.3) * viewScale;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
 
@@ -3366,9 +3366,9 @@ class Seagull {
     if (!this.leaving) {
       this.turnTimer -= dt;
       if (this.turnTimer <= 0) {
-        this.targetTurn = (Math.random() - 0.5) * 0.018;
-        // Occasionally circle tighter
-        if (Math.random() < 0.15) this.targetTurn *= 2.5;
+        this.targetTurn = (Math.random() - 0.5) * 0.01;
+        // Occasionally circle a bit tighter
+        if (Math.random() < 0.15) this.targetTurn *= 1.8;
         this.turnTimer = 5 + Math.random() * 15;
       }
 
@@ -3427,63 +3427,126 @@ class Seagull {
     }
   }
 
+  // Compute wing joint positions in local (rotated) coords for draw + shadow
+  _wingGeometry() {
+    const bl = this.bodyLen;
+    const fullHalf = this.wingspan * 0.5 * 0.85;
+    const bankShift = this._bank * 2;
+    const wingFwd = bl * 0.2;
+
+    // Flap drives outer wing fold — inner wing stays mostly extended
+    // flapAngle: 0 when gliding, oscillates during flaps
+    const flapAngle = this.flapping ? Math.sin(this.wingPhase) * 0.45 : 0;
+    // Inner wing barely moves, outer wing folds significantly
+    const innerFold = flapAngle * 0.15; // subtle inner dip
+    const outerFold = flapAngle * 0.6;  // pronounced outer fold
+
+    // Inner wing spans shoulder to elbow (~55% of total span)
+    // Outer wing spans elbow to tip (~45%)
+    const innerLen = fullHalf * 0.55;
+    const outerLen = fullHalf * 0.45;
+
+    // From above, fold foreshortens the visible span (cos of dihedral angle)
+    const innerVisible = innerLen * Math.cos(innerFold);
+    const outerVisible = outerLen * Math.cos(outerFold);
+
+    const sides = [];
+    for (const side of [-1, 1]) {
+      // Shoulder (wing root on body)
+      const sx = bl * 0.1 + wingFwd;
+      const sy = side * bl * 0.06;
+      // Elbow — end of inner wing, swept back slightly
+      const elbowX = -bl * 0.02 + wingFwd;
+      const elbowY = side * innerVisible + bankShift * side;
+      // Wing tip — outer segment, swept back more
+      const tipLeadX = elbowX - bl * 0.13;
+      const tipLeadY = elbowY + side * outerVisible + bankShift * side * 0.3;
+      const tipTrailX = elbowX - bl * 0.25;
+      const tipTrailY = tipLeadY;
+      // Trailing edge anchor at elbow
+      const elbowTrailX = elbowX - bl * 0.18;
+      const elbowTrailY = elbowY;
+      // Trailing root
+      const rootTrailX = -bl * 0.35 + wingFwd;
+      const rootTrailY = side * bl * 0.06;
+
+      // Inner wing width at elbow (chord)
+      const innerChord = bl * 0.2;
+      // Outer wing width at tip (narrower)
+      const outerChord = bl * 0.12;
+
+      sides.push({ side, sx, sy, elbowX, elbowY, tipLeadX, tipLeadY,
+        tipTrailX, tipTrailY, elbowTrailX, elbowTrailY,
+        rootTrailX, rootTrailY, innerChord, outerChord,
+        innerVisible, outerVisible });
+    }
+    return sides;
+  }
+
   draw(ctx) {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this._renderAngle);
 
-    // Wing spread — 1.0 when gliding, oscillates during flaps
-    const wingSpread = this.flapping
-      ? 0.75 + Math.cos(this.wingPhase) * 0.25
-      : 1.0;
-
-    const halfSpan = this.wingspan * 0.5 * wingSpread * 0.85; // 15% smaller wings
     const bl = this.bodyLen;
+    const wings = this._wingGeometry();
 
-    // Wing dihedral — slight V angle from banking
-    const bankShift = this._bank * 2;
-    // Wing attachment shifted 20% forward along body
-    const wingFwd = bl * 0.2;
-
-    // Wings — swept-back shape, attach forward on body, overlap torso
-    for (const side of [-1, 1]) {
+    // Draw each wing as two connected segments (inner + outer)
+    for (const w of wings) {
+      // Inner wing: shoulder to elbow
       ctx.beginPath();
-      // Wing root — inward to overlap body
-      ctx.moveTo(bl * 0.1 + wingFwd, side * bl * 0.06);
-      // Leading edge — sweeps back
+      ctx.moveTo(w.sx, w.sy);
+      // Leading edge to elbow
       ctx.quadraticCurveTo(
-        -bl * 0.05 + wingFwd, side * halfSpan * 0.5 + bankShift * side,
-        -bl * 0.15 + wingFwd, side * halfSpan + bankShift * side
+        (w.sx + w.elbowX) * 0.5 + bl * 0.03, (w.sy + w.elbowY) * 0.5,
+        w.elbowX, w.elbowY
       );
-      // Wing tip (rounded)
-      ctx.lineTo(-bl * 0.3 + wingFwd, side * halfSpan + bankShift * side);
-      // Trailing edge — curves back to body
+      // Trailing edge of inner wing at elbow
+      ctx.lineTo(w.elbowTrailX, w.elbowTrailY);
+      // Trailing edge back to root
       ctx.quadraticCurveTo(
-        -bl * 0.15 + wingFwd, side * halfSpan * 0.5 + bankShift * side,
-        -bl * 0.35 + wingFwd, side * bl * 0.06
+        (w.elbowTrailX + w.rootTrailX) * 0.5, (w.elbowTrailY + w.rootTrailY) * 0.5,
+        w.rootTrailX, w.rootTrailY
       );
       ctx.closePath();
-
-      // Main wing — light gray with subtle structure
       ctx.fillStyle = 'rgba(200, 210, 218, 0.92)';
       ctx.fill();
-      // Slight edge definition
       ctx.strokeStyle = 'rgba(140, 155, 165, 0.3)';
       ctx.lineWidth = 0.5;
       ctx.stroke();
 
-      // Dark wing tips — black primary feathers
+      // Outer wing: elbow to tip
       ctx.beginPath();
-      ctx.moveTo(-bl * 0.05 + wingFwd, side * halfSpan * 0.75 + bankShift * side);
+      ctx.moveTo(w.elbowX, w.elbowY);
+      // Leading edge to tip
       ctx.quadraticCurveTo(
-        -bl * 0.1 + wingFwd, side * halfSpan * 0.88 + bankShift * side,
-        -bl * 0.15 + wingFwd, side * halfSpan + bankShift * side
+        (w.elbowX + w.tipLeadX) * 0.5 + bl * 0.02,
+        (w.elbowY + w.tipLeadY) * 0.5,
+        w.tipLeadX, w.tipLeadY
       );
-      ctx.lineTo(-bl * 0.3 + wingFwd, side * halfSpan + bankShift * side);
+      // Tip edge
+      ctx.lineTo(w.tipTrailX, w.tipTrailY);
+      // Trailing edge back to elbow
       ctx.quadraticCurveTo(
-        -bl * 0.2 + wingFwd, side * halfSpan * 0.82 + bankShift * side,
-        -bl * 0.15 + wingFwd, side * halfSpan * 0.72 + bankShift * side
+        (w.tipTrailX + w.elbowTrailX) * 0.5,
+        (w.tipTrailY + w.elbowTrailY) * 0.5,
+        w.elbowTrailX, w.elbowTrailY
       );
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(195, 205, 215, 0.9)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(140, 155, 165, 0.25)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      // Dark wing tips — black primary feathers on outer segment
+      const tipMidY = (w.tipLeadY + w.tipTrailY) * 0.5;
+      const darkStartY = w.elbowY + (tipMidY - w.elbowY) * 0.55;
+      ctx.beginPath();
+      ctx.moveTo((w.elbowX + w.tipLeadX) * 0.5, darkStartY);
+      ctx.lineTo(w.tipLeadX, w.tipLeadY);
+      ctx.lineTo(w.tipTrailX, w.tipTrailY);
+      ctx.lineTo((w.elbowTrailX + w.tipTrailX) * 0.5, darkStartY);
       ctx.closePath();
       ctx.fillStyle = 'rgba(35, 40, 45, 0.8)';
       ctx.fill();
@@ -3643,45 +3706,72 @@ function drawAllFishShadows(ctx, drawables) {
       }
     }
   }
-  // Seagull shadows — stamped into the same shadow canvas, higher offset
+  // Seagull shadows — filled silhouette, not dot stamps
   for (const g of seagulls) {
     const heightScale = 1 + g.height * 0.3;
     const gOffX = shadowOffX + g.height * 15;
     const gOffY = shadowOffY + g.height * 20;
-    const wingSpread = g.flapping
-      ? 0.75 + Math.cos(g.wingPhase) * 0.25
-      : 1.0;
-    const halfSpan = g.wingspan * 0.5 * wingSpread * 0.85 * heightScale;
     const bl = g.bodyLen * heightScale;
     const angle = g._renderAngle;
-    const cosA = Math.cos(angle), sinA = Math.sin(angle);
     const cx = g.x + gOffX, cy = g.y + gOffY;
-    // Perpendicular to flight direction (wing axis)
-    const perpX = -sinA, perpY = cosA;
+    const wings = g._wingGeometry();
 
-    // Body shadow — elongated along flight direction
     shadowCtx.save();
     shadowCtx.translate(cx, cy);
     shadowCtx.rotate(angle);
-    shadowCtx.drawImage(shadowDot, -bl * 0.5, -bl * 0.15, bl, bl * 0.3);
-    shadowCtx.restore();
+    // Scale shadow slightly larger for height
+    shadowCtx.scale(heightScale, heightScale);
+    shadowCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
 
-    // Wing shadows — stamps along each wing, from root to tip
-    const wingSteps = 4;
-    for (let wi = 0; wi < wingSteps; wi++) {
-      const t = (wi + 0.5) / wingSteps; // 0 = root, 1 = tip
-      const spanPos = halfSpan * t;
-      const r = bl * 0.12 * (1 - t * 0.5); // tapers toward tip
-      for (const side of [-1, 1]) {
-        const wx = cx + perpX * spanPos * side - cosA * bl * 0.05;
-        const wy = cy + perpY * spanPos * side - sinA * bl * 0.05;
-        shadowCtx.save();
-        shadowCtx.translate(wx, wy);
-        shadowCtx.rotate(angle);
-        shadowCtx.drawImage(shadowDot, -r * 2, -r, r * 4, r * 2);
-        shadowCtx.restore();
-      }
+    // Body silhouette
+    shadowCtx.beginPath();
+    shadowCtx.ellipse(0, 0, bl * 0.45, bl * 0.1, 0, 0, Math.PI * 2);
+    shadowCtx.fill();
+
+    // Wing silhouettes — trace the same shape as the visible wings
+    for (const w of wings) {
+      // Inner wing
+      shadowCtx.beginPath();
+      shadowCtx.moveTo(w.sx, w.sy);
+      shadowCtx.quadraticCurveTo(
+        (w.sx + w.elbowX) * 0.5 + bl * 0.03, (w.sy + w.elbowY) * 0.5,
+        w.elbowX, w.elbowY
+      );
+      shadowCtx.lineTo(w.elbowTrailX, w.elbowTrailY);
+      shadowCtx.quadraticCurveTo(
+        (w.elbowTrailX + w.rootTrailX) * 0.5, (w.elbowTrailY + w.rootTrailY) * 0.5,
+        w.rootTrailX, w.rootTrailY
+      );
+      shadowCtx.closePath();
+      shadowCtx.fill();
+      // Outer wing
+      shadowCtx.beginPath();
+      shadowCtx.moveTo(w.elbowX, w.elbowY);
+      shadowCtx.quadraticCurveTo(
+        (w.elbowX + w.tipLeadX) * 0.5 + bl * 0.02,
+        (w.elbowY + w.tipLeadY) * 0.5,
+        w.tipLeadX, w.tipLeadY
+      );
+      shadowCtx.lineTo(w.tipTrailX, w.tipTrailY);
+      shadowCtx.quadraticCurveTo(
+        (w.tipTrailX + w.elbowTrailX) * 0.5,
+        (w.tipTrailY + w.elbowTrailY) * 0.5,
+        w.elbowTrailX, w.elbowTrailY
+      );
+      shadowCtx.closePath();
+      shadowCtx.fill();
     }
+
+    // Tail shadow
+    shadowCtx.beginPath();
+    shadowCtx.moveTo(-bl * 0.3, 0);
+    shadowCtx.lineTo(-bl * 0.55, bl * 0.18);
+    shadowCtx.lineTo(-bl * 0.48, 0);
+    shadowCtx.lineTo(-bl * 0.55, -bl * 0.18);
+    shadowCtx.closePath();
+    shadowCtx.fill();
+
+    shadowCtx.restore();
   }
 
   // Single blur pass on the half-res canvas
