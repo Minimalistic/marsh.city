@@ -3436,46 +3436,61 @@ class Seagull {
   }
 
   // Compute wing joint positions in local (rotated) coords for draw + shadow
+  // Top-down bird flap: flapT > 0 = downstroke, flapT < 0 = upstroke
   _wingGeometry() {
     const bl = this.bodyLen;
     const fullHalf = this.wingspan * 0.5 * 0.85;
     const bankShift = this._bank * 2;
     const wingFwd = bl * 0.2;
 
-    // Flap drives visible wing movement from above:
-    // - Elbow pulls inward on upstroke, pushes outward on downstroke
-    // - Outer wing sweeps back on upstroke, extends on downstroke
     const flapT = this.flapping ? Math.sin(this.wingPhase) : 0; // -1 to 1
 
-    // Inner wing: shoulder to elbow (~40% of span, joint closer to body)
-    // Outer wing: elbow to tip (~60%)
+    // Inner wing: shoulder to elbow (~40%), outer: elbow to tip (~60%)
     const innerLen = fullHalf * 0.4;
     const outerLen = fullHalf * 0.6;
 
-    // Elbow moves in/out with flap (visible lateral motion from above)
-    const elbowShift = flapT * innerLen * 0.4; // 40% of inner length
-    // Outer wing sweeps back on upstroke, extends forward on downstroke
-    const outerSweep = -flapT * bl * 0.16;
-    // Outer wing also folds inward on upstroke
-    const outerFold = -flapT * outerLen * 0.3;
+    // Elbow stays mostly at same distance from body:
+    // upstroke (flapT<0): pulls slightly inward, appears wider (angled toward viewer)
+    // downstroke (flapT>0): pushes slightly outward, appears narrower
+    const elbowShift = flapT * innerLen * 0.08;
+
+    // Inner wing chord (apparent width from above):
+    // upstroke: wing angled up toward viewer = appears wider
+    // downstroke: wing angled down away = appears narrower
+    const innerChordScale = 1 - flapT * 0.15; // 1.15 up, 0.85 down
+
+    // Outer wing from elbow to tip:
+    // upstroke: tips fold inward + sweep back (shorter apparent reach, pulled back)
+    // downstroke: tips extend outward + push slightly forward (longer reach)
+    const outerReach = outerLen * (1 + flapT * 0.2); // 0.8 up, 1.2 down
+    const outerSweepBack = -flapT * bl * 0.12; // positive=back on upstroke
+
+    // Tip taper — tips shrink on downstroke (angled away), widen on upstroke
+    const tipTaper = bl * (0.02 + (1 - flapT) * 0.008); // convergence amount
 
     const sides = [];
     for (const side of [-1, 1]) {
       // Shoulder (wing root on body)
       const sx = bl * 0.1 + wingFwd;
       const sy = side * bl * 0.06;
-      // Elbow — close to body, moves with flap
+
+      // Elbow — mostly stable distance, slight shift
       const elbowX = bl * 0.02 + wingFwd;
       const elbowY = side * (innerLen + elbowShift) + bankShift * side;
-      // Wing tip — swept back 15% more, tapered sharper
-      const tipLeadX = elbowX - bl * 0.22 + outerSweep;
-      const tipLeadY = elbowY + side * (outerLen + outerFold) + bankShift * side * 0.3;
-      // Trailing tip converges toward leading tip for taper
-      const tipTrailX = tipLeadX - bl * 0.08;
-      const tipTrailY = tipLeadY - side * bl * 0.02; // pulled inward for taper
-      // Trailing edge anchor at elbow
-      const elbowTrailX = elbowX - bl * 0.2;
+
+      // Inner wing trailing edge width varies with chord scale
+      const innerTrailOff = bl * 0.2 * innerChordScale;
+      const elbowTrailX = elbowX - innerTrailOff;
       const elbowTrailY = elbowY;
+
+      // Wing tip — reach and sweep change with flap
+      const tipLeadX = elbowX - bl * 0.22 + outerSweepBack;
+      const tipLeadY = elbowY + side * outerReach + bankShift * side * 0.3;
+
+      // Trailing tip converges for taper — more on downstroke
+      const tipTrailX = tipLeadX - bl * 0.08;
+      const tipTrailY = tipLeadY - side * tipTaper;
+
       // Trailing root
       const rootTrailX = -bl * 0.35 + wingFwd;
       const rootTrailY = side * bl * 0.06;
