@@ -873,7 +873,7 @@ function spawnWash() {
   washWaves.push({
     x: startX, y: startY,
     angle,
-    speed: Math.min((0.96 + intensity * 2.4) * (w / initialW), 2.52 * (w / initialW)),
+    speed: Math.min((0.96 + intensity * 2.4) * (w / initialW), 2.14 * (w / initialW)),
     width: (15 + intensity * 40) * viewScale,
     strength: 0.1 + intensity * 0.6,
     life: 1,
@@ -5288,9 +5288,9 @@ function draw(time) {
       if (!ww.seed) ww.seed = Math.random() * 100;
       const t = time * 0.0012;
       const lines = [
-        { behind: 0, thick: 3.2 * viewScale, alpha: 0.5, freq: 1.8 },     // bold leading edge, erratic
+        { behind: 0, thick: 3.2 * viewScale, alpha: 0.9, freq: 1.8 },     // near-opaque leading edge
         { behind: 2 * viewScale, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
-        { behind: 5 * viewScale, thick: 2.5 * viewScale, alpha: 0.4, freq: 2.2 },  // thick secondary, fast-changing
+        { behind: 4 * viewScale, thick: 2.5 * viewScale, alpha: 0.85, freq: 2.2 },  // near-opaque secondary
         { behind: 9 * viewScale, thick: 1.0 * viewScale, alpha: 0.2, freq: 1.1 },
         { behind: 14 * viewScale, thick: 0.6 * viewScale, alpha: 0.1, freq: 1.5 },
         { behind: 20 * viewScale, thick: 0.35 * viewScale, alpha: 0.05, freq: 1.8 },
