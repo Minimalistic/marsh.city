@@ -5323,7 +5323,7 @@ function draw(time) {
       if (!ww.seed) ww.seed = Math.random() * 100;
       const t = time * 0.0012;
       const lines = [
-        { behind: 0, thick: 3.2 * viewScale, alpha: 0.9, freq: 1.8, speed: 1.4 },
+        { behind: 0, thick: 3.2 * viewScale, alpha: 1.0, freq: 2.8, speed: 2.0 },
         { behind: 2 * viewScale, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0, speed: 1.0 },
         { behind: 4 * viewScale, thick: 2.5 * viewScale, alpha: 0.85, freq: 2.2, speed: 1.6 },
         { behind: 9 * viewScale, thick: 1.0 * viewScale, alpha: 0.2, freq: 1.1, speed: 0.9 },
