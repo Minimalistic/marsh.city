@@ -4712,8 +4712,8 @@ function rebuildSandCanvas() {
     const blurScale = 1 + (1 - prox) * 3; // 1× near rocks, 4× far away
     const ridgeThick = (3.6 + Math.sin(seed * 2.3) * 1.5) * viewScale * blurScale;
 
-    rippleCtx.beginPath();
-    let first = true;
+    // Build points with per-point proximity for alpha falloff along the line
+    const pts = [];
     for (let pos = -diagonal * 0.6; pos <= diagonal * 0.6; pos += rippleStep) {
       const wobble = Math.sin(pos * 0.015 + seed) * 3.5
                    + Math.sin(pos * 0.037 + seed * 2.1) * 1.8
@@ -4735,18 +4735,27 @@ function rebuildSandCanvas() {
         }
       }
 
-      if (rx < -20 || rx > w + 20 || ry < -20 || ry > h + 20) { first = true; continue; }
-      if (first) { rippleCtx.moveTo(rx, ry); first = false; }
-      else rippleCtx.lineTo(rx, ry);
+      if (rx < -20 || rx > w + 20 || ry < -20 || ry > h + 20) { pts.push(null); continue; }
+      const ptProx = rockProximity(rx, ry);
+      pts.push({ x: rx, y: ry, a: ptProx * 0.08 });
     }
-    // Alpha based on proximity — only visible near rocks, fades away
-    const ridgeAlpha = prox * 0.08 + Math.sin(seed) * 0.01;
-    if (ridgeAlpha < 0.005) continue; // skip invisible ridges
 
-    rippleCtx.strokeStyle = `rgba(195, 188, 167, ${ridgeAlpha})`;
+    // Draw per-segment with fading alpha along the line
     rippleCtx.lineWidth = ridgeThick;
     rippleCtx.lineCap = 'round';
-    rippleCtx.stroke();
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i], p1 = pts[i + 1];
+      if (!p0 || !p1) continue;
+      const segAlpha = Math.min(p0.a, p1.a);
+      if (segAlpha < 0.003) continue;
+      rippleCtx.globalAlpha = segAlpha;
+      rippleCtx.strokeStyle = 'rgba(195, 188, 167, 1)';
+      rippleCtx.beginPath();
+      rippleCtx.moveTo(p0.x, p0.y);
+      rippleCtx.lineTo(p1.x, p1.y);
+      rippleCtx.stroke();
+    }
+    rippleCtx.globalAlpha = 1;
   }
 
   // Gaussian blur via multiple offset draws — more passes further from rocks
