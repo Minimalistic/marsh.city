@@ -5465,13 +5465,13 @@ function draw(time) {
         ctx.translate(ww.x, ww.y);
         ctx.rotate(ww.angle);
 
-        // Barrel gradient: radial ellipse, wide along wave line, narrow front-to-back
-        const spanHalf = Math.max(w, h) * 0.8;
-        // Multiple layered ellipses for barrel effect — bright core, soft edges
+        // Barrel gradient: narrow along wave travel (X), wide along wave line (Y)
+        // After ctx.rotate(ww.angle): X = wave travel direction, Y = along the wave line
+        const spanHalf = Math.max(w, h) * 0.8; // how far the band extends along the wave line
         const layers = [
-          { rx: spanHalf, ry: bandDepth * 0.15, a: bandAlpha * 0.9, c: '150, 230, 235' },  // tight bright core
-          { rx: spanHalf, ry: bandDepth * 0.3, a: bandAlpha * 0.5, c: '120, 215, 225' },    // medium band
-          { rx: spanHalf, ry: bandDepth * 0.5, a: bandAlpha * 0.2, c: '100, 200, 215' },    // wide soft glow
+          { depth: bandDepth * 0.15, a: bandAlpha * 0.9, c: '150, 230, 235' },  // tight bright core
+          { depth: bandDepth * 0.3, a: bandAlpha * 0.5, c: '120, 215, 225' },    // medium band
+          { depth: bandDepth * 0.5, a: bandAlpha * 0.2, c: '100, 200, 215' },    // wide soft glow
         ];
         for (const ly of layers) {
           const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
@@ -5480,9 +5480,8 @@ function draw(time) {
           g.addColorStop(1, `rgba(${ly.c}, 0)`);
           ctx.fillStyle = g;
           ctx.save();
-          // Offset slightly behind the wave front (crest is just behind leading edge)
-          ctx.translate(-bandDepth * 0.1, 0);
-          ctx.scale(ly.rx, ly.ry);
+          // X = depth (narrow, front-to-back), Y = span (wide, along wave line)
+          ctx.scale(ly.depth, spanHalf);
           ctx.fillRect(-1, -1, 2, 2);
           ctx.restore();
         }
