@@ -1150,15 +1150,16 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Steer toward food from varied angles — fish surround it, not pile from one side
+        // Steer toward food eagerly — overrides schooling at close range
         const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.08 + proximity * 0.12;
+        const steerWeight = 0.15 + proximity * 0.35;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
         // Per-fish approach offset — spreads fish around the food
-        const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.3;
-        const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.1;
-        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
-        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
+        const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.25;
+        const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
+        const foodSpeed = scaledSpeed * (1.3 + proximity * 0.5);
+        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
+        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * foodSpeed;
         this.vx += (desiredVx - this.vx) * steerWeight;
         this.vy += (desiredVy - this.vy) * steerWeight;
       }
@@ -4419,8 +4420,17 @@ function draw(time) {
     const fp = foodPellets[i];
     fp.vx *= 0.92;
     fp.vy *= 0.92;
-    fp.vx += Math.cos(tide.angle) * tide.strength * 0.001;
-    fp.vy += Math.sin(tide.angle) * tide.strength * 0.001;
+    // Gentle drift with tide and current
+    fp.vx += Math.cos(tide.angle) * tide.strength * 0.004;
+    fp.vy += Math.sin(tide.angle) * tide.strength * 0.004;
+    // Bob and float — slow organic drift with local turbulence
+    if (!fp._bobPhase) fp._bobPhase = Math.random() * Math.PI * 20;
+    const bob = time * 0.001;
+    fp.vx += Math.sin(bob * 0.7 + fp._bobPhase) * 0.015;
+    fp.vy += Math.cos(bob * 0.9 + fp._bobPhase * 1.3) * 0.012;
+    const flow = sampleFlow(fp.x, fp.y, time);
+    fp.vx += flow.fx * 0.02;
+    fp.vy += flow.fy * 0.02;
     fp.x += fp.vx;
     fp.y += fp.vy;
     // Food on or near a reef slides out to where fish can reach it
