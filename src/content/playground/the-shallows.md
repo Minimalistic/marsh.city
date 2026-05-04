@@ -5172,22 +5172,23 @@ function draw(time) {
   drawAllFishShadows(ctx, drawables);
   _measure('shadows');
 
+  // Known-good transform — hard reset to this after each fish draw
+  // so a corrupted save/restore stack can never leak transforms between fish
+  const _dpr = Math.min(2, window.devicePixelRatio || 1);
   _mark('fishDraw');
   for (const d of drawables) {
     if (d.type === 'plant') {
       d.obj.draw(ctx, time);
     } else if (d.type === 'starfish') {
-      ctx.save();
       ctx.globalAlpha = d.obj.depthAlpha;
       d.obj.draw(ctx);
-      ctx.restore();
+      ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
+      ctx.globalAlpha = 1;
     } else {
-      // Fish draw can throw on NaN joints (non-finite gradient coords).
-      // If it does, we MUST restore canvas state or screen blend leaks → overexposure.
-      ctx.save();
       ctx.globalAlpha = d.obj.depthAlpha;
-      try { d.obj.draw(ctx); } catch(e) { /* NaN in draw, skip this fish */ }
-      ctx.restore();
+      try { d.obj.draw(ctx); } catch(e) { /* NaN in draw, skip */ }
+      // Hard reset — bypasses save/restore stack entirely
+      ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
     }
