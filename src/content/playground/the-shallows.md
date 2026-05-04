@@ -2709,20 +2709,19 @@ class Predator {
     this.vy *= 0.99;
 
     // Soft boundary — starts pushing 10% from edge, hard push when offscreen
-    const margin = 0.1;
-    const normX = this.x / w; // 0-1 when in viewport
-    const normY = this.y / h;
-    if (normX < margin) { const t = (margin - normX) / margin; this.vx += t * t * 1.5; }
-    if (normX > 1 - margin) { const t = (normX - (1 - margin)) / margin; this.vx -= t * t * 1.5; }
-    if (normY < margin) { const t = (margin - normY) / margin; this.vy += t * t * 1.5; }
-    if (normY > 1 - margin) { const t = (normY - (1 - margin)) / margin; this.vy -= t * t * 1.5; }
+    const bMargin = 0.1;
+    const bx = this.x / w, by = this.y / h; // 0-1 when in viewport
+    if (bx < bMargin) { const t = (bMargin - bx) / bMargin; this.vx += t * t * 1.5; }
+    if (bx > 1 - bMargin) { const t = (bx - (1 - bMargin)) / bMargin; this.vx -= t * t * 1.5; }
+    if (by < bMargin) { const t = (bMargin - by) / bMargin; this.vy += t * t * 1.5; }
+    if (by > 1 - bMargin) { const t = (by - (1 - bMargin)) / bMargin; this.vy -= t * t * 1.5; }
     // Hard push when offscreen
     if (this.x < 0) this.vx += 0.8;
     if (this.x > w) this.vx -= 0.8;
     if (this.y < 0) this.vy += 0.8;
     if (this.y > h) this.vy -= 0.8;
     // Drop target if stuck at edge — don't chase into walls
-    if (this.target && (normX < 0.02 || normX > 0.98 || normY < 0.02 || normY > 0.98)) {
+    if (this.target && (bx < 0.02 || bx > 0.98 || by < 0.02 || by > 0.98)) {
       this.target = null;
       this._retargetCooldown = 2 + Math.random() * 2;
     }
