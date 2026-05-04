@@ -3310,10 +3310,37 @@ function makeReef(x, y, sizeMultiplier = 1) {
     });
   }
 
+  // Grass tufts — sparse clumps on the exposed rock surface
+  const grassTufts = [];
+  const tuftCount = 2 + Math.floor(Math.random() * 3); // 2-4 per reef
+  for (let i = 0; i < tuftCount; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const cr = radiusAt(a, crownRadii);
+    const dist = Math.random() * cr * 0.7; // within the crown area
+    const bladeCount = 3 + Math.floor(Math.random() * 4); // 3-6 blades per tuft
+    const green = 45 + Math.floor(Math.random() * 30);
+    const blades = [];
+    for (let b = 0; b < bladeCount; b++) {
+      blades.push({
+        angle: -Math.PI / 2 + (Math.random() - 0.5) * 0.8, // mostly upward, some lean
+        length: (4 + Math.random() * 6) * (crownR / 30), // scale with reef
+        width: 0.6 + Math.random() * 0.6,
+        phase: Math.random() * Math.PI * 2, // sway offset
+      });
+    }
+    grassTufts.push({
+      ox: crownOffX + Math.cos(a) * dist,
+      oy: crownOffY + Math.sin(a) * dist,
+      blades,
+      color: `rgb(${green + 15}, ${green + 40}, ${green - 5})`,
+      tipColor: `rgb(${green + 25}, ${green + 55}, ${green + 5})`,
+    });
+  }
+
   return {
     x, y, baseR, crownR, crownOffX, crownOffY,
     baseShape, crownShape, baseColor, crownColor, rimColor,
-    baseRadii, crownRadii, radiusAt, edgeRocks,
+    baseRadii, crownRadii, radiusAt, edgeRocks, grassTufts,
     // Avoidance uses shape-aware radius
     avoidR: baseR * 0.85,
   };
@@ -4860,6 +4887,26 @@ function draw(time) {
       ctx.strokeStyle = er.rimColor;
       ctx.lineWidth = 0.8;
       ctx.stroke();
+    }
+    // Grass tufts — small blades swaying on the rock surface
+    const sway = time * 0.001;
+    for (const tuft of rf.grassTufts) {
+      for (const bl of tuft.blades) {
+        const wobble = Math.sin(sway * 1.5 + bl.phase) * 0.15 + Math.sin(sway * 2.7 + bl.phase * 1.6) * 0.08;
+        const baseX = tuft.ox, baseY = tuft.oy;
+        const tipX = baseX + Math.cos(bl.angle + wobble) * bl.length;
+        const tipY = baseY + Math.sin(bl.angle + wobble) * bl.length;
+        // Quadratic curve for a slight natural bow
+        const midX = (baseX + tipX) * 0.5 + Math.sin(bl.angle + wobble + 0.5) * bl.length * 0.15;
+        const midY = (baseY + tipY) * 0.5 + Math.cos(bl.angle + wobble + 0.5) * bl.length * 0.15;
+        ctx.beginPath();
+        ctx.moveTo(baseX, baseY);
+        ctx.quadraticCurveTo(midX, midY, tipX, tipY);
+        ctx.strokeStyle = tuft.color;
+        ctx.lineWidth = bl.width;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
     }
     ctx.restore();
   }
