@@ -67,9 +67,15 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 .pool-hint.show { opacity: 1; }
 .pool-fs-btn { position: absolute; bottom: 8px; right: 8px; z-index: 10; }
 .pool-fs-close { position: absolute; top: 8px; left: 8px; z-index: 10; }
-.fake-fullscreen #toolbar { top: calc(8px + env(safe-area-inset-top, 0px)) !important; right: calc(8px + env(safe-area-inset-right, 0px)) !important; }
-.fake-fullscreen .pool-fs-close { top: calc(8px + env(safe-area-inset-top, 0px)); left: calc(8px + env(safe-area-inset-left, 0px)); }
-.fake-fullscreen .pool-fs-btn { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); right: calc(8px + env(safe-area-inset-right, 0px)); }
+.fake-fullscreen #toolbar,
+#pool-container:fullscreen #toolbar,
+#pool-container:-webkit-full-screen #toolbar { top: calc(8px + env(safe-area-inset-top, 0px)) !important; right: calc(14px + env(safe-area-inset-right, 0px)) !important; }
+.fake-fullscreen .pool-fs-close,
+#pool-container:fullscreen .pool-fs-close,
+#pool-container:-webkit-full-screen .pool-fs-close { top: calc(8px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); }
+.fake-fullscreen .pool-fs-btn,
+#pool-container:fullscreen .pool-fs-btn,
+#pool-container:-webkit-full-screen .pool-fs-btn { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); }
 #toolbar.hidden, .pool-fs-btn.hidden, .pool-fs-close.hidden { opacity: 0; pointer-events: none; }
 #toolbar, .pool-fs-btn, .pool-fs-close { transition: opacity 0.5s; }
 #pool-container:fullscreen,
@@ -161,7 +167,7 @@ function initAudio() {
 
   oceanFilter = audioCtx.createBiquadFilter();
   oceanFilter.type = 'bandpass';
-  oceanFilter.frequency.value = 400;
+  oceanFilter.frequency.value = 250;
   oceanFilter.Q.value = 0.5;
 
   const lowShelf = audioCtx.createBiquadFilter();
@@ -173,7 +179,7 @@ function initAudio() {
   oceanLfo.type = 'sine';
   oceanLfo.frequency.value = 0.07;
   oceanLfoGain = audioCtx.createGain();
-  oceanLfoGain.gain.value = 250;
+  oceanLfoGain.gain.value = 150;
   oceanLfo.connect(oceanLfoGain);
   oceanLfoGain.connect(oceanFilter.frequency);
 
@@ -444,7 +450,7 @@ function updateOceanSound() {
 
   // Filter: muffled at rest, brighter as waves arrive
   oceanFilter.frequency.setTargetAtTime(
-    180 + waveIntensity * 100 + washPresence * 600,
+    120 + waveIntensity * 60 + washPresence * 320,
     audioCtx.currentTime, 0.2
   );
   // Volume: always-audible base, swells with wave presence
@@ -479,10 +485,30 @@ function updateOceanSound() {
     }
     // Add a subtle random ambient rumble on top
     const ambientRumble = Math.max(0, Math.sin(waveTime * 0.13) * Math.sin(waveTime * 0.07)) * 0.03;
+    // Reef collision rumble — waves hitting exposed rock add extra low-end punch
+    let reefRumble = 0;
+    let reefPan = 0;
+    const nowMs = performance.now();
+    if (typeof reefs !== 'undefined') {
+      for (const rf of reefs) {
+        if (rf.submerged || !rf._waveHit || !rf._waveTime) continue;
+        const elapsed = (nowMs - rf._waveTime) * 0.001;
+        if (elapsed > 4) continue;
+        // Quick attack, slow decay — rumble peaks ~0.2s after impact then fades over ~4s
+        const env = elapsed < 0.2 ? elapsed / 0.2 : Math.max(0, 1 - (elapsed - 0.2) / 3.8);
+        const vol = env * rf._waveHit * 0.2;
+        if (vol > reefRumble) {
+          reefRumble = vol;
+          reefPan = Math.max(-1, Math.min(1, (rf.x / w - 0.5) * 2));
+        }
+      }
+    }
     window._crashGain.gain.setTargetAtTime(
-      (crashVol + ambientRumble) * masterVolume * 2,
-      audioCtx.currentTime, crashVol > 0.01 ? 0.1 : 0.8
+      (crashVol + ambientRumble + reefRumble) * masterVolume * 2,
+      audioCtx.currentTime, (crashVol + reefRumble) > 0.01 ? 0.1 : 0.8
     );
+    // Blend crash panning toward reef hit location when reef rumble dominates
+    if (reefRumble > crashVol) crashPan = reefPan;
     if (crashPanner) {
       crashPanner.pan.setTargetAtTime(crashPan * 0.5, audioCtx.currentTime, 0.3);
     }
@@ -822,7 +848,7 @@ function spawnWash() {
   washWaves.push({
     x: startX, y: startY,
     angle,
-    speed: (0.96 + intensity * 2.4) * (w / initialW),
+    speed: Math.min((0.96 + intensity * 2.4) * (w / initialW), 2.52 * (w / initialW)),
     width: (15 + intensity * 40) * viewScale,
     strength: 0.1 + intensity * 0.6,
     life: 1,
@@ -3817,6 +3843,22 @@ class Frond {
       const dist = Math.sqrt(dx * dx + dy * dy);
       const segLen = this.len / this.segCount;
       if (dist > 0.01) { s.x = prev.x + dx * (segLen / dist); s.y = prev.y + dy * (segLen / dist); }
+      // Bend limit — prevent segments from folding back on themselves
+      // Looser toward the tip so the frond tapers naturally
+      if (i >= 2) {
+        const pp = this.segs[i - 2];
+        const pAng = Math.atan2(prev.y - pp.y, prev.x - pp.x);
+        const cAng = Math.atan2(s.y - prev.y, s.x - prev.x);
+        let bend = cAng - pAng;
+        if (bend > Math.PI) bend -= 2 * Math.PI;
+        if (bend < -Math.PI) bend += 2 * Math.PI;
+        const maxBend = 0.7 + t * 0.3; // ~40deg at base, ~57deg at tip
+        if (Math.abs(bend) > maxBend) {
+          const clampedAng = pAng + Math.sign(bend) * maxBend;
+          s.x = prev.x + Math.cos(clampedAng) * segLen;
+          s.y = prev.y + Math.sin(clampedAng) * segLen;
+        }
+      }
     }
   }
 
