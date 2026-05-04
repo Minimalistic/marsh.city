@@ -926,9 +926,9 @@ class Fish {
     // Spin-break: track cumulative turning while being chased
     this._chaseSpin = 0;       // accumulated signed angle while chased
     this._spinBreakAt = 4 + Math.random() * 3; // break after 4-7 radians (~1-1.5 loops)
-    // Distraction - sometimes fish wander off from the school
-    this.distracted = Math.random() < 0.08;
-    this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
+    // Distraction - fish wander off from the school more often
+    this.distracted = Math.random() < 0.12;
+    this.distractTimer = this.distracted ? 3 + Math.random() * 6 : 6 + Math.random() * 15;
     // Leaving — fish that decide to swim away and not come back
     this.leaving = false;
     // Fixed phase offset for undulation desync (not position-based)
@@ -1000,7 +1000,7 @@ class Fish {
         // Stragglers: long wanders, short school stints
         this.distractTimer = this.distracted ? 4 + Math.random() * 8 : 3 + Math.random() * 8;
       } else {
-        this.distractTimer = this.distracted ? 1.5 + Math.random() * 3 : 12 + Math.random() * 25;
+        this.distractTimer = this.distracted ? 3 + Math.random() * 6 : 6 + Math.random() * 15;
       }
     }
 
@@ -4864,6 +4864,26 @@ function draw(time) {
     const drift = (Math.random() - 0.5) * basePop * 0.4;
     popTarget = Math.max(basePop * 0.35, Math.min(basePop * 1.3, popTarget + drift));
     popDriftTimer = 12 + Math.random() * 40;
+  }
+
+  // Subgroup split — occasionally a cluster of nearby fish all break off together
+  if (Math.random() < 0.001 && fish.length > 20) {
+    const leader = fish[Math.floor(Math.random() * fish.length)];
+    if (!leader.leaving && !leader.fleeing) {
+      const splitAngle = leader.angle + (Math.random() - 0.5) * 1.5;
+      let splitCount = 0;
+      for (const f of fish) {
+        if (splitCount >= 8 + Math.floor(Math.random() * 12)) break;
+        const dx = f.x - leader.x, dy = f.y - leader.y;
+        if (dx * dx + dy * dy < 60 * 60 && !f.leaving && !f.fleeing) {
+          f.distracted = true;
+          f.distractTimer = 5 + Math.random() * 10;
+          f.vx += Math.cos(splitAngle) * 0.3;
+          f.vy += Math.sin(splitAngle) * 0.3;
+          splitCount++;
+        }
+      }
+    }
   }
 
   // Occasionally a few fish decide to leave — swim offscreen and don't come back
