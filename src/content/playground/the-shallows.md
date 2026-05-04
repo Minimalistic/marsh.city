@@ -679,9 +679,10 @@ canvas.addEventListener('mousedown', e => {
     foodPellets.push({ x: mx, y: my, size: 2.25, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock });
     if (!onRock) ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
-    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
+    ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120 * viewScale, opacity: 0.7 });
     // Tap void — temporary avoidance zone
-    tapVoids.push({ x: mx, y: my, radius: 60 * viewScale, life: 1, maxLife: 3 + Math.random() * 2 });
+    tapVoids.push({ x: mx, y: my, radius: 90 * viewScale, life: 1, maxLife: 3 + Math.random() * 2 });
+    tapHoldTimer = 0; // reset hold repeat timer
   }
 });
 canvas.addEventListener('mouseup', () => { mouse.down = false; });
@@ -710,8 +711,9 @@ canvas.addEventListener('touchstart', e => {
     foodPellets.push({ x: mouse.x, y: mouse.y, size: 2.25, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock: onRock2 });
     if (!onRock2) ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
-    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
-    tapVoids.push({ x: mouse.x, y: mouse.y, radius: 60 * viewScale, life: 1, maxLife: 3 + Math.random() * 2 });
+    ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 120 * viewScale, opacity: 0.7 });
+    tapVoids.push({ x: mouse.x, y: mouse.y, radius: 90 * viewScale, life: 1, maxLife: 3 + Math.random() * 2 });
+    tapHoldTimer = 0;
   }
 }, { passive: false });
 canvas.addEventListener('touchmove', e => {
@@ -1207,14 +1209,14 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Steer toward food eagerly — overrides schooling at close range
+        // Steer toward food eagerly — swift dart, no hesitation
         const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.15 + proximity * 0.35;
+        const steerWeight = 0.25 + proximity * 0.35;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
         // Per-fish approach offset — mild spread so they don't all pile from one side
         const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
         const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
-        const foodSpeed = scaledSpeed * (0.5 + (1 - proximity) * 0.4); // slow as they get closer
+        const foodSpeed = scaledSpeed * (1.1 + proximity * 0.3); // accelerate toward food
         const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
         const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * foodSpeed;
         this.vx += (desiredVx - this.vx) * steerWeight;
@@ -1239,22 +1241,22 @@ class Fish {
       }
     }
 
-    // Ripple avoidance — startle fish when water is tapped
+    // Ripple avoidance — startle fish hard when water is tapped
     for (const r of ripples) {
       const rdx = this.x - r.x;
       const rdy = this.y - r.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-      const ringWidth = 30 * viewScale;
+      const ringWidth = 40 * viewScale;
       if (Math.abs(rDist - r.radius) < ringWidth && r.opacity > 0.05 && rDist > 0.1) {
-        const force = 0.25 * r.opacity * viewScale;
+        const force = 0.5 * r.opacity * viewScale;
         this.vx += (rdx / rDist) * force;
         this.vy += (rdy / rDist) * force;
         this.fleeing = true;
-        this.fleeTimer = 0.5;
+        this.fleeTimer = 1.0;
       }
     }
 
-    // Tap void avoidance — temporary zones fish steer around like rocks
+    // Tap void avoidance — temporary zones fish flee from hard
     for (const tv of tapVoids) {
       if (tv.life <= 0) continue;
       const tvdx = this.x - tv.x, tvdy = this.y - tv.y;
@@ -1262,9 +1264,11 @@ class Fish {
       const tvR = tv.radius * tv.life; // shrinks as it fades
       if (tvDist < tvR && tvDist > 0.1) {
         const pen = 1 - tvDist / tvR;
-        const push = pen * pen * 0.3 * tv.life * viewScale;
+        const push = pen * pen * 0.5 * tv.life * viewScale;
         this.vx += (tvdx / tvDist) * push;
         this.vy += (tvdy / tvDist) * push;
+        this.fleeing = true;
+        this.fleeTimer = Math.max(this.fleeTimer, 0.6 * tv.life);
       }
     }
 
@@ -3878,6 +3882,7 @@ let settleTime = 0;
 
 // Tap voids — temporary zones fish avoid, fading over time
 const tapVoids = [];
+let tapHoldTimer = 0; // repeat ripples while holding
 
 // Regenerate the entire world for the current viewport size
 regenerateWorld = function() {
@@ -4775,6 +4780,16 @@ function draw(time) {
   for (let i = tapVoids.length - 1; i >= 0; i--) {
     tapVoids[i].life -= dt / tapVoids[i].maxLife;
     if (tapVoids[i].life <= 0) tapVoids.splice(i, 1);
+  }
+
+  // Hold-to-repeat: spawn ripples while button held on water
+  if (mouse.down && mouse.active && activeTool !== 'food') {
+    tapHoldTimer += dt;
+    if (tapHoldTimer >= 0.25) {
+      tapHoldTimer = 0;
+      ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 100 * viewScale, opacity: 0.5 });
+      tapVoids.push({ x: mouse.x, y: mouse.y, radius: 70 * viewScale, life: 1, maxLife: 2 + Math.random() * 1.5 });
+    }
   }
 
   // Cursor glow
