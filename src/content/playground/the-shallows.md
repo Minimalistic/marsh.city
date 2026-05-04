@@ -1545,7 +1545,7 @@ class Fish {
         let bend = currAngle - prevAngle;
         while (bend > Math.PI) bend -= Math.PI * 2;
         while (bend < -Math.PI) bend += Math.PI * 2;
-        const maxBend = 0.18;
+        const maxBend = 0.207;
         if (Math.abs(bend) > maxBend) {
           const clampedAngle = prevAngle + Math.sign(bend) * maxBend;
           curr.x = prev.x + Math.cos(clampedAngle) * this._segLen;
