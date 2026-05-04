@@ -5419,47 +5419,62 @@ function draw(time) {
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-        // Quick reject: is this point's lateral position even near the reef?
         const relX = px - cx, relY = py - cy;
-        const lateral = relX * (-sinA) + relY * cosA; // perp distance to wave ray through reef
-        if (Math.abs(lateral) > rf.crownR * 1.5 + pad) continue;
-        // How far along the wave direction is the point from reef center?
-        const along = relX * cosA + relY * sinA; // positive = past reef in wave dir
-        // Check if point is inside OR past the reef (in wave shadow)
+        const lateral = relX * (-sinA) + relY * cosA;
+        const along = relX * cosA + relY * sinA;
         const dist = Math.sqrt(relX * relX + relY * relY);
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
-        // If inside crown, definitely clamp
-        // If past crown in wave direction AND lateral within crown width, also clamp
-        const approachAngle = Math.atan2(-sinA * lateral + cosA * (-Math.abs(along)), -cosA * lateral - sinA * (-Math.abs(along)));
-        // Simpler: check if the ray backward from this point passes through the crown
-        // Sample the crown radius at the angle from center toward the approach side at this lateral offset
-        const latAngle = Math.atan2(lateral, -(rf.crownR)); // angle from center at this lateral pos
-        const latEdge = rf.radiusAt(latAngle + Math.PI + ww.angle, rf.crownRadii) + pad;
-        const inShadow = along > -latEdge && Math.abs(lateral) < latEdge;
-        if (dist < edge || inShadow) {
-          // Pin to approach-side edge: walk backward from reef center at this lateral offset
-          const pinAngle = Math.atan2(lateral, 0) + ww.angle + Math.PI; // approach side at this lateral
-          // Better: compute the approach edge point for this lateral position
-          // Use the perpendicular position and find where the crown edge is on the approach side
-          const testAngles = 12;
+
+        // Inside crown: clamp to approach edge
+        if (dist < edge) {
+          const baseAngle = ww.angle + Math.PI;
           let bestX = cx, bestY = cy, bestDist = Infinity;
-          const baseAngle = ww.angle + Math.PI; // approach direction
-          for (let ti = -testAngles; ti <= testAngles; ti++) {
-            const ta = baseAngle + (ti / testAngles) * Math.PI * 0.7; // scan approach side
+          for (let ti = -12; ti <= 12; ti++) {
+            const ta = baseAngle + (ti / 12) * Math.PI * 0.7;
             const tr = rf.radiusAt(ta, rf.crownRadii) + pad;
-            const tx = cx + Math.cos(ta) * tr;
-            const ty = cy + Math.sin(ta) * tr;
-            // Find the closest approach-edge point that matches this lateral offset
+            const tx = cx + Math.cos(ta) * tr, ty = cy + Math.sin(ta) * tr;
             const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
-            const latDiff = Math.abs(tLat - lateral);
-            if (latDiff < bestDist) { bestDist = latDiff; bestX = tx; bestY = ty; }
+            const ld = Math.abs(tLat - lateral);
+            if (ld < bestDist) { bestDist = ld; bestX = tx; bestY = ty; }
           }
           const stretch = Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2);
-          return { x: bestX, y: bestY, clamped: true, stretch };
+          return { x: bestX, y: bestY, stretch };
+        }
+
+        // Past the rock in wave direction: teardrop convergence
+        // The "shadow" tapers from full crown width at the rock to zero further downstream
+        if (along > 0 && Math.abs(lateral) < rf.crownR + pad) {
+          const taperLen = rf.crownR * 4; // gap closes over 4x crown radius
+          const taperT = Math.min(1, along / taperLen); // 0 at rock, 1 = fully closed
+          // Shadow width narrows linearly: full crown width at rock → 0 at taperLen
+          const shadowWidth = (rf.crownR + pad) * (1 - taperT);
+          if (Math.abs(lateral) < shadowWidth) {
+            // Point is in the tapered shadow — blend from pinned edge to free position
+            // At taperT=0 (right behind rock): fully pinned to edge
+            // At taperT=1 (far downstream): fully free (gap closed)
+            const pinStrength = (1 - taperT) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
+
+            // Find approach edge point for this lateral
+            const baseAngle = ww.angle + Math.PI;
+            let bestX = cx, bestY = cy, bestDist = Infinity;
+            for (let ti = -12; ti <= 12; ti++) {
+              const ta = baseAngle + (ti / 12) * Math.PI * 0.7;
+              const tr = rf.radiusAt(ta, rf.crownRadii) + pad;
+              const tx = cx + Math.cos(ta) * tr, ty = cy + Math.sin(ta) * tr;
+              const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
+              if (Math.abs(tLat - lateral) < bestDist) { bestDist = Math.abs(tLat - lateral); bestX = tx; bestY = ty; }
+            }
+
+            // Blend: pinned position → free position based on taper
+            const bx = bestX * pinStrength + px * (1 - pinStrength);
+            const by = bestY * pinStrength + py * (1 - pinStrength);
+            const stretch = pinStrength * Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2);
+            return { x: bx, y: by, stretch };
+          }
         }
       }
-      return { x: px, y: py, clamped: false, stretch: 0 };
+      return { x: px, y: py, stretch: 0 };
     }
 
     // Draw wave front lines only while active
@@ -6055,12 +6070,12 @@ function draw(time) {
   }
   ctx.restore();
 
-  // Second pass: re-draw foam, ripples, and wave lines on top of fish/kelp/starfish
-  // Foam bits overlay
+  // Second pass: foam + wave lines overlay on top of fish/kelp/starfish
+  // Foam overlay — only larger foam bits, skip tiny dots
   for (const fb of foamBits) {
     const sizeCurve = fb.life > 0.6 ? 1 - (1 - fb.life) * 0.3 : Math.pow(fb.life / 0.6, 1.5);
     const drawSize = fb.size * sizeCurve;
-    if (drawSize < 0.05) continue;
+    if (drawSize < 0.4) continue; // skip tiny dots — only render substantial foam
     const alpha = fb.life * fb.life * fb.life * 0.35;
     if (alpha < 0.003) continue;
     ctx.beginPath();
@@ -6068,10 +6083,10 @@ function draw(time) {
     ctx.fillStyle = `rgba(200, 225, 235, ${alpha})`;
     ctx.fill();
   }
-  // Wave blob overlay (per-wave foam blobs)
-  for (const ww of washWaves) {
-    if (ww.blobs) {
-      for (const b of ww.blobs) {
+  // Wave blob overlay
+  for (const ww2 of washWaves) {
+    if (ww2.blobs) {
+      for (const b of ww2.blobs) {
         const life = 1 - b.age / b.maxAge;
         if (life <= 0) continue;
         const shrink = life < 0.3 ? 0.3 + (life / 0.3) * 0.7 : 1.0;
@@ -6092,7 +6107,6 @@ function draw(time) {
     }
   }
   ctx.globalAlpha = 1;
-  // Wave front lines + trails overlay
   // This makes waves visually overlap everything except reef crowns and birds
   for (const ww of washWaves) {
     const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
@@ -6110,23 +6124,41 @@ function draw(time) {
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
         const along = relX * cosA + relY * sinA;
-        const latAngle = Math.atan2(lateral, -(rf.crownR));
-        const latEdge = rf.radiusAt(latAngle + Math.PI + ww.angle, rf.crownRadii) + _pad;
-        const inShadow = along > -latEdge && Math.abs(lateral) < latEdge;
-        if (dist < edge || inShadow) {
+
+        // Inside crown: clamp to approach edge
+        if (dist < edge) {
           const baseAngle = ww.angle + Math.PI;
-          const testAngles = 12;
           let bestX = cx, bestY = cy, bestDist = Infinity;
-          for (let ti = -testAngles; ti <= testAngles; ti++) {
-            const ta = baseAngle + (ti / testAngles) * Math.PI * 0.7;
-            const tr = rf.radiusAt(ta, rf.crownRadii) + _pad;
-            const tx = cx + Math.cos(ta) * tr, ty = cy + Math.sin(ta) * tr;
+          for (let ti = -12; ti <= 12; ti++) {
+            const ta = baseAngle + (ti / 12) * Math.PI * 0.7;
+            const tr2 = rf.radiusAt(ta, rf.crownRadii) + _pad;
+            const tx = cx + Math.cos(ta) * tr2, ty = cy + Math.sin(ta) * tr2;
             const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
-            const ld = Math.abs(tLat - lateral);
-            if (ld < bestDist) { bestDist = ld; bestX = tx; bestY = ty; }
+            if (Math.abs(tLat - lateral) < bestDist) { bestDist = Math.abs(tLat - lateral); bestX = tx; bestY = ty; }
           }
-          const stretch = Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2);
-          return { x: bestX, y: bestY, stretch };
+          return { x: bestX, y: bestY, stretch: Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2) };
+        }
+
+        // Past rock: teardrop convergence
+        if (along > 0 && Math.abs(lateral) < rf.crownR + _pad) {
+          const taperLen = rf.crownR * 4;
+          const taperT = Math.min(1, along / taperLen);
+          const shadowWidth = (rf.crownR + _pad) * (1 - taperT);
+          if (Math.abs(lateral) < shadowWidth) {
+            const pinStr = (1 - taperT) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
+            const baseAngle = ww.angle + Math.PI;
+            let bestX = cx, bestY = cy, bestDist = Infinity;
+            for (let ti = -12; ti <= 12; ti++) {
+              const ta = baseAngle + (ti / 12) * Math.PI * 0.7;
+              const tr2 = rf.radiusAt(ta, rf.crownRadii) + _pad;
+              const tx = cx + Math.cos(ta) * tr2, ty = cy + Math.sin(ta) * tr2;
+              const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
+              if (Math.abs(tLat - lateral) < bestDist) { bestDist = Math.abs(tLat - lateral); bestX = tx; bestY = ty; }
+            }
+            const bx = bestX * pinStr + px * (1 - pinStr);
+            const by = bestY * pinStr + py * (1 - pinStr);
+            return { x: bx, y: by, stretch: pinStr * Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2) };
+          }
         }
       }
       return { x: px, y: py, stretch: 0 };
