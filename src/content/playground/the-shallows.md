@@ -3489,33 +3489,48 @@ class Seagull {
       ctx.fill();
     }
 
-    // Body — elongated teardrop, head to tail
+    // Body — elongated teardrop, extended head
     ctx.beginPath();
-    ctx.moveTo(bl * 0.4, 0); // head (beak tip)
-    ctx.quadraticCurveTo(bl * 0.25, bl * 0.08, bl * 0.05, bl * 0.1);
+    ctx.moveTo(bl * 0.5, 0); // nose tip (extended forward)
+    ctx.quadraticCurveTo(bl * 0.35, bl * 0.07, bl * 0.05, bl * 0.1);
     ctx.quadraticCurveTo(-bl * 0.2, bl * 0.07, -bl * 0.35, 0);
     ctx.quadraticCurveTo(-bl * 0.2, -bl * 0.07, bl * 0.05, -bl * 0.1);
-    ctx.quadraticCurveTo(bl * 0.25, -bl * 0.08, bl * 0.4, 0);
+    ctx.quadraticCurveTo(bl * 0.35, -bl * 0.07, bl * 0.5, 0);
     ctx.closePath();
     ctx.fillStyle = 'rgba(245, 248, 250, 0.92)';
     ctx.fill();
 
-    // Head — slightly darker cap
+    // Head cap — extended forward
     ctx.beginPath();
-    ctx.arc(bl * 0.28, 0, bl * 0.08, 0, Math.PI * 2);
+    ctx.arc(bl * 0.35, 0, bl * 0.08, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(240, 242, 245, 0.9)';
     ctx.fill();
 
-    // Tail feathers — fanned out, 5% longer
+    // Beak — yellow, pointed, extends from head
     ctx.beginPath();
-    // Center spine of tail
+    ctx.moveTo(bl * 0.5, 0); // tip of head
+    ctx.lineTo(bl * 0.65, 0); // beak tip
+    ctx.lineTo(bl * 0.5, bl * 0.025); // lower jaw
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(230, 190, 50, 0.95)';
+    ctx.fill();
+    // Beak upper ridge
+    ctx.beginPath();
+    ctx.moveTo(bl * 0.5, -bl * 0.02);
+    ctx.lineTo(bl * 0.65, 0);
+    ctx.lineTo(bl * 0.5, 0);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(210, 170, 40, 0.9)';
+    ctx.fill();
+
+    // Tail feathers — wider fan
+    ctx.beginPath();
     ctx.moveTo(-bl * 0.3, 0);
-    // Fan out to 5 feather tips
-    ctx.lineTo(-bl * 0.55, bl * 0.12);
-    ctx.quadraticCurveTo(-bl * 0.5, bl * 0.06, -bl * 0.55, bl * 0.03);
+    ctx.lineTo(-bl * 0.55, bl * 0.18);
+    ctx.quadraticCurveTo(-bl * 0.5, bl * 0.09, -bl * 0.55, bl * 0.04);
     ctx.lineTo(-bl * 0.48, 0);
-    ctx.lineTo(-bl * 0.55, -bl * 0.03);
-    ctx.quadraticCurveTo(-bl * 0.5, -bl * 0.06, -bl * 0.55, -bl * 0.12);
+    ctx.lineTo(-bl * 0.55, -bl * 0.04);
+    ctx.quadraticCurveTo(-bl * 0.5, -bl * 0.09, -bl * 0.55, -bl * 0.18);
     ctx.closePath();
     ctx.fillStyle = 'rgba(175, 182, 190, 0.85)';
     ctx.fill();
@@ -3524,15 +3539,15 @@ class Seagull {
     ctx.lineWidth = 0.4;
     ctx.beginPath();
     ctx.moveTo(-bl * 0.32, 0);
-    ctx.lineTo(-bl * 0.55, bl * 0.12);
+    ctx.lineTo(-bl * 0.55, bl * 0.18);
     ctx.moveTo(-bl * 0.32, 0);
-    ctx.lineTo(-bl * 0.55, bl * 0.03);
+    ctx.lineTo(-bl * 0.55, bl * 0.04);
     ctx.moveTo(-bl * 0.32, 0);
     ctx.lineTo(-bl * 0.48, 0);
     ctx.moveTo(-bl * 0.32, 0);
-    ctx.lineTo(-bl * 0.55, -bl * 0.03);
+    ctx.lineTo(-bl * 0.55, -bl * 0.04);
     ctx.moveTo(-bl * 0.32, 0);
-    ctx.lineTo(-bl * 0.55, -bl * 0.12);
+    ctx.lineTo(-bl * 0.55, -bl * 0.18);
     ctx.stroke();
 
     ctx.restore();
