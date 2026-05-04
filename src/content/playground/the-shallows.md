@@ -5932,8 +5932,8 @@ function draw(time) {
     const gOffY = g.height * 45;
     const bl = g.bodyLen * heightScale;
     const wings = g._wingGeometry();
-    const blurR = Math.round(8 + g.height * 12);
-    const alpha = 0.08 + (1 - g.height) * 0.05;
+    const blurR = Math.round(14 + g.height * 18);
+    const alpha = 0.05 + (1 - g.height) * 0.035;
 
     // Size the offscreen canvas to fit the shadow + blur padding
     const pad = blurR * 3; // extra space for blur bleed
