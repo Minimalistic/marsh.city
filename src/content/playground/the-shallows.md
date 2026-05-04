@@ -3310,7 +3310,7 @@ class Seagull {
     else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
     else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
 
-    this.speed = (0.6 + Math.random() * 0.3) * viewScale;
+    this.speed = (1.0 + Math.random() * 0.5) * viewScale;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
 
@@ -3326,7 +3326,7 @@ class Seagull {
     this.turnTimer = 6 + Math.random() * 12;
 
     // Size — scales with viewport
-    this.wingspan = (30 + Math.random() * 10) * viewScale;
+    this.wingspan = (40 + Math.random() * 12) * viewScale;
     this.bodyLen = this.wingspan * 0.35;
 
     // Bank angle — visual tilt into turns
@@ -3395,16 +3395,17 @@ class Seagull {
     // Smooth velocity from angle
     const targetVx = Math.cos(this.angle) * this.speed;
     const targetVy = Math.sin(this.angle) * this.speed;
-    this.vx += (targetVx - this.vx) * 0.04;
-    this.vy += (targetVy - this.vy) * 0.04;
+    this.vx += (targetVx - this.vx) * 0.08;
+    this.vy += (targetVy - this.vy) * 0.08;
     this.x += this.vx;
     this.y += this.vy;
 
-    // Smooth render angle
-    let aDiff = this.angle - this._renderAngle;
+    // Smooth render angle — derives from actual velocity for accuracy
+    const actualAngle = Math.atan2(this.vy, this.vx);
+    let aDiff = actualAngle - this._renderAngle;
     while (aDiff > Math.PI) aDiff -= Math.PI * 2;
     while (aDiff < -Math.PI) aDiff += Math.PI * 2;
-    this._renderAngle += aDiff * 0.08;
+    this._renderAngle += aDiff * 0.12;
 
     // Bank into turns — visual only
     this._bank += (this.turnRate * 30 - this._bank) * 0.04;
@@ -3433,7 +3434,7 @@ class Seagull {
     const shadowOffY = this.height * 20;
     const sx = this.x + shadowOffX;
     const sy = this.y + shadowOffY;
-    const alpha = 0.08 + (1 - this.height) * 0.06; // lower = darker shadow
+    const alpha = 0.12 + (1 - this.height) * 0.08; // lower = darker shadow
 
     ctx.save();
     ctx.translate(sx, sy);
@@ -3491,24 +3492,28 @@ class Seagull {
       );
       ctx.closePath();
 
-      // Main wing — white/light gray
-      ctx.fillStyle = 'rgba(235, 240, 245, 0.9)';
+      // Main wing — light gray with subtle structure
+      ctx.fillStyle = 'rgba(200, 210, 218, 0.92)';
       ctx.fill();
+      // Slight edge definition
+      ctx.strokeStyle = 'rgba(140, 155, 165, 0.3)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
 
-      // Dark wing tips
+      // Dark wing tips — black primary feathers
       ctx.beginPath();
-      ctx.moveTo(-bl * 0.1, side * halfSpan * 0.8 + bankShift * side);
+      ctx.moveTo(-bl * 0.05, side * halfSpan * 0.75 + bankShift * side);
       ctx.quadraticCurveTo(
-        -bl * 0.12, side * halfSpan * 0.9 + bankShift * side,
+        -bl * 0.1, side * halfSpan * 0.88 + bankShift * side,
         -bl * 0.15, side * halfSpan + bankShift * side
       );
       ctx.lineTo(-bl * 0.3, side * halfSpan + bankShift * side);
       ctx.quadraticCurveTo(
-        -bl * 0.22, side * halfSpan * 0.85 + bankShift * side,
-        -bl * 0.2, side * halfSpan * 0.78 + bankShift * side
+        -bl * 0.2, side * halfSpan * 0.82 + bankShift * side,
+        -bl * 0.15, side * halfSpan * 0.72 + bankShift * side
       );
       ctx.closePath();
-      ctx.fillStyle = 'rgba(50, 55, 60, 0.7)';
+      ctx.fillStyle = 'rgba(35, 40, 45, 0.8)';
       ctx.fill();
     }
 
@@ -3712,7 +3717,7 @@ for (let i = 0; i < predatorMax; i++) predators.push(new Predator());
 
 // Seagulls — fly overhead, cast shadows, come and go
 const seagulls = [];
-let seagullSpawnTimer = 10 + Math.random() * 30; // first one arrives after a bit
+let seagullSpawnTimer = 3 + Math.random() * 5; // first one arrives soon
 const seagullMax = w * h > 400000 ? 2 : 1;
 
 // Organic population — wanders around a midpoint, fish come and go
