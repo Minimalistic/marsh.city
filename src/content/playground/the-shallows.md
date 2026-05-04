@@ -1174,17 +1174,21 @@ class Fish {
       const accuracy = 0.4 + (this._phaseOffset % 1) * 0.6; // 0.4-1.0
       const eatDist = 6 + accuracy * 4; // accurate fish slow down earlier (6-10)
       if (closestFoodDist < eatDist && angleMismatch < 1.2) {
-        // Approaching food — brake proportional to accuracy (dt-independent)
-        const brakeBase = 0.75 + accuracy * 0.15; // 0.75-0.90 per frame at 60fps
-        const brake = Math.pow(brakeBase, dt * 60);
-        this.vx *= brake;
-        this.vy *= brake;
-        // Turn toward food - accurate fish turn tighter
-        const turnRate = 0.2 + accuracy * 0.25;
-        const turnToFood = Math.max(-turnRate, Math.min(turnRate, headingDiff));
-        this.angle += turnToFood * 0.4;
-        this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // Near food — steer toward it via velocity, let the turn rate limiter handle banking
+        const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // Gentle brake only when very close and well-aligned
+        if (closestFoodDist < biteDist * 2 && angleMismatch < 0.5) {
+          const brakeBase = 0.82 + accuracy * 0.1;
+          const brake = Math.pow(brakeBase, dt * 60);
+          this.vx *= brake;
+          this.vy *= brake;
+        }
+        // Steer toward food by blending desired direction into velocity
+        const steer = (0.15 + accuracy * 0.15) * dt * 60;
+        const foodVx = Math.cos(desiredAngle) * curSpd;
+        const foodVy = Math.sin(desiredAngle) * curSpd;
+        this.vx += (foodVx - this.vx) * steer;
+        this.vy += (foodVy - this.vy) * steer;
         if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating) {
           closestFood.bites -= 2;
           // Visible size reduction - food gets eaten away fast
@@ -1214,12 +1218,13 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else if (closestFoodDist < eatDist && angleMismatch >= 1.2) {
-        // Too misaligned to eat — fly-by, swing around for another pass
-        // Just steer gently, don't brake — fish overshoots naturally
-        const flybySteer = Math.max(-0.08, Math.min(0.08, headingDiff));
-        this.angle += flybySteer;
-        this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // Too misaligned to eat — fly-by, bank around for another pass
+        const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        const steer = 0.06 * dt * 60;
+        const foodVx = Math.cos(desiredAngle) * curSpd;
+        const foodVy = Math.sin(desiredAngle) * curSpd;
+        this.vx += (foodVx - this.vx) * steer;
+        this.vy += (foodVy - this.vy) * steer;
       } else {
         // Steer toward food eagerly — swift dart, no hesitation
         const proximity = 1 - closestFoodDist / foodRange;
@@ -1529,25 +1534,33 @@ class Fish {
       this.angle = Math.atan2(this.vy, this.vx);
     }
 
-    // Fish can only swim forward - kill lateral drift and backward motion
+    // Fish swim forward — lateral motion absorbed into banking turns
     const headX = Math.cos(this.angle);
     const headY = Math.sin(this.angle);
     const fwdSpeed = this.vx * headX + this.vy * headY;
     const latSpeed = this.vx * (-headY) + this.vy * headX;
-    // Kill sideways drift aggressively - fish dart forward
-    this.vx -= (-headY) * latSpeed * 0.7;
-    this.vy -= headX * latSpeed * 0.7;
-    // Prevent backward movement
+    // Dampen lateral drift — but allow some for banking feel
+    const latDamp = Math.pow(0.4, dt * 60); // ~60% kill per frame at 60fps
+    this.vx -= (-headY) * latSpeed * (1 - latDamp);
+    this.vy -= headX * latSpeed * (1 - latDamp);
+    // Backward momentum → banking turn instead of hard stop
     if (fwdSpeed < 0) {
-      this.vx -= headX * fwdSpeed * 0.8;
-      this.vy -= headY * fwdSpeed * 0.8;
+      // Convert backward energy into a tight arc — pick the direction we're already drifting
+      const turnSign = latSpeed > 0 ? 1 : -1;
+      const backwardEnergy = Math.abs(fwdSpeed);
+      // Kill backward component
+      this.vx -= headX * fwdSpeed * 0.9;
+      this.vy -= headY * fwdSpeed * 0.9;
+      // Inject that energy as a lateral kick to bank the turn
+      this.vx += (-headY) * turnSign * backwardEnergy * 0.6;
+      this.vy += headX * turnSign * backwardEnergy * 0.6;
     }
-    // Enforce minimum forward speed - fish never stall or hover
-    const minFwd = scaledSpeed * 0.5;
+    // Enforce minimum forward speed — strong enough to prevent stalling
+    const minFwd = scaledSpeed * 0.6;
     const fwdNow = this.vx * headX + this.vy * headY;
     if (fwdNow < minFwd) {
-      this.vx += headX * (minFwd - fwdNow) * 0.3;
-      this.vy += headY * (minFwd - fwdNow) * 0.3;
+      this.vx += headX * (minFwd - fwdNow) * 0.5;
+      this.vy += headY * (minFwd - fwdNow) * 0.5;
     }
 
     // Drag - smooths out micro-jitter (dt-independent)
@@ -1628,19 +1641,20 @@ class Fish {
       }
     }
 
-    // Angle tracks velocity direction but with turn rate limit
-    // Fish must move forward to turn - can't pivot in place
+    // Angle tracks velocity direction — fish bank into turns, never pivot
     const targetAngle = Math.atan2(this.vy, this.vx);
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    const maxTurn = 0.08 + currentSpeed * 0.08;
+    // Turn rate: always meaningful minimum, faster fish turn wider arcs
+    const maxTurn = (0.15 + currentSpeed * 0.06) * dt * 60;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
-    // Smooth render angle — body visuals lag behind physics heading
+    // Smooth render angle — body visuals lag slightly behind physics heading
     let renderDiff = this.angle - this._renderAngle;
     while (renderDiff > Math.PI) renderDiff -= Math.PI * 2;
     while (renderDiff < -Math.PI) renderDiff += Math.PI * 2;
-    this._renderAngle += renderDiff * 0.15;
+    const renderBlend = 1 - Math.pow(0.15, dt);
+    this._renderAngle += renderDiff * renderBlend;
 
     // Update chain: joints have inertia — they carry momentum and can't vibrate
     this._joints[0].x = this.x;
