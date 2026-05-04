@@ -2698,8 +2698,8 @@ class Predator {
     this.vx -= (-headY) * latSpeed * 0.6;
     this.vy -= headX * latSpeed * 0.6;
     if (fwdSpeed < 0) { this.vx -= headX * fwdSpeed * 0.7; this.vy -= headY * fwdSpeed * 0.7; }
-    // Near-zero minimum when not chasing — barracuda can hover
-    const minFwd = this.target ? this.baseSpeed * 0.3 * viewScale : this.baseSpeed * 0.05 * viewScale;
+    // Always moving forward — big fish can't hover in place
+    const minFwd = this.target ? this.baseSpeed * 0.4 * viewScale : this.baseSpeed * 0.2 * viewScale;
     const fwdNow = this.vx * headX + this.vy * headY;
     if (fwdNow < minFwd) { this.vx += headX * (minFwd - fwdNow) * 0.2; this.vy += headY * (minFwd - fwdNow) * 0.2; }
 
@@ -2772,11 +2772,11 @@ class Predator {
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    // Sluggish turns when full, snappier as hunger builds
+    // Turn rate scales with speed — must move forward to turn, no nose pivoting
     const turnMult = 0.4 + this.hunger * 0.6;
-    // Snap turns get extra turn rate so the head whips fast
     const snapBoost = this._snapping ? 2.0 : 1.0;
-    const maxTurn = (0.12 + currentSpeed * 0.12) * turnMult * snapBoost;
+    const speedRatio = Math.min(1, currentSpeed / (this.baseSpeed * 1.5 * viewScale));
+    const maxTurn = (0.02 + speedRatio * 0.14) * turnMult * snapBoost;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
     // Smooth render angle — body follows heading
     let rDiff = this.angle - this._renderAngle;
@@ -5024,23 +5024,30 @@ function draw(time) {
         for (let ring = 0; ring < 2; ring++) {
           const rPhase = t * (0.6 + ring * 0.2) + er.ox * 0.1 + er.oy * 0.1;
           const baseR = er.r * (1.2 + ring * 0.8) + Math.sin(rPhase) * 1.5;
-          // Wave distortion: compress on incoming side, stretch on outgoing
+          // Wave distortion, skip points inside the reef crown
           const ringSteps = 24;
           ctx.beginPath();
+          let drawing = false;
           for (let si = 0; si <= ringSteps; si++) {
             const a = (si / ringSteps) * Math.PI * 2;
             const dirX = Math.cos(a), dirY = Math.sin(a);
-            // How much this point faces the wave: +1 = incoming, -1 = outgoing
             const facing = dirX * waveHitCos + dirY * waveHitSin;
-            // Compress incoming side, stretch outgoing side, scaled by wave boost
             const distort = waveBoost * (ring + 1) * 2.5;
             const r = baseR - facing * distort;
             const px = er.ox + dirX * r;
             const py = er.oy + dirY * r;
-            if (si === 0) ctx.moveTo(px, py);
+            // Check if this point is inside the reef crown
+            const toCrownDx = px - rf.crownOffX, toCrownDy = py - rf.crownOffY;
+            const toCrownDist = Math.sqrt(toCrownDx * toCrownDx + toCrownDy * toCrownDy);
+            const crownAngle = Math.atan2(toCrownDy, toCrownDx);
+            const crownEdge = rf.radiusAt(crownAngle, rf.crownRadii);
+            if (toCrownDist < crownEdge + 2) {
+              drawing = false; // inside crown, break the path
+              continue;
+            }
+            if (!drawing) { ctx.moveTo(px, py); drawing = true; }
             else ctx.lineTo(px, py);
           }
-          ctx.closePath();
           ctx.strokeStyle = `rgba(180, 210, 225, ${0.1 - ring * 0.035 + waveBoost * 0.04})`;
           ctx.lineWidth = 0.8 - ring * 0.2;
           ctx.stroke();
