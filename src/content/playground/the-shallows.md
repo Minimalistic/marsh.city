@@ -645,6 +645,34 @@ function screenToCanvas(clientX, clientY) {
   };
 }
 
+// Drop a scatter of small food pellets around a point
+function dropFood(cx, cy) {
+  const count = 4 + Math.floor(Math.random() * 4); // 4-7 pellets per drop
+  let anyInWater = false;
+  for (let i = 0; i < count; i++) {
+    const scatter = 6 + Math.random() * 10; // spread radius
+    const a = Math.random() * Math.PI * 2;
+    const fx = cx + Math.cos(a) * scatter;
+    const fy = cy + Math.sin(a) * scatter;
+    const b = 80 + Math.floor(Math.random() * 40); // smaller pellets = fewer bites
+    let onRock = false;
+    for (const rf of reefs) {
+      const cdx = fx - (rf.x + rf.crownOffX), cdy = fy - (rf.y + rf.crownOffY);
+      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+      const cAngle = Math.atan2(cdy, cdx);
+      if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock = true; break; }
+    }
+    if (!onRock) anyInWater = true;
+    foodPellets.push({
+      x: fx, y: fy, size: 0.9 + Math.random() * 0.6, bites: b, startBites: b,
+      vx: Math.cos(a) * (0.2 + Math.random() * 0.4),
+      vy: Math.sin(a) * (0.2 + Math.random() * 0.4),
+      onRock,
+    });
+  }
+  if (anyInWater) ripples.push({ x: cx, y: cy, radius: 2, maxRadius: 25, opacity: 0.25 });
+}
+
 // Mouse
 let mouse = { x: -1000, y: -1000, prevX: -1000, prevY: -1000, active: false, speed: 0, down: false };
 canvas.addEventListener('mouseenter', e => {
@@ -674,17 +702,7 @@ canvas.addEventListener('mousedown', e => {
   const mx = p.x;
   const my = p.y;
   if (activeTool === 'food') {
-    // Drop food where clicked - if on a rock it'll roll down into the water
-    const b = 250 + Math.floor(Math.random() * 60);
-    let onRock = false;
-    for (const rf of reefs) {
-      const cdx = mx - (rf.x + rf.crownOffX), cdy = my - (rf.y + rf.crownOffY);
-      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
-      const cAngle = Math.atan2(cdy, cdx);
-      if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock = true; break; }
-    }
-    foodPellets.push({ x: mx, y: my, size: 2.25, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock });
-    if (!onRock) ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
+    dropFood(mx, my);
   } else {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120 * viewScale, opacity: 0.7 });
     // Tap void — temporary avoidance zone
@@ -707,16 +725,7 @@ canvas.addEventListener('touchstart', e => {
   mouse.down = true;
   mouse.speed = 0;
   if (activeTool === 'food') {
-    const b2 = 250 + Math.floor(Math.random() * 60);
-    let onRock2 = false;
-    for (const rf of reefs) {
-      const cdx = mouse.x - (rf.x + rf.crownOffX), cdy = mouse.y - (rf.y + rf.crownOffY);
-      const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
-      const cAngle = Math.atan2(cdy, cdx);
-      if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock2 = true; break; }
-    }
-    foodPellets.push({ x: mouse.x, y: mouse.y, size: 2.25, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock: onRock2 });
-    if (!onRock2) ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
+    dropFood(mouse.x, mouse.y);
   } else {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 120 * viewScale, opacity: 0.7 });
     tapVoids.push({ x: mouse.x, y: mouse.y, radius: 90 * viewScale, life: 1, maxLife: 3 + Math.random() * 2 });
@@ -1264,19 +1273,19 @@ class Fish {
       const predAggression = predSpeed / (pred.baseSpeed * viewScale);
       const beingChased = pred.target === this;
 
-      // Passive avoidance — cautious but not panicked, tight berth
-      const comfortZone = 80 * viewScale;
+      // Passive avoidance — preferred distance is ~2x predator body length
+      const comfortZone = Math.max(100, pred.len * 2.5) * viewScale;
       if (pDist < comfortZone && pDist > 0.1) {
         const avoidance = 1 - pDist / comfortZone;
         const pushAngle = Math.atan2(pdy, pdx);
-        // Gentle nudge — aware but not alarmed
-        const pushForce = avoidance * avoidance * 0.3 * viewScale;
+        // Ramps hard close in — gentle awareness at range, urgent at close quarters
+        const pushForce = avoidance * avoidance * avoidance * 0.6 * viewScale;
         this.vx += Math.cos(pushAngle) * pushForce;
         this.vy += Math.sin(pushAngle) * pushForce;
-        // Only flee when genuinely close — inner 40% of comfort zone
-        if (avoidance > 0.6) {
+        // Flee when inner 50% of comfort zone
+        if (avoidance > 0.5) {
           this.fleeing = true;
-          this.fleeTimer = Math.max(this.fleeTimer, 0.2 + avoidance * 0.3);
+          this.fleeTimer = Math.max(this.fleeTimer, 0.3 + avoidance * 0.5);
         }
       }
 
