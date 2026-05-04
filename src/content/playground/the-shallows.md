@@ -4760,7 +4760,10 @@ function rebuildSandCanvas() {
 
       if (rx < -20 || rx > w + 20 || ry < -20 || ry > h + 20) { pts.push(null); continue; }
       const ptProx = rockProximity(rx, ry);
-      pts.push({ x: rx, y: ry, a: ptProx * 0.168 });
+      // Depth factor: darker top-left, lighter bottom-right (last 30%)
+      const depthT = (rx / w + ry / h) / 2; // 0=top-left, 1=bottom-right
+      const depthDim = depthT > 0.7 ? 1 : 0.6 + (depthT / 0.7) * 0.4;
+      pts.push({ x: rx, y: ry, a: ptProx * 0.168 * depthDim });
     }
 
     // Draw per-segment with fading alpha along the line
@@ -4781,16 +4784,25 @@ function rebuildSandCanvas() {
     rippleCtx.globalAlpha = 1;
   }
 
-  // Gaussian blur via multiple offset draws — more passes further from rocks
-  // Close passes (sharp near rocks)
+  // Gaussian blur via circular offset samples (no grid artifacts)
   sandCtx.save();
   sandCtx.setTransform(1, 0, 0, 1, 0, 0);
   const blurR = Math.ceil(12.5 * viewScale * dpr);
-  sandCtx.globalAlpha = 0.084;
-  for (let dx = -blurR; dx <= blurR; dx += Math.ceil(blurR / 2)) {
-    for (let dy = -blurR; dy <= blurR; dy += Math.ceil(blurR / 2)) {
-      sandCtx.drawImage(rippleCv, dx, dy);
-    }
+  // Center draw + concentric ring samples
+  const samples = [
+    [0, 0],
+    ...Array.from({ length: 8 }, (_, i) => {
+      const a = (i / 8) * Math.PI * 2;
+      return [Math.cos(a) * blurR * 0.5, Math.sin(a) * blurR * 0.5];
+    }),
+    ...Array.from({ length: 12 }, (_, i) => {
+      const a = (i / 12) * Math.PI * 2 + 0.3;
+      return [Math.cos(a) * blurR, Math.sin(a) * blurR];
+    }),
+  ];
+  sandCtx.globalAlpha = 1 / samples.length;
+  for (const [dx, dy] of samples) {
+    sandCtx.drawImage(rippleCv, Math.round(dx), Math.round(dy));
   }
   sandCtx.globalAlpha = 1;
   sandCtx.restore();
