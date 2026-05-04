@@ -5399,8 +5399,9 @@ function draw(time) {
       ctx.stroke();
     }
 
-    // Wave wraps around rocks like a rope: points inside or near a rock
-    // get pushed to the nearest lateral side of the rock perimeter
+    // Wave wraps around rocks: inside points clamp to upstream face only,
+    // shadow zone behind rock gets turbulent displacement
+    const upAngle = Math.atan2(-sinA, -cosA); // direction facing the incoming wave
     function reefClamp(px, py) {
       const pad = 4 * viewScale;
       for (const rf of reefs) {
@@ -5412,18 +5413,45 @@ function draw(time) {
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
         if (dist < edge && dist > 0.1) {
-          const lateral = relX * (-sinA) + relY * cosA;
-          const sideDir = lateral >= 0 ? 1 : -1;
-          const sideAngle = Math.atan2(sideDir * (-sinA), sideDir * cosA);
-          const blend = 1 - (dist / edge);
-          const targetAngle = sideAngle * blend + angle * (1 - blend);
+          // Clamp to upstream half only — never wrap to the downstream face
+          let targetAngle = angle;
+          // How far is this angle from the upstream direction?
+          let diff = targetAngle - upAngle;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          // If angle is on the downstream half (>90° from upstream), clamp to ±90°
+          const maxSpread = Math.PI * 0.5;
+          if (diff > maxSpread) targetAngle = upAngle + maxSpread;
+          else if (diff < -maxSpread) targetAngle = upAngle - maxSpread;
+
           const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + pad;
           const ox = cx + Math.cos(targetAngle) * targetR;
           const oy = cy + Math.sin(targetAngle) * targetR;
           return { x: ox, y: oy, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
         }
 
-        // Bunching zone: points just outside the rock get pulled slightly toward it
+        // Shadow zone: downstream of rock, within its lateral width
+        const along = relX * cosA + relY * sinA; // positive = downstream
+        const lateral = relX * (-sinA) + relY * cosA;
+        if (along > 0) {
+          const taperLen = rf.crownR * 4;
+          const taperT = Math.min(1, along / taperLen); // 0 at rock → 1 at taper end
+          const shadowWidth = (rf.crownR + pad) * Math.pow(1 - taperT, 1.2);
+          if (Math.abs(lateral) < shadowWidth) {
+            // Turbulent displacement — chaotic jitter + inward curl
+            const intensity = (1 - taperT) * ww.strength;
+            const seed = px * 0.07 + py * 0.09 + time * 0.003;
+            const jitterX = (Math.sin(seed * 3.7) * 2.5 + Math.sin(seed * 7.1 + 1.3) * 1.5) * viewScale * intensity;
+            const jitterY = (Math.sin(seed * 4.3 + 2.1) * 2.5 + Math.sin(seed * 6.9) * 1.5) * viewScale * intensity;
+            // Inward curl: pull toward the rock's centerline (lateral = 0)
+            const curlStrength = intensity * 0.4;
+            const curlX = -lateral * curlStrength * (-sinA);
+            const curlY = -lateral * curlStrength * cosA;
+            return { x: px + jitterX + curlX, y: py + jitterY + curlY, shadow: true };
+          }
+        }
+
+        // Bunching zone: points approaching the upstream face get pulled toward it
         const influence = edge + 18 * viewScale;
         if (dist < influence) {
           const t = (influence - dist) / (influence - edge);
@@ -6155,8 +6183,9 @@ function draw(time) {
   for (const ww of washWaves) {
     const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
     const span = Math.max(w, h) * 1.2;
-    // Wrap + wave-shadow detection — same logic as first pass
+    // Upstream-only clamp + shadow turbulence — same logic as first pass
     const _pad = 4 * viewScale;
+    const _upAngle = Math.atan2(-sinA, -cosA);
     function clampPt(px, py) {
       for (const rf of reefs) {
         if (rf.submerged) continue;
@@ -6166,13 +6195,32 @@ function draw(time) {
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
         if (dist < edge && dist > 0.1) {
-          const lateral = relX * (-sinA) + relY * cosA;
-          const sideDir = lateral >= 0 ? 1 : -1;
-          const sideAngle = Math.atan2(sideDir * (-sinA), sideDir * cosA);
-          const blend = 1 - (dist / edge);
-          const targetAngle = sideAngle * blend + angle * (1 - blend);
+          let targetAngle = angle;
+          let diff = targetAngle - _upAngle;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          const maxSpread = Math.PI * 0.5;
+          if (diff > maxSpread) targetAngle = _upAngle + maxSpread;
+          else if (diff < -maxSpread) targetAngle = _upAngle - maxSpread;
           const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + _pad;
           return { x: cx + Math.cos(targetAngle) * targetR, y: cy + Math.sin(targetAngle) * targetR, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
+        }
+        const along = relX * cosA + relY * sinA;
+        const lateral = relX * (-sinA) + relY * cosA;
+        if (along > 0) {
+          const taperLen = rf.crownR * 4;
+          const taperT = Math.min(1, along / taperLen);
+          const shadowWidth = (rf.crownR + _pad) * Math.pow(1 - taperT, 1.2);
+          if (Math.abs(lateral) < shadowWidth) {
+            const intensity = (1 - taperT) * ww.strength;
+            const seed = px * 0.07 + py * 0.09 + time * 0.003;
+            const jitterX = (Math.sin(seed * 3.7) * 2.5 + Math.sin(seed * 7.1 + 1.3) * 1.5) * viewScale * intensity;
+            const jitterY = (Math.sin(seed * 4.3 + 2.1) * 2.5 + Math.sin(seed * 6.9) * 1.5) * viewScale * intensity;
+            const curlStrength = intensity * 0.4;
+            const curlX = -lateral * curlStrength * (-sinA);
+            const curlY = -lateral * curlStrength * cosA;
+            return { x: px + jitterX + curlX, y: py + jitterY + curlY, shadow: true };
+          }
         }
         const influence = edge + 18 * viewScale;
         if (dist < influence) {
