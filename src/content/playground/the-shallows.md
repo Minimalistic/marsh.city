@@ -5370,24 +5370,31 @@ function draw(time) {
                      + Math.sin(pos * 0.012 * f + tr.seed * 5.1) * (1.5 + Math.sin(t2 * 6.5 + tr.seed * 3.1) * 1)) * vs;
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
-        // Clamp to approach side — trails snag on rocks, never pass through
         const tcl = reefClamp(px, py);
-        trPts.push({ x: tcl.x, y: tcl.y, stretch: tcl.stretch });
+        trPts.push({ x: tcl.x, y: tcl.y, hidden: tcl.hidden });
       }
-      // Draw with stretch-based fading
-      const maxSF = 200 * viewScale;
+      // Draw visible runs — gaps at rocks
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineJoin = 'round';
-      for (let i = 0; i < trPts.length - 1; i++) {
-        const segStretch = Math.max(trPts[i].stretch, trPts[i + 1].stretch);
-        const sFade = Math.max(0, 1 - segStretch / maxSF);
-        if (sFade < 0.01) continue;
-        ctx.globalAlpha = trAlpha * sFade;
-        ctx.lineWidth = tr.thick * tr.life * sFade;
-        ctx.beginPath();
-        ctx.moveTo(trPts[i].x, trPts[i].y);
-        ctx.lineTo(trPts[i + 1].x, trPts[i + 1].y);
-        ctx.stroke();
+      ctx.lineWidth = tr.thick * tr.life;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.globalAlpha = trAlpha;
+      let trRun = -1;
+      for (let i = 0; i <= trPts.length; i++) {
+        const vis = i < trPts.length && !trPts[i].hidden;
+        if (vis && trRun < 0) trRun = i;
+        if (!vis && trRun >= 0) {
+          ctx.beginPath();
+          ctx.moveTo(trPts[trRun].x, trPts[trRun].y);
+          for (let j = trRun + 1; j < i; j++) {
+            if (j < i - 1) {
+              const mx = (trPts[j].x + trPts[j + 1].x) * 0.5;
+              const my = (trPts[j].y + trPts[j + 1].y) * 0.5;
+              ctx.quadraticCurveTo(trPts[j].x, trPts[j].y, mx, my);
+            } else ctx.lineTo(trPts[j].x, trPts[j].y);
+          }
+          ctx.stroke();
+          trRun = -1;
+        }
       }
     }
 
@@ -5414,71 +5421,41 @@ function draw(time) {
     // Clamp point to approach side: checks if the ray from the point backward
     // along wave direction intersects any reef. If so, pins to the entry edge.
     // Works regardless of how far past the rock the point has traveled.
+    // Simple reef interaction: points inside crown are hidden (natural gap),
+    // points behind the rock gently converge to close the wake
     function reefClamp(px, py) {
-      const pad = 4 * viewScale;
+      const pad = 3 * viewScale;
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
         const relX = px - cx, relY = py - cy;
-        const lateral = relX * (-sinA) + relY * cosA;
-        const along = relX * cosA + relY * sinA;
         const dist = Math.sqrt(relX * relX + relY * relY);
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
-        // Inside crown
+        // Inside crown: hidden
         if (dist < edge) {
-          if (along < 0) {
-            // Approaching from the front — just push outward to nearest edge
-            // Wave hasn't passed this part of the rock yet, no snapping forward
-            return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, stretch: 0 };
-          }
-          // Past the rock's midline — clamp to approach edge (snagged)
-          const baseAngle = ww.angle + Math.PI;
-          let bestX = cx, bestY = cy, bestDist = Infinity;
-          for (let ti = -12; ti <= 12; ti++) {
-            const ta = baseAngle + (ti / 12) * Math.PI * 0.7;
-            const tr = rf.radiusAt(ta, rf.crownRadii) + pad;
-            const tx = cx + Math.cos(ta) * tr, ty = cy + Math.sin(ta) * tr;
-            const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
-            if (Math.abs(tLat - lateral) < bestDist) { bestDist = Math.abs(tLat - lateral); bestX = tx; bestY = ty; }
-          }
-          return { x: bestX, y: bestY, stretch: Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2) };
+          return { x: px, y: py, hidden: true, stretch: 0 };
         }
 
-        // Past the rock in wave direction: teardrop convergence
-        // The "shadow" tapers from full crown width at the rock to zero further downstream
+        // Behind the rock: gentle teardrop convergence
+        const along = relX * cosA + relY * sinA;
+        const lateral = relX * (-sinA) + relY * cosA;
         if (along > 0 && Math.abs(lateral) < rf.crownR + pad) {
-          const taperLen = rf.crownR * 4; // gap closes over 4x crown radius
-          const taperT = Math.min(1, along / taperLen); // 0 at rock, 1 = fully closed
-          // Shadow width narrows linearly: full crown width at rock → 0 at taperLen
+          const taperLen = rf.crownR * 5;
+          const taperT = Math.min(1, along / taperLen);
           const shadowWidth = (rf.crownR + pad) * (1 - taperT);
           if (Math.abs(lateral) < shadowWidth) {
-            // Point is in the tapered shadow — blend from pinned edge to free position
-            // At taperT=0 (right behind rock): fully pinned to edge
-            // At taperT=1 (far downstream): fully free (gap closed)
             const pinStrength = (1 - taperT) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
-
-            // Find approach edge point for this lateral
-            const baseAngle = ww.angle + Math.PI;
-            let bestX = cx, bestY = cy, bestDist = Infinity;
-            for (let ti = -12; ti <= 12; ti++) {
-              const ta = baseAngle + (ti / 12) * Math.PI * 0.7;
-              const tr = rf.radiusAt(ta, rf.crownRadii) + pad;
-              const tx = cx + Math.cos(ta) * tr, ty = cy + Math.sin(ta) * tr;
-              const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
-              if (Math.abs(tLat - lateral) < bestDist) { bestDist = Math.abs(tLat - lateral); bestX = tx; bestY = ty; }
-            }
-
-            // Blend: pinned position → free position based on taper
-            const bx = bestX * pinStrength + px * (1 - pinStrength);
-            const by = bestY * pinStrength + py * (1 - pinStrength);
-            const stretch = pinStrength * Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2);
-            return { x: bx, y: by, stretch };
+            const centerX = cx + cosA * along;
+            const centerY = cy + sinA * along;
+            const bx = px * (1 - pinStrength * 0.5) + centerX * pinStrength * 0.5;
+            const by = py * (1 - pinStrength * 0.5) + centerY * pinStrength * 0.5;
+            return { x: bx, y: by, hidden: false, stretch: 0 };
           }
         }
       }
-      return { x: px, y: py, stretch: 0 };
+      return { x: px, y: py, hidden: false, stretch: 0 };
     }
 
     // Draw wave front lines only while active
@@ -5508,30 +5485,32 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const cl = reefClamp(px, py);
-          pts.push({ x: cl.x, y: cl.y, stretch: cl.stretch });
+          pts.push({ x: cl.x, y: cl.y, hidden: cl.hidden });
         }
-        // Draw segments with stretch-based fading — snagged portions fade as distance grows
+        // Draw visible runs — hidden points create natural gaps at rocks
         const baseAlpha = ww.life * ln.alpha;
-        const maxStretchFade = 200 * viewScale; // fully faded at this stretch distance
         ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        for (let i = 0; i < pts.length - 1; i++) {
-          const segStretch = Math.max(pts[i].stretch, pts[i + 1].stretch);
-          const stretchFade = Math.max(0, 1 - segStretch / maxStretchFade);
-          if (stretchFade < 0.01) continue;
-          ctx.globalAlpha = baseAlpha * stretchFade;
-          ctx.beginPath();
-          ctx.moveTo(pts[i].x, pts[i].y);
-          if (i < pts.length - 2) {
-            const mx = (pts[i + 1].x + pts[i + 2].x) * 0.5;
-            const my = (pts[i + 1].y + pts[i + 2].y) * 0.5;
-            ctx.quadraticCurveTo(pts[i + 1].x, pts[i + 1].y, mx, my);
-          } else {
-            ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+        ctx.globalAlpha = baseAlpha;
+        let runStart = -1;
+        for (let i = 0; i <= pts.length; i++) {
+          const vis = i < pts.length && !pts[i].hidden;
+          if (vis && runStart < 0) runStart = i;
+          if (!vis && runStart >= 0) {
+            ctx.beginPath();
+            ctx.moveTo(pts[runStart].x, pts[runStart].y);
+            for (let j = runStart + 1; j < i; j++) {
+              if (j < i - 1) {
+                const mx = (pts[j].x + pts[j + 1].x) * 0.5;
+                const my = (pts[j].y + pts[j + 1].y) * 0.5;
+                ctx.quadraticCurveTo(pts[j].x, pts[j].y, mx, my);
+              } else ctx.lineTo(pts[j].x, pts[j].y);
+            }
+            ctx.stroke();
+            runStart = -1;
           }
-          ctx.stroke();
         }
       }
     } // end if (alive) — blob drawing continues below for lingering foam
@@ -6115,62 +6094,31 @@ function draw(time) {
   for (const ww of washWaves) {
     const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
     const span = Math.max(w, h) * 1.2;
-    // Clamp point to approach side — ray-based, catches points far past the rock
-    const _pad = 4 * viewScale;
+    // Simple: hidden inside crown, teardrop convergence behind
+    const _pad = 3 * viewScale;
     function clampPt(px, py) {
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
         const relX = px - cx, relY = py - cy;
-        const lateral = relX * (-sinA) + relY * cosA;
-        if (Math.abs(lateral) > rf.crownR * 1.5 + _pad) continue;
         const dist = Math.sqrt(relX * relX + relY * relY);
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
+        if (dist < edge) return { x: px, y: py, hidden: true };
         const along = relX * cosA + relY * sinA;
-
-        // Inside crown
-        if (dist < edge) {
-          if (along < 0) {
-            // Approaching — push outward, no forward snap
-            return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, stretch: 0 };
-          }
-          // Past midline — clamp to approach edge
-          const baseAngle = ww.angle + Math.PI;
-          let bestX = cx, bestY = cy, bestDist = Infinity;
-          for (let ti = -12; ti <= 12; ti++) {
-            const ta = baseAngle + (ti / 12) * Math.PI * 0.7;
-            const tr2 = rf.radiusAt(ta, rf.crownRadii) + _pad;
-            const tx = cx + Math.cos(ta) * tr2, ty = cy + Math.sin(ta) * tr2;
-            const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
-            if (Math.abs(tLat - lateral) < bestDist) { bestDist = Math.abs(tLat - lateral); bestX = tx; bestY = ty; }
-          }
-          return { x: bestX, y: bestY, stretch: Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2) };
-        }
-
-        // Past rock: teardrop convergence
+        const lateral = relX * (-sinA) + relY * cosA;
         if (along > 0 && Math.abs(lateral) < rf.crownR + _pad) {
-          const taperLen = rf.crownR * 4;
+          const taperLen = rf.crownR * 5;
           const taperT = Math.min(1, along / taperLen);
           const shadowWidth = (rf.crownR + _pad) * (1 - taperT);
           if (Math.abs(lateral) < shadowWidth) {
-            const pinStr = (1 - taperT) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
-            const baseAngle = ww.angle + Math.PI;
-            let bestX = cx, bestY = cy, bestDist = Infinity;
-            for (let ti = -12; ti <= 12; ti++) {
-              const ta = baseAngle + (ti / 12) * Math.PI * 0.7;
-              const tr2 = rf.radiusAt(ta, rf.crownRadii) + _pad;
-              const tx = cx + Math.cos(ta) * tr2, ty = cy + Math.sin(ta) * tr2;
-              const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
-              if (Math.abs(tLat - lateral) < bestDist) { bestDist = Math.abs(tLat - lateral); bestX = tx; bestY = ty; }
-            }
-            const bx = bestX * pinStr + px * (1 - pinStr);
-            const by = bestY * pinStr + py * (1 - pinStr);
-            return { x: bx, y: by, stretch: pinStr * Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2) };
+            const pin = (1 - taperT) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
+            const centerX = cx + cosA * along, centerY = cy + sinA * along;
+            return { x: px * (1 - pin * 0.5) + centerX * pin * 0.5, y: py * (1 - pin * 0.5) + centerY * pin * 0.5, hidden: false };
           }
         }
       }
-      return { x: px, y: py, stretch: 0 };
+      return { x: px, y: py, hidden: false };
     }
     const alive = ww.life > 0.1;
     // Trail lines
@@ -6190,21 +6138,29 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcp = clampPt(px, py);
-        trPts.push({ x: tcp.x, y: tcp.y, stretch: tcp.stretch });
+        trPts.push({ x: tcp.x, y: tcp.y, hidden: tcp.hidden });
       }
-      const maxSF2 = 200 * viewScale;
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      ctx.lineWidth = tr.thick * tr.life;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      for (let j = 0; j < trPts.length - 1; j++) {
-        const sStr = Math.max(trPts[j].stretch, trPts[j + 1].stretch);
-        const sFd = Math.max(0, 1 - sStr / maxSF2);
-        if (sFd < 0.01) continue;
-        ctx.globalAlpha = trAlpha * sFd;
-        ctx.lineWidth = tr.thick * tr.life * sFd;
-        ctx.beginPath();
-        ctx.moveTo(trPts[j].x, trPts[j].y);
-        ctx.lineTo(trPts[j + 1].x, trPts[j + 1].y);
-        ctx.stroke();
+      ctx.globalAlpha = trAlpha;
+      let tr2Run = -1;
+      for (let j = 0; j <= trPts.length; j++) {
+        const vis = j < trPts.length && !trPts[j].hidden;
+        if (vis && tr2Run < 0) tr2Run = j;
+        if (!vis && tr2Run >= 0) {
+          ctx.beginPath();
+          ctx.moveTo(trPts[tr2Run].x, trPts[tr2Run].y);
+          for (let k = tr2Run + 1; k < j; k++) {
+            if (k < j - 1) {
+              const mx = (trPts[k].x + trPts[k+1].x) * 0.5;
+              const my = (trPts[k].y + trPts[k+1].y) * 0.5;
+              ctx.quadraticCurveTo(trPts[k].x, trPts[k].y, mx, my);
+            } else ctx.lineTo(trPts[k].x, trPts[k].y);
+          }
+          ctx.stroke();
+          tr2Run = -1;
+        }
       }
     }
     // Wave front lines
@@ -6228,22 +6184,30 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const fcp = clampPt(px, py);
-          pts.push({ x: fcp.x, y: fcp.y, stretch: fcp.stretch });
+          pts.push({ x: fcp.x, y: fcp.y, hidden: fcp.hidden });
         }
         const baseAlpha = ww.life * ln.alpha;
-        const maxSF3 = 200 * viewScale;
+        ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        for (let i = 0; i < pts.length - 1; i++) {
-          const sStr = Math.max(pts[i].stretch, pts[i + 1].stretch);
-          const sFd = Math.max(0, 1 - sStr / maxSF3);
-          if (sFd < 0.01) continue;
-          ctx.globalAlpha = baseAlpha * sFd;
-          ctx.lineWidth = ln.thick * sFd;
-          ctx.beginPath();
-          ctx.moveTo(pts[i].x, pts[i].y);
-          ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
-          ctx.stroke();
+        ctx.globalAlpha = baseAlpha;
+        let fRun = -1;
+        for (let i = 0; i <= pts.length; i++) {
+          const vis = i < pts.length && !pts[i].hidden;
+          if (vis && fRun < 0) fRun = i;
+          if (!vis && fRun >= 0) {
+            ctx.beginPath();
+            ctx.moveTo(pts[fRun].x, pts[fRun].y);
+            for (let j = fRun + 1; j < i; j++) {
+              if (j < i - 1) {
+                const mx = (pts[j].x + pts[j+1].x) * 0.5;
+                const my = (pts[j].y + pts[j+1].y) * 0.5;
+                ctx.quadraticCurveTo(pts[j].x, pts[j].y, mx, my);
+              } else ctx.lineTo(pts[j].x, pts[j].y);
+            }
+            ctx.stroke();
+            fRun = -1;
+          }
         }
       }
     }
