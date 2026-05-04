@@ -323,15 +323,12 @@ poolContainer.addEventListener('touchstart', showUI);
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
 let regenerateWorld = null; // set after world init
 
+let inFullscreen = false; // track FS state so resize handler can skip
 function handleFSChange() {
-  const inFS = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
-  fsCloseBtn.hidden = !inFS;
-  fsBtn.hidden = inFS;
-  // Regenerate the entire world at new scale after layout settles
-  setTimeout(() => {
-    ({ w, h } = resize());
-    if (regenerateWorld) regenerateWorld();
-  }, 200);
+  inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
+  fsCloseBtn.hidden = !inFullscreen;
+  fsBtn.hidden = inFullscreen;
+  // Don't resize canvas or regenerate — CSS scales the existing pixels
   showUI();
 }
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
@@ -534,6 +531,7 @@ function rescaleAll(oldW, oldH) {
   while (rocks.length > targetRocks && rocks.length > 15) rocks.pop();
 }
 function onResize() {
+  if (inFullscreen) return; // CSS handles scaling in fullscreen
   const oldW = w, oldH = h;
   ({ w, h } = resize());
   if (w !== oldW || h !== oldH) { rescaleAll(oldW, oldH); rebuildGrid(); }
@@ -838,8 +836,8 @@ class Fish {
 
     // Per-fish comfort distance from rocks - some swim closer than others
     this.rockComfort = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
-    // Sociability — ~15% are stragglers who drift from the school
-    this.sociability = Math.random() < 0.15 ? 0.15 + Math.random() * 0.25 : 0.7 + Math.random() * 0.3;
+    // Sociability — ~7% are stragglers who drift from the school
+    this.sociability = Math.random() < 0.07 ? 0.15 + Math.random() * 0.25 : 0.7 + Math.random() * 0.3;
     // Stragglers: shorter sensing range, weaker schooling pull
     this.separationDist = (12 + Math.random() * 5) * this.scale;
     this.alignDist = 150 * this.scale * this.sociability;
@@ -2312,7 +2310,7 @@ class Predator {
 
     // Hunger: 0 = full, 1 = starving. Threshold varies per fish
     this.hunger = 0.2 + Math.random() * 0.2;
-    this._hungerRate = 0.008 + Math.random() * 0.008; // variable metabolism
+    this._hungerRate = 0.0032 + Math.random() * 0.0032; // variable metabolism — slow burn
     this._huntThreshold = 0.4 + Math.random() * 0.25; // some hunt sooner than others
     this.hunting = false;
     this.target = null;
