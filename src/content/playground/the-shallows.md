@@ -3419,7 +3419,7 @@ class Seagull {
     this._renderAngle += aDiff * 0.12;
 
     // Bank into turns — visual only
-    this._bank += (this.turnRate * 30 - this._bank) * 0.04;
+    this._bank += (this.turnRate * 40 - this._bank) * 0.06;
 
     // Flapping — occasional short bursts to stay aloft
     this.flapTimer -= dt;
@@ -3473,27 +3473,33 @@ class Seagull {
     // Tip taper
     const tipTaper = bl * (0.02 + (1 - tipT) * 0.006);
 
+    // Bank tilt — inner wing foreshortens, outer wing extends
+    // _bank is positive when turning right (side=1 is inner), negative for left
+    const bankScale = this._bank * 2.5; // amplify for visible effect
+
     const sides = [];
     for (const side of [-1, 1]) {
+      // Per-wing scale from banking: inner wing shrinks, outer grows
+      const wingBankFactor = 1 - side * bankScale;
+
       // Shoulder (wing root) — fixed points, never change with flap
-      // Set back 25% from head, 15% thicker than previous
-      const sx = bl * -0.02 + wingFwd;           // leading root — 5% forward
+      const sx = bl * -0.02 + wingFwd;
       const sy = side * bl * 0.046;
-      const rootTrailX = bl * -0.20 + wingFwd;   // trailing root
+      const rootTrailX = bl * -0.20 + wingFwd;
       const rootTrailY = side * bl * 0.046;
 
-      // Elbow — stable lateral distance, sweeps fore/aft
+      // Elbow — stable lateral distance, sweeps fore/aft, scales with bank
       const elbowX = bl * 0.02 + wingFwd + elbowSweep;
-      const elbowY = side * (innerLen + elbowShift) + bankShift * side;
+      const elbowY = side * (innerLen + elbowShift) * wingBankFactor + bankShift * side;
 
       // Inner wing trailing edge width varies with chord scale
       const innerTrailOff = bl * 0.2 * innerChordScale;
       const elbowTrailX = elbowX - innerTrailOff;
       const elbowTrailY = elbowY;
 
-      // Wing tip — pulled back 15%, reach and sweep change with flap
+      // Wing tip — reach also scales with bank (inner wing shorter, outer longer)
       const tipLeadX = elbowX - bl * 0.253 + outerSweepBack;
-      const tipLeadY = elbowY + side * outerReach + bankShift * side * 0.3;
+      const tipLeadY = elbowY + side * outerReach * wingBankFactor + bankShift * side * 0.3;
 
       // Trailing tip converges for taper — more on downstroke
       const tipTrailX = tipLeadX - bl * 0.092;
@@ -3510,6 +3516,8 @@ class Seagull {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this._renderAngle);
+    // Body shifts laterally into the turn (bird leans into it)
+    ctx.translate(0, this._bank * this.bodyLen * 0.3);
 
     const bl = this.bodyLen;
     const wings = this._wingGeometry();
