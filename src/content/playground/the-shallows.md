@@ -440,12 +440,13 @@ const foamBits = [];
 const killFx = [];
 
 function resize() {
-  const rect = canvas.getBoundingClientRect();
+  // Always render at full screen resolution so fullscreen is instant & crisp
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
+  const sw = screen.width, sh = screen.height;
+  canvas.width = sw * dpr;
+  canvas.height = sh * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { w: rect.width, h: rect.height };
+  return { w: sw, h: sh };
 }
 
 let { w, h } = resize();
