@@ -3390,20 +3390,22 @@ class Seagull {
         this.turnTimer = 5 + Math.random() * 15;
       }
 
-      // Soft edge avoidance — steer away before reaching edges
-      const margin = Math.min(w, h) * 0.2;
+      // Soft edge avoidance — bird can fly well offscreen before turning back
+      // Roaming area extends 30% beyond viewport on each side
+      const pad = Math.min(w, h) * 0.3;
+      const margin = Math.min(w, h) * 0.25; // steer zone width
       const toCenter = Math.atan2(h * 0.5 - this.y, w * 0.5 - this.x);
       let edgeUrgency = 0;
-      if (this.x < margin) edgeUrgency = (margin - this.x) / margin;
-      else if (this.x > w - margin) edgeUrgency = (this.x - (w - margin)) / margin;
-      if (this.y < margin) edgeUrgency = Math.max(edgeUrgency, (margin - this.y) / margin);
-      else if (this.y > h - margin) edgeUrgency = Math.max(edgeUrgency, (this.y - (h - margin)) / margin);
+      if (this.x < -pad + margin) edgeUrgency = (-pad + margin - this.x) / margin;
+      else if (this.x > w + pad - margin) edgeUrgency = (this.x - (w + pad - margin)) / margin;
+      if (this.y < -pad + margin) edgeUrgency = Math.max(edgeUrgency, (-pad + margin - this.y) / margin);
+      else if (this.y > h + pad - margin) edgeUrgency = Math.max(edgeUrgency, (this.y - (h + pad - margin)) / margin);
+      edgeUrgency = Math.min(1, Math.max(0, edgeUrgency));
       if (edgeUrgency > 0) {
-        // Steer toward center
         let diff = toCenter - this.angle;
         while (diff > Math.PI) diff -= Math.PI * 2;
         while (diff < -Math.PI) diff += Math.PI * 2;
-        this.angle += diff * edgeUrgency * 0.03;
+        this.angle += diff * edgeUrgency * 0.025;
       }
     }
 
