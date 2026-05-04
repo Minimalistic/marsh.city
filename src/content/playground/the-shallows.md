@@ -80,10 +80,10 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 #toolbar, .pool-fs-btn, .pool-fs-close { transition: opacity 0.5s; }
 #pool-container:fullscreen,
 #pool-container:-webkit-full-screen,
-#pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; background: #1a6b7a !important; }
+#pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; background: #1a6b7a !important; overflow: hidden !important; }
 #pool-container:fullscreen canvas,
 #pool-container:-webkit-full-screen canvas,
-#pool-container.fake-fullscreen canvas { width: 100% !important; height: 100% !important; }
+#pool-container.fake-fullscreen canvas { position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; min-width: 100% !important; min-height: 100% !important; width: auto !important; height: auto !important; aspect-ratio: 16/9 !important; }
 #pool-container.fs-rotated { transform: rotate(90deg); transform-origin: center center; width: 100vh !important; height: 100vw !important; top: 50% !important; left: 50% !important; margin-top: -50vw !important; margin-left: -50vh !important; }
 .fake-fullscreen ~ *, body:has(.fake-fullscreen) > *:not(script):not(style):not(link) { visibility: hidden !important; }
 .fake-fullscreen, .fake-fullscreen * { visibility: visible !important; }
@@ -436,17 +436,12 @@ function updateOceanSound() {
     const distFromCenter = Math.sqrt(dx * dx + dy * dy);
     // Normalize: 0 = at center of screen, 1 = one viewport diagonal away
     const normDist = distFromCenter / vpDiag;
-    // Presence based on distance: full when on screen, fades with distance
-    let presence;
-    if (normDist < 0.35) {
-      presence = 1.0; // on screen - full volume
-    } else if (normDist < 0.8) {
-      // Fading but still clearly audible
-      presence = 1.0 - (normDist - 0.35) / 0.45 * 0.6; // 1.0 → 0.4
-    } else {
-      // Distant - low rumble
-      presence = Math.max(0.15, 0.4 - (normDist - 0.8) / 0.5 * 0.25);
-    }
+    // Smooth presence curve — audible from spawn, builds gradually as wave approaches
+    // Uses travel progress too, so even distant waves grow as they move toward camera
+    const progress = ww.traveled / ww.maxTravel;
+    const distPresence = Math.max(0, 1 - normDist * 1.1); // 0 at edge, 1 at center
+    const travelPresence = Math.min(1, progress * 2.5);    // builds from 0 over first 40% of travel
+    const presence = Math.max(distPresence, travelPresence * 0.6) * (0.3 + travelPresence * 0.7);
     const str = presence * ww.strength;
     if (str > strongestWave) {
       strongestWave = str;
@@ -454,7 +449,6 @@ function updateOceanSound() {
     }
     washPresence = Math.max(washPresence, str);
     // Queue a crash when wave has left the screen
-    const progress = ww.traveled / ww.maxTravel;
     if (!ww._crashQueued && progress > 0.7) {
       ww._crashQueued = true;
       const delay = 0.8 + Math.random() * 2.5;
