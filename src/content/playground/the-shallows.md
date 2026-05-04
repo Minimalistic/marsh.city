@@ -882,6 +882,8 @@ const washWaves = [];
 let washTimer = 8 + Math.random() * 10;
 // Splash ripples — arc-shaped wave lines that radiate from rocks after wave impact
 const splashRipples = [];
+// Reef cling lines — wave remnants snagged on rocks, stretch and fade
+const reefClings = [];
 
 function spawnWash() {
   const angle = waveBaseAngle + (Math.random() - 0.5) * 0.06;
@@ -4860,11 +4862,35 @@ function draw(time) {
         }
       }
     }
-    // Waves hitting reefs: spawn foam and trigger ripple boost
+    // Waves hitting reefs: spawn foam, trigger ripple, spawn cling remnants
     for (const rf of reefs) {
       if (rf.submerged) continue;
       const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
       if (rel > -rf.crownR * 1.5 && rel < rf.crownR * 1.5 + ww.width) {
+        // Spawn cling remnants — wave line segments snagged on reef edge
+        if (!rf._clingSpawned || rf._clingSpawned !== ww) {
+          rf._clingSpawned = ww; // only once per wave per reef
+          const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+          const clingCount = 2 + Math.floor(Math.random() * 2);
+          for (let ci = 0; ci < clingCount; ci++) {
+            // Anchor on the reef edge facing the wave
+            const aAngle = ww.angle + Math.PI + (Math.random() - 0.5) * 1.2;
+            const edgeR = rf.radiusAt(aAngle, rf.crownRadii);
+            reefClings.push({
+              ax: cx + Math.cos(aAngle) * (edgeR + 3), // anchor point on reef edge
+              ay: cy + Math.sin(aAngle) * (edgeR + 3),
+              waveAngle: ww.angle, // direction wave is traveling
+              stretch: 0, // current stretch distance from anchor
+              speed: ww.speed * 0.7, // initial stretch speed
+              life: 1,
+              maxLife: 3 + Math.random() * 3,
+              thick: (1.2 + Math.random() * 0.8) * viewScale,
+              alpha: ww.strength * (0.3 + Math.random() * 0.2),
+              seed: Math.random() * 100,
+              arcSpread: (0.4 + Math.random() * 0.4), // how wide the arc fans
+            });
+          }
+        }
         // Track wave impact for ripple boost
         if (!rf._waveHit || rf._waveHit < ww.strength) {
           rf._waveHit = ww.strength;
@@ -5368,41 +5394,66 @@ function draw(time) {
         { behind: 20 * viewScale, thick: 0.35 * viewScale, alpha: 0.05, freq: 1.1, speed: 1.1 },
       ];
       for (const ln of lines) {
-        // Compute smooth curve points, then draw with quadratic curves
-        const step = 8; // wider spacing for smoother curves
+        const step = 8;
         const pts = [];
         for (let pos = -span; pos <= span; pos += step) {
           const f = ln.freq;
           const vs = viewScale;
           const ts = ln.speed;
-          // Low-frequency harmonics only — smooth, watery undulation
           const offset = (Math.sin(pos * 0.025 * f + ww.seed) * (4 + Math.sin(t * 2.5 * ts + ww.seed) * 3)
                        + Math.sin(pos * 0.055 * f + ww.seed * 2.3) * (2.5 + Math.sin(t * 4.3 * ts + ww.seed * 1.7) * 2)
                        + Math.sin(pos * 0.012 * f + ww.seed * 5.1) * (2 + Math.sin(t * 6.5 * ts + ww.seed * 3.9) * 1.5)) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
-          const deflect = reefDeflect(px, py);
-          if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
-          pts.push({ x: px, y: py });
+          // Per-point reef proximity — fade near reefs instead of hard deflect
+          let reefFade = 1;
+          for (const rf of reefs) {
+            if (rf.submerged) continue;
+            const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+            const dx = px - cx, dy = py - cy;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx);
+            const edge = rf.radiusAt(angle, rf.crownRadii);
+            if (dist < edge) { reefFade = 0; break; } // inside crown — invisible
+            const fadeZone = edge + 20 * viewScale;
+            if (dist < fadeZone) {
+              reefFade = Math.min(reefFade, (dist - edge) / (fadeZone - edge));
+            }
+          }
+          pts.push({ x: px, y: py, fade: reefFade });
         }
-        // Draw smooth quadratic curves through the points
-        ctx.beginPath();
-        if (pts.length > 0) ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length - 1; i++) {
-          const mx = (pts[i].x + pts[i + 1].x) * 0.5;
-          const my = (pts[i].y + pts[i + 1].y) * 0.5;
-          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
-        }
-        if (pts.length > 1) {
-          const last = pts[pts.length - 1];
-          ctx.lineTo(last.x, last.y);
-        }
-        ctx.globalAlpha = ww.life * ln.alpha;
-        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        // Draw as segments with per-point alpha for reef fading
+        const baseAlpha = ww.life * ln.alpha;
         ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.stroke();
+        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        // Find runs of visible points (fade > 0.01) and draw each run
+        let runStart = -1;
+        for (let i = 0; i <= pts.length; i++) {
+          const visible = i < pts.length && pts[i].fade > 0.01;
+          if (visible && runStart < 0) runStart = i;
+          if (!visible && runStart >= 0) {
+            // Draw this visible run with faded edges
+            ctx.beginPath();
+            ctx.moveTo(pts[runStart].x, pts[runStart].y);
+            for (let j = runStart + 1; j < i; j++) {
+              if (j < i - 1) {
+                const mx = (pts[j].x + pts[j + 1].x) * 0.5;
+                const my = (pts[j].y + pts[j + 1].y) * 0.5;
+                ctx.quadraticCurveTo(pts[j].x, pts[j].y, mx, my);
+              } else {
+                ctx.lineTo(pts[j].x, pts[j].y);
+              }
+            }
+            // Use minimum fade in this run for the segment alpha
+            let minFade = 1;
+            for (let j = runStart; j < i; j++) minFade = Math.min(minFade, pts[j].fade);
+            ctx.globalAlpha = baseAlpha * (0.3 + minFade * 0.7);
+            ctx.stroke();
+            runStart = -1;
+          }
+        }
       }
     } // end if (alive) — blob drawing continues below for lingering foam
 
@@ -5441,6 +5492,43 @@ function draw(time) {
   ctx.globalAlpha = 1;
 
   _measure('foam+waves');
+
+  // Reef cling lines — wave remnants snagged on rocks, stretching and fading
+  for (let i = reefClings.length - 1; i >= 0; i--) {
+    const cl = reefClings[i];
+    cl.life -= dt / cl.maxLife;
+    if (cl.life <= 0) { reefClings.splice(i, 1); continue; }
+    // Stretch outward from anchor in wave direction, decelerating
+    cl.stretch += cl.speed;
+    cl.speed *= 0.975; // slows as it stretches
+    const fadeAlpha = cl.life * cl.life * cl.alpha;
+    if (fadeAlpha < 0.003) { reefClings.splice(i, 1); continue; }
+
+    // Draw as a short arc from anchor stretching in wave direction
+    const cosW = Math.cos(cl.waveAngle), sinW = Math.sin(cl.waveAngle);
+    const perpW = { x: -sinW, y: cosW };
+    const arcHalf = cl.arcSpread * cl.stretch * 0.3; // arc width scales with stretch
+    const steps = 8;
+    ctx.beginPath();
+    let first = true;
+    for (let si = 0; si <= steps; si++) {
+      const t2 = si / steps; // 0 = one side, 1 = other side
+      const lateral = (t2 - 0.5) * 2 * arcHalf; // -arcHalf to +arcHalf
+      // Points fan out from anchor along wave direction
+      const stretchFactor = 1 - Math.abs(t2 - 0.5) * 0.6; // center stretches most
+      const wobble = Math.sin(lateral * 0.3 + cl.seed) * 2 * cl.life;
+      const px = cl.ax + cosW * (cl.stretch * stretchFactor + wobble) + perpW.x * lateral;
+      const py = cl.ay + sinW * (cl.stretch * stretchFactor + wobble) + perpW.y * lateral;
+      if (first) { ctx.moveTo(px, py); first = false; }
+      else ctx.lineTo(px, py);
+    }
+    ctx.globalAlpha = fadeAlpha;
+    ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+    ctx.lineWidth = cl.thick * cl.life;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 
   // Ongoing splash emission — reefs spawn ripples after 0.25s delay, then decay
   for (const rf of reefs) {
