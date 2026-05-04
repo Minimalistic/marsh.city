@@ -841,7 +841,7 @@ class Fish {
     // Stragglers: shorter sensing range, weaker schooling pull
     this.separationDist = (12 + Math.random() * 5) * this.scale;
     this.alignDist = 150 * this.scale * this.sociability;
-    this.cohesionDist = 128 * this.scale * this.sociability;
+    this.cohesionDist = 96 * this.scale * this.sociability;
 
     // Stragglers are slower and wander more
     if (this.sociability < 0.5) {
@@ -1015,7 +1015,7 @@ class Fish {
       // cross: signed lateral offset from school centerline
       const cross = (toCx * schHy - toCy * schHx) / toCDist;
       // Along-track pull toward center — stronger = tighter core with natural edge falloff
-      const alongStr = 0.0144;
+      const alongStr = 0.018;
       const alongX = schHx * foreAft * toCDist * alongStr;
       const alongY = schHy * foreAft * toCDist * alongStr;
       // Cross-track pull toward centerline — stronger at front and back (teardrop)
@@ -1023,11 +1023,11 @@ class Fish {
       const absCross = Math.abs(cross);
       let crossStr;
       if (foreAft > 0.3) {
-        crossStr = 0.036 + absForeAft * 0.022;
+        crossStr = 0.045 + absForeAft * 0.028;
       } else if (foreAft < -0.3) {
-        crossStr = 0.022 + absForeAft * 0.012;
+        crossStr = 0.028 + absForeAft * 0.015;
       } else {
-        crossStr = 0.012 + absCross * 0.007;
+        crossStr = 0.015 + absCross * 0.009;
       }
       // Cross-track force: perpendicular to school heading, toward centerline
       const crossForceX = -schHy * cross * toCDist * crossStr;
