@@ -5277,6 +5277,7 @@ function draw(time) {
     if (!ww.blobs) ww.blobs = [];
     const cosA = Math.cos(ww.angle);
     const sinA = Math.sin(ww.angle);
+    const upAngle = Math.atan2(-sinA, -cosA); // direction facing the incoming wave
     const span = Math.max(w, h) * 1.2;
     const alive = ww.life > 0.1; // wave front still active (not just lingering foam)
 
@@ -5401,7 +5402,6 @@ function draw(time) {
 
     // Wave wraps around rocks: inside points clamp to upstream face only,
     // shadow zone behind rock gets turbulent displacement
-    const upAngle = Math.atan2(-sinA, -cosA); // direction facing the incoming wave
     function reefClamp(px, py) {
       const pad = 4 * viewScale;
       for (const rf of reefs) {
