@@ -4743,7 +4743,7 @@ function rebuildSandCanvas() {
     const ridgeAlpha = prox * 0.08 + Math.sin(seed) * 0.01;
     if (ridgeAlpha < 0.005) continue; // skip invisible ridges
 
-    rippleCtx.strokeStyle = `rgba(210, 195, 160, ${ridgeAlpha})`;
+    rippleCtx.strokeStyle = `rgba(195, 188, 167, ${ridgeAlpha})`;
     rippleCtx.lineWidth = ridgeThick;
     rippleCtx.lineCap = 'round';
     rippleCtx.stroke();
@@ -4753,8 +4753,8 @@ function rebuildSandCanvas() {
   // Close passes (sharp near rocks)
   sandCtx.save();
   sandCtx.setTransform(1, 0, 0, 1, 0, 0);
-  const blurR = Math.ceil(5 * viewScale * dpr);
-  sandCtx.globalAlpha = 0.12;
+  const blurR = Math.ceil(6.25 * viewScale * dpr);
+  sandCtx.globalAlpha = 0.084;
   for (let dx = -blurR; dx <= blurR; dx += Math.ceil(blurR / 2)) {
     for (let dy = -blurR; dy <= blurR; dy += Math.ceil(blurR / 2)) {
       sandCtx.drawImage(rippleCv, dx, dy);
