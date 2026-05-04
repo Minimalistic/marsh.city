@@ -5287,7 +5287,7 @@ function draw(time) {
   // Reset transform for raw pixel copy, then restore DPR transform
   waveTrailCtx.save();
   waveTrailCtx.setTransform(1, 0, 0, 1, 0, 0);
-  waveTrailCtx.globalAlpha = 0.78;
+  waveTrailCtx.globalAlpha = 0.72;
   waveTrailCtx.globalCompositeOperation = 'copy';
   waveTrailCtx.drawImage(waveTrailCanvas, 0, 0);
   waveTrailCtx.restore();
@@ -5594,7 +5594,10 @@ function draw(time) {
         }
 
         isFirstLine = false;
-        const baseAlpha = ww.life * ln.alpha;
+        // Fade in over first 10% of travel so waves don't pop in at full brightness
+        const waveProgress = 1 - ww.life;
+        const lineFadeIn = Math.min(waveProgress / 0.1, 1);
+        const baseAlpha = lineFadeIn * ww.life * ln.alpha;
 
         // Draw wave lines to trail canvas (frame-persistence creates ghost effect)
         waveTrailCtx.globalAlpha = baseAlpha * 0.5;
@@ -6359,7 +6362,9 @@ function draw(time) {
         }
 
         isFirstLine = false;
-        const baseAlpha = ww.life * ln.alpha;
+        const waveProgress = 1 - ww.life;
+        const lineFadeIn = Math.min(waveProgress / 0.1, 1);
+        const baseAlpha = lineFadeIn * ww.life * ln.alpha;
 
         waveTrailCtx.globalAlpha = baseAlpha * 0.5;
         waveTrailCtx.lineWidth = ln.thick;
