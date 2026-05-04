@@ -4081,14 +4081,14 @@ function draw(time) {
     for (let layer = 0; layer < layers; layer++) {
       const scale = (1.2 - (layer / layers) * 0.7) * 1.5; // 1.8 outer to 0.75 inner
       const alpha = (layer / (layers - 1)) * 0.25; // 0 outer to 0.25 inner
-      // All layers blend toward circle — even inner ones are somewhat eroded
-      const smooth = 1 - (layer / (layers - 1)) * 0.7; // 1.0 at outermost, 0.3 at innermost
+      // All layers blend strongly toward circle — underwater rock is eroded smooth
+      const smooth = 1 - (layer / (layers - 1)) * 0.5; // 1.0 at outermost, 0.5 at innermost
       ctx.beginPath();
       const n = rf.baseShape.length;
       // Compute smoothed points — blend between original shape and circle
       const pts = rf.baseShape.map((p, i) => {
         const r = rf.baseRadii[i];
-        const blended = r * (1 - smooth * 0.7) + avgBaseR * smooth * 0.7;
+        const blended = r * (1 - smooth * 0.9) + avgBaseR * smooth * 0.9;
         const a = Math.atan2(p.y, p.x);
         return { x: Math.cos(a) * blended * scale, y: Math.sin(a) * blended * scale };
       });
