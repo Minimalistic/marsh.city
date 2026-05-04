@@ -5453,15 +5453,15 @@ function draw(time) {
         for (let si = 0; si < burstCount; si++) {
           splashRipples.push({
             cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
-            radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 3,
-            maxRadius: (rf.crownR * 3 + si * 18) * viewScale,
-            speed: (1.4 + Math.random() * 0.8) * viewScale,
+            radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 2,
+            maxRadius: (rf.crownR * 1.95 + si * 12) * viewScale,
+            speed: (0.9 + Math.random() * 0.5) * viewScale,
             hitAngle,
-            strength: rf._splashEmit * (0.8 + Math.random() * 0.2),
+            strength: rf._splashEmit * (0.52 + Math.random() * 0.13),
             life: 1,
             maxLife: 4 + Math.random() * 3,
             seed: Math.random() * 100,
-            thick: (2.0 + Math.random() * 1.2) * viewScale,
+            thick: (1.3 + Math.random() * 0.8) * viewScale,
           });
         }
       } else {
@@ -5470,14 +5470,14 @@ function draw(time) {
         splashRipples.push({
           cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
           radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2,
-          maxRadius: (rf.crownR * 2.2 + decay * 12) * viewScale,
-          speed: (0.8 + decay * 0.6) * viewScale,
+          maxRadius: (rf.crownR * 1.43 + decay * 8) * viewScale,
+          speed: (0.52 + decay * 0.39) * viewScale,
           hitAngle,
-          strength: rf._splashEmit * decay * (0.5 + Math.random() * 0.3),
+          strength: rf._splashEmit * decay * (0.33 + Math.random() * 0.2),
           life: 1,
           maxLife: 3 + decay * 2,
           seed: Math.random() * 100,
-          thick: (0.8 + decay * 0.8) * viewScale,
+          thick: (0.52 + decay * 0.52) * viewScale,
         });
       }
     }
