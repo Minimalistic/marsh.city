@@ -1385,9 +1385,9 @@ class Fish {
       if (pred.target === this) { beingHunted = true; break; }
     }
     let targetSpeed;
-    if (panicSprint) targetSpeed = scaledSpeed * 5.5; // explosive burst
-    else if (beingHunted) targetSpeed = scaledSpeed * 4.5; // full flight
-    else if (this.fleeing) targetSpeed = scaledSpeed * 3.0; // alarmed dash
+    if (panicSprint) targetSpeed = scaledSpeed * 6.05; // explosive burst
+    else if (beingHunted) targetSpeed = scaledSpeed * 4.95; // full flight
+    else if (this.fleeing) targetSpeed = scaledSpeed * 3.3; // alarmed dash
     else if (this.idle) targetSpeed = scaledSpeed * 1.08;
     else targetSpeed = scaledSpeed * 1.56;
 
@@ -2621,7 +2621,7 @@ class Predator {
         } else {
         // Aggressive ramp: faster base chase, harder steering at close range
         const closeness = Math.max(0, 1 - dist / (220 * viewScale));
-        const chaseSpeed = this.baseSpeed * (2.8 + closeness * 2.5) * viewScale;
+        const chaseSpeed = this.baseSpeed * (2.38 + closeness * 2.13) * viewScale;
         const steer = 0.08 + closeness * 0.2;
         this.vx += (Math.cos(pursuitAngle) * chaseSpeed - this.vx) * steer;
         this.vy += (Math.sin(pursuitAngle) * chaseSpeed - this.vy) * steer;
@@ -2692,11 +2692,11 @@ class Predator {
 
     const predScale = viewScale;
     let targetSpeed;
-    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 7.0 * predScale; this.burstTimer -= dt; }
-    else if (this.target) targetSpeed = this.baseSpeed * (1.75 + this.hunger * 0.7) * predScale;
-    else if (this.hunting) targetSpeed = this.baseSpeed * (0.35 + this.hunger * 0.28) * predScale;
+    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 5.95 * predScale; this.burstTimer -= dt; }
+    else if (this.target) targetSpeed = this.baseSpeed * (1.49 + this.hunger * 0.6) * predScale;
+    else if (this.hunting) targetSpeed = this.baseSpeed * (0.30 + this.hunger * 0.24) * predScale;
     // Hovering — slow deliberate cruise, not motionless
-    else targetSpeed = this.baseSpeed * (0.3 + this.hunger * 0.3) * predScale;
+    else targetSpeed = this.baseSpeed * (0.26 + this.hunger * 0.26) * predScale;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     // Slow to change speed when well-fed, responsive when hungry/hunting
@@ -4839,8 +4839,8 @@ function draw(time) {
       else if (edge === 1) { pred.x = w + 40; pred.y = h * (0.2 + Math.random() * 0.6); pred.angle = Math.PI + (Math.random() - 0.5) * 0.3; }
       else if (edge === 2) { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = -40; pred.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
       else { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = h + 40; pred.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
-      pred.vx = Math.cos(pred.angle) * pred.baseSpeed * 3 * viewScale;
-      pred.vy = Math.sin(pred.angle) * pred.baseSpeed * 3 * viewScale;
+      pred.vx = Math.cos(pred.angle) * pred.baseSpeed * 2.55 * viewScale;
+      pred.vy = Math.sin(pred.angle) * pred.baseSpeed * 2.55 * viewScale;
       pred.hunger = 0.8; // comes back hungry
       pred.hunting = true;
       pred._burstFlick = 1.0;
