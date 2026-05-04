@@ -4681,14 +4681,25 @@ function rebuildSandCanvas() {
       if (rf.submerged) continue;
       const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
       const dx = x - cx, dy = y - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      // How far downstream of the rock is this point? (positive = downstream)
+      // Downstream distance and lateral distance from rock center
       const along = dx * waveCos + dy * waveSin;
-      // Heavily favor downstream: 90% of visibility is post-rock
-      // Upstream gets only 10% influence, downstream gets full
-      const dirBias = along > 0 ? 1 : 0.1;
-      const influence = rf.crownR * 7;
-      if (dist < influence) best = Math.max(best, (1 - dist / influence) * dirBias);
+      const lateral = Math.abs(dx * (-waveSin) + dy * waveCos);
+      // Teardrop shape: extends much further downstream, narrow laterally
+      const downstreamReach = rf.crownR * 12; // long plume behind rock
+      const upstreamReach = rf.crownR * 3;    // short in front
+      const lateralReach = rf.crownR * 5;     // moderate width
+      const reach = along > 0 ? downstreamReach : upstreamReach;
+      // Normalized distance in the elongated shape
+      const alongNorm = Math.abs(along) / reach;
+      const lateralNorm = lateral / lateralReach;
+      const combined = Math.sqrt(alongNorm * alongNorm + lateralNorm * lateralNorm);
+      if (combined >= 1) continue;
+      // Smooth cubic falloff instead of linear — gentle fade at edges
+      const falloff = (1 - combined);
+      const smooth = falloff * falloff * (3 - 2 * falloff); // smoothstep
+      // Downstream bias
+      const dirBias = along > 0 ? 1 : 0.15;
+      best = Math.max(best, smooth * dirBias);
     }
     return best;
   }
