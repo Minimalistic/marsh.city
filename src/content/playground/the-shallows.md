@@ -3474,9 +3474,9 @@ class Seagull {
     for (const side of [-1, 1]) {
       // Shoulder (wing root) — fixed points, never change with flap
       // Set back 25% from head, 15% thicker than previous
-      const sx = bl * -0.07 + wingFwd;           // leading root — set back from head
-      const sy = side * bl * 0.046;              // 15% wider lateral attachment
-      const rootTrailX = bl * -0.25 + wingFwd;   // trailing root
+      const sx = bl * -0.02 + wingFwd;           // leading root — 5% forward
+      const sy = side * bl * 0.046;
+      const rootTrailX = bl * -0.20 + wingFwd;   // trailing root
       const rootTrailY = side * bl * 0.046;
 
       // Elbow — stable lateral distance, sweeps fore/aft
