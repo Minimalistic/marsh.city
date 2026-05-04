@@ -6102,14 +6102,14 @@ function draw(time) {
   // Seagull shadows — rendered to offscreen canvas then composited once
   // Guarantees a single unified shape with no internal overlap artifacts
   for (const g of seagulls) {
-    // Higher = smaller shadow, more diffuse, more transparent
-    const heightScale = 1.1 - g.height * 0.3; // 1.1 at ground, 0.8 at max height
-    const gOffX = g.height * 35;
-    const gOffY = g.height * 45;
+    // Higher = much smaller shadow, very transparent, 2x further offset
+    const heightScale = (1.1 - g.height * 0.3) * 0.5; // 50% smaller overall, shrinks further with height
+    const gOffX = g.height * 70;  // 2x further at max height
+    const gOffY = g.height * 90;
     const bl = g.bodyLen * heightScale;
     const wings = g._wingGeometry();
     const blurR = Math.round(14 + g.height * 18);
-    const alpha = 0.08 * (1 - g.height * 0.7); // fades strongly with altitude
+    const alpha = 0.05 * (1 - g.height * 0.85); // very faint at altitude
 
     // Size the offscreen canvas to fit the shadow + blur padding
     const pad = blurR * 3; // extra space for blur bleed
