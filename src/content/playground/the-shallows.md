@@ -108,7 +108,7 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
   position: absolute; bottom: 8px; left: 8px; z-index: 10;
   background: rgba(0,0,0,0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border-radius: 6px; padding: 6px 10px;
-  font: 10px/1.5 monospace; color: rgba(255,255,255,0.7);
+  font: 13px/1.5 monospace; color: rgba(255,255,255,0.7);
   pointer-events: none; white-space: pre;
 }
 </style>
@@ -3427,36 +3427,6 @@ class Seagull {
     }
   }
 
-  // Draw shadow on the water surface
-  drawShadow(ctx) {
-    const shadowScale = 1 + this.height * 0.3; // higher = larger shadow
-    const shadowOffX = this.height * 15; // offset from bird position
-    const shadowOffY = this.height * 20;
-    const sx = this.x + shadowOffX;
-    const sy = this.y + shadowOffY;
-    const alpha = 0.12 + (1 - this.height) * 0.08; // lower = darker shadow
-
-    ctx.save();
-    ctx.translate(sx, sy);
-    ctx.rotate(this._renderAngle);
-
-    // Wing spread factor — 1.0 when gliding, dips during flaps
-    const wingSpread = this.flapping
-      ? 0.7 + Math.cos(this.wingPhase) * 0.3
-      : 1.0;
-    const ws = this.wingspan * shadowScale * wingSpread;
-    const bl = this.bodyLen * shadowScale;
-
-    // Soft oval shadow for body + wings
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, ws * 0.5, bl * 0.3, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 30, 40, 1)';
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.restore();
-  }
-
   draw(ctx) {
     ctx.save();
     ctx.translate(this.x, this.y);
@@ -3658,6 +3628,47 @@ function drawAllFishShadows(ctx, drawables) {
       }
     }
   }
+  // Seagull shadows — stamped into the same shadow canvas, higher offset
+  for (const g of seagulls) {
+    const heightScale = 1 + g.height * 0.3;
+    const gOffX = shadowOffX + g.height * 15;
+    const gOffY = shadowOffY + g.height * 20;
+    const wingSpread = g.flapping
+      ? 0.75 + Math.cos(g.wingPhase) * 0.25
+      : 1.0;
+    const halfSpan = g.wingspan * 0.5 * wingSpread * 0.85 * heightScale;
+    const bl = g.bodyLen * heightScale;
+    const angle = g._renderAngle;
+    const cosA = Math.cos(angle), sinA = Math.sin(angle);
+    const cx = g.x + gOffX, cy = g.y + gOffY;
+    // Perpendicular to flight direction (wing axis)
+    const perpX = -sinA, perpY = cosA;
+
+    // Body shadow — elongated along flight direction
+    shadowCtx.save();
+    shadowCtx.translate(cx, cy);
+    shadowCtx.rotate(angle);
+    shadowCtx.drawImage(shadowDot, -bl * 0.5, -bl * 0.15, bl, bl * 0.3);
+    shadowCtx.restore();
+
+    // Wing shadows — stamps along each wing, from root to tip
+    const wingSteps = 4;
+    for (let wi = 0; wi < wingSteps; wi++) {
+      const t = (wi + 0.5) / wingSteps; // 0 = root, 1 = tip
+      const spanPos = halfSpan * t;
+      const r = bl * 0.12 * (1 - t * 0.5); // tapers toward tip
+      for (const side of [-1, 1]) {
+        const wx = cx + perpX * spanPos * side - cosA * bl * 0.05;
+        const wy = cy + perpY * spanPos * side - sinA * bl * 0.05;
+        shadowCtx.save();
+        shadowCtx.translate(wx, wy);
+        shadowCtx.rotate(angle);
+        shadowCtx.drawImage(shadowDot, -r * 2, -r, r * 4, r * 2);
+        shadowCtx.restore();
+      }
+    }
+  }
+
   // Single blur pass on the half-res canvas
   shadowBlurCtx.clearRect(0, 0, sw, sh);
   shadowBlurCtx.drawImage(shadowCanvas, 0, 0);
@@ -5849,8 +5860,6 @@ function draw(time) {
 
   _measure('reefs');
 
-  // Seagull shadows — on the water, under the bird
-  for (const g of seagulls) g.drawShadow(ctx);
   // Seagulls — drawn on top of everything (flying above the water)
   for (const g of seagulls) g.draw(ctx);
 
