@@ -325,21 +325,10 @@ let regenerateWorld = null; // set after world init
 
 let inFullscreen = false; // track FS state so resize handler can skip
 function handleFSChange() {
-  const wasFS = inFullscreen;
   inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
   fsCloseBtn.hidden = !inFullscreen;
   fsBtn.hidden = inFullscreen;
-  // On any fullscreen toggle, do a proper resize after layout settles
-  setTimeout(() => {
-    const oldW = w, oldH = h;
-    ({ w, h } = resize());
-    if (w !== oldW || h !== oldH) {
-      rescaleAll(oldW, oldH);
-      rebuildGrid();
-      rebuildBgGradient();
-      rebuildSandCanvas();
-    }
-  }, 150);
+  // Don't resize canvas or regenerate — CSS scales the existing pixels
   showUI();
 }
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
