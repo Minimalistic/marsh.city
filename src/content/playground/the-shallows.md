@@ -1876,7 +1876,8 @@ class Fish {
     this._prevAngle = this.angle;
     const turning = Math.abs(angleDelta) > 0.03;
     const active = this.speed > 1.2 || turning || this.fleeing || this._biting;
-    this._glint -= 0.016; // roughly 1 frame at 60fps
+    this._glint = Math.max(0, this._glint - dt); // dt-scaled decay
+    if (this._glint > 0.15) this._glint = 0; // hard cap — kill stuck flashes
     if (this._glint <= 0 && active && Math.random() < 0.008) {
       const sun = getSunlight(this.x, this.y);
       if (sun > 0.5) {
@@ -1902,10 +1903,11 @@ class Fish {
     }
 
     // Belly flash — only when fleeing with body bend at 90%+ of max
-    this._bellyFlash -= 0.028; // 15% faster decay
+    this._bellyFlash = Math.max(0, this._bellyFlash - dt * 1.7); // dt-scaled decay
+    if (this._bellyFlash > 0.12) this._bellyFlash = 0; // hard cap — kill stuck flashes
     const bendThreshold = 0.207 * 0.9; // 90% of max body bend
     if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.03) {
-      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash (15% shorter)
+      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash
     }
     if (this._bellyFlash > 0) {
       const flashAlpha = Math.min(1, this._bellyFlash * 12) * 0.5;
@@ -4260,6 +4262,9 @@ function draw(time) {
   }
 
   // Clear - bright tropical shallow water (cached gradient)
+  // Reset composite state to prevent any leaked screen/multiply from prior frame
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
   ctx.fillStyle = bgGradient;
   ctx.fillRect(0, 0, w, h);
 
