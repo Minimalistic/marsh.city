@@ -452,7 +452,7 @@ let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
 // More fish on larger viewports - scales aggressively with area
-const initialFishCount = Math.min(171, Math.max(55, Math.floor(initialArea / 1540)));
+const initialFishCount = Math.min(214, Math.max(69, Math.floor(initialArea / 1232)));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -476,7 +476,7 @@ function rescaleAll(oldW, oldH) {
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
   // Update organic population base for new viewport size
-  const newBasePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
+  const newBasePop = Math.min(214, Math.max(45, Math.floor((w * h) / 1232)));
   const popRatio = newBasePop / Math.max(1, basePop);
   popTarget = Math.max(newBasePop * 0.35, Math.min(newBasePop * 1.3, popTarget * popRatio));
   basePop = newBasePop;
@@ -804,7 +804,7 @@ class Fish {
       else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
       else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
     }
-    this.speed = (0.6 + Math.random() * 1.4) * 0.56; // calm cruising — stragglers get slowed after sociability is set
+    this.speed = (0.6 + Math.random() * 1.4) * 0.70; // calm cruising — stragglers get slowed after sociability is set
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
@@ -841,7 +841,7 @@ class Fish {
     // Stragglers: shorter sensing range, weaker schooling pull
     this.separationDist = (12 + Math.random() * 5) * this.scale;
     this.alignDist = 150 * this.scale * this.sociability;
-    this.cohesionDist = 200 * this.scale * this.sociability;
+    this.cohesionDist = 160 * this.scale * this.sociability;
 
     // Stragglers are slower and wander more
     if (this.sociability < 0.5) {
@@ -949,9 +949,9 @@ class Fish {
     }
     const schoolWeight = (this.distracted && !predNearby) ? 0.3 : 1;
     // Separation weaker in dense school centers — fish stack at different depths
-    const density = Math.min(1, cohCount / 8); // 0 = edge/alone, 1 = deep in pack
-    const densityJitter = 0.78 + this._phaseOffset % 1 * 0.12; // per-fish variation
-    const sepStr = 0.07 * (1 - density * densityJitter); // 0.07 at edge, ~0.015 at center
+    const density = Math.min(1, cohCount / 5); // 0 = edge/alone, 1 = deep in pack (tighter threshold)
+    const densityJitter = 0.85 + this._phaseOffset % 1 * 0.1; // per-fish variation
+    const sepStr = 0.07 * (1 - density * densityJitter * 0.92); // 0.07 at edge, ~0.005 at center
     if (sepCount > 0) { this.vx += sepX * sepStr; this.vy += sepY * sepStr; }
     // Measure heading agreement — how aligned are nearby fish with this one?
     let headingAgreement = 1; // 1 = perfect agreement, 0 = opposing
@@ -1009,8 +1009,8 @@ class Fish {
       const foreAft = (toCx * schHx + toCy * schHy) / toCDist;
       // cross: signed lateral offset from school centerline
       const cross = (toCx * schHy - toCy * schHx) / toCDist;
-      // Along-track pull toward center (gentle, keeps school compact)
-      const alongStr = 0.0062;
+      // Along-track pull toward center — stronger = tighter core with natural edge falloff
+      const alongStr = 0.012;
       const alongX = schHx * foreAft * toCDist * alongStr;
       const alongY = schHy * foreAft * toCDist * alongStr;
       // Cross-track pull toward centerline — stronger at front and back (teardrop)
@@ -1018,11 +1018,11 @@ class Fish {
       const absCross = Math.abs(cross);
       let crossStr;
       if (foreAft > 0.3) {
-        crossStr = 0.019 + absForeAft * 0.012;
+        crossStr = 0.030 + absForeAft * 0.018;
       } else if (foreAft < -0.3) {
-        crossStr = 0.011 + absForeAft * 0.006;
+        crossStr = 0.018 + absForeAft * 0.010;
       } else {
-        crossStr = 0.006 + absCross * 0.0036;
+        crossStr = 0.010 + absCross * 0.006;
       }
       // Cross-track force: perpendicular to school heading, toward centerline
       const crossForceX = -schHy * cross * toCDist * crossStr;
@@ -3087,7 +3087,7 @@ function drawAllFishShadows(ctx, drawables) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-const fishCount = Math.min(171, Math.max(55, Math.floor((w * h) / 1540)));
+const fishCount = Math.min(214, Math.max(69, Math.floor((w * h) / 1232)));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
@@ -3146,7 +3146,7 @@ const predators = [];
 const predatorCount = w * h > 600000 ? 2 : 1;
 for (let i = 0; i < predatorCount; i++) predators.push(new Predator());
 // Organic population — wanders around a midpoint, fish come and go
-let basePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
+let basePop = Math.min(214, Math.max(45, Math.floor((w * h) / 1232)));
 let popTarget = basePop * (0.7 + Math.random() * 0.3); // start a little varied
 let popDriftTimer = 10 + Math.random() * 20; // time until next target shift
 let schoolArrivalTimer = 15 + Math.random() * 30; // next wave of newcomers
@@ -3630,9 +3630,9 @@ regenerateWorld = function() {
   spawnStarfish();
 
   // Fish — swim in from edges
-  basePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
+  basePop = Math.min(214, Math.max(45, Math.floor((w * h) / 1232)));
   popTarget = basePop * (0.7 + Math.random() * 0.3);
-  const newFishCount = Math.min(171, Math.max(55, Math.floor((w * h) / 1540)));
+  const newFishCount = Math.min(214, Math.max(69, Math.floor((w * h) / 1232)));
   spawnWaves = makeSpawnWaves(newFishCount, w, h);
   spawnTimer = 0;
 
@@ -3759,7 +3759,7 @@ function draw(time) {
     ww.traveled += ww.speed;
     ww.life = 1 - ww.traveled / ww.maxTravel;
     // Don't remove dead waves until their foam blobs have faded out
-    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0)) { washWaves.splice(i, 1); continue; }
+    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0) && (!ww.trails || ww.trails.length === 0)) { washWaves.splice(i, 1); continue; }
     // Push things in the wave's path
     const pushForce = ww.strength * ww.life;
     const cosA = Math.cos(ww.angle);
@@ -4186,6 +4186,65 @@ function draw(time) {
           });
         }
       }
+    }
+
+    // Shed trail lines behind the wave — irregular ripples left in its wake
+    if (!ww.trails) ww.trails = [];
+    if (!ww._nextTrail) ww._nextTrail = 20 + Math.random() * 40;
+    if (alive && ww.traveled > ww._nextTrail) {
+      ww._nextTrail = ww.traveled + 30 + Math.random() * 60; // irregular spacing
+      // Pick one of the thinner line styles to shed
+      const pick = 1 + Math.floor(Math.random() * 3); // index 1-3
+      const templates = [
+        null,
+        { thick: 1.2 * viewScale, alpha: 0.18, freq: 1.3 },
+        { thick: 0.8 * viewScale, alpha: 0.10, freq: 0.8 },
+        { thick: 0.5 * viewScale, alpha: 0.06, freq: 1.6 },
+      ];
+      const tmpl = templates[pick];
+      ww.trails.push({
+        x: ww.x, y: ww.y,
+        seed: (ww.seed || 0) + Math.random() * 10,
+        traveled: ww.traveled,
+        thick: tmpl.thick,
+        alpha: tmpl.alpha * (0.6 + Math.random() * 0.4),
+        freq: tmpl.freq,
+        life: 1,
+        maxLife: 3 + Math.random() * 4,
+        driftSpeed: ww.speed * (0.08 + Math.random() * 0.12),
+      });
+    }
+    // Update and draw trail lines
+    for (let ti = ww.trails.length - 1; ti >= 0; ti--) {
+      const tr = ww.trails[ti];
+      tr.life -= dt / tr.maxLife;
+      if (tr.life <= 0) { ww.trails.splice(ti, 1); continue; }
+      tr.x += cosA * tr.driftSpeed;
+      tr.y += sinA * tr.driftSpeed;
+      const trAlpha = tr.life * tr.life * tr.alpha;
+      if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
+      const perpX = -sinA, perpY = cosA;
+      const t2 = tr.traveled * 0.02;
+      ctx.beginPath();
+      const step = 4;
+      let first = true;
+      for (let pos = -span; pos <= span; pos += step) {
+        const f = tr.freq;
+        const vs = viewScale;
+        const offset = (Math.sin(pos * 0.04 * f + t2 * 0.6 + tr.seed) * 6
+                     + Math.sin(pos * 0.09 * f + t2 * 1.1 + tr.seed * 2.3) * 4
+                     + Math.sin(pos * 0.18 * f + t2 * 2.3 + tr.seed * 4.7) * 2) * vs;
+        const px = tr.x + perpX * pos + cosA * offset;
+        const py = tr.y + perpY * pos + sinA * offset;
+        if (first) { ctx.moveTo(px, py); first = false; }
+        else ctx.lineTo(px, py);
+      }
+      ctx.globalAlpha = trAlpha;
+      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      ctx.lineWidth = tr.thick * tr.life;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
     }
 
     // Draw wave front lines only while active
