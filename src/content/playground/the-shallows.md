@@ -3339,6 +3339,13 @@ class Seagull {
     this._bank = 0;
     this._renderAngle = this.angle;
 
+    // Wind buffeting — turbulence offsets
+    this._turbPhase = Math.random() * Math.PI * 20;
+    this._turbX = 0;
+    this._turbY = 0;
+    this._turbAngle = 0;
+    this._turbBank = 0;
+
     // Height above water — affects shadow offset and size
     this.height = 0.6 + Math.random() * 0.4;
 
@@ -3421,6 +3428,21 @@ class Seagull {
     // Bank into turns — visual only
     this._bank += (this.turnRate * 40 - this._bank) * 0.06;
 
+    // Wind buffeting — layered turbulence affects position, angle, and bank
+    this._turbPhase += dt;
+    const tp = this._turbPhase;
+    // Smooth random nudges — multiple frequencies for organic feel
+    this._turbX += ((Math.sin(tp * 0.7 + 1.3) * 0.15
+                   + Math.sin(tp * 1.9 + 4.7) * 0.08
+                   + Math.sin(tp * 3.3 + 2.1) * 0.04) - this._turbX) * 0.03;
+    this._turbY += ((Math.sin(tp * 0.6 + 3.1) * 0.15
+                   + Math.sin(tp * 1.7 + 0.9) * 0.08
+                   + Math.sin(tp * 2.9 + 5.3) * 0.04) - this._turbY) * 0.03;
+    this._turbAngle += ((Math.sin(tp * 0.5 + 2.7) * 0.008
+                       + Math.sin(tp * 1.3 + 6.1) * 0.005) - this._turbAngle) * 0.04;
+    this._turbBank += ((Math.sin(tp * 0.8 + 1.9) * 0.03
+                      + Math.sin(tp * 2.1 + 3.7) * 0.015) - this._turbBank) * 0.04;
+
     // Flapping — occasional short bursts to stay aloft
     this.flapTimer -= dt;
     if (!this.flapping && this.flapTimer <= 0) {
@@ -3475,7 +3497,7 @@ class Seagull {
 
     // Bank tilt — inner wing foreshortens, outer wing extends
     // _bank is positive when turning right (side=1 is inner), negative for left
-    const bankScale = this._bank * 2.5; // amplify for visible effect
+    const bankScale = (this._bank + this._turbBank) * 1.75; // 30% less than before
 
     const sides = [];
     for (const side of [-1, 1]) {
@@ -3514,10 +3536,10 @@ class Seagull {
 
   draw(ctx) {
     ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this._renderAngle);
+    ctx.translate(this.x + this._turbX, this.y + this._turbY);
+    ctx.rotate(this._renderAngle + this._turbAngle);
     // Body shifts laterally into the turn (bird leans into it)
-    ctx.translate(0, this._bank * this.bodyLen * 0.3);
+    ctx.translate(0, (this._bank + this._turbBank) * this.bodyLen * 0.21);
 
     const bl = this.bodyLen;
     const wings = this._wingGeometry();
