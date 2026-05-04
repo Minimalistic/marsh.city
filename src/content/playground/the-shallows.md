@@ -5370,36 +5370,9 @@ function draw(time) {
                      + Math.sin(pos * 0.012 * f + tr.seed * 5.1) * (1.5 + Math.sin(t2 * 6.5 + tr.seed * 3.1) * 1)) * vs;
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
-        // Pin to reef edge on wave-approach side — never pass through rock
-        for (const rf of reefs) {
-          if (rf.submerged) continue;
-          const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-          const dx = px - cx, dy = py - cy;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 0.1) continue;
-          const angle = Math.atan2(dy, dx);
-          const edge = rf.radiusAt(angle, rf.crownRadii) + 4 * viewScale;
-          if (dist < edge) {
-            // Pin to approaching side: use wave direction to find the entry edge
-            const approachAngle = Math.atan2(-sinA, -cosA); // opposite of wave travel
-            // Blend between nearest edge and approach-side edge
-            // Points in the wave's shadow get pinned to approach side
-            const behindDot = (dx * cosA + dy * sinA); // positive = past rock in wave dir
-            if (behindDot > 0) {
-              // Past the rock — pin to the approach-side edge
-              const pinR = rf.radiusAt(approachAngle, rf.crownRadii) + 4 * viewScale;
-              // Slide laterally along the approach edge based on pos
-              const lateralAngle = approachAngle + Math.atan2(perpX * pos, perpY * pos) * 0.15;
-              const pinEdge = rf.radiusAt(lateralAngle, rf.crownRadii) + 4 * viewScale;
-              px = cx + Math.cos(lateralAngle) * pinEdge;
-              py = cy + Math.sin(lateralAngle) * pinEdge;
-            } else {
-              // Approaching side — push outward to crown edge
-              px = cx + (dx / dist) * edge;
-              py = cy + (dy / dist) * edge;
-            }
-          }
-        }
+        // Clamp to approach side — trails snag on rocks, never pass through
+        const tcl = reefClamp(px, py);
+        px = tcl.x; py = tcl.y;
         trPts.push({ x: px, y: py });
       }
       ctx.beginPath();
@@ -5429,13 +5402,49 @@ function draw(time) {
         const dist = Math.sqrt(dx * dx + dy * dy);
         const angle = Math.atan2(dy, dx);
         const edge = rf.radiusAt(angle, rf.crownRadii);
-        const influence = edge + 25 * viewScale; // deflection starts before contact
+        const influence = edge + 25 * viewScale;
         if (dist < influence) {
-          const t = 1 - dist / influence; // 0 at edge of influence, 1 at reef center
-          push = Math.max(push, t * t * 35 * viewScale); // quadratic falloff
+          const t = 1 - dist / influence;
+          push = Math.max(push, t * t * 35 * viewScale);
         }
       }
       return push;
+    }
+
+    // Clamp a point to the approach side of any reef it's inside
+    // Steps backward along wave direction until outside the crown
+    function reefClamp(px, py) {
+      const pad = 4 * viewScale;
+      for (const rf of reefs) {
+        if (rf.submerged) continue;
+        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+        const dx = px - cx, dy = py - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 0.1) { return { x: cx - cosA * rf.crownR, y: cy - sinA * rf.crownR, clamped: true }; }
+        const angle = Math.atan2(dy, dx);
+        const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
+        if (dist < edge) {
+          // Step backward along wave direction until outside crown
+          let sx = px, sy = py;
+          const stepSize = 3 * viewScale;
+          for (let s = 0; s < 30; s++) {
+            sx -= cosA * stepSize;
+            sy -= sinA * stepSize;
+            const sdx = sx - cx, sdy = sy - cy;
+            const sDist = Math.sqrt(sdx * sdx + sdy * sdy);
+            const sAngle = Math.atan2(sdy, sdx);
+            const sEdge = rf.radiusAt(sAngle, rf.crownRadii) + pad;
+            if (sDist >= sEdge) {
+              return { x: sx, y: sy, clamped: true };
+            }
+          }
+          // Fallback: place at approach-side edge
+          const aAngle = ww.angle + Math.PI;
+          const aEdge = rf.radiusAt(aAngle, rf.crownRadii) + pad;
+          return { x: cx + Math.cos(aAngle) * aEdge, y: cy + Math.sin(aAngle) * aEdge, clamped: true };
+        }
+      }
+      return { x: px, y: py, clamped: false };
     }
 
     // Draw wave front lines only while active
@@ -5464,24 +5473,10 @@ function draw(time) {
                        + Math.sin(pos * 0.012 * f + ww.seed * 5.1) * (2 + Math.sin(t * 6.5 * ts + ww.seed * 3.9) * 1.5)) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
-          // Pin to reef edge — wave wraps around rock, never passes through
-          let onRock = false;
-          for (const rf of reefs) {
-            if (rf.submerged) continue;
-            const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-            const dx = px - cx, dy = py - cy;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 0.1) { onRock = true; break; }
-            const angle = Math.atan2(dy, dx);
-            const edge = rf.radiusAt(angle, rf.crownRadii) + 4 * viewScale;
-            if (dist < edge) {
-              onRock = true;
-              // Pin to crown edge — push outward from center
-              px = cx + (dx / dist) * edge;
-              py = cy + (dy / dist) * edge;
-            }
-          }
-          pts.push({ x: px, y: py, onRock });
+          // Clamp to approach side — wave stays on the side it hits, never passes through
+          const cl = reefClamp(px, py);
+          px = cl.x; py = cl.y;
+          pts.push({ x: px, y: py });
         }
         // Draw as one continuous line — pinned points create the wrap effect
         const baseAlpha = ww.life * ln.alpha;
@@ -6086,6 +6081,31 @@ function draw(time) {
   for (const ww of washWaves) {
     const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
     const span = Math.max(w, h) * 1.2;
+    // Clamp point to approach side of reefs — step backward until outside
+    const _pad = 4 * viewScale, _step = 3 * viewScale;
+    function clampPt(px, py) {
+      for (const rf of reefs) {
+        if (rf.submerged) continue;
+        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+        let dx = px - cx, dy = py - cy;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 0.1) return { x: cx - cosA * rf.crownR, y: cy - sinA * rf.crownR };
+        const edge = rf.radiusAt(Math.atan2(dy, dx), rf.crownRadii) + _pad;
+        if (dist < edge) {
+          let sx = px, sy = py;
+          for (let s = 0; s < 30; s++) {
+            sx -= cosA * _step; sy -= sinA * _step;
+            const sdx = sx - cx, sdy = sy - cy;
+            const sDist = Math.sqrt(sdx * sdx + sdy * sdy);
+            if (sDist >= rf.radiusAt(Math.atan2(sdy, sdx), rf.crownRadii) + _pad) return { x: sx, y: sy };
+          }
+          const aA = ww.angle + Math.PI;
+          const aE = rf.radiusAt(aA, rf.crownRadii) + _pad;
+          return { x: cx + Math.cos(aA) * aE, y: cy + Math.sin(aA) * aE };
+        }
+      }
+      return { x: px, y: py };
+    }
     const alive = ww.life > 0.1;
     // Trail lines
     for (const tr of ww.trails) {
@@ -6103,17 +6123,8 @@ function draw(time) {
                      + Math.sin(pos * 0.012 * f + tr.seed * 5.1) * (1.5 + Math.sin(t2 * 6.5 + tr.seed * 3.1) * 1)) * vs;
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
-        for (const rf of reefs) {
-          if (rf.submerged) continue;
-          const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-          const dx = px - cx, dy = py - cy;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 0.1) continue;
-          const angle = Math.atan2(dy, dx);
-          const edge = rf.radiusAt(angle, rf.crownRadii) + 5 * viewScale;
-          if (dist < edge) { px = cx + (dx / dist) * edge; py = cy + (dy / dist) * edge; }
-        }
-        trPts.push({ x: px, y: py });
+        const tcp = clampPt(px, py);
+        trPts.push({ x: tcp.x, y: tcp.y });
       }
       ctx.beginPath();
       if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
@@ -6149,17 +6160,8 @@ function draw(time) {
                        + Math.sin(pos * 0.012 * f + ww.seed * 5.1) * (2 + Math.sin(t * 6.5 * ts + ww.seed * 3.9) * 1.5)) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
-          for (const rf of reefs) {
-            if (rf.submerged) continue;
-            const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-            const dx = px - cx, dy = py - cy;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 0.1) continue;
-            const angle = Math.atan2(dy, dx);
-            const edge = rf.radiusAt(angle, rf.crownRadii) + 4 * viewScale;
-            if (dist < edge) { px = cx + (dx / dist) * edge; py = cy + (dy / dist) * edge; }
-          }
-          pts.push({ x: px, y: py });
+          const fcp = clampPt(px, py);
+          pts.push({ x: fcp.x, y: fcp.y });
         }
         const baseAlpha = ww.life * ln.alpha;
         ctx.lineWidth = ln.thick; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
