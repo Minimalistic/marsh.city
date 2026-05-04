@@ -5372,23 +5372,23 @@ function draw(time) {
         let py = tr.y + perpY * pos + sinA * offset;
         // Clamp to approach side — trails snag on rocks, never pass through
         const tcl = reefClamp(px, py);
-        px = tcl.x; py = tcl.y;
-        trPts.push({ x: px, y: py });
+        trPts.push({ x: tcl.x, y: tcl.y, stretch: tcl.stretch });
       }
-      ctx.beginPath();
-      if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
-      for (let i = 1; i < trPts.length - 1; i++) {
-        const mx = (trPts[i].x + trPts[i + 1].x) * 0.5;
-        const my = (trPts[i].y + trPts[i + 1].y) * 0.5;
-        ctx.quadraticCurveTo(trPts[i].x, trPts[i].y, mx, my);
-      }
-      if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
-      ctx.globalAlpha = trAlpha;
+      // Draw with stretch-based fading
+      const maxSF = 200 * viewScale;
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineWidth = tr.thick * tr.life;
-      ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.stroke();
+      for (let i = 0; i < trPts.length - 1; i++) {
+        const segStretch = Math.max(trPts[i].stretch, trPts[i + 1].stretch);
+        const sFade = Math.max(0, 1 - segStretch / maxSF);
+        if (sFade < 0.01) continue;
+        ctx.globalAlpha = trAlpha * sFade;
+        ctx.lineWidth = tr.thick * tr.life * sFade;
+        ctx.beginPath();
+        ctx.moveTo(trPts[i].x, trPts[i].y);
+        ctx.lineTo(trPts[i + 1].x, trPts[i + 1].y);
+        ctx.stroke();
+      }
     }
 
     // Wave-reef interaction: push wave line points backward around above-water reefs
@@ -5411,40 +5411,55 @@ function draw(time) {
       return push;
     }
 
-    // Clamp a point to the approach side of any reef it's inside
-    // Steps backward along wave direction until outside the crown
+    // Clamp point to approach side: checks if the ray from the point backward
+    // along wave direction intersects any reef. If so, pins to the entry edge.
+    // Works regardless of how far past the rock the point has traveled.
     function reefClamp(px, py) {
       const pad = 4 * viewScale;
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-        const dx = px - cx, dy = py - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 0.1) { return { x: cx - cosA * rf.crownR, y: cy - sinA * rf.crownR, clamped: true }; }
-        const angle = Math.atan2(dy, dx);
+        // Quick reject: is this point's lateral position even near the reef?
+        const relX = px - cx, relY = py - cy;
+        const lateral = relX * (-sinA) + relY * cosA; // perp distance to wave ray through reef
+        if (Math.abs(lateral) > rf.crownR * 1.5 + pad) continue;
+        // How far along the wave direction is the point from reef center?
+        const along = relX * cosA + relY * sinA; // positive = past reef in wave dir
+        // Check if point is inside OR past the reef (in wave shadow)
+        const dist = Math.sqrt(relX * relX + relY * relY);
+        const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
-        if (dist < edge) {
-          // Step backward along wave direction until outside crown
-          let sx = px, sy = py;
-          const stepSize = 3 * viewScale;
-          for (let s = 0; s < 30; s++) {
-            sx -= cosA * stepSize;
-            sy -= sinA * stepSize;
-            const sdx = sx - cx, sdy = sy - cy;
-            const sDist = Math.sqrt(sdx * sdx + sdy * sdy);
-            const sAngle = Math.atan2(sdy, sdx);
-            const sEdge = rf.radiusAt(sAngle, rf.crownRadii) + pad;
-            if (sDist >= sEdge) {
-              return { x: sx, y: sy, clamped: true };
-            }
+        // If inside crown, definitely clamp
+        // If past crown in wave direction AND lateral within crown width, also clamp
+        const approachAngle = Math.atan2(-sinA * lateral + cosA * (-Math.abs(along)), -cosA * lateral - sinA * (-Math.abs(along)));
+        // Simpler: check if the ray backward from this point passes through the crown
+        // Sample the crown radius at the angle from center toward the approach side at this lateral offset
+        const latAngle = Math.atan2(lateral, -(rf.crownR)); // angle from center at this lateral pos
+        const latEdge = rf.radiusAt(latAngle + Math.PI + ww.angle, rf.crownRadii) + pad;
+        const inShadow = along > -latEdge && Math.abs(lateral) < latEdge;
+        if (dist < edge || inShadow) {
+          // Pin to approach-side edge: walk backward from reef center at this lateral offset
+          const pinAngle = Math.atan2(lateral, 0) + ww.angle + Math.PI; // approach side at this lateral
+          // Better: compute the approach edge point for this lateral position
+          // Use the perpendicular position and find where the crown edge is on the approach side
+          const testAngles = 12;
+          let bestX = cx, bestY = cy, bestDist = Infinity;
+          const baseAngle = ww.angle + Math.PI; // approach direction
+          for (let ti = -testAngles; ti <= testAngles; ti++) {
+            const ta = baseAngle + (ti / testAngles) * Math.PI * 0.7; // scan approach side
+            const tr = rf.radiusAt(ta, rf.crownRadii) + pad;
+            const tx = cx + Math.cos(ta) * tr;
+            const ty = cy + Math.sin(ta) * tr;
+            // Find the closest approach-edge point that matches this lateral offset
+            const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
+            const latDiff = Math.abs(tLat - lateral);
+            if (latDiff < bestDist) { bestDist = latDiff; bestX = tx; bestY = ty; }
           }
-          // Fallback: place at approach-side edge
-          const aAngle = ww.angle + Math.PI;
-          const aEdge = rf.radiusAt(aAngle, rf.crownRadii) + pad;
-          return { x: cx + Math.cos(aAngle) * aEdge, y: cy + Math.sin(aAngle) * aEdge, clamped: true };
+          const stretch = Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2);
+          return { x: bestX, y: bestY, clamped: true, stretch };
         }
       }
-      return { x: px, y: py, clamped: false };
+      return { x: px, y: py, clamped: false, stretch: 0 };
     }
 
     // Draw wave front lines only while active
@@ -5473,31 +5488,32 @@ function draw(time) {
                        + Math.sin(pos * 0.012 * f + ww.seed * 5.1) * (2 + Math.sin(t * 6.5 * ts + ww.seed * 3.9) * 1.5)) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
-          // Clamp to approach side — wave stays on the side it hits, never passes through
           const cl = reefClamp(px, py);
-          px = cl.x; py = cl.y;
-          pts.push({ x: px, y: py });
+          pts.push({ x: cl.x, y: cl.y, stretch: cl.stretch });
         }
-        // Draw as one continuous line — pinned points create the wrap effect
+        // Draw segments with stretch-based fading — snagged portions fade as distance grows
         const baseAlpha = ww.life * ln.alpha;
+        const maxStretchFade = 200 * viewScale; // fully faded at this stretch distance
         ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        ctx.globalAlpha = baseAlpha;
-        ctx.beginPath();
-        let drawing = false;
-        for (let i = 0; i < pts.length; i++) {
-          if (!drawing) { ctx.moveTo(pts[i].x, pts[i].y); drawing = true; }
-          else if (i < pts.length - 1) {
-            const mx = (pts[i].x + pts[i + 1].x) * 0.5;
-            const my = (pts[i].y + pts[i + 1].y) * 0.5;
-            ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const segStretch = Math.max(pts[i].stretch, pts[i + 1].stretch);
+          const stretchFade = Math.max(0, 1 - segStretch / maxStretchFade);
+          if (stretchFade < 0.01) continue;
+          ctx.globalAlpha = baseAlpha * stretchFade;
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          if (i < pts.length - 2) {
+            const mx = (pts[i + 1].x + pts[i + 2].x) * 0.5;
+            const my = (pts[i + 1].y + pts[i + 2].y) * 0.5;
+            ctx.quadraticCurveTo(pts[i + 1].x, pts[i + 1].y, mx, my);
           } else {
-            ctx.lineTo(pts[i].x, pts[i].y);
+            ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
           }
+          ctx.stroke();
         }
-        ctx.stroke();
       }
     } // end if (alive) — blob drawing continues below for lingering foam
 
@@ -6081,30 +6097,39 @@ function draw(time) {
   for (const ww of washWaves) {
     const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
     const span = Math.max(w, h) * 1.2;
-    // Clamp point to approach side of reefs — step backward until outside
-    const _pad = 4 * viewScale, _step = 3 * viewScale;
+    // Clamp point to approach side — ray-based, catches points far past the rock
+    const _pad = 4 * viewScale;
     function clampPt(px, py) {
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-        let dx = px - cx, dy = py - cy;
-        let dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 0.1) return { x: cx - cosA * rf.crownR, y: cy - sinA * rf.crownR };
-        const edge = rf.radiusAt(Math.atan2(dy, dx), rf.crownRadii) + _pad;
-        if (dist < edge) {
-          let sx = px, sy = py;
-          for (let s = 0; s < 30; s++) {
-            sx -= cosA * _step; sy -= sinA * _step;
-            const sdx = sx - cx, sdy = sy - cy;
-            const sDist = Math.sqrt(sdx * sdx + sdy * sdy);
-            if (sDist >= rf.radiusAt(Math.atan2(sdy, sdx), rf.crownRadii) + _pad) return { x: sx, y: sy };
+        const relX = px - cx, relY = py - cy;
+        const lateral = relX * (-sinA) + relY * cosA;
+        if (Math.abs(lateral) > rf.crownR * 1.5 + _pad) continue;
+        const dist = Math.sqrt(relX * relX + relY * relY);
+        const angle = Math.atan2(relY, relX);
+        const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
+        const along = relX * cosA + relY * sinA;
+        const latAngle = Math.atan2(lateral, -(rf.crownR));
+        const latEdge = rf.radiusAt(latAngle + Math.PI + ww.angle, rf.crownRadii) + _pad;
+        const inShadow = along > -latEdge && Math.abs(lateral) < latEdge;
+        if (dist < edge || inShadow) {
+          const baseAngle = ww.angle + Math.PI;
+          const testAngles = 12;
+          let bestX = cx, bestY = cy, bestDist = Infinity;
+          for (let ti = -testAngles; ti <= testAngles; ti++) {
+            const ta = baseAngle + (ti / testAngles) * Math.PI * 0.7;
+            const tr = rf.radiusAt(ta, rf.crownRadii) + _pad;
+            const tx = cx + Math.cos(ta) * tr, ty = cy + Math.sin(ta) * tr;
+            const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
+            const ld = Math.abs(tLat - lateral);
+            if (ld < bestDist) { bestDist = ld; bestX = tx; bestY = ty; }
           }
-          const aA = ww.angle + Math.PI;
-          const aE = rf.radiusAt(aA, rf.crownRadii) + _pad;
-          return { x: cx + Math.cos(aA) * aE, y: cy + Math.sin(aA) * aE };
+          const stretch = Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2);
+          return { x: bestX, y: bestY, stretch };
         }
       }
-      return { x: px, y: py };
+      return { x: px, y: py, stretch: 0 };
     }
     const alive = ww.life > 0.1;
     // Trail lines
@@ -6124,21 +6149,22 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcp = clampPt(px, py);
-        trPts.push({ x: tcp.x, y: tcp.y });
+        trPts.push({ x: tcp.x, y: tcp.y, stretch: tcp.stretch });
       }
-      ctx.beginPath();
-      if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
-      for (let j = 1; j < trPts.length - 1; j++) {
-        const mx = (trPts[j].x + trPts[j + 1].x) * 0.5;
-        const my = (trPts[j].y + trPts[j + 1].y) * 0.5;
-        ctx.quadraticCurveTo(trPts[j].x, trPts[j].y, mx, my);
-      }
-      if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
-      ctx.globalAlpha = trAlpha;
+      const maxSF2 = 200 * viewScale;
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineWidth = tr.thick * tr.life;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.stroke();
+      for (let j = 0; j < trPts.length - 1; j++) {
+        const sStr = Math.max(trPts[j].stretch, trPts[j + 1].stretch);
+        const sFd = Math.max(0, 1 - sStr / maxSF2);
+        if (sFd < 0.01) continue;
+        ctx.globalAlpha = trAlpha * sFd;
+        ctx.lineWidth = tr.thick * tr.life * sFd;
+        ctx.beginPath();
+        ctx.moveTo(trPts[j].x, trPts[j].y);
+        ctx.lineTo(trPts[j + 1].x, trPts[j + 1].y);
+        ctx.stroke();
+      }
     }
     // Wave front lines
     if (alive) {
@@ -6161,21 +6187,23 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const fcp = clampPt(px, py);
-          pts.push({ x: fcp.x, y: fcp.y });
+          pts.push({ x: fcp.x, y: fcp.y, stretch: fcp.stretch });
         }
         const baseAlpha = ww.life * ln.alpha;
-        ctx.lineWidth = ln.thick; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        const maxSF3 = 200 * viewScale;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        ctx.globalAlpha = baseAlpha;
-        ctx.beginPath();
-        if (pts.length > 0) ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length - 1; i++) {
-          const mx = (pts[i].x + pts[i + 1].x) * 0.5;
-          const my = (pts[i].y + pts[i + 1].y) * 0.5;
-          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const sStr = Math.max(pts[i].stretch, pts[i + 1].stretch);
+          const sFd = Math.max(0, 1 - sStr / maxSF3);
+          if (sFd < 0.01) continue;
+          ctx.globalAlpha = baseAlpha * sFd;
+          ctx.lineWidth = ln.thick * sFd;
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+          ctx.stroke();
         }
-        if (pts.length > 1) ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-        ctx.stroke();
       }
     }
   }
