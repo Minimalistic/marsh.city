@@ -2508,6 +2508,24 @@ class Predator {
       }
 
       if (this.target) {
+        // Opportunistic switch — if another fish blunders closer, take the easy meal
+        const mDx = this.target.x - mouthX, mDy = this.target.y - mouthY;
+        const targetDist = Math.sqrt(mDx * mDx + mDy * mDy);
+        for (const f of getNeighbors(this.x, this.y)) {
+          if (f === this.target) continue;
+          const fdx = f.x - mouthX, fdy = f.y - mouthY;
+          const fDist = Math.sqrt(fdx * fdx + fdy * fdy);
+          // Must be ahead of the predator and much closer than current target
+          const aheadDot = fdx * cosA + fdy * sinA;
+          if (fDist < 50 * viewScale && fDist < targetDist * 0.5 && aheadDot > 0) {
+            this.target = f;
+            this.burstTimer = 0.5;
+            this._burstFlick = 0.8;
+            this._burstFlickDir = -this._burstFlickDir;
+            break;
+          }
+        }
+
         // Shark-like pursuit — relentless, adjusts course, multiple attack dashes
         const dx = this.target.x - this.x, dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
