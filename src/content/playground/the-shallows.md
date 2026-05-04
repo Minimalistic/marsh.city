@@ -2549,17 +2549,18 @@ class Predator {
       if (prevJaw <= 0 && curJaw > 0) {
         const mx = this.x + Math.cos(this.angle) * this.len * 0.05;
         const my = this.y + Math.sin(this.angle) * this.len * 0.05;
-        const count = 3 + Math.floor(Math.random() * 4);
+        const count = 6 + Math.floor(Math.random() * 6);
         for (let k = 0; k < count; k++) {
           // Billow outward from mouth — fan within ~90° of facing direction
           const a = this.angle + (Math.random() - 0.5) * 0.8;
           const spd = 0.15 + Math.random() * 0.5;
+          const tiny = Math.random() < 0.4; // 40% are ultra-small dust
           killFx.push({
             x: mx + Math.cos(a) * 3, y: my + Math.sin(a) * 3,
             vx: Math.cos(a) * spd + this.vx * 0.15,
             vy: Math.sin(a) * spd + this.vy * 0.15,
             type: 'scale', life: 1, maxLife: 3 + Math.random() * 4,
-            size: 0.2 + Math.random() * 0.6,
+            size: tiny ? 0.08 + Math.random() * 0.15 : 0.2 + Math.random() * 0.6,
             color: 'rgb(160,170,180)',
             sparkle: Math.random() * Math.PI * 2,
             _freq: 4 + Math.random() * 3, _f1: 1.8 + Math.random() * 1.2, _f2: 0.5 + Math.random() * 0.6,
@@ -2716,16 +2717,17 @@ class Predator {
         this.chompPhase = 0;
         const catchX = mouthX, catchY = mouthY;
         const preyColor = prey.color || 'rgb(140,150,160)';
-        for (let k = 0; k < 11; k++) {
+        for (let k = 0; k < 22; k++) {
           // Billow forward from mouth — soft fan, not an explosion
           const a = this.angle + (Math.random() - 0.5) * 1.0;
           const spd = 0.2 + Math.random() * 0.6;
+          const tiny = Math.random() < 0.4;
           killFx.push({
             x: catchX + Math.cos(a) * 4, y: catchY + Math.sin(a) * 4,
             vx: Math.cos(a) * spd + this.vx * 0.15,
             vy: Math.sin(a) * spd + this.vy * 0.15,
             type: 'scale', life: 1, maxLife: 3 + Math.random() * 5,
-            size: 0.25 + Math.random() * 0.75, color: preyColor,
+            size: tiny ? 0.08 + Math.random() * 0.15 : 0.25 + Math.random() * 0.75, color: preyColor,
             sparkle: Math.random() * Math.PI * 2,
             _freq: 4 + Math.random() * 3, _f1: 1.8 + Math.random() * 1.2, _f2: 0.5 + Math.random() * 0.6,
             bites: 3 + Math.floor(Math.random() * 3),
