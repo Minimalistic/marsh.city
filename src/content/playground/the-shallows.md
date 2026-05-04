@@ -4700,36 +4700,54 @@ function rebuildSandCanvas() {
     const seed = ri * 7.13;
     const ridgeThick = (3.6 + Math.sin(seed * 2.3) * 1.5) * viewScale;
 
-    const midX = w / 2 + waveCos * ridgeOffset;
-    const midY = h / 2 + waveSin * ridgeOffset;
-    const prox = rockProximity(midX, midY);
-    const ridgeAlpha = (0.03 + prox * 0.12) + Math.sin(seed) * 0.02 + Math.random() * 0.01;
-
     rippleCtx.beginPath();
     let first = true;
     for (let pos = -diagonal * 0.6; pos <= diagonal * 0.6; pos += rippleStep) {
       const wobble = Math.sin(pos * 0.015 + seed) * 3.5
                    + Math.sin(pos * 0.037 + seed * 2.1) * 1.8
                    + Math.sin(pos * 0.008 + seed * 0.7) * 5;
-      const rx = w / 2 + perpCos * pos + waveCos * (ridgeOffset + wobble * viewScale);
-      const ry = h / 2 + perpSin * pos + waveSin * (ridgeOffset + wobble * viewScale);
+      let rx = w / 2 + perpCos * pos + waveCos * (ridgeOffset + wobble * viewScale);
+      let ry = h / 2 + perpSin * pos + waveSin * (ridgeOffset + wobble * viewScale);
+
+      // Bend sand lines around rocks like water does
+      for (const rf of reefs) {
+        if (rf.submerged) continue;
+        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+        const dx = rx - cx, dy = ry - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const pushR = rf.crownR * 2.5;
+        if (dist < pushR && dist > 0.1) {
+          const push = (1 - dist / pushR);
+          rx += (dx / dist) * push * pushR * 0.4;
+          ry += (dy / dist) * push * pushR * 0.4;
+        }
+      }
+
       if (rx < -20 || rx > w + 20 || ry < -20 || ry > h + 20) { first = true; continue; }
       if (first) { rippleCtx.moveTo(rx, ry); first = false; }
       else rippleCtx.lineTo(rx, ry);
     }
+    // Alpha based on proximity — only visible near rocks, fades away
+    const midX = w / 2 + waveCos * ridgeOffset;
+    const midY = h / 2 + waveSin * ridgeOffset;
+    const prox = rockProximity(midX, midY);
+    const ridgeAlpha = prox * 0.08 + Math.sin(seed) * 0.01;
+    if (ridgeAlpha < 0.005) continue; // skip invisible ridges
+
     rippleCtx.strokeStyle = `rgba(210, 195, 160, ${ridgeAlpha})`;
     rippleCtx.lineWidth = ridgeThick;
     rippleCtx.lineCap = 'round';
     rippleCtx.stroke();
   }
 
-  // Gaussian blur via multiple offset draws (works in all browsers)
+  // Gaussian blur via multiple offset draws — more passes further from rocks
+  // Close passes (sharp near rocks)
   sandCtx.save();
   sandCtx.setTransform(1, 0, 0, 1, 0, 0);
-  const blurR = Math.ceil(4 * viewScale * dpr);
-  sandCtx.globalAlpha = 0.25;
-  for (let dx = -blurR; dx <= blurR; dx += blurR) {
-    for (let dy = -blurR; dy <= blurR; dy += blurR) {
+  const blurR = Math.ceil(5 * viewScale * dpr);
+  sandCtx.globalAlpha = 0.12;
+  for (let dx = -blurR; dx <= blurR; dx += Math.ceil(blurR / 2)) {
+    for (let dy = -blurR; dy <= blurR; dy += Math.ceil(blurR / 2)) {
       sandCtx.drawImage(rippleCv, dx, dy);
     }
   }
