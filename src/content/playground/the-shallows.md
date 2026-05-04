@@ -3571,19 +3571,41 @@ function makeReef(x, y, sizeMultiplier = 1) {
 
 const reefs = [];
 const reefCount = Math.max(2, Math.min(4, Math.floor(Math.sqrt(w * h) / 400)));
-// Main reefs — 30% larger than before
+// Main reefs placed at compositional anchor points (rule of thirds / golden ratio)
+// with natural jitter so it feels organic, not gridded
+const _phi = 0.618;
+const _anchors = [
+  // Rule-of-thirds intersections + golden ratio points, shuffled
+  { x: 1/3, y: 1/3 }, { x: 2/3, y: 2/3 }, { x: _phi, y: 1 - _phi },
+  { x: 1 - _phi, y: _phi }, { x: 1/3, y: 2/3 }, { x: 2/3, y: 1/3 },
+];
+// Shuffle so the biggest reef doesn't always land on the same spot
+for (let i = _anchors.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [_anchors[i], _anchors[j]] = [_anchors[j], _anchors[i]];
+}
 for (let i = 0; i < reefCount; i++) {
   const sizeMult = i === 0 ? 1.7 + Math.random() * 0.5 : 0.9 + Math.random() * 0.4;
   const estR = (60 + 45) * sizeMult * viewScale;
-  let rx, ry, tries = 0;
-  do {
-    rx = w * 0.12 + Math.random() * w * 0.76;
-    ry = h * 0.12 + Math.random() * h * 0.76;
-    tries++;
-  } while (tries < 40 && reefs.some(r => {
+  const anchor = _anchors[i % _anchors.length];
+  // Jitter ±15% of viewport from the anchor point
+  let rx = (anchor.x + (Math.random() - 0.5) * 0.25) * w;
+  let ry = (anchor.y + (Math.random() - 0.5) * 0.25) * h;
+  // Clamp to safe bounds
+  rx = Math.max(w * 0.1, Math.min(w * 0.9, rx));
+  ry = Math.max(h * 0.1, Math.min(h * 0.9, ry));
+  // Nudge if overlapping existing reefs
+  let tries = 0;
+  while (tries < 20 && reefs.some(r => {
     const dx = r.x - rx, dy = r.y - ry;
     return Math.sqrt(dx * dx + dy * dy) < r.baseR + estR + 40;
-  }));
+  })) {
+    rx += (Math.random() - 0.5) * w * 0.15;
+    ry += (Math.random() - 0.5) * h * 0.15;
+    rx = Math.max(w * 0.1, Math.min(w * 0.9, rx));
+    ry = Math.max(h * 0.1, Math.min(h * 0.9, ry));
+    tries++;
+  }
   reefs.push(makeReef(rx, ry, sizeMult));
 }
 // Small satellite rocks — 5-6 extras, some near big reefs, some standalone
@@ -3950,14 +3972,30 @@ regenerateWorld = function() {
     rocks.push(makeSand(Math.random() * w, Math.random() * h));
   }
 
-  // Main reefs — 30% larger
+  // Main reefs — compositional placement (same logic as init)
   const reefCount2 = Math.max(2, Math.min(4, Math.floor(Math.sqrt(w * h) / 400)));
+  const _anch2 = [
+    { x: 1/3, y: 1/3 }, { x: 2/3, y: 2/3 }, { x: 0.618, y: 0.382 },
+    { x: 0.382, y: 0.618 }, { x: 1/3, y: 2/3 }, { x: 2/3, y: 1/3 },
+  ];
+  for (let i = _anch2.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [_anch2[i], _anch2[j]] = [_anch2[j], _anch2[i]];
+  }
   for (let i = 0; i < reefCount2; i++) {
     const sizeMult = i === 0 ? 1.7 + Math.random() * 0.5 : 0.9 + Math.random() * 0.4;
     const estR = (60 + 45) * sizeMult * viewScale;
-    let rx, ry, tries = 0;
-    do { rx = w * 0.12 + Math.random() * w * 0.76; ry = h * 0.12 + Math.random() * h * 0.76; tries++; }
-    while (tries < 40 && reefs.some(r => Math.sqrt((r.x-rx)**2+(r.y-ry)**2) < r.baseR + estR + 40));
+    const anch = _anch2[i % _anch2.length];
+    let rx = (anch.x + (Math.random() - 0.5) * 0.25) * w;
+    let ry = (anch.y + (Math.random() - 0.5) * 0.25) * h;
+    rx = Math.max(w * 0.1, Math.min(w * 0.9, rx));
+    ry = Math.max(h * 0.1, Math.min(h * 0.9, ry));
+    let tries = 0;
+    while (tries < 20 && reefs.some(r => Math.sqrt((r.x-rx)**2+(r.y-ry)**2) < r.baseR + estR + 40)) {
+      rx += (Math.random() - 0.5) * w * 0.15; ry += (Math.random() - 0.5) * h * 0.15;
+      rx = Math.max(w * 0.1, Math.min(w * 0.9, rx)); ry = Math.max(h * 0.1, Math.min(h * 0.9, ry));
+      tries++;
+    }
     reefs.push(makeReef(rx, ry, sizeMult));
   }
   // Small satellite rocks
@@ -4256,6 +4294,20 @@ function draw(time) {
         // Forward push — wave shoves fish in its travel direction
         f.vx += cosA * force * 0.08;
         f.vy += sinA * force * 0.08;
+        // Steer into the wave at the crest — fish nose into the current to hold position
+        if (rel > -5 && rel < ww.width * 1.2 && intensity > 0.5) {
+          const steerStr = force * 0.03 * intensity;
+          const headAngle = Math.atan2(f.vy, f.vx);
+          // Target heading: into the wave (opposite of wave travel)
+          const intoWave = ww.angle + Math.PI;
+          let steerDiff = intoWave - headAngle;
+          while (steerDiff > Math.PI) steerDiff -= Math.PI * 2;
+          while (steerDiff < -Math.PI) steerDiff += Math.PI * 2;
+          const spd = Math.sqrt(f.vx * f.vx + f.vy * f.vy) || 0.01;
+          const nudgedAngle = headAngle + steerDiff * steerStr;
+          f.vx += (Math.cos(nudgedAngle) * spd - f.vx) * steerStr * 0.5;
+          f.vy += (Math.sin(nudgedAngle) * spd - f.vy) * steerStr * 0.5;
+        }
         // Lateral turbulence at the front — fish get jostled sideways
         if (rel < ww.width * 1.5) {
           const jitter = force * 0.04 * intensity;
@@ -5099,14 +5151,14 @@ function draw(time) {
       d.obj.draw(ctx);
       ctx.restore();
     } else {
+      // Fish draw can throw on NaN joints (non-finite gradient coords).
+      // If it does, we MUST restore canvas state or screen blend leaks → overexposure.
       ctx.save();
       ctx.globalAlpha = d.obj.depthAlpha;
-      d.obj.draw(ctx);
+      try { d.obj.draw(ctx); } catch(e) { /* NaN in draw, skip this fish */ }
       ctx.restore();
-      // Defensive reset — fish draw uses screen blend for glint/belly flash;
-      // if any inner save/restore is skipped (error, NaN coords), screen mode
-      // leaks and causes progressive overexposure of everything drawn after
       ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
     }
   }
 
