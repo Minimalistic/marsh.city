@@ -882,8 +882,6 @@ const washWaves = [];
 let washTimer = 8 + Math.random() * 10;
 // Splash ripples — arc-shaped wave lines that radiate from rocks after wave impact
 const splashRipples = [];
-// Reef cling lines — wave remnants snagged on rocks, stretch and fade
-const reefClings = [];
 
 function spawnWash() {
   const angle = waveBaseAngle + (Math.random() - 0.5) * 0.06;
@@ -4887,35 +4885,11 @@ function draw(time) {
         }
       }
     }
-    // Waves hitting reefs: spawn foam, trigger ripple, spawn cling remnants
+    // Waves hitting reefs: spawn foam and trigger ripple boost
     for (const rf of reefs) {
       if (rf.submerged) continue;
       const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
       if (rel > -rf.crownR * 1.5 && rel < rf.crownR * 1.5 + ww.width) {
-        // Spawn cling remnants — wave line segments snagged on reef edge
-        if (!rf._clingSpawned || rf._clingSpawned !== ww) {
-          rf._clingSpawned = ww; // only once per wave per reef
-          const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-          const clingCount = 2 + Math.floor(Math.random() * 2);
-          for (let ci = 0; ci < clingCount; ci++) {
-            // Anchor on the reef edge facing the wave
-            const aAngle = ww.angle + Math.PI + (Math.random() - 0.5) * 1.2;
-            const edgeR = rf.radiusAt(aAngle, rf.crownRadii);
-            reefClings.push({
-              ax: cx + Math.cos(aAngle) * (edgeR + 3), // anchor point on reef edge
-              ay: cy + Math.sin(aAngle) * (edgeR + 3),
-              waveAngle: ww.angle, // direction wave is traveling
-              stretch: 0, // current stretch distance from anchor
-              speed: ww.speed * 0.7, // initial stretch speed
-              life: 1,
-              maxLife: 3 + Math.random() * 3,
-              thick: (1.2 + Math.random() * 0.8) * viewScale,
-              alpha: ww.strength * (0.3 + Math.random() * 0.2),
-              seed: Math.random() * 100,
-              arcSpread: (0.4 + Math.random() * 0.4), // how wide the arc fans
-            });
-          }
-        }
         // Track wave impact for ripple boost
         if (!rf._waveHit || rf._waveHit < ww.strength) {
           rf._waveHit = ww.strength;
@@ -5438,19 +5412,19 @@ function draw(time) {
           return { x: px, y: py, hidden: true, stretch: 0 };
         }
 
-        // Behind the rock: gentle teardrop convergence
+        // Behind the rock: teardrop convergence, dampens quickly with distance
         const along = relX * cosA + relY * sinA;
         const lateral = relX * (-sinA) + relY * cosA;
         if (along > 0 && Math.abs(lateral) < rf.crownR + pad) {
-          const taperLen = rf.crownR * 5;
+          const taperLen = rf.crownR * 3.5; // closes faster
           const taperT = Math.min(1, along / taperLen);
-          const shadowWidth = (rf.crownR + pad) * (1 - taperT);
+          const shadowWidth = (rf.crownR + pad) * Math.pow(1 - taperT, 1.5); // faster narrowing
           if (Math.abs(lateral) < shadowWidth) {
-            const pinStrength = (1 - taperT) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
+            const pinStrength = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
             const centerX = cx + cosA * along;
             const centerY = cy + sinA * along;
-            const bx = px * (1 - pinStrength * 0.5) + centerX * pinStrength * 0.5;
-            const by = py * (1 - pinStrength * 0.5) + centerY * pinStrength * 0.5;
+            const bx = px * (1 - pinStrength * 0.6) + centerX * pinStrength * 0.6;
+            const by = py * (1 - pinStrength * 0.6) + centerY * pinStrength * 0.6;
             return { x: bx, y: by, hidden: false, stretch: 0 };
           }
         }
@@ -5550,46 +5524,6 @@ function draw(time) {
   ctx.globalAlpha = 1;
 
   _measure('foam+waves');
-
-  // Reef cling lines — wave remnants snagged on rocks, stretching and fading
-  for (let i = reefClings.length - 1; i >= 0; i--) {
-    const cl = reefClings[i];
-    cl.life -= dt / cl.maxLife;
-    if (cl.life <= 0) { reefClings.splice(i, 1); continue; }
-    // Stretch outward from anchor in wave direction, decelerating
-    cl.stretch += cl.speed;
-    cl.speed *= 0.975; // slows as it stretches
-    // Fade in smoothly over first 0.3s
-    const clAge = (1 - cl.life) * cl.maxLife;
-    const clFadeIn = Math.min(1, clAge / 0.3);
-    const fadeAlpha = clFadeIn * clFadeIn * cl.life * cl.life * cl.alpha;
-    if (fadeAlpha < 0.003) { reefClings.splice(i, 1); continue; }
-
-    // Draw as a short arc from anchor stretching in wave direction
-    const cosW = Math.cos(cl.waveAngle), sinW = Math.sin(cl.waveAngle);
-    const perpW = { x: -sinW, y: cosW };
-    const arcHalf = cl.arcSpread * cl.stretch * 0.3; // arc width scales with stretch
-    const steps = 8;
-    ctx.beginPath();
-    let first = true;
-    for (let si = 0; si <= steps; si++) {
-      const t2 = si / steps; // 0 = one side, 1 = other side
-      const lateral = (t2 - 0.5) * 2 * arcHalf; // -arcHalf to +arcHalf
-      // Points fan out from anchor along wave direction
-      const stretchFactor = 1 - Math.abs(t2 - 0.5) * 0.6; // center stretches most
-      const wobble = Math.sin(lateral * 0.3 + cl.seed) * 2 * cl.life;
-      const px = cl.ax + cosW * (cl.stretch * stretchFactor + wobble) + perpW.x * lateral;
-      const py = cl.ay + sinW * (cl.stretch * stretchFactor + wobble) + perpW.y * lateral;
-      if (first) { ctx.moveTo(px, py); first = false; }
-      else ctx.lineTo(px, py);
-    }
-    ctx.globalAlpha = fadeAlpha;
-    ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-    ctx.lineWidth = cl.thick * cl.life;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
 
   // Ongoing splash emission — reefs spawn ripples after 0.25s delay, then decay
   for (const rf of reefs) {
@@ -6108,13 +6042,13 @@ function draw(time) {
         const along = relX * cosA + relY * sinA;
         const lateral = relX * (-sinA) + relY * cosA;
         if (along > 0 && Math.abs(lateral) < rf.crownR + _pad) {
-          const taperLen = rf.crownR * 5;
+          const taperLen = rf.crownR * 3.5;
           const taperT = Math.min(1, along / taperLen);
-          const shadowWidth = (rf.crownR + _pad) * (1 - taperT);
+          const shadowWidth = (rf.crownR + _pad) * Math.pow(1 - taperT, 1.5);
           if (Math.abs(lateral) < shadowWidth) {
-            const pin = (1 - taperT) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
+            const pin = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
             const centerX = cx + cosA * along, centerY = cy + sinA * along;
-            return { x: px * (1 - pin * 0.5) + centerX * pin * 0.5, y: py * (1 - pin * 0.5) + centerY * pin * 0.5, hidden: false };
+            return { x: px * (1 - pin * 0.6) + centerX * pin * 0.6, y: py * (1 - pin * 0.6) + centerY * pin * 0.6, hidden: false };
           }
         }
       }
