@@ -5287,7 +5287,7 @@ function draw(time) {
   // Reset transform for raw pixel copy, then restore DPR transform
   waveTrailCtx.save();
   waveTrailCtx.setTransform(1, 0, 0, 1, 0, 0);
-  waveTrailCtx.globalAlpha = 0.72;
+  waveTrailCtx.globalAlpha = 0.78;
   waveTrailCtx.globalCompositeOperation = 'copy';
   waveTrailCtx.drawImage(waveTrailCanvas, 0, 0);
   waveTrailCtx.restore();
