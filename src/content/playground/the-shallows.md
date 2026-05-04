@@ -1202,19 +1202,19 @@ class Fish {
       const beingChased = pred.target === this;
 
       // Passive avoidance — fish always steer clear of the big fish
-      // Wide detection radius — fish react well before predator is close
-      const comfortZone = 220 * viewScale;
+      // Very wide detection radius — fish react well before predator is close
+      const comfortZone = 320 * viewScale;
       if (pDist < comfortZone && pDist > 0.1) {
         const avoidance = 1 - pDist / comfortZone;
         const pushAngle = Math.atan2(pdy, pdx);
-        // Cubic falloff — gentle at edge, sharp ramp as predator closes in
-        const pushForce = avoidance * avoidance * avoidance * 0.6 * viewScale;
+        // Quadratic falloff — responsive earlier, strong up close
+        const pushForce = avoidance * avoidance * 1.2 * viewScale;
         this.vx += Math.cos(pushAngle) * pushForce;
         this.vy += Math.sin(pushAngle) * pushForce;
         // Any fish within comfort zone starts fleeing
-        if (avoidance > 0.2) {
+        if (avoidance > 0.15) {
           this.fleeing = true;
-          this.fleeTimer = Math.max(this.fleeTimer, 0.3 + avoidance * 0.5);
+          this.fleeTimer = Math.max(this.fleeTimer, 0.5 + avoidance * 0.8);
         }
       }
 
@@ -1225,34 +1225,35 @@ class Fish {
       if (headingDiff > Math.PI) headingDiff = Math.PI * 2 - headingDiff;
       const inPath = headingDiff < 1.0; // within ~57° of predator's heading
 
-      // Active flee — always triggered near predator, path, or chased
+      // Active flee — life-or-death escape response
       if (!beingChased && !inPath && predAggression < 0.8) continue;
-      const baseRange = beingChased ? 300 : inPath ? 220 : 100 + predAggression * 60;
+      const baseRange = beingChased ? 400 : inPath ? 300 : 150 + predAggression * 80;
       const fleeRange = baseRange * viewScale;
       if (pDist < fleeRange && pDist > 0.1) {
         const proximity = 1 - pDist / fleeRange;
         const fear = proximity * proximity;
         const fleeAngle = Math.atan2(pdy, pdx);
-        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (0.6 + fear * 1.2);
-        const force = beingChased ? (0.8 * fear + 0.35) : inPath ? (0.5 * fear + 0.15) : (0.2 * fear);
+        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (0.5 + fear * 1.5);
+        const force = beingChased ? (1.8 * fear + 0.7) : inPath ? (1.0 * fear + 0.3) : (0.4 * fear);
         this.vx += Math.cos(jinkAngle) * force * viewScale;
         this.vy += Math.sin(jinkAngle) * force * viewScale;
-        if (fear > 0.05) {
+        if (fear > 0.03) {
           this.fleeing = true;
-          this.fleeTimer = beingChased ? 1.8 : 0.5 + fear * 0.8;
+          this.fleeTimer = beingChased ? 2.5 : 0.8 + fear * 1.2;
         }
         // Panic snap — predator is dangerously close, instant velocity override
-        if ((beingChased || inPath) && pDist < 70 * viewScale) {
+        if ((beingChased || inPath) && pDist < 100 * viewScale) {
           panicSprint = true;
           const despAngle = fleeAngle + (Math.random() - 0.5) * 1.5;
-          this.vx = Math.cos(despAngle) * scaledSpeed * 4.0;
-          this.vy = Math.sin(despAngle) * scaledSpeed * 4.0;
+          this.vx = Math.cos(despAngle) * scaledSpeed * 5.0;
+          this.vy = Math.sin(despAngle) * scaledSpeed * 5.0;
           this.fleeing = true;
-          this.fleeTimer = 2.0;
-        } else if (beingChased && pDist < fleeRange * 0.4) {
-          const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
-          this.vx += Math.cos(dartAngle) * scaledSpeed * 0.8;
-          this.vy += Math.sin(dartAngle) * scaledSpeed * 0.8;
+          this.fleeTimer = 2.5;
+        } else if (beingChased && pDist < fleeRange * 0.5) {
+          // Desperate jink — sharp random direction change
+          const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.5;
+          this.vx += Math.cos(dartAngle) * scaledSpeed * 1.5;
+          this.vy += Math.sin(dartAngle) * scaledSpeed * 1.5;
           this.distracted = true;
           this.distractTimer = 1.5 + Math.random() * 2;
         }
@@ -1310,16 +1311,16 @@ class Fish {
       if (pred.target === this) { beingHunted = true; break; }
     }
     let targetSpeed;
-    if (panicSprint) targetSpeed = scaledSpeed * 4.0; // last-ditch desperate burst
-    else if (beingHunted) targetSpeed = scaledSpeed * 3.0; // panic sprint
-    else if (this.fleeing) targetSpeed = scaledSpeed * 2.2;
+    if (panicSprint) targetSpeed = scaledSpeed * 5.5; // explosive burst
+    else if (beingHunted) targetSpeed = scaledSpeed * 4.5; // full flight
+    else if (this.fleeing) targetSpeed = scaledSpeed * 3.0; // alarmed dash
     else if (this.idle) targetSpeed = scaledSpeed * 1.08;
     else targetSpeed = scaledSpeed * 1.56;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      // Ramp up fast when fleeing, smooth when cruising
-      const accel = (panicSprint || beingHunted) ? 0.6 : this.fleeing ? 0.4 : 0.15;
+      // Near-instant acceleration when life is at stake
+      const accel = (panicSprint || beingHunted) ? 0.85 : this.fleeing ? 0.6 : 0.15;
       const desired = currentSpeed + (targetSpeed - currentSpeed) * accel;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
