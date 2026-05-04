@@ -325,25 +325,19 @@ let regenerateWorld = null; // set after world init
 
 let inFullscreen = false; // track FS state so resize handler can skip
 function handleFSChange() {
+  const wasFS = inFullscreen;
   inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
   fsCloseBtn.hidden = !inFullscreen;
   fsBtn.hidden = inFullscreen;
-  // Check if aspect ratio changed significantly (e.g. landscape embed → portrait mobile)
-  // If so, do a lightweight rescale. Otherwise CSS-only scaling is fine.
+  // On any fullscreen toggle, do a proper resize after layout settles
   setTimeout(() => {
-    const rect = canvas.getBoundingClientRect();
-    const oldAR = w / h;
-    const newAR = rect.width / rect.height;
-    // >30% aspect ratio change means we need a real resize (portrait↔landscape)
-    if (Math.abs(newAR - oldAR) / oldAR > 0.3) {
-      const oldW = w, oldH = h;
-      ({ w, h } = resize());
-      if (w !== oldW || h !== oldH) {
-        rescaleAll(oldW, oldH);
-        rebuildGrid();
-        rebuildBgGradient();
-        rebuildSandCanvas();
-      }
+    const oldW = w, oldH = h;
+    ({ w, h } = resize());
+    if (w !== oldW || h !== oldH) {
+      rescaleAll(oldW, oldH);
+      rebuildGrid();
+      rebuildBgGradient();
+      rebuildSandCanvas();
     }
   }, 150);
   showUI();
