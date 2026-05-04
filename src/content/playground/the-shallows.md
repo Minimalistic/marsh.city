@@ -2705,7 +2705,7 @@ class Predator {
       curr.px = curr.x; curr.py = curr.y;
       const t = j / this._jointCount;
       // Drag — stiff at snout, loosens toward tail. Lower = springs back faster
-      const headStiff = j <= 3 ? 0.75 : 0.45;
+      const headStiff = t < 0.4 ? 0.78 : 0.45;
       const drag = headStiff - t * 0.1;
       curr.x += velX * drag;
       curr.y += velY * drag;
@@ -2726,7 +2726,7 @@ class Predator {
       // Head joints get much stronger straightening to stay rigid
       const speedFactor = Math.min(1, currentSpeed / (this.baseSpeed * 2));
       const spawnBoost = this._spawnFrames > 0 ? 0.15 : 0;
-      const headBoost = j <= 3 ? 0.05 : 0;
+      const headBoost = t < 0.4 ? 0.07 : 0;
       const straighten = (0.008 + speedFactor * 0.015 + spawnBoost + headBoost) * (1 - t * 0.4);
       curr.x += (restX - curr.x) * straighten;
       curr.y += (restY - curr.y) * straighten;
@@ -2744,8 +2744,9 @@ class Predator {
         let bend = currAng - prevAng;
         while (bend > Math.PI) bend -= Math.PI * 2;
         while (bend < -Math.PI) bend += Math.PI * 2;
-        // Max bend per joint: ~15 deg at head, ~25 deg at tail
-        const maxBend = (0.26 + t * 0.18);
+        // Max bend per joint: stiffer front half, looser tail
+        const frontStiff = t < 0.4 ? 0.16 : 0.26; // ~9 deg front, ~15 deg mid
+        const maxBend = (frontStiff + t * 0.18);
         if (Math.abs(bend) > maxBend) {
           const clamped = prevAng + Math.sign(bend) * maxBend;
           curr.x = prev.x + Math.cos(clamped) * this._segLen;
@@ -4234,8 +4235,10 @@ function draw(time) {
         const offset = (Math.sin(pos * 0.04 * f + t2 * 3.1 + tr.seed) * 6
                      + Math.sin(pos * 0.09 * f + t2 * 5.7 + tr.seed * 2.3) * 4
                      + Math.sin(pos * 0.18 * f + t2 * 9.3 + tr.seed * 4.7) * 2) * vs;
-        const px = tr.x + perpX * pos + cosA * offset;
-        const py = tr.y + perpY * pos + sinA * offset;
+        let px = tr.x + perpX * pos + cosA * offset;
+        let py = tr.y + perpY * pos + sinA * offset;
+        const deflect = reefDeflect(px, py);
+        if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
         if (first) { ctx.moveTo(px, py); first = false; }
         else ctx.lineTo(px, py);
       }
@@ -4245,6 +4248,26 @@ function draw(time) {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
+    }
+
+    // Wave-reef interaction: push wave line points backward around above-water reefs
+    // Returns extra backward offset (positive = pushed back against wave direction)
+    function reefDeflect(px, py) {
+      let push = 0;
+      for (const rf of reefs) {
+        if (rf.submerged) continue;
+        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+        const dx = px - cx, dy = py - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const edge = rf.radiusAt(angle, rf.crownRadii);
+        const influence = edge + 25 * viewScale; // deflection starts before contact
+        if (dist < influence) {
+          const t = 1 - dist / influence; // 0 at edge of influence, 1 at reef center
+          push = Math.max(push, t * t * 35 * viewScale); // quadratic falloff
+        }
+      }
+      return push;
     }
 
     // Draw wave front lines only while active
@@ -4271,8 +4294,10 @@ function draw(time) {
                        + Math.sin(pos * 0.09 * f + t * 5.7 + ww.seed * 2.3) * 4
                        + Math.sin(pos * 0.18 * f + t * 9.3 + ww.seed * 4.7) * 2
                        + Math.sin(pos * 0.35 * f + t * 14 + ww.seed * 7) * 1) * vs;
-          const px = ww.x + perpX * pos + cosA * (offset - ln.behind);
-          const py = ww.y + perpY * pos + sinA * (offset - ln.behind);
+          let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
+          let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
+          const deflect = reefDeflect(px, py);
+          if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
           if (first) { ctx.moveTo(px, py); first = false; }
           else ctx.lineTo(px, py);
       }
