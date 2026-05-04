@@ -527,9 +527,26 @@ function updateOceanSound() {
         }
       }
     }
+    // Splash ripple rumble — softer, lower rumble when ripples emit from rocks
+    let splashRumble = 0;
+    let splashPan = 0;
+    if (typeof reefs !== 'undefined') {
+      for (const rf of reefs) {
+        if (!rf._splashRumble || !rf._splashRumbleTime) continue;
+        const elapsed = (nowMs - rf._splashRumbleTime) * 0.001;
+        if (elapsed > 3) { rf._splashRumble = 0; continue; }
+        // Gentle attack, slow fade — softer than the main reef hit
+        const env = elapsed < 0.3 ? elapsed / 0.3 : Math.max(0, 1 - (elapsed - 0.3) / 2.7);
+        const vol = env * rf._splashRumble * 0.08;
+        if (vol > splashRumble) {
+          splashRumble = vol;
+          splashPan = Math.max(-1, Math.min(1, (rf.x / w - 0.5) * 2));
+        }
+      }
+    }
     window._crashGain.gain.setTargetAtTime(
-      (crashVol + ambientRumble + reefRumble) * masterVolume * 2 * soundFadeIn,
-      audioCtx.currentTime, (crashVol + reefRumble) > 0.01 ? 0.1 : 0.8
+      (crashVol + ambientRumble + reefRumble + splashRumble) * masterVolume * 2 * soundFadeIn,
+      audioCtx.currentTime, (crashVol + reefRumble + splashRumble) > 0.01 ? 0.1 : 0.8
     );
     // Blend crash panning toward reef hit location when reef rumble dominates
     if (reefRumble > crashVol) crashPan = reefPan;
@@ -5440,6 +5457,9 @@ function draw(time) {
       if (rf._splashFirst) {
         rf._splashFirst = false;
         rf._splashNext = 0.15;
+        // Trigger splash rumble sound
+        rf._splashRumble = rf._splashEmit;
+        rf._splashRumbleTime = performance.now();
         const burstCount = 2 + Math.floor(rf._splashEmit * 2);
         for (let si = 0; si < burstCount; si++) {
           splashRipples.push({
