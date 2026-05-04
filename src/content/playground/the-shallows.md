@@ -1108,14 +1108,14 @@ class Fish {
           closestFood.bites--;
           // Visible size reduction - food gets eaten away
           closestFood.size *= 0.97;
-          // Bump the food on bite
-          closestFood.vx += Math.cos(this.angle) * 0.6;
-          closestFood.vy += Math.sin(this.angle) * 0.6;
+          // Gentle nudge on bite — food barely moves
+          closestFood.vx += Math.cos(this.angle) * 0.1;
+          closestFood.vy += Math.sin(this.angle) * 0.1;
           // Peck lunge - dart forward then brief pullback
           this._biting = true;
           this._biteTimer = 0.12;
-          this.vx += Math.cos(this.angle) * 1.5;
-          this.vy += Math.sin(this.angle) * 1.5;
+          this.vx += Math.cos(this.angle) * 0.8;
+          this.vy += Math.sin(this.angle) * 0.8;
           this.eating = true;
           this.eatTimer = 0.3 + Math.random() * 0.5; // quick pullback, come right back
           // Scatter fragments occasionally - food breaks apart
@@ -1133,13 +1133,15 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Steer toward food eagerly - stronger pull the closer they get
+        // Steer toward food from varied angles — fish surround it, not pile from one side
         const proximity = 1 - closestFoodDist / foodRange;
         const steerWeight = 0.08 + proximity * 0.12;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        const wobble = (Math.sin(this._phaseOffset + time * 0.001) * 0.2);
-        const desiredVx = Math.cos(foodAngle + wobble) * scaledSpeed * 1.2;
-        const desiredVy = Math.sin(foodAngle + wobble) * scaledSpeed * 1.2;
+        // Per-fish approach offset — spreads fish around the food
+        const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.3;
+        const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.1;
+        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
+        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
         this.vx += (desiredVx - this.vx) * steerWeight;
         this.vy += (desiredVy - this.vy) * steerWeight;
       }
@@ -4419,10 +4421,10 @@ function draw(time) {
   // Update and draw food pellets
   for (let i = foodPellets.length - 1; i >= 0; i--) {
     const fp = foodPellets[i];
-    fp.vx *= 0.98;
-    fp.vy *= 0.98;
-    fp.vx += Math.cos(tide.angle) * tide.strength * 0.003;
-    fp.vy += Math.sin(tide.angle) * tide.strength * 0.003;
+    fp.vx *= 0.92;
+    fp.vy *= 0.92;
+    fp.vx += Math.cos(tide.angle) * tide.strength * 0.001;
+    fp.vy += Math.sin(tide.angle) * tide.strength * 0.001;
     fp.x += fp.vx;
     fp.y += fp.vy;
     // Food on or near a reef slides out to where fish can reach it
