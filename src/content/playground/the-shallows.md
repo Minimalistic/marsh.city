@@ -5391,7 +5391,7 @@ function draw(time) {
                      + Math.sin(pos * 0.012 * f + tr.seed * 5.1) * (1.5 + Math.sin(t2 * 6.5 + tr.seed * 3.1) * 1)) * vs;
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
-        const tcl = reefClamp(px, py);
+        const tcl = reefClamp(px, py, 3 + (tr.seed % 5) * 2);
         trPts.push({ x: tcl.x, y: tcl.y, hit: !!tcl.hit, shadow: !!tcl.shadow });
       }
       // Post-rock drag for trail lines
@@ -5435,8 +5435,8 @@ function draw(time) {
 
     // Wave wraps around rocks: inside points clamp to upstream face only,
     // shadow zone behind rock gets turbulent displacement
-    function reefClamp(px, py) {
-      const pad = 4 * viewScale;
+    function reefClamp(px, py, extraPad) {
+      const pad = (4 + (extraPad || 0)) * viewScale;
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
@@ -5582,7 +5582,7 @@ function draw(time) {
                        + Math.sin(pos * 0.012 * f + ww.seed * 5.1) * (2 + Math.sin(t * 6.5 * ts + ww.seed * 3.9) * 1.5)) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
-          const cl = reefClamp(px, py);
+          const cl = reefClamp(px, py, ln.behind / viewScale * 0.4);
           pts.push({ x: cl.x, y: cl.y, hit: !!cl.hit });
           // Emit contact splashes where the primary wave line touches rock
           if (isFirstLine && cl.hit && contactSplashes.length < 500 && Math.random() < 0.6) {
