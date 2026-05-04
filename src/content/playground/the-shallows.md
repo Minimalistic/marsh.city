@@ -3166,6 +3166,55 @@ for (let i = 0; i < 15; i++) {
   rocks.push(makeSand(Math.random() * w, Math.random() * h));
 }
 
+// Seabed pebbles — small irregular gray rocks scattered across the floor
+// Slightly denser near reefs (added after reefs are placed), with loose clusters
+const seabedRocks = [];
+function generateSeabedRocks() {
+  seabedRocks.length = 0;
+  const count = Math.floor(18 + (w * h) / 25000); // scales with viewport, not too dense
+  // Seed a few cluster centers for natural grouping
+  const clusterCount = 3 + Math.floor(Math.random() * 3);
+  const clusters = Array.from({ length: clusterCount }, () => ({
+    x: Math.random() * w, y: Math.random() * h,
+    r: 60 + Math.random() * 100, // cluster radius
+  }));
+  for (let i = 0; i < count; i++) {
+    let px, py;
+    if (Math.random() < 0.4 && clusters.length > 0) {
+      // Place near a random cluster center
+      const cl = clusters[Math.floor(Math.random() * clusters.length)];
+      const a = Math.random() * Math.PI * 2;
+      const d = Math.random() * cl.r;
+      px = cl.x + Math.cos(a) * d;
+      py = cl.y + Math.sin(a) * d;
+    } else {
+      px = Math.random() * w;
+      py = Math.random() * h;
+    }
+    // Skip if on top of a reef crown (will be added near-reef after reefs exist)
+    const rockSize = (1.5 + Math.random() * 3.5) * viewScale;
+    const gray = 60 + Math.floor(Math.random() * 35);
+    const warm = Math.floor(Math.random() * 6);
+    // Check if touching previous rock — share color
+    const neighbor = seabedRocks.find(sr => {
+      const dx = sr.x - px, dy = sr.y - py;
+      return Math.sqrt(dx * dx + dy * dy) < sr.size + rockSize + 1;
+    });
+    const g = neighbor ? neighbor._gray : gray;
+    const wm = neighbor ? neighbor._warm : warm;
+    const vertCount = 5 + Math.floor(Math.random() * 3);
+    seabedRocks.push({
+      x: px, y: py, size: rockSize,
+      _gray: g, _warm: wm,
+      color: `rgb(${g + wm}, ${g - 2}, ${g - wm - 3})`,
+      verts: Array.from({ length: vertCount }, (_, j) => ({
+        a: (j / vertCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4,
+        r: 0.65 + Math.random() * 0.5,
+      })),
+    });
+  }
+}
+
 // Reef structures - partially submerged obstacles
 // Each reef has an irregular outline generated from noisy radius samples
 function makeReef(x, y, sizeMultiplier = 1) {
@@ -3313,6 +3362,38 @@ for (let i = 0; i < satelliteCount; i++) {
     const sr = makeReef(rx, ry, sizeMult);
     sr.submerged = true; // fully underwater, fish swim over them
     reefs.push(sr);
+  }
+}
+
+// Generate seabed pebbles — extra density near non-submerged reefs
+generateSeabedRocks();
+for (const rf of reefs) {
+  if (rf.submerged) continue;
+  const nearCount = 5 + Math.floor(Math.random() * 5);
+  for (let i = 0; i < nearCount; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const d = rf.baseR * (1.1 + Math.random() * 0.8);
+    const px = rf.x + Math.cos(a) * d;
+    const py = rf.y + Math.sin(a) * d;
+    const rockSize = (1.5 + Math.random() * 3) * viewScale;
+    const gray = 60 + Math.floor(Math.random() * 35);
+    const warm = Math.floor(Math.random() * 6);
+    const neighbor = seabedRocks.find(sr => {
+      const dx = sr.x - px, dy = sr.y - py;
+      return Math.sqrt(dx * dx + dy * dy) < sr.size + rockSize + 1;
+    });
+    const g = neighbor ? neighbor._gray : gray;
+    const wm = neighbor ? neighbor._warm : warm;
+    const vertCount = 5 + Math.floor(Math.random() * 3);
+    seabedRocks.push({
+      x: px, y: py, size: rockSize,
+      _gray: g, _warm: wm,
+      color: `rgb(${g + wm}, ${g - 2}, ${g - wm - 3})`,
+      verts: Array.from({ length: vertCount }, (_, j) => ({
+        a: (j / vertCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4,
+        r: 0.65 + Math.random() * 0.5,
+      })),
+    });
   }
 }
 
@@ -3651,6 +3732,28 @@ regenerateWorld = function() {
       reefs.push(sr);
     }
   }
+  // Seabed pebbles
+  generateSeabedRocks();
+  for (const rf of reefs) {
+    if (rf.submerged) continue;
+    const nearCount = 5 + Math.floor(Math.random() * 5);
+    for (let i = 0; i < nearCount; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const d = rf.baseR * (1.1 + Math.random() * 0.8);
+      const px = rf.x + Math.cos(a) * d, py = rf.y + Math.sin(a) * d;
+      const rockSize = (1.5 + Math.random() * 3) * viewScale;
+      const gray = 60 + Math.floor(Math.random() * 35);
+      const warm = Math.floor(Math.random() * 6);
+      const nb = seabedRocks.find(sr => Math.sqrt((sr.x-px)**2+(sr.y-py)**2) < sr.size+rockSize+1);
+      const g = nb ? nb._gray : gray, wm = nb ? nb._warm : warm;
+      const vc = 5 + Math.floor(Math.random() * 3);
+      seabedRocks.push({ x: px, y: py, size: rockSize, _gray: g, _warm: wm,
+        color: `rgb(${g+wm},${g-2},${g-wm-3})`,
+        verts: Array.from({length:vc},(_,j)=>({a:(j/vc)*Math.PI*2+(Math.random()-0.5)*0.4,r:0.65+Math.random()*0.5})),
+      });
+    }
+  }
+
   // Reef fish — 2-5 total
   const totalTangs2 = 2 + Math.floor(Math.random() * 4);
   for (let i = 0; i < totalTangs2; i++) {
@@ -3726,6 +3829,22 @@ function rebuildSandCanvas() {
     sandCtx.ellipse(0, 0, r.size, r.size * r.elongation, 0, 0, Math.PI * 2);
     sandCtx.fill();
     sandCtx.restore();
+  }
+  // Seabed pebbles — small irregular gray rocks baked into the sand layer
+  for (const sr of seabedRocks) {
+    sandCtx.beginPath();
+    for (let vi = 0; vi <= sr.verts.length; vi++) {
+      const v = sr.verts[vi % sr.verts.length];
+      const px = sr.x + Math.cos(v.a) * v.r * sr.size;
+      const py = sr.y + Math.sin(v.a) * v.r * sr.size;
+      if (vi === 0) sandCtx.moveTo(px, py);
+      else sandCtx.lineTo(px, py);
+    }
+    sandCtx.closePath();
+    sandCtx.fillStyle = sr.color;
+    sandCtx.globalAlpha = 0.35;
+    sandCtx.fill();
+    sandCtx.globalAlpha = 1;
   }
 }
 rebuildSandCanvas();
@@ -3962,8 +4081,8 @@ function draw(time) {
     for (let layer = 0; layer < layers; layer++) {
       const scale = (1.2 - (layer / layers) * 0.7) * 1.5; // 1.8 outer to 0.75 inner
       const alpha = (layer / (layers - 1)) * 0.25; // 0 outer to 0.25 inner
-      // Outer layers blend toward circle — deeper water = more eroded/smooth
-      const smooth = 1 - layer / (layers - 1); // 1 at outermost, 0 at innermost
+      // All layers blend toward circle — even inner ones are somewhat eroded
+      const smooth = 1 - (layer / (layers - 1)) * 0.7; // 1.0 at outermost, 0.3 at innermost
       ctx.beginPath();
       const n = rf.baseShape.length;
       // Compute smoothed points — blend between original shape and circle
