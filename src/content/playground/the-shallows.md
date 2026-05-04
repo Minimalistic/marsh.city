@@ -3579,22 +3579,16 @@ class Seagull {
       ctx.closePath();
       ctx.fillStyle = 'rgba(200, 210, 218, 0.92)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(140, 155, 165, 0.3)';
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
 
       // Outer wing: elbow to tip
       ctx.beginPath();
       ctx.moveTo(w.elbowX, w.elbowY);
-      // Leading edge to tip
       ctx.quadraticCurveTo(
         (w.elbowX + w.tipLeadX) * 0.5 + bl * 0.02,
         (w.elbowY + w.tipLeadY) * 0.5,
         w.tipLeadX, w.tipLeadY
       );
-      // Tip edge
       ctx.lineTo(w.tipTrailX, w.tipTrailY);
-      // Trailing edge back to elbow
       ctx.quadraticCurveTo(
         (w.tipTrailX + w.elbowTrailX) * 0.5,
         (w.tipTrailY + w.elbowTrailY) * 0.5,
@@ -3603,9 +3597,6 @@ class Seagull {
       ctx.closePath();
       ctx.fillStyle = 'rgba(195, 205, 215, 0.9)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(140, 155, 165, 0.25)';
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
 
       // Dark wing tips — black primary feathers on outer segment
       const tipMidY = (w.tipLeadY + w.tipTrailY) * 0.5;
@@ -4865,7 +4856,7 @@ function draw(time) {
           // Track impact for ongoing ripple emission — delay before first ripple
           rf._splashEmit = ww.strength;
           rf._splashAngle = ww.angle + Math.PI;
-          rf._splashTimer = -0.25; // 0.25s delay before ripples start
+          rf._splashTimer = -0.75; // 0.75s delay before ripples start
           rf._splashNext = 0;
           rf._splashFirst = true; // first burst is thickest
         }
@@ -5455,7 +5446,7 @@ function draw(time) {
             cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
             radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 2,
             maxRadius: (rf.crownR * 1.95 + si * 12) * viewScale,
-            speed: (0.9 + Math.random() * 0.5) * viewScale,
+            speed: (0.4 + Math.random() * 0.25) * viewScale,
             hitAngle,
             strength: rf._splashEmit * (0.52 + Math.random() * 0.13),
             life: 1,
@@ -5471,7 +5462,7 @@ function draw(time) {
           cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
           radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2,
           maxRadius: (rf.crownR * 1.43 + decay * 8) * viewScale,
-          speed: (0.52 + decay * 0.39) * viewScale,
+          speed: (0.25 + decay * 0.2) * viewScale,
           hitAngle,
           strength: rf._splashEmit * decay * (0.33 + Math.random() * 0.2),
           life: 1,
