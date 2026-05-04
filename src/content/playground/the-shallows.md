@@ -1765,24 +1765,38 @@ class Fish {
       ctx.restore();
     }
 
-    // Belly flash — sharp turn exposes the fish's side, catching bright light
-    this._bellyFlash -= 0.016;
-    if (this._bellyFlash <= 0 && Math.abs(angleDelta) > 0.08 && Math.random() < 0.03) {
-      this._bellyFlash = 0.1 + Math.random() * 0.08; // 100-180ms flash
+    // Belly flash — only triggers during panicked fleeing + sharp turn
+    this._bellyFlash -= 0.024; // 50% faster decay
+    if (this._bellyFlash <= 0 && this.fleeing && Math.abs(angleDelta) > 0.08 && Math.random() < 0.03) {
+      this._bellyFlash = 0.07 + Math.random() * 0.05; // 70-120ms flash (50% shorter)
     }
     if (this._bellyFlash > 0) {
-      const flashAlpha = Math.min(1, this._bellyFlash * 8) * 0.5;
+      const flashAlpha = Math.min(1, this._bellyFlash * 12) * 0.5;
+      const midSeg = Math.floor(segs * 0.3);
+      const midX = spineX[midSeg], midY = spineY[midSeg];
+      // Outer hazy glow — larger than the fish
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = flashAlpha * 0.35;
+      const glowR = widths[midSeg] * 6;
+      const haze = ctx.createRadialGradient(midX, midY, 0, midX, midY, glowR);
+      haze.addColorStop(0, 'rgba(230, 245, 255, 1)');
+      haze.addColorStop(0.4, 'rgba(200, 230, 250, 0.4)');
+      haze.addColorStop(1, 'rgba(200, 230, 250, 0)');
+      ctx.fillStyle = haze;
+      ctx.fillRect(midX - glowR, midY - glowR, glowR * 2, glowR * 2);
+      ctx.restore();
+      // Sharp body flash along the spine
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
       ctx.globalAlpha = flashAlpha;
-      // Flash covers the mid-body (segments 1 through ~60%)
       const from = 1, to = Math.floor(segs * 0.6);
       ctx.beginPath();
       ctx.moveTo(spineX[from], spineY[from]);
       for (let si = from; si <= to; si++) {
         ctx.lineTo(spineX[si], spineY[si]);
       }
-      ctx.lineWidth = widths[Math.floor(segs * 0.3)] * 2.5;
+      ctx.lineWidth = widths[midSeg] * 2.5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.strokeStyle = 'rgba(255, 255, 245, 1)';
