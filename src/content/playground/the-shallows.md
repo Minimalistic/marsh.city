@@ -5356,8 +5356,8 @@ function draw(time) {
           alpha: tmpl.alpha * (0.6 + Math.random() * 0.4),
           freq: tmpl.freq,
           life: 1,
-          maxLife: 5 + Math.random() * 7,
-          driftSpeed: ww.speed * (0.4 + Math.random() * 0.3), // starts with wave momentum
+          maxLife: 2.5 + Math.random() * 3.5,
+          driftSpeed: ww.speed * (0.4 + Math.random() * 0.3),
         });
       }
     }
@@ -5368,11 +5368,11 @@ function draw(time) {
       if (tr.life <= 0) { ww.trails.splice(ti, 1); continue; }
       tr.x += cosA * tr.driftSpeed;
       tr.y += sinA * tr.driftSpeed;
-      // Decays toward a minimum — never fully stalls, keeps drifting with wave
-      const minDrift = (tr._minDrift || (tr._minDrift = tr.driftSpeed * 0.15));
-      tr.driftSpeed = minDrift + (tr.driftSpeed - minDrift) * 0.985;
-      const trAlpha = tr.life * tr.life * tr.alpha;
-      if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
+      // Decays toward a minimum — keeps drifting visibly until death
+      const minDrift = (tr._minDrift || (tr._minDrift = tr.driftSpeed * 0.3));
+      tr.driftSpeed = minDrift + (tr.driftSpeed - minDrift) * 0.97;
+      const trAlpha = tr.life * tr.life * tr.life * tr.alpha; // cubic fade
+      if (trAlpha < 0.005) { ww.trails.splice(ti, 1); continue; }
       const perpX = -sinA, perpY = cosA;
       const t2 = time * 0.0012;
       const step = 4;
@@ -5529,11 +5529,10 @@ function draw(time) {
       const t = time * 0.0012;
       const lines = [
         { behind: 0, thick: 4.5 * viewScale, alpha: 1.0, freq: 1.6, speed: 1.8 },
-        { behind: 2 * viewScale, thick: 3.0 * viewScale, alpha: 0.4, freq: 1.0, speed: 1.0 },
-        { behind: 4 * viewScale, thick: 3.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
-        { behind: 9 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 0.9, speed: 0.9 },
-        { behind: 14 * viewScale, thick: 0.7 * viewScale, alpha: 0.1, freq: 1.0, speed: 1.0 },
-        { behind: 20 * viewScale, thick: 0.4 * viewScale, alpha: 0.05, freq: 1.1, speed: 1.1 },
+        { behind: 6 * viewScale, thick: 3.0 * viewScale, alpha: 0.4, freq: 1.0, speed: 1.0 },
+        { behind: 12 * viewScale, thick: 3.5 * viewScale, alpha: 0.7, freq: 1.3, speed: 1.4 },
+        { behind: 24 * viewScale, thick: 1.2 * viewScale, alpha: 0.15, freq: 0.9, speed: 0.9 },
+        { behind: 38 * viewScale, thick: 0.7 * viewScale, alpha: 0.08, freq: 1.0, speed: 1.0 },
       ];
       let isFirstLine = true;
       const dragSpread = Math.ceil(28 * viewScale / 4); // how many points the drag influence spreads
@@ -6306,8 +6305,8 @@ function draw(time) {
       if (!ww.seed) ww.seed = Math.random() * 100;
       const lines = [
         { behind: 0, thick: 4.5 * viewScale, alpha: 1.0, freq: 1.6, speed: 1.8 },
-        { behind: 2 * viewScale, thick: 3.0 * viewScale, alpha: 0.4, freq: 1.0, speed: 1.0 },
-        { behind: 4 * viewScale, thick: 3.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
+        { behind: 6 * viewScale, thick: 3.0 * viewScale, alpha: 0.4, freq: 1.0, speed: 1.0 },
+        { behind: 12 * viewScale, thick: 3.5 * viewScale, alpha: 0.7, freq: 1.3, speed: 1.4 },
       ];
       let isFirstLine = true;
       const dragSpread = Math.ceil(28 * viewScale / 4);
