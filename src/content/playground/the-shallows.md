@@ -4660,9 +4660,9 @@ function rebuildSandCanvas() {
 
   // Full seafloor sand base — warm sand tone across the entire viewport
   const sfGrad = sandCtx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-  sfGrad.addColorStop(0, 'rgba(180, 165, 130, 0.18)');
-  sfGrad.addColorStop(0.5, 'rgba(170, 155, 120, 0.12)');
-  sfGrad.addColorStop(1, 'rgba(160, 145, 110, 0.06)');
+  sfGrad.addColorStop(0, 'rgba(150, 160, 145, 0.18)');
+  sfGrad.addColorStop(0.5, 'rgba(140, 150, 135, 0.12)');
+  sfGrad.addColorStop(1, 'rgba(130, 140, 125, 0.06)');
   sandCtx.fillStyle = sfGrad;
   sandCtx.fillRect(0, 0, w, h);
 
@@ -4673,33 +4673,32 @@ function rebuildSandCanvas() {
   const rippleSpacing = 8 * viewScale;
   const diagonal = Math.sqrt(w * w + h * h);
   const rippleCount = Math.ceil(diagonal / rippleSpacing);
-  const rippleStep = 3;
+  const rippleStep = 1.5; // doubled point density
 
   function rockProximity(x, y) {
     let best = 0;
     for (const rf of reefs) {
-      if (rf.submerged) continue;
-      const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+      const cx = rf.submerged ? rf.x : rf.x + rf.crownOffX;
+      const cy = rf.submerged ? rf.y : rf.y + rf.crownOffY;
+      const rockSize = rf.crownR || rf.baseR || 20;
+      // Submerged rocks have reduced influence based on size
+      const sizeFactor = rf.submerged ? Math.min(1, rockSize / 40) * 0.5 : 1;
       const dx = x - cx, dy = y - cy;
-      // Downstream distance and lateral distance from rock center
       const along = dx * waveCos + dy * waveSin;
       const lateral = Math.abs(dx * (-waveSin) + dy * waveCos);
-      // Teardrop shape: extends much further downstream, narrow laterally
-      const downstreamReach = rf.crownR * 36; // long plume behind rock
-      const upstreamReach = rf.crownR * 9;    // short in front
-      const lateralReach = rf.crownR * 15;    // moderate width
+      // Teardrop shape scaled by rock size
+      const downstreamReach = rockSize * 36;
+      const upstreamReach = rockSize * 9;
+      const lateralReach = rockSize * 15;
       const reach = along > 0 ? downstreamReach : upstreamReach;
-      // Normalized distance in the elongated shape
       const alongNorm = Math.abs(along) / reach;
       const lateralNorm = lateral / lateralReach;
       const combined = Math.sqrt(alongNorm * alongNorm + lateralNorm * lateralNorm);
       if (combined >= 1) continue;
-      // Extra-long feather: square root stretches the falloff curve further out
       const falloff = Math.sqrt(1 - combined);
-      const smooth = falloff * falloff * (3 - 2 * falloff); // smoothstep on stretched curve
-      // Downstream bias
+      const smooth = falloff * falloff * (3 - 2 * falloff);
       const dirBias = along > 0 ? 1 : 0.15;
-      best = Math.max(best, smooth * dirBias);
+      best = Math.max(best, smooth * dirBias * sizeFactor);
     }
     return best;
   }
@@ -4734,22 +4733,24 @@ function rebuildSandCanvas() {
 
       // Bend sand lines around rocks + post-hit turbulent distortion
       for (const rf of reefs) {
-        if (rf.submerged) continue;
-        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+        const cx = rf.submerged ? rf.x : rf.x + rf.crownOffX;
+        const cy = rf.submerged ? rf.y : rf.y + rf.crownOffY;
+        const rockSize = rf.crownR || rf.baseR || 20;
+        const influence = rf.submerged ? 0.3 * Math.min(1, rockSize / 40) : 1;
         const dx = rx - cx, dy = ry - cy;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const pushR = rf.crownR * 2.5;
+        const pushR = rockSize * 2.5;
         if (dist < pushR && dist > 0.1) {
-          const push = (1 - dist / pushR);
+          const push = (1 - dist / pushR) * influence;
           rx += (dx / dist) * push * pushR * 0.4;
           ry += (dy / dist) * push * pushR * 0.4;
         }
         // Post-hit distortion: downstream points get chaotic displacement
         const along = dx * waveCos + dy * waveSin;
         if (along > 0) {
-          const turbR = rf.crownR * 5;
+          const turbR = rockSize * 5;
           if (dist < turbR) {
-            const intensity = (1 - dist / turbR) * Math.min(1, along / (rf.crownR * 2));
+            const intensity = (1 - dist / turbR) * Math.min(1, along / (rockSize * 2)) * influence;
             const turbSeed = pos * 0.1 + seed + ri * 0.7;
             rx += (Math.sin(turbSeed * 2.3) * 8 + Math.sin(turbSeed * 5.7) * 4) * viewScale * intensity;
             ry += (Math.sin(turbSeed * 3.1 + 1.4) * 8 + Math.sin(turbSeed * 4.9) * 4) * viewScale * intensity;
@@ -4771,7 +4772,7 @@ function rebuildSandCanvas() {
       const segAlpha = Math.min(p0.a, p1.a);
       if (segAlpha < 0.003) continue;
       rippleCtx.globalAlpha = segAlpha;
-      rippleCtx.strokeStyle = 'rgba(90, 120, 130, 1)';
+      rippleCtx.strokeStyle = 'rgba(130, 145, 135, 1)';
       rippleCtx.beginPath();
       rippleCtx.moveTo(p0.x, p0.y);
       rippleCtx.lineTo(p1.x, p1.y);
@@ -4804,9 +4805,9 @@ function rebuildSandCanvas() {
     const depX = cx + waveCos * depositDist * 0.6;
     const depY = cy + waveSin * depositDist * 0.6;
     const dg = sandCtx.createRadialGradient(depX, depY, 0, depX, depY, depositDist);
-    dg.addColorStop(0, 'rgba(200, 185, 145, 0.25)');
-    dg.addColorStop(0.4, 'rgba(195, 180, 140, 0.15)');
-    dg.addColorStop(1, 'rgba(190, 175, 135, 0)');
+    dg.addColorStop(0, 'rgba(150, 160, 140, 0.25)');
+    dg.addColorStop(0.4, 'rgba(140, 150, 135, 0.15)');
+    dg.addColorStop(1, 'rgba(130, 140, 125, 0)');
     sandCtx.save();
     sandCtx.translate(depX, depY);
     sandCtx.rotate(waveBaseAngle);
