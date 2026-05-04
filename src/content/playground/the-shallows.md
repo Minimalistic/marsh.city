@@ -108,7 +108,7 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
   position: absolute; bottom: 8px; left: 8px; z-index: 10;
   background: rgba(0,0,0,0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border-radius: 6px; padding: 6px 10px;
-  font: 13px/1.5 monospace; color: rgba(255,255,255,0.7);
+  font: 16px/1.5 monospace; color: rgba(255,255,255,0.7);
   pointer-events: none; white-space: pre;
 }
 </style>
