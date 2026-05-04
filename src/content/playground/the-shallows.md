@@ -4850,14 +4850,16 @@ function draw(time) {
     const nv = rf.crownShape.length;
     const t = time * 0.001; // seconds
 
-    // Wave impact decay — boosted ripples after a wash wave hits
+    // Wave impact — ramps in over 0.5s, then fades out over 5s
     let waveBoost = 0, waveHitCos = 0, waveHitSin = 0;
     if (rf._waveHit && rf._waveTime) {
       const elapsed = (time - rf._waveTime) * 0.001; // seconds since impact
-      waveBoost = rf._waveHit * Math.max(0, 1 - elapsed / 5); // fades over 5s
+      const rampIn = Math.min(1, elapsed / 0.5); // 0→1 over first 0.5s
+      const fadeOut = Math.max(0, 1 - Math.max(0, elapsed - 0.5) / 5); // 1→0 over next 5s
+      waveBoost = rf._waveHit * rampIn * fadeOut;
       waveHitCos = Math.cos(rf._waveAngle);
       waveHitSin = Math.sin(rf._waveAngle);
-      if (waveBoost <= 0) rf._waveHit = 0;
+      if (elapsed > 5.5) rf._waveHit = 0;
     }
 
     // Waterline ripples — more rings radiating outward, chaotic with currents
