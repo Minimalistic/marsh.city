@@ -914,15 +914,9 @@ class Fish {
     // Flee state
     this.fleeing = false;
     this.fleeTimer = 0;
-    // Eating pause
+    // Eating cooldown — after grabbing a bite, fish dashes away briefly
     this.eating = false;
     this.eatTimer = 0;
-    // Pecking — fish stops at food and takes multiple bites
-    this.pecking = false;
-    this.peckTimer = 0;
-    this.peckCount = 0;       // bites remaining in this pecking bout
-    this.peckTarget = null;   // which food pellet
-    this._peckBobPhase = 0;   // head-bob oscillation
     // Bite lunge animation
     this._biting = false;
     this._biteTimer = 0;
@@ -966,56 +960,10 @@ class Fish {
 
   update(dt, fish, time) {
     this._drawTime = time;
-    // After grabbing food, brief cooldown before seeking more
+    // After grabbing a bite, fish dashes away then circles back
     if (this.eating) {
       this.eatTimer -= dt;
       if (this.eatTimer <= 0) this.eating = false;
-    }
-    // Pecking — fish holds position at food, takes repeated bites
-    // Flee cancels pecking immediately
-    if (this.pecking && this.fleeing) {
-      this.pecking = false;
-      this.peckTarget = null;
-      this.peckCount = 0;
-    }
-    if (this.pecking) {
-      this.peckTimer -= dt;
-      this._peckBobPhase += dt * 12; // fast bob cycle
-      // Hold near the food, nearly stopped
-      this.vx *= 0.7;
-      this.vy *= 0.7;
-      if (this.peckTarget) {
-        // Gently nudge toward food to stay on it
-        const pdx = this.peckTarget.x - (this.x + Math.cos(this.angle) * this.len * 0.5);
-        const pdy = this.peckTarget.y - (this.y + Math.sin(this.angle) * this.len * 0.5);
-        const pd = Math.sqrt(pdx * pdx + pdy * pdy) || 1;
-        this.vx += (pdx / pd) * 0.15;
-        this.vy += (pdy / pd) * 0.15;
-      }
-      if (this.peckTimer <= 0 && this.peckCount > 0) {
-        // Take a bite
-        this.peckCount--;
-        this.peckTimer = 0.15 + Math.random() * 0.1; // time until next peck
-        this._biting = true;
-        this._biteTimer = 0.08;
-        // Small forward jab
-        this.vx += Math.cos(this.angle) * 0.4;
-        this.vy += Math.sin(this.angle) * 0.4;
-        if (this.peckTarget && this.peckTarget.bites > 0) {
-          this.peckTarget.bites -= 2;
-          this.peckTarget.size *= 0.93;
-          this.peckTarget.vx += Math.cos(this.angle) * 0.05;
-          this.peckTarget.vy += Math.sin(this.angle) * 0.05;
-          if (this.peckTarget.bites <= 0) this.peckTarget.size = 0;
-        }
-      }
-      if (this.peckCount <= 0 && this.peckTimer <= 0) {
-        // Done pecking — short cooldown before seeking food again
-        this.pecking = false;
-        this.peckTarget = null;
-        this.eating = true;
-        this.eatTimer = 0.3 + Math.random() * 0.4;
-      }
     }
 
     // Boids forces
@@ -1166,7 +1114,7 @@ class Fish {
     this.vy -= Math.sign(normY) * edgeY * 0.015;
 
     // School waypoint drift — very gentle pull so the school sweeps across the scene
-    if (!this.fleeing && !this.eating && !this.pecking && !this.distracted) {
+    if (!this.fleeing && !this.eating && !this.distracted) {
       const wpDx = schoolWP.x - this.x, wpDy = schoolWP.y - this.y;
       const wpDist = Math.sqrt(wpDx * wpDx + wpDy * wpDy) || 1;
       this.vx += (wpDx / wpDist) * 0.008;
@@ -1195,10 +1143,10 @@ class Fish {
     const foodRange = 700;
     let closestFood = null;
     let closestFoodDist = foodRange;
-    // Skip food when fleeing, eating (post-bite pullback), pecking, or fearful
-    if (this.eating || this.fleeing || this.pecking) { closestFood = null; closestFoodDist = Infinity; }
+    // Skip food when fleeing or eating (post-bite dash away)
+    if (this.eating || this.fleeing) { closestFood = null; closestFoodDist = Infinity; }
     for (const fp of foodPellets) {
-      if (this.eating || this.fleeing || this.pecking) break;
+      if (this.eating || this.fleeing) break;
       if (fp.bites <= 0) continue;
       const fdx = fp.x - mouthX;
       const fdy = fp.y - mouthY;
@@ -1231,17 +1179,26 @@ class Fish {
         this.angle += turnToFood * 0.4;
         this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating && !this.pecking) {
-          // Stop and peck — fish holds position and takes 2-4 bites
-          this.pecking = true;
-          this.peckTimer = 0.1; // first bite comes quickly
-          this.peckCount = 2 + Math.floor(Math.random() * 3); // 2-4 bites
-          this.peckTarget = closestFood;
-          this._peckBobPhase = 0;
-          // Kill momentum — fish stops to eat
-          this.vx *= 0.2;
-          this.vy *= 0.2;
-          // Scatter fragments occasionally - food breaks apart
+        if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating) {
+          // Grab a bite — sharp turn and dash away
+          closestFood.bites -= 2;
+          closestFood.size *= 0.93;
+          closestFood.vx += Math.cos(this.angle) * 0.08;
+          closestFood.vy += Math.sin(this.angle) * 0.08;
+          this._biting = true;
+          this._biteTimer = 0.1;
+          // Sharp turn away — pick a random sideways-to-backward angle
+          const turnDir = Math.random() < 0.5 ? 1 : -1;
+          const turnAmount = (0.8 + Math.random() * 1.5) * turnDir; // 45-130° turn
+          this.angle += turnAmount;
+          // Dart away with the bite — quick burst
+          const dashSpeed = 1.5 + Math.random() * 1.0;
+          this.vx = Math.cos(this.angle) * dashSpeed;
+          this.vy = Math.sin(this.angle) * dashSpeed;
+          // Brief cooldown — hesitate then come back for more
+          this.eating = true;
+          this.eatTimer = 0.25 + Math.random() * 0.35;
+          // Scatter fragments occasionally
           if (Math.random() < 0.3 && closestFood.size > 0.8) {
             const fragAngle = Math.random() * Math.PI * 2;
             foodPellets.push({
@@ -1253,6 +1210,7 @@ class Fish {
               vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
             });
           }
+          if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
         // Steer toward food eagerly — overrides schooling at close range
@@ -1418,7 +1376,7 @@ class Fish {
     }
 
     // Course-correction twitch — quick heading flick, like real fish do
-    if (!this.fleeing && !panicSprint && !this.eating && !this.pecking) {
+    if (!this.fleeing && !panicSprint && !this.eating) {
       this._twitchTimer -= dt;
       if (this._twitchTimer <= 0) {
         const twitchAngle = (Math.random() - 0.5) * 2 * this._twitchMag;
@@ -4205,9 +4163,10 @@ function draw(time) {
   // Update wash waves - push fish and debris as they pass
   for (let i = washWaves.length - 1; i >= 0; i--) {
     const ww = washWaves[i];
-    ww.x += Math.cos(ww.angle) * ww.speed;
-    ww.y += Math.sin(ww.angle) * ww.speed;
-    ww.traveled += ww.speed;
+    const step = ww.speed * dt * 60; // normalize to original 60fps-based speed
+    ww.x += Math.cos(ww.angle) * step;
+    ww.y += Math.sin(ww.angle) * step;
+    ww.traveled += step;
     ww.life = 1 - ww.traveled / ww.maxTravel;
     // Don't remove dead waves until their foam blobs have faded out
     if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0) && (!ww.trails || ww.trails.length === 0)) { washWaves.splice(i, 1); continue; }
@@ -4618,7 +4577,7 @@ function draw(time) {
     if (!ww.blobs) ww.blobs = [];
     const cosA = Math.cos(ww.angle);
     const sinA = Math.sin(ww.angle);
-    const span = Math.max(w, h) * 1.2;
+    const span = Math.sqrt(w * w + h * h) * 0.7; // half-diagonal + margin for angled waves
     const alive = ww.life > 0.1; // wave front still active (not just lingering foam)
 
     // Spawn foam only while the wave front is still active
