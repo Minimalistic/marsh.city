@@ -3218,10 +3218,38 @@ function makeReef(x, y, sizeMultiplier = 1) {
     return radii[i0] * (1 - frac) + radii[i1] * frac;
   }
 
+  // Edge rocks — small gray boulders straddling the reef boundary
+  const edgeRocks = [];
+  const edgeCount = 4 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < edgeCount; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const edgeR = radiusAt(a, crownRadii);
+    // Place some inside (-0.3 to 0), some outside (0 to 0.5) the crown edge
+    const offsetFrac = -0.3 + Math.random() * 0.8;
+    const dist = edgeR * (1 + offsetFrac);
+    const rockR = (3 + Math.random() * 6) * (baseR / 60); // scale with reef size
+    const gray = 55 + Math.floor(Math.random() * 40); // varied gray
+    const warm = Math.floor(Math.random() * 8); // slight warm/cool shift
+    edgeRocks.push({
+      ox: crownOffX + Math.cos(a) * dist,
+      oy: crownOffY + Math.sin(a) * dist,
+      r: rockR,
+      // Irregular shape via 5-7 vertices
+      verts: Array.from({ length: 5 + Math.floor(Math.random() * 3) }, (_, j) => {
+        const va = (j / (5 + Math.floor(Math.random() * 0.01))) * Math.PI * 2;
+        const vr = 0.7 + Math.random() * 0.5;
+        return { a: (j / 6) * Math.PI * 2 + (Math.random() - 0.5) * 0.4, r: vr };
+      }),
+      color: `rgb(${gray + warm}, ${gray - 2}, ${gray - warm - 3})`,
+      rimColor: `rgba(${gray + 20 + warm}, ${gray + 18}, ${gray + 15 - warm}, 0.5)`,
+      aboveWater: offsetFrac < 0.15, // rocks closer to center poke above water
+    });
+  }
+
   return {
     x, y, baseR, crownR, crownOffX, crownOffY,
     baseShape, crownShape, baseColor, crownColor, rimColor,
-    baseRadii, crownRadii, radiusAt,
+    baseRadii, crownRadii, radiusAt, edgeRocks,
     // Avoidance uses shape-aware radius
     avoidR: baseR * 0.85,
   };
@@ -4621,6 +4649,24 @@ function draw(time) {
     sheenGrad.addColorStop(0, 'rgba(180, 230, 240, 0.1)');
     sheenGrad.addColorStop(1, 'rgba(180, 230, 240, 0)');
 
+    // Submerged edge rocks — drawn under the crown so they peek out at edges
+    for (const er of rf.edgeRocks) {
+      if (er.aboveWater) continue;
+      ctx.beginPath();
+      for (let vi = 0; vi <= er.verts.length; vi++) {
+        const v = er.verts[vi % er.verts.length];
+        const px = er.ox + Math.cos(v.a) * v.r * er.r;
+        const py = er.oy + Math.sin(v.a) * v.r * er.r;
+        if (vi === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = er.color;
+      ctx.globalAlpha = 0.6;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
     // Crown shape - the dry rock poking out of the water
     ctx.beginPath();
     ctx.moveTo(rf.crownShape[0].x, rf.crownShape[0].y);
@@ -4650,6 +4696,24 @@ function draw(time) {
         ctx.fillStyle = 'rgba(0,0,0,0.15)';
         ctx.fill();
       }
+    }
+    // Above-water edge rocks — sit on top of the crown, breaking up the silhouette
+    for (const er of rf.edgeRocks) {
+      if (!er.aboveWater) continue;
+      ctx.beginPath();
+      for (let vi = 0; vi <= er.verts.length; vi++) {
+        const v = er.verts[vi % er.verts.length];
+        const px = er.ox + Math.cos(v.a) * v.r * er.r;
+        const py = er.oy + Math.sin(v.a) * v.r * er.r;
+        if (vi === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = er.color;
+      ctx.fill();
+      ctx.strokeStyle = er.rimColor;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
     }
     ctx.restore();
   }
