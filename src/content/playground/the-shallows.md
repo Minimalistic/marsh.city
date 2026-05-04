@@ -2657,6 +2657,7 @@ class Predator {
         if (td < 10 && mySpeed > this.baseSpeed * 2.5 * viewScale) prey = this.target;
       }
       if (prey) {
+        try {
         const idx = smallFish.indexOf(prey);
         if (idx >= 0) smallFish.splice(idx, 1);
         this.hunger = Math.max(0, this.hunger - 0.45);
@@ -2680,6 +2681,7 @@ class Predator {
             sparkle: Math.random() * Math.PI * 2,
           });
         }
+        } catch(e) { console.error('Catch error:', e); }
       }
     }
 
@@ -4069,6 +4071,8 @@ function rebuildSandCanvas() {
 rebuildSandCanvas();
 
 function draw(time) {
+  requestAnimationFrame(draw);
+  try {
   const dt = Math.min((time - lastTime) / 1000, 0.05);
   lastTime = time;
   if (settleTime > 0) settleTime -= dt;
@@ -5281,7 +5285,7 @@ function draw(time) {
   // ctx.restore();
   // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  requestAnimationFrame(draw);
+  } catch(e) { console.error('Draw error:', e); }
 }
 
 requestAnimationFrame(draw);
