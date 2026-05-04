@@ -5366,20 +5366,16 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcl = reefClamp(px, py);
-        trPts.push({ x: tcl.x, y: tcl.y, dim: tcl.dim });
+        trPts.push({ x: tcl.x, y: tcl.y });
       }
-      // Draw per-segment with dimming near rocks
+      ctx.globalAlpha = trAlpha;
+      ctx.lineWidth = tr.thick * tr.life;
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      for (let i = 0; i < trPts.length - 1; i++) {
-        const segDim = Math.min(trPts[i].dim, trPts[i + 1].dim);
-        ctx.globalAlpha = trAlpha * segDim;
-        ctx.lineWidth = tr.thick * tr.life * segDim;
-        ctx.beginPath();
-        ctx.moveTo(trPts[i].x, trPts[i].y);
-        ctx.lineTo(trPts[i + 1].x, trPts[i + 1].y);
-        ctx.stroke();
-      }
+      ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(trPts[0].x, trPts[0].y);
+      for (let i = 1; i < trPts.length; i++) ctx.lineTo(trPts[i].x, trPts[i].y);
+      ctx.stroke();
     }
 
     // Wave-reef interaction: push wave line points backward around above-water reefs
@@ -5449,7 +5445,11 @@ function draw(time) {
     // Bright turquoise core that fades both front-to-back AND laterally
     if (alive) {
       const bandDepth = ww.width * 6; // thick front-to-back depth
-      const bandAlpha = ww.life * (0.25 + ww.strength * 0.25);
+      // Bell curve: fade in during first 15%, hold steady, fade out in last 25%
+      const progress = 1 - ww.life; // 0 at spawn → 1 at end
+      const fadeIn = Math.min(progress / 0.15, 1); // ramp up over first 15%
+      const fadeOut = Math.min(ww.life / 0.25, 1); // ramp down over last 25%
+      const bandAlpha = fadeIn * fadeOut * (0.25 + ww.strength * 0.25);
       if (bandAlpha > 0.01) {
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
@@ -5508,22 +5508,18 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const cl = reefClamp(px, py);
-          pts.push({ x: cl.x, y: cl.y, dim: cl.dim });
+          pts.push({ x: cl.x, y: cl.y });
         }
-        // Draw per-segment with dimming near rocks
         const baseAlpha = ww.life * ln.alpha;
-        ctx.lineCap = 'round';
+        ctx.globalAlpha = baseAlpha;
+        ctx.lineWidth = ln.thick;
+        ctx.lineCap = 'butt';
         ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        for (let i = 0; i < pts.length - 1; i++) {
-          const segDim = Math.min(pts[i].dim, pts[i + 1].dim);
-          ctx.globalAlpha = baseAlpha * segDim;
-          ctx.lineWidth = ln.thick * segDim;
-          ctx.beginPath();
-          ctx.moveTo(pts[i].x, pts[i].y);
-          ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
-          ctx.stroke();
-        }
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
       }
     } // end if (alive) — blob drawing continues below for lingering foam
 
@@ -6149,19 +6145,16 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcp = clampPt(px, py);
-        trPts.push({ x: tcp.x, y: tcp.y, dim: tcp.dim });
+        trPts.push({ x: tcp.x, y: tcp.y });
       }
+      ctx.globalAlpha = trAlpha;
+      ctx.lineWidth = tr.thick * tr.life;
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      for (let j = 0; j < trPts.length - 1; j++) {
-        const sd = Math.min(trPts[j].dim, trPts[j + 1].dim);
-        ctx.globalAlpha = trAlpha * sd;
-        ctx.lineWidth = tr.thick * tr.life * sd;
-        ctx.beginPath();
-        ctx.moveTo(trPts[j].x, trPts[j].y);
-        ctx.lineTo(trPts[j + 1].x, trPts[j + 1].y);
-        ctx.stroke();
-      }
+      ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(trPts[0].x, trPts[0].y);
+      for (let i = 1; i < trPts.length; i++) ctx.lineTo(trPts[i].x, trPts[i].y);
+      ctx.stroke();
     }
     // Wave front lines
     if (alive) {
@@ -6184,20 +6177,17 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const fcp = clampPt(px, py);
-          pts.push({ x: fcp.x, y: fcp.y, dim: fcp.dim });
+          pts.push({ x: fcp.x, y: fcp.y });
         }
         const baseAlpha = ww.life * ln.alpha;
+        ctx.globalAlpha = baseAlpha;
+        ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        for (let i = 0; i < pts.length - 1; i++) {
-          const sd = Math.min(pts[i].dim, pts[i + 1].dim);
-          ctx.globalAlpha = baseAlpha * sd;
-          ctx.lineWidth = ln.thick * sd;
-          ctx.beginPath();
-          ctx.moveTo(pts[i].x, pts[i].y);
-          ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
-          ctx.stroke();
-        }
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
       }
     }
   }
