@@ -4224,16 +4224,16 @@ function draw(time) {
       const trAlpha = tr.life * tr.life * tr.alpha;
       if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
       const perpX = -sinA, perpY = cosA;
-      const t2 = tr.traveled * 0.02;
+      const t2 = time * 0.0012;
       ctx.beginPath();
       const step = 4;
       let first = true;
       for (let pos = -span; pos <= span; pos += step) {
         const f = tr.freq;
         const vs = viewScale;
-        const offset = (Math.sin(pos * 0.04 * f + t2 * 0.6 + tr.seed) * 6
-                     + Math.sin(pos * 0.09 * f + t2 * 1.1 + tr.seed * 2.3) * 4
-                     + Math.sin(pos * 0.18 * f + t2 * 2.3 + tr.seed * 4.7) * 2) * vs;
+        const offset = (Math.sin(pos * 0.04 * f + t2 * 3.1 + tr.seed) * 6
+                     + Math.sin(pos * 0.09 * f + t2 * 5.7 + tr.seed * 2.3) * 4
+                     + Math.sin(pos * 0.18 * f + t2 * 9.3 + tr.seed * 4.7) * 2) * vs;
         const px = tr.x + perpX * pos + cosA * offset;
         const py = tr.y + perpY * pos + sinA * offset;
         if (first) { ctx.moveTo(px, py); first = false; }
@@ -4252,7 +4252,7 @@ function draw(time) {
       const perpX = -sinA;
       const perpY = cosA;
       if (!ww.seed) ww.seed = Math.random() * 100;
-      const t = ww.traveled * 0.02;
+      const t = time * 0.0012;
       const lines = [
         { behind: 0, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
         { behind: 4 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 1.3 },
@@ -4266,11 +4266,11 @@ function draw(time) {
         for (let pos = -span; pos <= span; pos += step) {
           const f = ln.freq;
           const vs = viewScale;
-          // Higher base frequency so the wave reads as choppy texture, not a diagonal lean
-          const offset = (Math.sin(pos * 0.04 * f + t * 0.6 + ww.seed) * 6
-                       + Math.sin(pos * 0.09 * f + t * 1.1 + ww.seed * 2.3) * 4
-                       + Math.sin(pos * 0.18 * f + t * 2.3 + ww.seed * 4.7) * 2
-                       + Math.sin(pos * 0.35 * f + t * 3.1 + ww.seed * 7) * 1) * vs;
+          // Time-driven oscillation so wave shape constantly evolves
+          const offset = (Math.sin(pos * 0.04 * f + t * 3.1 + ww.seed) * 6
+                       + Math.sin(pos * 0.09 * f + t * 5.7 + ww.seed * 2.3) * 4
+                       + Math.sin(pos * 0.18 * f + t * 9.3 + ww.seed * 4.7) * 2
+                       + Math.sin(pos * 0.35 * f + t * 14 + ww.seed * 7) * 1) * vs;
           const px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           const py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           if (first) { ctx.moveTo(px, py); first = false; }
