@@ -1174,8 +1174,9 @@ class Fish {
       const accuracy = 0.4 + (this._phaseOffset % 1) * 0.6; // 0.4-1.0
       const eatDist = 6 + accuracy * 4; // accurate fish slow down earlier (6-10)
       if (closestFoodDist < eatDist && angleMismatch < 1.2) {
-        // Approaching food — brake proportional to accuracy
-        const brake = 0.75 + accuracy * 0.15; // 0.75-0.90 (inaccurate fish barely slow)
+        // Approaching food — brake proportional to accuracy (dt-independent)
+        const brakeBase = 0.75 + accuracy * 0.15; // 0.75-0.90 per frame at 60fps
+        const brake = Math.pow(brakeBase, dt * 60);
         this.vx *= brake;
         this.vy *= brake;
         // Turn toward food - accurate fish turn tighter
@@ -1397,27 +1398,35 @@ class Fish {
       }
     }
 
-    // Speed management - fish dart and zip, quick speed changes
-    // Check if actively being chased by a predator
+    // Speed management — smooth urgency blend, no hard state jumps
     let beingHunted = false;
     for (const pred of predators) {
       if (pred.target === this) { beingHunted = true; break; }
     }
-    let targetSpeed;
-    if (panicSprint) targetSpeed = scaledSpeed * 5.35; // explosive burst
-    else if (beingHunted) targetSpeed = scaledSpeed * 4.37; // full flight
-    else if (this.fleeing) targetSpeed = scaledSpeed * 2.92; // alarmed dash
-    else if (this.idle) targetSpeed = scaledSpeed * 0.95;
-    else targetSpeed = scaledSpeed * 1.38;
+    // Target urgency: 0 = idle, 1 = normal, 2+ = alarmed/fleeing
+    let targetUrgency;
+    if (panicSprint) targetUrgency = 5.0;
+    else if (beingHunted) targetUrgency = 4.0;
+    else if (this.fleeing) targetUrgency = 2.5;
+    else if (this.idle) targetUrgency = 0.5;
+    else targetUrgency = 1.0;
+    // Smooth urgency — ramps up fast (threat response), settles down gradually (calming)
+    if (!this._urgency) this._urgency = 1.0;
+    const urgencyUp = 1 - Math.pow(0.02, dt); // ~12% per frame at 60fps, dt-independent
+    const urgencyDown = 1 - Math.pow(0.15, dt); // ~3% per frame at 60fps
+    const urgencyRate = targetUrgency > this._urgency ? urgencyUp : urgencyDown;
+    this._urgency += (targetUrgency - this._urgency) * urgencyRate;
+    // Map urgency to speed — continuous curve instead of discrete jumps
+    // u=0.5→0.95, u=1→1.38, u=2.5→2.9, u=4→4.4, u=5→5.4
+    const u = this._urgency;
+    const speedMult = 0.52 + u * 0.86 + Math.max(0, u - 2) * 0.35;
+    const targetSpeed = scaledSpeed * speedMult;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      // Fast transitions between states - snappy acceleration and deceleration
-      let accel;
-      if (panicSprint || beingHunted) accel = 0.85; // explosive
-      else if (this.fleeing) accel = 0.6; // alarmed burst
-      else if (currentSpeed > targetSpeed * 1.5) accel = 0.35; // coming down from flee - quick settle
-      else accel = 0.25; // normal cruising adjustments
+      // Dt-independent speed convergence
+      const accelRate = this._urgency > 2 ? 0.02 : 0.08; // tighter tracking when alarmed
+      const accel = 1 - Math.pow(accelRate, dt);
       const desired = currentSpeed + (targetSpeed - currentSpeed) * accel;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
@@ -1541,9 +1550,10 @@ class Fish {
       this.vy += headY * (minFwd - fwdNow) * 0.3;
     }
 
-    // Drag - smooths out micro-jitter
-    this.vx *= 0.99;
-    this.vy *= 0.99;
+    // Drag - smooths out micro-jitter (dt-independent)
+    const drag = Math.pow(0.99, dt * 60);
+    this.vx *= drag;
+    this.vy *= drag;
 
     // Soft return from offscreen — unless this fish is leaving
     if (!this.leaving) {
