@@ -1127,7 +1127,11 @@ class Fish {
           this.vx += Math.cos(this.angle) * 0.8;
           this.vy += Math.sin(this.angle) * 0.8;
           this.eating = true;
-          this.eatTimer = 0.15 + Math.random() * 0.25; // rapid pullback, frenzy pace
+          this.eatTimer = 1.5 + Math.random() * 2.5; // swim off to chew before coming back
+          // Dart away from food after biting — go digest
+          const awayAngle = this.angle + Math.PI + (Math.random() - 0.5) * 1.2;
+          this.vx = Math.cos(awayAngle) * scaledSpeed * 1.5;
+          this.vy = Math.sin(awayAngle) * scaledSpeed * 1.5;
           // Scatter fragments occasionally - food breaks apart
           if (Math.random() < 0.3 && closestFood.size > 0.8) {
             const fragAngle = Math.random() * Math.PI * 2;
@@ -1150,7 +1154,7 @@ class Fish {
         // Per-fish approach offset — spreads fish around the food
         const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.3;
         const wobble = Math.sin(this._phaseOffset + time * 0.003) * 0.15;
-        const frenzySpeed = scaledSpeed * (2.0 + proximity * 1.5);
+        const frenzySpeed = scaledSpeed * (1.2 + proximity * 0.6);
         const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * frenzySpeed;
         const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * frenzySpeed;
         this.vx += (desiredVx - this.vx) * steerWeight;
@@ -1813,7 +1817,7 @@ class Fish {
     // Belly flash — only when fleeing with body bend at 90%+ of max
     this._bellyFlash -= 0.028; // 15% faster decay
     const bendThreshold = 0.207 * 0.9; // 90% of max body bend
-    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.03) {
+    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.008) {
       this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash (15% shorter)
     }
     if (this._bellyFlash > 0) {
