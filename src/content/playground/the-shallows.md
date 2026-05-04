@@ -674,7 +674,7 @@ canvas.addEventListener('mousedown', e => {
       const cAngle = Math.atan2(cdy, cdx);
       if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock = true; break; }
     }
-    foodPellets.push({ x: mx, y: my, size: 1.5, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock });
+    foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock });
     if (!onRock) ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
@@ -705,7 +705,7 @@ canvas.addEventListener('touchstart', e => {
       const cAngle = Math.atan2(cdy, cdx);
       if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock2 = true; break; }
     }
-    foodPellets.push({ x: mouse.x, y: mouse.y, size: 1.5, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock: onRock2 });
+    foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock: onRock2 });
     if (!onRock2) ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
