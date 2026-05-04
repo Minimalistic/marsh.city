@@ -728,6 +728,8 @@ const ripples = [];
 
 // Wave current - oscillates back and forth like real shallow water wash
 const tide = { angle: 0, strength: 0 };
+// School waypoint — a drifting target that gently pulls the school across the viewport
+const schoolWP = { x: w * 0.5, y: h * 0.5, timer: 15 + Math.random() * 20 };
 const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
 // Cloud shadows — large soft blobs that drift linearly across the scene
@@ -881,7 +883,7 @@ class Fish {
 
     // Size - scales with viewport, with ~30% variation between fish
     const sizeVar = 0.7 + Math.random() * 0.6; // 0.7 to 1.3 range
-    this.len = (12.5 + Math.random() * 6.25) * this.scale * sizeVar;
+    this.len = (10.6 + Math.random() * 5.3) * this.scale * sizeVar;
     this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
 
     // Color type = palette index (determines which fish school together)
@@ -1108,6 +1110,14 @@ class Fish {
     this.vx -= Math.sign(normX) * edgeX * 0.015;
     this.vy -= Math.sign(normY) * edgeY * 0.015;
 
+    // School waypoint drift — very gentle pull so the school sweeps across the scene
+    if (!this.fleeing && !this.eating && !this.distracted) {
+      const wpDx = schoolWP.x - this.x, wpDy = schoolWP.y - this.y;
+      const wpDist = Math.sqrt(wpDx * wpDx + wpDy * wpDy) || 1;
+      this.vx += (wpDx / wpDist) * 0.008;
+      this.vy += (wpDy / wpDist) * 0.008;
+    }
+
     // Tidal current + local turbulence (fish resist most of it)
     this.vx += Math.cos(tide.angle) * tide.strength * 0.006 * viewScale;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.006 * viewScale;
@@ -1155,8 +1165,8 @@ class Fish {
       this.distracted = false;
       this.distractTimer = 5;
 
-      const eatDist = 12;
-      const biteDist = 7;
+      const eatDist = 8;
+      const biteDist = 4;
       if (closestFoodDist < eatDist) {
         // Close to food — slow down and actively turn to face it
         this.vx *= 0.82;
@@ -4083,6 +4093,14 @@ function draw(time) {
   const secondaryWave = Math.sin(waveTime * 0.11) * 0.08 + Math.sin(waveTime * 0.31) * 0.04;
   tide.angle = waveBaseAngle + secondaryWave;
   tide.strength = 0.25 + waveCycle * 0.35;
+
+  // School waypoint — periodically pick a new target so the school sweeps across
+  schoolWP.timer -= dt;
+  if (schoolWP.timer <= 0) {
+    schoolWP.x = w * (0.1 + Math.random() * 0.8);
+    schoolWP.y = h * (0.1 + Math.random() * 0.8);
+    schoolWP.timer = 20 + Math.random() * 30;
+  }
 
   updateOceanSound();
 
