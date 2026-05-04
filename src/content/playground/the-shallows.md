@@ -4787,7 +4787,7 @@ function rebuildSandCanvas() {
   // Gaussian blur via circular offset samples (no grid artifacts)
   sandCtx.save();
   sandCtx.setTransform(1, 0, 0, 1, 0, 0);
-  const blurR = Math.ceil(12.5 * viewScale * dpr);
+  const blurR = Math.ceil(20 * viewScale * dpr);
   // Center draw + concentric ring samples
   const samples = [
     [0, 0],
