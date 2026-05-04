@@ -1345,7 +1345,7 @@ class Fish {
       const bAngle = Math.atan2(rdy, rdx);
       const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(bAngle * 3.1 + rf.y * 0.1);
       const baseR = rf.radiusAt(bAngle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
-      const baseSense = Math.max(baseR * 2, baseR + fishLen5);
+      const baseSense = Math.max(baseR * 4, baseR + fishLen5 * 2);
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
         // Only steer when actually approaching the rock
@@ -1369,7 +1369,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      const crownSense = Math.max(crownR * 2.45, crownR + fishLen5);
+      const crownSense = Math.max(crownR * 5, crownR + fishLen5 * 2);
       if (cDist < crownSense && cDist > 0.1) {
         const prox = 1 - cDist / crownSense;
         // Urgency ramps hard at close range — gentle far out, desperate near rock
@@ -1535,6 +1535,7 @@ class Fish {
     // Update chain: joints have inertia — they carry momentum and can't vibrate
     this._joints[0].x = this.x;
     this._joints[0].y = this.y;
+    this._maxBendThisFrame = 0;
     for (let j = 1; j <= this._jointCount; j++) {
       const prev = this._joints[j - 1];
       const curr = this._joints[j];
@@ -1572,6 +1573,7 @@ class Fish {
         let bend = currAngle - prevAngle;
         while (bend > Math.PI) bend -= Math.PI * 2;
         while (bend < -Math.PI) bend += Math.PI * 2;
+        if (Math.abs(bend) > this._maxBendThisFrame) this._maxBendThisFrame = Math.abs(bend);
         const maxBend = 0.207;
         if (Math.abs(bend) > maxBend) {
           const clampedAngle = prevAngle + Math.sign(bend) * maxBend;
@@ -1790,10 +1792,11 @@ class Fish {
       ctx.restore();
     }
 
-    // Belly flash — only triggers during panicked fleeing + sharp turn
-    this._bellyFlash -= 0.024; // 50% faster decay
-    if (this._bellyFlash <= 0 && this.fleeing && Math.abs(angleDelta) > 0.08 && Math.random() < 0.03) {
-      this._bellyFlash = 0.07 + Math.random() * 0.05; // 70-120ms flash (50% shorter)
+    // Belly flash — only when fleeing with body bend at 90%+ of max
+    this._bellyFlash -= 0.028; // 15% faster decay
+    const bendThreshold = 0.207 * 0.9; // 90% of max body bend
+    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.03) {
+      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash (15% shorter)
     }
     if (this._bellyFlash > 0) {
       const flashAlpha = Math.min(1, this._bellyFlash * 12) * 0.5;
