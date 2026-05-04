@@ -3760,7 +3760,7 @@ function draw(time) {
     ww.traveled += ww.speed;
     ww.life = 1 - ww.traveled / ww.maxTravel;
     // Don't remove dead waves until their foam blobs have faded out
-    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0) && (!ww.trails || ww.trails.length === 0)) { washWaves.splice(i, 1); continue; }
+    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0) && (!ww.trails || ww.trails.length === 0) && (!ww.reefFx || ww.reefFx.length === 0)) { washWaves.splice(i, 1); continue; }
     // Push things in the wave's path
     const pushForce = ww.strength * ww.life;
     const cosA = Math.cos(ww.angle);
@@ -4239,6 +4239,7 @@ function draw(time) {
         let py = tr.y + perpY * pos + sinA * offset;
         const deflect = reefDeflect(px, py);
         if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
+        if (insideReef(px, py, 2)) { first = true; continue; }
         if (first) { ctx.moveTo(px, py); first = false; }
         else ctx.lineTo(px, py);
       }
@@ -4250,8 +4251,20 @@ function draw(time) {
       ctx.stroke();
     }
 
-    // Wave-reef interaction: push wave line points backward around above-water reefs
-    // Returns extra backward offset (positive = pushed back against wave direction)
+    // Check if point is inside any above-water reef crown (+ margin)
+    function insideReef(px, py, margin = 0) {
+      for (const rf of reefs) {
+        if (rf.submerged) continue;
+        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+        const dx = px - cx, dy = py - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        if (dist < rf.radiusAt(angle, rf.crownRadii) + margin) return true;
+      }
+      return false;
+    }
+
+    // Wave-reef interaction: deflect lines + spawn wrap arcs and wake lines
     function reefDeflect(px, py) {
       let push = 0;
       for (const rf of reefs) {
@@ -4261,13 +4274,123 @@ function draw(time) {
         const dist = Math.sqrt(dx * dx + dy * dy);
         const angle = Math.atan2(dy, dx);
         const edge = rf.radiusAt(angle, rf.crownRadii);
-        const influence = edge + 25 * viewScale; // deflection starts before contact
+        const influence = edge + 25 * viewScale;
         if (dist < influence) {
-          const t = 1 - dist / influence; // 0 at edge of influence, 1 at reef center
-          push = Math.max(push, t * t * 35 * viewScale); // quadratic falloff
+          const t = 1 - dist / influence;
+          push = Math.max(push, t * t * 35 * viewScale);
         }
       }
       return push;
+    }
+
+    // Spawn reef wrap arcs and wake V-lines as wave passes each reef
+    if (!ww.reefFx) ww.reefFx = [];
+    if (!ww._reefHit) ww._reefHit = new Set();
+    if (alive) {
+      for (const rf of reefs) {
+        if (rf.submerged || ww._reefHit.has(rf)) continue;
+        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+        // How far the wave front is from the reef center, along wave direction
+        const rel = (cx - ww.x) * cosA + (cy - ww.y) * sinA;
+        const influence = rf.crownR + 20 * viewScale;
+        if (rel > -influence && rel < influence) {
+          ww._reefHit.add(rf);
+          const avgR = rf.crownR;
+          // Wrap arcs — curved lines hugging both sides of the rock
+          for (let side = -1; side <= 1; side += 2) {
+            ww.reefFx.push({
+              type: 'wrap',
+              cx, cy, rf,
+              side, // -1 = left, +1 = right
+              startAngle: Math.atan2(-sinA, -cosA), // facing the wave
+              life: 1,
+              maxLife: 2.5 + Math.random() * 2,
+              seed: Math.random() * 100,
+              alpha: 0.2 + Math.random() * 0.1,
+              thick: (0.8 + Math.random() * 0.8) * viewScale,
+            });
+          }
+          // Wake V-lines — diverging lines behind the rock
+          for (let vi = 0; vi < 2 + Math.floor(Math.random() * 2); vi++) {
+            const spread = (0.25 + Math.random() * 0.35) * (vi % 2 === 0 ? 1 : -1);
+            ww.reefFx.push({
+              type: 'wake',
+              sx: cx + cosA * (avgR + 5 * viewScale),
+              sy: cy + sinA * (avgR + 5 * viewScale),
+              angle: ww.angle + spread,
+              len: 0,
+              maxLen: (40 + Math.random() * 50) * viewScale,
+              growSpeed: (60 + Math.random() * 40) * viewScale,
+              life: 1,
+              maxLife: 2 + Math.random() * 2.5,
+              seed: Math.random() * 100,
+              alpha: 0.12 + Math.random() * 0.08,
+              thick: (0.5 + Math.random() * 0.7) * viewScale,
+            });
+          }
+        }
+      }
+    }
+
+    // Update and draw reef interaction effects
+    for (let fi = ww.reefFx.length - 1; fi >= 0; fi--) {
+      const fx = ww.reefFx[fi];
+      fx.life -= dt / fx.maxLife;
+      if (fx.life <= 0) { ww.reefFx.splice(fi, 1); continue; }
+      const fadeAlpha = fx.life * fx.life * fx.alpha;
+      if (fadeAlpha < 0.003) { ww.reefFx.splice(fi, 1); continue; }
+
+      if (fx.type === 'wrap') {
+        // Arc that wraps around the reef crown on one side
+        const arcSpan = Math.PI * (0.35 + fx.life * 0.3); // shrinks as it fades
+        const startA = fx.startAngle + fx.side * 0.1;
+        const dir = fx.side;
+        const avgR = fx.rf.crownR;
+        const margin = (8 + (1 - fx.life) * 15) * viewScale; // drifts outward as it ages
+        ctx.beginPath();
+        const steps = 20;
+        let first = true;
+        for (let s = 0; s <= steps; s++) {
+          const frac = s / steps;
+          const a = startA + dir * frac * arcSpan;
+          const edgeR = fx.rf.radiusAt(a, fx.rf.crownRadii);
+          const wiggle = Math.sin(frac * 12 + fx.seed + time * 0.003) * 3 * viewScale;
+          const r = edgeR + margin + wiggle;
+          const px = fx.cx + Math.cos(a) * r;
+          const py = fx.cy + Math.sin(a) * r;
+          if (insideReef(px, py, 2)) { first = true; continue; }
+          if (first) { ctx.moveTo(px, py); first = false; }
+          else ctx.lineTo(px, py);
+        }
+        ctx.globalAlpha = fadeAlpha;
+        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        ctx.lineWidth = fx.thick * fx.life;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      } else if (fx.type === 'wake') {
+        // Diverging line growing outward behind the rock
+        fx.len = Math.min(fx.maxLen, fx.len + dt * fx.growSpeed);
+        const wcos = Math.cos(fx.angle), wsin = Math.sin(fx.angle);
+        ctx.beginPath();
+        const steps = Math.max(8, Math.ceil(fx.len / 5));
+        let first = true;
+        for (let s = 0; s <= steps; s++) {
+          const frac = s / steps;
+          const d = frac * fx.len;
+          const wiggle = Math.sin(frac * 8 + fx.seed + time * 0.004) * 2.5 * viewScale;
+          const px = fx.sx + wcos * d + (-wsin) * wiggle;
+          const py = fx.sy + wsin * d + wcos * wiggle;
+          if (insideReef(px, py, 2)) { first = true; continue; }
+          if (first) { ctx.moveTo(px, py); first = false; }
+          else ctx.lineTo(px, py);
+        }
+        // Fade along the length — thinner at the tip
+        ctx.globalAlpha = fadeAlpha;
+        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        ctx.lineWidth = fx.thick * fx.life;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
     }
 
     // Draw wave front lines only while active
@@ -4298,6 +4421,7 @@ function draw(time) {
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const deflect = reefDeflect(px, py);
           if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
+          if (insideReef(px, py, 2)) { first = true; continue; }
           if (first) { ctx.moveTo(px, py); first = false; }
           else ctx.lineTo(px, py);
       }
