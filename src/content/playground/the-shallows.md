@@ -3497,7 +3497,7 @@ class Seagull {
 
     // Bank tilt — inner wing foreshortens, outer wing extends
     // _bank is positive when turning right (side=1 is inner), negative for left
-    const bankScale = (this._bank + this._turbBank) * 1.75; // 30% less than before
+    const bankScale = (this._bank + this._turbBank) * 0.875;
 
     const sides = [];
     for (const side of [-1, 1]) {
@@ -3539,7 +3539,7 @@ class Seagull {
     ctx.translate(this.x + this._turbX, this.y + this._turbY);
     ctx.rotate(this._renderAngle + this._turbAngle);
     // Body shifts laterally into the turn (bird leans into it)
-    ctx.translate(0, (this._bank + this._turbBank) * this.bodyLen * 0.21);
+    ctx.translate(0, (this._bank + this._turbBank) * this.bodyLen * 0.105);
 
     const bl = this.bodyLen;
     const wings = this._wingGeometry();
