@@ -3372,9 +3372,9 @@ class Seagull {
     if (!this.leaving) {
       this.turnTimer -= dt;
       if (this.turnTimer <= 0) {
-        this.targetTurn = (Math.random() - 0.5) * 0.01;
+        this.targetTurn = (Math.random() - 0.5) * 0.006;
         // Occasionally circle a bit tighter
-        if (Math.random() < 0.15) this.targetTurn *= 1.8;
+        if (Math.random() < 0.15) this.targetTurn *= 1.5;
         this.turnTimer = 5 + Math.random() * 15;
       }
 
@@ -3393,18 +3393,21 @@ class Seagull {
         let diff = toCenter - this.angle;
         while (diff > Math.PI) diff -= Math.PI * 2;
         while (diff < -Math.PI) diff += Math.PI * 2;
-        this.angle += diff * edgeUrgency * 0.025;
+        this.angle += diff * edgeUrgency * 0.012;
       }
     }
 
     this.turnRate += (this.targetTurn - this.turnRate) * 0.015;
+    // Hard cap on turn rate — birds can't turn on a dime
+    const maxTurn = 0.006;
+    this.turnRate = Math.max(-maxTurn, Math.min(maxTurn, this.turnRate));
     this.angle += this.turnRate;
 
-    // Smooth velocity from angle
+    // Smooth velocity from angle — slow blend prevents sharp directional snaps
     const targetVx = Math.cos(this.angle) * this.speed;
     const targetVy = Math.sin(this.angle) * this.speed;
-    this.vx += (targetVx - this.vx) * 0.08;
-    this.vy += (targetVy - this.vy) * 0.08;
+    this.vx += (targetVx - this.vx) * 0.04;
+    this.vy += (targetVy - this.vy) * 0.04;
     this.x += this.vx;
     this.y += this.vy;
 
@@ -5915,77 +5918,100 @@ function draw(time) {
 
   _measure('reefs');
 
-  // Seagull shadows — drawn after reefs so they cast on rocks too
-  // Highly diffused: bird is high above, shadow is soft and spread
+  // Seagull shadows — rendered to offscreen canvas then composited once
+  // Guarantees a single unified shape with no internal overlap artifacts
   for (const g of seagulls) {
     const heightScale = 1 + g.height * 0.4;
-    const gOffX = g.height * 18;
-    const gOffY = g.height * 24;
+    // Bird is far higher than fish — shadow offset much larger
+    const gOffX = g.height * 35;
+    const gOffY = g.height * 45;
     const bl = g.bodyLen * heightScale;
-    const angle = g._renderAngle;
-    const cx = g.x + gOffX, cy = g.y + gOffY;
     const wings = g._wingGeometry();
-    const alpha = 0.07 + (1 - g.height) * 0.05;
+    const blurR = Math.round(8 + g.height * 12);
+    const alpha = 0.08 + (1 - g.height) * 0.05;
 
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-    ctx.scale(heightScale, heightScale);
-    ctx.globalAlpha = alpha;
-    ctx.filter = `blur(${Math.round(6 + g.height * 8)}px)`;
+    // Size the offscreen canvas to fit the shadow + blur padding
+    const pad = blurR * 3; // extra space for blur bleed
+    const span = g.wingspan * heightScale + bl;
+    const canvSize = Math.ceil((span + pad * 2) * 1.2);
+    const half = canvSize * 0.5;
 
-    // Single combined path — all parts as subpaths, one fill, no overlap artifacts
-    ctx.beginPath();
+    // Reuse a shared offscreen canvas for bird shadows
+    if (!window._gullShadowCv) {
+      window._gullShadowCv = document.createElement('canvas');
+      window._gullShadowCtx = window._gullShadowCv.getContext('2d');
+    }
+    const sc = window._gullShadowCv;
+    const sctx = window._gullShadowCtx;
+    if (sc.width < canvSize || sc.height < canvSize) {
+      sc.width = canvSize;
+      sc.height = canvSize;
+    }
+    sctx.clearRect(0, 0, canvSize, canvSize);
 
-    // Body ellipse
-    ctx.ellipse(0, 0, bl * 0.45, bl * 0.12, 0, 0, Math.PI * 2);
+    // Draw all shadow parts at full opacity onto offscreen canvas
+    sctx.save();
+    sctx.translate(half, half);
+    sctx.rotate(g._renderAngle);
+    sctx.scale(heightScale, heightScale);
+    sctx.fillStyle = '#000';
 
-    // Wings
+    // Body
+    sctx.beginPath();
+    sctx.ellipse(0, 0, bl * 0.45, bl * 0.12, 0, 0, Math.PI * 2);
+    sctx.fill();
+
+    // Wings — draw as filled shapes, overlaps don't matter (full opacity)
     for (const w of wings) {
-      // Inner wing
-      ctx.moveTo(w.sx, w.sy);
-      ctx.quadraticCurveTo(
+      sctx.beginPath();
+      sctx.moveTo(w.sx, w.sy);
+      sctx.quadraticCurveTo(
         (w.sx + w.elbowX) * 0.5 + bl * 0.03, (w.sy + w.elbowY) * 0.5,
         w.elbowX, w.elbowY
       );
-      ctx.lineTo(w.elbowTrailX, w.elbowTrailY);
-      ctx.quadraticCurveTo(
+      sctx.lineTo(w.elbowTrailX, w.elbowTrailY);
+      sctx.quadraticCurveTo(
         (w.elbowTrailX + w.rootTrailX) * 0.5, (w.elbowTrailY + w.rootTrailY) * 0.5,
         w.rootTrailX, w.rootTrailY
       );
-      ctx.closePath();
-      // Outer wing
-      ctx.moveTo(w.elbowX, w.elbowY);
-      ctx.quadraticCurveTo(
+      sctx.closePath();
+      sctx.fill();
+      sctx.beginPath();
+      sctx.moveTo(w.elbowX, w.elbowY);
+      sctx.quadraticCurveTo(
         (w.elbowX + w.tipLeadX) * 0.5 + bl * 0.02,
         (w.elbowY + w.tipLeadY) * 0.5,
         w.tipLeadX, w.tipLeadY
       );
-      ctx.lineTo(w.tipTrailX, w.tipTrailY);
-      ctx.quadraticCurveTo(
+      sctx.lineTo(w.tipTrailX, w.tipTrailY);
+      sctx.quadraticCurveTo(
         (w.tipTrailX + w.elbowTrailX) * 0.5,
         (w.tipTrailY + w.elbowTrailY) * 0.5,
         w.elbowTrailX, w.elbowTrailY
       );
-      ctx.closePath();
+      sctx.closePath();
+      sctx.fill();
     }
 
     // Tail
-    ctx.moveTo(-bl * 0.3, 0);
-    ctx.lineTo(-bl * 0.55, bl * 0.18);
-    ctx.lineTo(-bl * 0.48, 0);
-    ctx.lineTo(-bl * 0.55, -bl * 0.18);
-    ctx.closePath();
+    sctx.beginPath();
+    sctx.moveTo(-bl * 0.3, 0);
+    sctx.lineTo(-bl * 0.55, bl * 0.18);
+    sctx.lineTo(-bl * 0.48, 0);
+    sctx.lineTo(-bl * 0.55, -bl * 0.18);
+    sctx.closePath();
+    sctx.fill();
+    sctx.restore();
 
-    // Radial gradient fill — denser center, lighter edges
-    const gradR = g.wingspan * heightScale * 0.5;
-    const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, gradR);
-    sg.addColorStop(0, 'rgba(0, 25, 35, 1)');
-    sg.addColorStop(0.5, 'rgba(0, 25, 35, 0.7)');
-    sg.addColorStop(1, 'rgba(0, 25, 35, 0.35)');
-    ctx.fillStyle = sg;
-    ctx.fill();
-
+    // Composite the offscreen canvas onto main canvas with blur + alpha
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.filter = `blur(${blurR}px)`;
+    // Position: bird center + shadow offset, then shift by half canvas size
+    ctx.drawImage(sc,
+      0, 0, canvSize, canvSize,
+      g.x + gOffX - half, g.y + gOffY - half, canvSize, canvSize
+    );
     ctx.restore();
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
