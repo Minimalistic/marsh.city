@@ -5504,7 +5504,10 @@ function draw(time) {
     // Stretch outward from anchor in wave direction, decelerating
     cl.stretch += cl.speed;
     cl.speed *= 0.975; // slows as it stretches
-    const fadeAlpha = cl.life * cl.life * cl.alpha;
+    // Fade in smoothly over first 0.3s
+    const clAge = (1 - cl.life) * cl.maxLife;
+    const clFadeIn = Math.min(1, clAge / 0.3);
+    const fadeAlpha = clFadeIn * clFadeIn * cl.life * cl.life * cl.alpha;
     if (fadeAlpha < 0.003) { reefClings.splice(i, 1); continue; }
 
     // Draw as a short arc from anchor stretching in wave direction
@@ -5594,7 +5597,10 @@ function draw(time) {
     sp.speed *= 0.992; // gradually slows
     if (sp.radius > sp.maxRadius) { splashRipples.splice(i, 1); continue; }
 
-    const alpha = sp.life * sp.life * sp.strength * 0.5;
+    // Fade in over first 0.4 seconds — don't snap into existence
+    const age = (1 - sp.life) * sp.maxLife; // seconds since spawn
+    const fadeIn = Math.min(1, age / 0.4); // 0→1 over 0.4s
+    const alpha = fadeIn * fadeIn * sp.life * sp.life * sp.strength * 0.5;
     if (alpha < 0.005) { splashRipples.splice(i, 1); continue; }
 
     // Draw arc centered on reef, strongest on the hit side, fading on the lee side
