@@ -4698,7 +4698,14 @@ function rebuildSandCanvas() {
   for (let ri = 0; ri < rippleCount; ri++) {
     const ridgeOffset = (ri - rippleCount / 2) * rippleSpacing;
     const seed = ri * 7.13;
-    const ridgeThick = (3.6 + Math.sin(seed * 2.3) * 1.5) * viewScale;
+
+    // Proximity check early for thickness + alpha
+    const midX = w / 2 + waveCos * ridgeOffset;
+    const midY = h / 2 + waveSin * ridgeOffset;
+    const prox = rockProximity(midX, midY);
+    // Far from rocks: thicker (blurrier), near rocks: thinner (sharper)
+    const blurScale = 1 + (1 - prox) * 3; // 1× near rocks, 4× far away
+    const ridgeThick = (3.6 + Math.sin(seed * 2.3) * 1.5) * viewScale * blurScale;
 
     rippleCtx.beginPath();
     let first = true;
@@ -4728,9 +4735,6 @@ function rebuildSandCanvas() {
       else rippleCtx.lineTo(rx, ry);
     }
     // Alpha based on proximity — only visible near rocks, fades away
-    const midX = w / 2 + waveCos * ridgeOffset;
-    const midY = h / 2 + waveSin * ridgeOffset;
-    const prox = rockProximity(midX, midY);
     const ridgeAlpha = prox * 0.08 + Math.sin(seed) * 0.01;
     if (ridgeAlpha < 0.005) continue; // skip invisible ridges
 
