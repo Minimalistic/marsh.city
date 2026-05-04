@@ -328,7 +328,24 @@ function handleFSChange() {
   inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
   fsCloseBtn.hidden = !inFullscreen;
   fsBtn.hidden = inFullscreen;
-  // Don't resize canvas or regenerate — CSS scales the existing pixels
+  // Check if aspect ratio changed significantly (e.g. landscape embed → portrait mobile)
+  // If so, do a lightweight rescale. Otherwise CSS-only scaling is fine.
+  setTimeout(() => {
+    const rect = canvas.getBoundingClientRect();
+    const oldAR = w / h;
+    const newAR = rect.width / rect.height;
+    // >30% aspect ratio change means we need a real resize (portrait↔landscape)
+    if (Math.abs(newAR - oldAR) / oldAR > 0.3) {
+      const oldW = w, oldH = h;
+      ({ w, h } = resize());
+      if (w !== oldW || h !== oldH) {
+        rescaleAll(oldW, oldH);
+        rebuildGrid();
+        rebuildBgGradient();
+        rebuildSandCanvas();
+      }
+    }
+  }, 150);
   showUI();
 }
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
