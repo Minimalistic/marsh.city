@@ -883,7 +883,7 @@ class Fish {
 
     // Size - scales with viewport, with ~30% variation between fish
     const sizeVar = 0.7 + Math.random() * 0.6; // 0.7 to 1.3 range
-    this.len = (10.6 + Math.random() * 5.3) * this.scale * sizeVar;
+    this.len = (9 + Math.random() * 4.5) * this.scale * sizeVar;
     this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
 
     // Color type = palette index (determines which fish school together)
@@ -2440,7 +2440,7 @@ class Predator {
     this.y = h * (0.2 + Math.random() * 0.6);
     this.angle = Math.random() * Math.PI * 2;
 
-    this.len = (26 + Math.random() * 10) * (w < 500 ? 0.8 : 1);
+    this.len = (20.8 + Math.random() * 8) * (w < 500 ? 0.8 : 1);
     this.bodyWidth = this.len * 0.055; // sleek barracuda profile
     this.speed = 0.7 + Math.random() * 0.4;
     this.baseSpeed = this.speed;
