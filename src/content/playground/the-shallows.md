@@ -5369,8 +5369,11 @@ function draw(time) {
       const tr = ww.trails[ti];
       tr.life -= dt / tr.maxLife;
       if (tr.life <= 0) { ww.trails.splice(ti, 1); continue; }
-      tr.x += cosA * tr.driftSpeed;
-      tr.y += sinA * tr.driftSpeed;
+      // Ebb and flow: smooth speed oscillation on top of the base drift
+      if (!tr._ebSeed) tr._ebSeed = Math.random() * 10;
+      const ebb = 1 + Math.sin(time * 0.0015 + tr._ebSeed) * 0.25 + Math.sin(time * 0.0037 + tr._ebSeed * 2.3) * 0.12;
+      tr.x += cosA * tr.driftSpeed * ebb;
+      tr.y += sinA * tr.driftSpeed * ebb;
       // Decays toward a high minimum — must keep moving visibly until death
       const minDrift = (tr._minDrift || (tr._minDrift = tr.driftSpeed * 0.5));
       tr.driftSpeed = minDrift + (tr.driftSpeed - minDrift) * 0.96;
@@ -5420,7 +5423,7 @@ function draw(time) {
         trPts[i].y += perpY * swirl + sinA * stretch;
       }
 
-      waveTrailCtx.globalAlpha = trAlpha * 0.5;
+      waveTrailCtx.globalAlpha = trAlpha * 0.7;
       waveTrailCtx.lineWidth = tr.thick * tr.life;
       waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
       waveTrailCtx.lineCap = 'butt'; waveTrailCtx.lineJoin = 'round';
@@ -6347,7 +6350,7 @@ function draw(time) {
         trPts[i].y += perpY * swirl + sinA * stretch;
       }
 
-      waveTrailCtx.globalAlpha = trAlpha * 0.5;
+      waveTrailCtx.globalAlpha = trAlpha * 0.7;
       waveTrailCtx.lineWidth = tr.thick * tr.life;
       waveTrailCtx.strokeStyle = 'rgba(200, 230, 245, 1)';
       waveTrailCtx.lineCap = 'butt'; waveTrailCtx.lineJoin = 'round';
