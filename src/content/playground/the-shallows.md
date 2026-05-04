@@ -4668,6 +4668,8 @@ function rebuildSandCanvas() {
 
   // Sand ripple lines — undulating ridges perpendicular to wave direction
   // Pre-computed as if waves sculpted the sand floor over time
+  // Draw with blur for soft sandy look
+  sandCtx.filter = `blur(${1.5 * viewScale}px)`;
   const waveCos = Math.cos(waveBaseAngle), waveSin = Math.sin(waveBaseAngle);
   const perpCos = -waveSin, perpSin = waveCos; // perpendicular to wave travel
   const rippleSpacing = 8 * viewScale; // distance between ridges
@@ -4675,18 +4677,37 @@ function rebuildSandCanvas() {
   const rippleCount = Math.ceil(diagonal / rippleSpacing);
   const rippleStep = 3; // px between points along each line
 
+  // Helper: proximity factor to nearest exposed rock (1 = close, 0 = far)
+  function rockProximity(x, y) {
+    let best = 0;
+    for (const rf of reefs) {
+      if (rf.submerged) continue;
+      const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+      const dx = x - cx, dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const influence = rf.crownR * 6; // how far the rock's sand influence extends
+      if (dist < influence) {
+        best = Math.max(best, 1 - dist / influence);
+      }
+    }
+    return best;
+  }
+
   for (let ri = 0; ri < rippleCount; ri++) {
-    // Each ridge starts from edge, extends perpendicular to wave direction
     const ridgeOffset = (ri - rippleCount / 2) * rippleSpacing;
     const seed = ri * 7.13;
-    // Vary alpha per ridge for organic feel
-    const ridgeAlpha = 0.08 + Math.sin(seed) * 0.03 + Math.random() * 0.02;
-    const ridgeThick = (1.0 + Math.sin(seed * 2.3) * 0.5) * viewScale;
+    const ridgeThick = (1.2 + Math.sin(seed * 2.3) * 0.5) * viewScale;
+
+    // Sample rock proximity at the ridge midpoint for per-ridge alpha scaling
+    const midX = w / 2 + waveCos * ridgeOffset;
+    const midY = h / 2 + waveSin * ridgeOffset;
+    const prox = rockProximity(midX, midY);
+    // Base alpha faded far from rocks, stronger near them
+    const ridgeAlpha = (0.03 + prox * 0.12) + Math.sin(seed) * 0.02 + Math.random() * 0.01;
 
     sandCtx.beginPath();
     let first = true;
     for (let pos = -diagonal * 0.6; pos <= diagonal * 0.6; pos += rippleStep) {
-      // Undulation: sine waves of different frequencies for organic ripple shape
       const wobble = Math.sin(pos * 0.015 + seed) * 3.5
                    + Math.sin(pos * 0.037 + seed * 2.1) * 1.8
                    + Math.sin(pos * 0.008 + seed * 0.7) * 5;
@@ -4701,6 +4722,7 @@ function rebuildSandCanvas() {
     sandCtx.lineCap = 'round';
     sandCtx.stroke();
   }
+  sandCtx.filter = 'none';
 
   // Sand buildup downstream of exposed rocks — deposited by wave action
   for (const rf of reefs) {
