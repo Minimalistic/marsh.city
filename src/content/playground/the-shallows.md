@@ -1245,20 +1245,19 @@ class Fish {
       const predAggression = predSpeed / (pred.baseSpeed * viewScale);
       const beingChased = pred.target === this;
 
-      // Passive avoidance — fish always steer clear of the big fish
-      // Very wide detection radius — fish react well before predator is close
-      const comfortZone = 320 * viewScale;
+      // Passive avoidance — fish steer clear but don't panic at long range
+      const comfortZone = 150 * viewScale;
       if (pDist < comfortZone && pDist > 0.1) {
         const avoidance = 1 - pDist / comfortZone;
         const pushAngle = Math.atan2(pdy, pdx);
-        // Quadratic falloff — responsive earlier, strong up close
-        const pushForce = avoidance * avoidance * 1.2 * viewScale;
+        // Gentle push — keeps fish away without triggering full flee
+        const pushForce = avoidance * avoidance * 0.5 * viewScale;
         this.vx += Math.cos(pushAngle) * pushForce;
         this.vy += Math.sin(pushAngle) * pushForce;
-        // Any fish within comfort zone starts fleeing
-        if (avoidance > 0.15) {
+        // Only flee when genuinely close — inner 40% of comfort zone
+        if (avoidance > 0.6) {
           this.fleeing = true;
-          this.fleeTimer = Math.max(this.fleeTimer, 0.5 + avoidance * 0.8);
+          this.fleeTimer = Math.max(this.fleeTimer, 0.2 + avoidance * 0.3);
         }
       }
 
@@ -1358,8 +1357,8 @@ class Fish {
     if (panicSprint) targetSpeed = scaledSpeed * 5.5; // explosive burst
     else if (beingHunted) targetSpeed = scaledSpeed * 4.5; // full flight
     else if (this.fleeing) targetSpeed = scaledSpeed * 3.0; // alarmed dash
-    else if (this.idle) targetSpeed = scaledSpeed * 0.65;
-    else targetSpeed = scaledSpeed * 0.94;
+    else if (this.idle) targetSpeed = scaledSpeed * 1.08;
+    else targetSpeed = scaledSpeed * 1.56;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
