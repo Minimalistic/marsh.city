@@ -840,7 +840,7 @@ class Fish {
       else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
       else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6; }
     }
-    this.speed = (0.6 + Math.random() * 1.4) * 0.70; // calm cruising — stragglers get slowed after sociability is set
+    this.speed = (0.6 + Math.random() * 1.4) * 0.56; // calm cruising — stragglers get slowed after sociability is set
     this.baseSpeed = this.speed;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
@@ -1141,9 +1141,9 @@ class Fish {
         this.vx *= 0.85;
         this.vy *= 0.85;
         if (closestFoodDist < biteDist && angleMismatch < 0.6 && !this.eating) {
-          closestFood.bites--;
-          // Visible size reduction - food gets eaten away
-          closestFood.size *= 0.97;
+          closestFood.bites -= 2;
+          // Visible size reduction - food gets eaten away fast
+          closestFood.size *= 0.93;
           // Gentle nudge on bite — food barely moves
           closestFood.vx += Math.cos(this.angle) * 0.1;
           closestFood.vy += Math.sin(this.angle) * 0.1;
@@ -1161,7 +1161,7 @@ class Fish {
               x: closestFood.x + Math.cos(fragAngle) * 3,
               y: closestFood.y + Math.sin(fragAngle) * 3,
               size: closestFood.size * (0.2 + Math.random() * 0.2),
-              bites: 5 + Math.floor(Math.random() * 10),
+              bites: 3 + Math.floor(Math.random() * 5),
               vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.5),
               vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
             });
@@ -1176,7 +1176,7 @@ class Fish {
         // Per-fish approach offset — spreads fish around the food
         const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.25;
         const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
-        const foodSpeed = scaledSpeed * (1.3 + proximity * 0.5);
+        const foodSpeed = scaledSpeed * (1.0 + proximity * 0.3);
         const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
         const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * foodSpeed;
         this.vx += (desiredVx - this.vx) * steerWeight;
