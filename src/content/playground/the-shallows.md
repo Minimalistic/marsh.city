@@ -3760,7 +3760,7 @@ function draw(time) {
     ww.traveled += ww.speed;
     ww.life = 1 - ww.traveled / ww.maxTravel;
     // Don't remove dead waves until their foam blobs have faded out
-    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0) && (!ww.particles || ww.particles.length === 0)) { washWaves.splice(i, 1); continue; }
+    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0) && (!ww.trails || ww.trails.length === 0)) { washWaves.splice(i, 1); continue; }
     // Push things in the wave's path
     const pushForce = ww.strength * ww.life;
     const cosA = Math.cos(ww.angle);
@@ -4189,96 +4189,126 @@ function draw(time) {
       }
     }
 
-    // Wave particles: immediate-mode front (draw-and-forget) + persistent trails
-    if (!ww.particles) ww.particles = [];
-    if (!ww.seed) ww.seed = Math.random() * 100;
-    const perpX = -sinA;
-    const perpY = cosA;
+    // Shed trail lines behind the wave — irregular ripples left in its wake
+    if (!ww.trails) ww.trails = [];
+    if (!ww._nextTrail) ww._nextTrail = 20 + Math.random() * 40;
+    if (alive && ww.traveled > ww._nextTrail) {
+      ww._nextTrail = ww.traveled + 30 + Math.random() * 60; // irregular spacing
+      // Pick one of the thinner line styles to shed
+      const pick = 1 + Math.floor(Math.random() * 3); // index 1-3
+      const templates = [
+        null,
+        { thick: 1.2 * viewScale, alpha: 0.18, freq: 1.3 },
+        { thick: 0.8 * viewScale, alpha: 0.10, freq: 0.8 },
+        { thick: 0.5 * viewScale, alpha: 0.06, freq: 1.6 },
+      ];
+      const tmpl = templates[pick];
+      ww.trails.push({
+        x: ww.x, y: ww.y,
+        seed: (ww.seed || 0) + Math.random() * 10,
+        traveled: ww.traveled,
+        thick: tmpl.thick,
+        alpha: tmpl.alpha * (0.6 + Math.random() * 0.4),
+        freq: tmpl.freq,
+        life: 1,
+        maxLife: 3 + Math.random() * 4,
+        driftSpeed: ww.speed * (0.08 + Math.random() * 0.12),
+      });
+    }
+    // Update and draw trail lines
+    for (let ti = ww.trails.length - 1; ti >= 0; ti--) {
+      const tr = ww.trails[ti];
+      tr.life -= dt / tr.maxLife;
+      if (tr.life <= 0) { ww.trails.splice(ti, 1); continue; }
+      tr.x += cosA * tr.driftSpeed;
+      tr.y += sinA * tr.driftSpeed;
+      const trAlpha = tr.life * tr.life * tr.alpha;
+      if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
+      const perpX = -sinA, perpY = cosA;
+      const t2 = time * 0.0012;
+      ctx.beginPath();
+      const step = 4;
+      let first = true;
+      for (let pos = -span; pos <= span; pos += step) {
+        const f = tr.freq;
+        const vs = viewScale;
+        const offset = (Math.sin(pos * 0.04 * f + t2 * 3.1 + tr.seed) * 6
+                     + Math.sin(pos * 0.09 * f + t2 * 5.7 + tr.seed * 2.3) * 4
+                     + Math.sin(pos * 0.18 * f + t2 * 9.3 + tr.seed * 4.7) * 2) * vs;
+        let px = tr.x + perpX * pos + cosA * offset;
+        let py = tr.y + perpY * pos + sinA * offset;
+        const deflect = reefDeflect(px, py);
+        if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
+        if (first) { ctx.moveTo(px, py); first = false; }
+        else ctx.lineTo(px, py);
+      }
+      ctx.globalAlpha = trAlpha;
+      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      ctx.lineWidth = tr.thick * tr.life;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
 
-    // Quick reef check — only at spawn/draw time, not per-frame updates
-    function ptInReef(px, py) {
+    // Wave-reef interaction: push wave line points backward around above-water reefs
+    // Returns extra backward offset (positive = pushed back against wave direction)
+    function reefDeflect(px, py) {
+      let push = 0;
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
         const dx = px - cx, dy = py - cy;
-        const distSq = dx * dx + dy * dy;
-        if (distSq > (rf.crownR + 5) * (rf.crownR + 5)) continue;
-        const dist = Math.sqrt(distSq);
+        const dist = Math.sqrt(dx * dx + dy * dy);
         const angle = Math.atan2(dy, dx);
-        if (dist < rf.radiusAt(angle, rf.crownRadii) + 3) return true;
+        const edge = rf.radiusAt(angle, rf.crownRadii);
+        const influence = edge + 25 * viewScale; // deflection starts before contact
+        if (dist < influence) {
+          const t = 1 - dist / influence; // 0 at edge of influence, 1 at reef center
+          push = Math.max(push, t * t * 35 * viewScale); // quadratic falloff
+        }
       }
-      return false;
+      return push;
     }
 
-    // Draw leading edge immediately — no state, no accumulation
+    // Draw wave front lines only while active
     if (alive) {
-      ctx.fillStyle = 'rgba(200, 230, 245, 1)';
-      // Dense rows at the wave front, each with decreasing density/brightness
-      const rows = [
-        { behind: 0, count: Math.ceil(70 * viewScale), alpha: 0.45, sizeMin: 1.0, sizeMax: 2.5, spread: 3 },
-        { behind: 3 * viewScale, count: Math.ceil(50 * viewScale), alpha: 0.30, sizeMin: 0.8, sizeMax: 2.0, spread: 5 },
-        { behind: 7 * viewScale, count: Math.ceil(30 * viewScale), alpha: 0.18, sizeMin: 0.5, sizeMax: 1.5, spread: 8 },
-        { behind: 13 * viewScale, count: Math.ceil(18 * viewScale), alpha: 0.10, sizeMin: 0.3, sizeMax: 1.0, spread: 12 },
-        { behind: 20 * viewScale, count: Math.ceil(10 * viewScale), alpha: 0.05, sizeMin: 0.2, sizeMax: 0.8, spread: 16 },
+      const perpX = -sinA;
+      const perpY = cosA;
+      if (!ww.seed) ww.seed = Math.random() * 100;
+      const t = time * 0.0012;
+      const lines = [
+        { behind: 0, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
+        { behind: 4 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 1.3 },
+        { behind: 9 * viewScale, thick: 0.8 * viewScale, alpha: 0.12, freq: 0.8 },
+        { behind: 15 * viewScale, thick: 0.5 * viewScale, alpha: 0.07, freq: 1.6 },
       ];
-      for (const row of rows) {
-        const rowAlpha = row.alpha * ww.life;
-        for (let i = 0; i < row.count; i++) {
-          const lateral = (Math.random() - 0.5) * span;
-          const jAlong = (Math.random() - 0.5) * row.spread * viewScale;
-          const px = ww.x + perpX * lateral - cosA * (row.behind + jAlong);
-          const py = ww.y + perpY * lateral - sinA * (row.behind + jAlong);
-          if (ptInReef(px, py)) continue;
-          const size = (row.sizeMin + Math.random() * (row.sizeMax - row.sizeMin)) * viewScale;
-          ctx.globalAlpha = rowAlpha * (0.4 + Math.random() * 0.6);
-          ctx.beginPath();
-          ctx.arc(px, py, size, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      for (const ln of lines) {
+        ctx.beginPath();
+        const step = 3;
+        let first = true;
+        for (let pos = -span; pos <= span; pos += step) {
+          const f = ln.freq;
+          const vs = viewScale;
+          // Time-driven oscillation so wave shape constantly evolves
+          const offset = (Math.sin(pos * 0.04 * f + t * 3.1 + ww.seed) * 6
+                       + Math.sin(pos * 0.09 * f + t * 5.7 + ww.seed * 2.3) * 4
+                       + Math.sin(pos * 0.18 * f + t * 9.3 + ww.seed * 4.7) * 2
+                       + Math.sin(pos * 0.35 * f + t * 14 + ww.seed * 7) * 1) * vs;
+          let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
+          let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
+          const deflect = reefDeflect(px, py);
+          if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
+          if (first) { ctx.moveTo(px, py); first = false; }
+          else ctx.lineTo(px, py);
       }
-
-      // Trail clusters — shed periodically, these DO persist
-      if (!ww._nextTrail) ww._nextTrail = 15 + Math.random() * 25;
-      if (ww.traveled > ww._nextTrail) {
-        ww._nextTrail = ww.traveled + 20 + Math.random() * 40;
-        const clusterCount = Math.ceil((12 + Math.random() * 12) * viewScale);
-        for (let i = 0; i < clusterCount; i++) {
-          const lateral = (Math.random() - 0.5) * span * 0.9;
-          const behind = (5 + Math.random() * 15) * viewScale;
-          const px = ww.x - cosA * behind + perpX * lateral;
-          const py = ww.y - sinA * behind + perpY * lateral;
-          if (ptInReef(px, py)) continue;
-          ww.particles.push({
-            x: px, y: py,
-            vx: cosA * ww.speed * (0.02 + Math.random() * 0.06) + (Math.random() - 0.5) * 0.2,
-            vy: sinA * ww.speed * (0.02 + Math.random() * 0.06) + (Math.random() - 0.5) * 0.2,
-            size: (0.3 + Math.random() * 1.0) * viewScale,
-            alpha: (0.06 + Math.random() * 0.12) * ww.life,
-            life: 1,
-            maxLife: 2.5 + Math.random() * 4,
-          });
-        }
+        ctx.globalAlpha = ww.life * ln.alpha;
+        ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+        ctx.lineWidth = ln.thick;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
       }
-    }
-
-    // Update and draw persistent trail particles
-    ctx.fillStyle = 'rgba(200, 230, 245, 1)';
-    for (let pi = ww.particles.length - 1; pi >= 0; pi--) {
-      const p = ww.particles[pi];
-      p.life -= dt / p.maxLife;
-      if (p.life <= 0) { ww.particles.splice(pi, 1); continue; }
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vx *= 0.995;
-      p.vy *= 0.995;
-      const fade = p.life < 0.4 ? p.life / 0.4 : 1;
-      const a = p.alpha * fade * fade;
-      if (a < 0.003) { ww.particles.splice(pi, 1); continue; }
-      ctx.globalAlpha = a;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * (0.6 + p.life * 0.4), 0, Math.PI * 2);
-      ctx.fill();
-    }
+    } // end if (alive) — blob drawing continues below for lingering foam
 
     // Update and draw blobs - drift with current and turbulence, fade out
     for (let i = ww.blobs.length - 1; i >= 0; i--) {
