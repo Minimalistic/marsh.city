@@ -4862,21 +4862,26 @@ function draw(time) {
           rf._waveHit = ww.strength;
           rf._waveAngle = ww.angle;
           rf._waveTime = time;
-          // Spawn expanding splash ripple lines from the rock
-          const hitAngle = ww.angle + Math.PI; // direction wave came from
-          const count = 2 + Math.floor(ww.strength * 3);
-          for (let si = 0; si < count; si++) {
+          // Track impact for ongoing ripple emission
+          rf._splashEmit = ww.strength;
+          rf._splashAngle = ww.angle + Math.PI;
+          rf._splashTimer = 0; // time since impact
+          rf._splashNext = 0; // next spawn time
+          // Immediate initial burst — thickest, most active ripples
+          const hitAngle = rf._splashAngle;
+          const burstCount = 2 + Math.floor(ww.strength * 2);
+          for (let si = 0; si < burstCount; si++) {
             splashRipples.push({
               cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
               radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 3,
-              maxRadius: (rf.crownR * 2.5 + si * 15) * viewScale,
-              speed: (1.2 + Math.random() * 0.8 - si * 0.15) * viewScale,
-              hitAngle, // direction wave arrived from
-              strength: ww.strength * (0.7 + Math.random() * 0.3),
+              maxRadius: (rf.crownR * 3 + si * 18) * viewScale,
+              speed: (1.4 + Math.random() * 0.8) * viewScale,
+              hitAngle,
+              strength: ww.strength * (0.8 + Math.random() * 0.2),
               life: 1,
-              maxLife: 3 + Math.random() * 3 + si * 0.5,
+              maxLife: 4 + Math.random() * 3,
               seed: Math.random() * 100,
-              thick: (1.5 + Math.random() * 1.0 - si * 0.3) * viewScale,
+              thick: (2.0 + Math.random() * 1.2) * viewScale, // thickest on impact
             });
           }
         }
@@ -5444,6 +5449,34 @@ function draw(time) {
   ctx.globalAlpha = 1;
 
   _measure('foam+waves');
+
+  // Ongoing splash emission — reefs continue spawning ripples after impact, decaying
+  for (const rf of reefs) {
+    if (!rf._splashEmit || rf._splashEmit <= 0) continue;
+    rf._splashTimer += dt;
+    const emitDuration = 2.5; // seconds of continued emission after impact
+    if (rf._splashTimer > emitDuration) { rf._splashEmit = 0; continue; }
+    // Intensity decays over emission period
+    const decay = 1 - rf._splashTimer / emitDuration;
+    rf._splashNext -= dt;
+    if (rf._splashNext <= 0) {
+      // Spawn interval increases as intensity fades
+      rf._splashNext = 0.2 + (1 - decay) * 0.6;
+      const hitAngle = rf._splashAngle;
+      splashRipples.push({
+        cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
+        radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2,
+        maxRadius: (rf.crownR * 2.2 + decay * 12) * viewScale,
+        speed: (0.8 + decay * 0.6) * viewScale,
+        hitAngle,
+        strength: rf._splashEmit * decay * (0.5 + Math.random() * 0.3),
+        life: 1,
+        maxLife: 3 + decay * 2,
+        seed: Math.random() * 100,
+        thick: (0.8 + decay * 0.8) * viewScale, // thinner as it fades
+      });
+    }
+  }
 
   // Splash ripples — arc-shaped wave lines radiating from rocks after wave impact
   for (let i = splashRipples.length - 1; i >= 0; i--) {
@@ -6064,14 +6097,14 @@ function draw(time) {
   // Seagull shadows — rendered to offscreen canvas then composited once
   // Guarantees a single unified shape with no internal overlap artifacts
   for (const g of seagulls) {
-    const heightScale = 1 + g.height * 0.4;
-    // Bird is far higher than fish — shadow offset much larger
+    // Higher = smaller shadow, more diffuse, more transparent
+    const heightScale = 1.1 - g.height * 0.3; // 1.1 at ground, 0.8 at max height
     const gOffX = g.height * 35;
     const gOffY = g.height * 45;
     const bl = g.bodyLen * heightScale;
     const wings = g._wingGeometry();
     const blurR = Math.round(14 + g.height * 18);
-    const alpha = 0.05 + (1 - g.height) * 0.035;
+    const alpha = 0.08 * (1 - g.height * 0.7); // fades strongly with altitude
 
     // Size the offscreen canvas to fit the shadow + blur padding
     const pad = blurR * 3; // extra space for blur bleed
