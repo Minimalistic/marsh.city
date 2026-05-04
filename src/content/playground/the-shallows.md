@@ -69,13 +69,13 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 .pool-fs-close { position: absolute; top: 8px; left: 8px; z-index: 10; }
 .fake-fullscreen #toolbar,
 #pool-container:fullscreen #toolbar,
-#pool-container:-webkit-full-screen #toolbar { top: calc(8px + env(safe-area-inset-top, 0px)) !important; right: calc(14px + env(safe-area-inset-right, 0px)) !important; }
+#pool-container:-webkit-full-screen #toolbar { top: calc(12px + env(safe-area-inset-top, 0px)) !important; right: calc(max(20px, env(safe-area-inset-right, 0px)) + 8px) !important; }
 .fake-fullscreen .pool-fs-close,
 #pool-container:fullscreen .pool-fs-close,
-#pool-container:-webkit-full-screen .pool-fs-close { top: calc(8px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); }
+#pool-container:-webkit-full-screen .pool-fs-close { top: calc(12px + env(safe-area-inset-top, 0px)) !important; left: calc(max(20px, env(safe-area-inset-left, 0px)) + 8px) !important; }
 .fake-fullscreen .pool-fs-btn,
 #pool-container:fullscreen .pool-fs-btn,
-#pool-container:-webkit-full-screen .pool-fs-btn { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); }
+#pool-container:-webkit-full-screen .pool-fs-btn { bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; right: calc(max(20px, env(safe-area-inset-right, 0px)) + 8px) !important; }
 #toolbar.hidden, .pool-fs-btn.hidden, .pool-fs-close.hidden { opacity: 0; pointer-events: none; }
 #toolbar, .pool-fs-btn, .pool-fs-close { transition: opacity 0.5s; }
 #pool-container:fullscreen,
@@ -425,51 +425,55 @@ function updateOceanSound() {
     soundFadeIn = Math.min(1, (now - soundFadeStart) / 2);
   }
 
-  // Track waves by their actual distance from the viewport, not progress %
+  // Track each wave's audio contribution — blend all waves for smooth ebb and flow
   let washPresence = 0;
-  let wavePanX = 0;
-  let strongestWave = 0;
-  const vpDiag = Math.sqrt(w * w + h * h); // viewport diagonal for distance normalization
+  let panSum = 0, panWeight = 0;
   for (const ww of washWaves) {
-    // How far is the wave front from the viewport center?
-    const dx = ww.x - w / 2, dy = ww.y - h / 2;
-    const distFromCenter = Math.sqrt(dx * dx + dy * dy);
-    // Normalize: 0 = at center of screen, 1 = one viewport diagonal away
-    const normDist = distFromCenter / vpDiag;
-    // Smooth presence curve — audible from spawn, builds gradually as wave approaches
-    // Uses travel progress too, so even distant waves grow as they move toward camera
     const progress = ww.traveled / ww.maxTravel;
-    const distPresence = Math.max(0, 1 - normDist * 1.1); // 0 at edge, 1 at center
-    const travelPresence = Math.min(1, progress * 2.5);    // builds from 0 over first 40% of travel
-    const presence = Math.max(distPresence, travelPresence * 0.6) * (0.3 + travelPresence * 0.7);
-    const str = presence * ww.strength;
-    if (str > strongestWave) {
-      strongestWave = str;
-      wavePanX = Math.max(-1, Math.min(1, (ww.x / w - 0.5) * 2));
+    // Bell-shaped presence: builds from spawn, peaks at ~40% travel, fades to silence by end
+    // Approaching phase (0→0.4): gradual build like hearing a wave approach from the distance
+    // Passing phase (0.4→0.6): at its loudest, wave is right here
+    // Receding phase (0.6→1.0): smooth fade as it moves away
+    let presence;
+    if (progress < 0.4) {
+      presence = progress / 0.4; // 0 → 1
+      presence = presence * presence * (3 - 2 * presence); // smoothstep — gentle start
+    } else if (progress < 0.6) {
+      presence = 1.0; // peak
+    } else {
+      const fade = (progress - 0.6) / 0.4; // 0 → 1
+      presence = 1 - fade * fade; // eases out smoothly
     }
+    const str = presence * ww.strength;
+    // Weighted pan — all waves contribute based on their presence strength
+    const pan = Math.max(-1, Math.min(1, (ww.x / w - 0.5) * 2));
+    panSum += pan * str;
+    panWeight += str;
     washPresence = Math.max(washPresence, str);
     // Queue a crash when wave has left the screen
     if (!ww._crashQueued && progress > 0.7) {
       ww._crashQueued = true;
       const delay = 0.8 + Math.random() * 2.5;
-      crashQueue.push({ time: now + delay, pan: wavePanX, strength: ww.strength });
+      const crashPanX = Math.max(-1, Math.min(1, (ww.x / w - 0.5) * 2));
+      crashQueue.push({ time: now + delay, pan: crashPanX, strength: ww.strength });
     }
   }
+  const wavePanX = panWeight > 0.01 ? panSum / panWeight : 0;
 
   // Filter: muffled at rest, brighter as waves arrive
   oceanFilter.frequency.setTargetAtTime(
     120 + waveIntensity * 60 + washPresence * 320,
-    audioCtx.currentTime, 0.2
+    audioCtx.currentTime, 0.3
   );
   // Volume: always-audible base, swells with wave presence
   const baseVol = 0.06 + waveIntensity * 0.03; // constant low rumble
   const waveVol = washPresence * 0.22;
   oceanGain.gain.setTargetAtTime(
     (baseVol + waveVol) * masterVolume * 2 * soundFadeIn,
-    audioCtx.currentTime, 0.1
+    audioCtx.currentTime, 0.3
   );
   if (oceanPanner) {
-    oceanPanner.pan.setTargetAtTime(wavePanX * 0.6, audioCtx.currentTime, 0.3);
+    oceanPanner.pan.setTargetAtTime(wavePanX * 0.5, audioCtx.currentTime, 0.8);
   }
   oceanLfo.frequency.setTargetAtTime(0.03 + washPresence * 0.1, audioCtx.currentTime, 0.5);
 
@@ -4361,7 +4365,7 @@ function draw(time) {
     } else {
       spawnWash();
       // Very irregular timing - sometimes rapid sets, sometimes long lulls
-      washTimer = 15 + Math.random() * 30 + (Math.random() < 0.3 ? 20 : 0);
+      washTimer = 10 + Math.random() * 18 + (Math.random() < 0.2 ? 12 : 0);
     }
   }
 
