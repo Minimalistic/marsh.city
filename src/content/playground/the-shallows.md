@@ -5454,33 +5454,39 @@ function draw(time) {
       return { x: px, y: py };
     }
 
-    // Wave light band — screen-mode gradient showing the wave crest catching light
+    // Wave light band — barrel gradient spanning the full wave width
+    // Bright turquoise core that fades both front-to-back AND laterally
     if (alive) {
-      const bandWidth = ww.width * 2.5; // total band width
-      const bandAlpha = ww.life * ww.strength * 0.18;
-      if (bandAlpha > 0.005) {
+      const bandDepth = ww.width * 6; // thick front-to-back depth
+      const bandAlpha = ww.life * (0.25 + ww.strength * 0.25);
+      if (bandAlpha > 0.01) {
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        // Gradient perpendicular to wave front: from leading edge to trailing
-        const gx0 = ww.x + cosA * bandWidth * 0.3; // leading edge (ahead of wave)
-        const gy0 = ww.y + sinA * bandWidth * 0.3;
-        const gx1 = ww.x - cosA * bandWidth * 0.7; // trailing edge (behind)
-        const gy1 = ww.y - sinA * bandWidth * 0.7;
-        const wg = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
-        wg.addColorStop(0, 'rgba(80, 180, 190, 0)');        // leading edge — darker fade
-        wg.addColorStop(0.2, `rgba(100, 200, 210, ${bandAlpha * 0.5})`);
-        wg.addColorStop(0.4, `rgba(140, 220, 225, ${bandAlpha})`);  // bright turquoise center
-        wg.addColorStop(0.55, `rgba(160, 235, 240, ${bandAlpha})`); // peak brightness
-        wg.addColorStop(0.75, `rgba(120, 210, 220, ${bandAlpha * 0.4})`);
-        wg.addColorStop(1, 'rgba(80, 180, 190, 0)');        // trailing fade
-        ctx.fillStyle = wg;
-        // Draw a wide rect covering the wave band area
-        const span = Math.max(w, h) * 1.5;
-        ctx.save();
         ctx.translate(ww.x, ww.y);
         ctx.rotate(ww.angle);
-        ctx.fillRect(-span, -bandWidth * 0.3, span * 2, bandWidth);
-        ctx.restore();
+
+        // Barrel gradient: radial ellipse, wide along wave line, narrow front-to-back
+        const spanHalf = Math.max(w, h) * 0.8;
+        // Multiple layered ellipses for barrel effect — bright core, soft edges
+        const layers = [
+          { rx: spanHalf, ry: bandDepth * 0.15, a: bandAlpha * 0.9, c: '150, 230, 235' },  // tight bright core
+          { rx: spanHalf, ry: bandDepth * 0.3, a: bandAlpha * 0.5, c: '120, 215, 225' },    // medium band
+          { rx: spanHalf, ry: bandDepth * 0.5, a: bandAlpha * 0.2, c: '100, 200, 215' },    // wide soft glow
+        ];
+        for (const ly of layers) {
+          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+          g.addColorStop(0, `rgba(${ly.c}, ${ly.a})`);
+          g.addColorStop(0.6, `rgba(${ly.c}, ${ly.a * 0.4})`);
+          g.addColorStop(1, `rgba(${ly.c}, 0)`);
+          ctx.fillStyle = g;
+          ctx.save();
+          // Offset slightly behind the wave front (crest is just behind leading edge)
+          ctx.translate(-bandDepth * 0.1, 0);
+          ctx.scale(ly.rx, ly.ry);
+          ctx.fillRect(-1, -1, 2, 2);
+          ctx.restore();
+        }
+
         ctx.restore();
       }
     }
