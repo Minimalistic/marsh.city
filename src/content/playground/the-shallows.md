@@ -5378,27 +5378,8 @@ function draw(time) {
       ctx.stroke();
     }
 
-    // Wave-reef interaction: push wave line points backward around above-water reefs
-    // Returns extra backward offset (positive = pushed back against wave direction)
-    function reefDeflect(px, py) {
-      let push = 0;
-      for (const rf of reefs) {
-        if (rf.submerged) continue;
-        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-        const dx = px - cx, dy = py - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx);
-        const edge = rf.radiusAt(angle, rf.crownRadii);
-        const influence = edge + 25 * viewScale;
-        if (dist < influence) {
-          const t = 1 - dist / influence;
-          push = Math.max(push, t * t * 35 * viewScale);
-        }
-      }
-      return push;
-    }
-
-    // Wave wraps around rocks: points inside crown or in wave-shadow get clamped
+    // Wave wraps around rocks like a rope: points inside or near a rock
+    // get pushed to the nearest lateral side of the rock perimeter
     function reefClamp(px, py) {
       const pad = 4 * viewScale;
       for (const rf of reefs) {
@@ -5406,39 +5387,42 @@ function draw(time) {
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
         const relX = px - cx, relY = py - cy;
         const dist = Math.sqrt(relX * relX + relY * relY);
-        const along = relX * cosA + relY * sinA;
-        const lateral = relX * (-sinA) + relY * cosA;
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
-        // Inside crown: push outward to nearest edge (wrap), heavily dimmed
         if (dist < edge && dist > 0.1) {
-          return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, dim: 0.15 };
+          // Point is inside rock — push laterally to nearest side (rope wrap)
+          // Perpendicular to wave direction: which side is this point closer to?
+          const lateral = relX * (-sinA) + relY * cosA;
+          const sideDir = lateral >= 0 ? 1 : -1;
+          // Find the edge angle on that side of the rock
+          const sideAngle = Math.atan2(sideDir * (-sinA), sideDir * cosA);
+          const fullAngle = Math.atan2(
+            cy + Math.sin(sideAngle) - cy,
+            cx + Math.cos(sideAngle) - cx
+          );
+          const sideR = rf.radiusAt(sideAngle, rf.crownRadii) + pad;
+          // Place point on the perimeter at the side, preserving wave-travel position
+          // Blend between radial push-out and lateral side to create arc
+          const along = relX * cosA + relY * sinA;
+          // Sweep angle: from the point's radial angle toward the side
+          const blend = 1 - (dist / edge); // 0 at edge, 1 at center
+          const targetAngle = sideAngle * blend + angle * (1 - blend);
+          const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + pad;
+          return { x: cx + Math.cos(targetAngle) * targetR, y: cy + Math.sin(targetAngle) * targetR };
         }
 
-        // In the wave-shadow: past the rock AND within the rock's lateral width
-        if (along > 0 && Math.abs(lateral) < rf.crownR + pad) {
-          const taperLen = rf.crownR * 3.5;
-          const taperT = Math.min(1, along / taperLen);
-          const shadowWidth = (rf.crownR + pad) * Math.pow(1 - taperT, 1.5);
-
-          if (Math.abs(lateral) < shadowWidth) {
-            const sideDir = lateral >= 0 ? 1 : -1;
-            const edgeAngle = Math.atan2(sideDir * cosA, -sideDir * sinA) + ww.angle;
-            const eR = rf.radiusAt(edgeAngle, rf.crownRadii) + pad;
-            const edgeX = cx + Math.cos(edgeAngle) * eR;
-            const edgeY = cy + Math.sin(edgeAngle) * eR;
-
-            const pin = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
-            const bx = px * (1 - pin) + edgeX * pin;
-            const by = py * (1 - pin) + edgeY * pin;
-            // Heavily dimmed in shadow, recovers as taper closes
-            const dim = 0.15 + taperT * 0.85;
-            return { x: bx, y: by, dim };
-          }
+        // Bunching zone: points just outside the rock get pulled slightly toward it
+        const influence = edge + 18 * viewScale;
+        if (dist < influence) {
+          const t = (influence - dist) / (influence - edge); // 0 at influence edge, 1 at rock edge
+          const pull = t * t * 0.3; // gentle pull toward rock
+          const nx = cx + (relX / dist) * edge;
+          const ny = cy + (relY / dist) * edge;
+          return { x: px * (1 - pull) + nx * pull, y: py * (1 - pull) + ny * pull };
         }
       }
-      return { x: px, y: py, dim: 1 };
+      return { x: px, y: py };
     }
 
     // Wave light band — barrel gradient spanning the full wave width
@@ -6104,28 +6088,27 @@ function draw(time) {
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
         const relX = px - cx, relY = py - cy;
         const dist = Math.sqrt(relX * relX + relY * relY);
-        const along = relX * cosA + relY * sinA;
-        const lateral = relX * (-sinA) + relY * cosA;
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
-        if (dist < edge && dist > 0.1) return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, dim: 0.15 };
-        if (along > 0 && Math.abs(lateral) < rf.crownR + _pad) {
-          const taperLen = rf.crownR * 3.5;
-          const taperT = Math.min(1, along / taperLen);
-          const shadowWidth = (rf.crownR + _pad) * Math.pow(1 - taperT, 1.5);
-          if (Math.abs(lateral) < shadowWidth) {
-            const sideDir = lateral >= 0 ? 1 : -1;
-            const edgeAngle = Math.atan2(sideDir * cosA, -sideDir * sinA) + ww.angle;
-            const eR = rf.radiusAt(edgeAngle, rf.crownRadii) + _pad;
-            const edgeX = cx + Math.cos(edgeAngle) * eR;
-            const edgeY = cy + Math.sin(edgeAngle) * eR;
-            const pin = Math.pow(1 - taperT, 2) * (1 - Math.abs(lateral) / Math.max(1, shadowWidth));
-            const dim = 0.15 + taperT * 0.85;
-            return { x: px * (1 - pin) + edgeX * pin, y: py * (1 - pin) + edgeY * pin, dim };
-          }
+        if (dist < edge && dist > 0.1) {
+          const lateral = relX * (-sinA) + relY * cosA;
+          const sideDir = lateral >= 0 ? 1 : -1;
+          const sideAngle = Math.atan2(sideDir * (-sinA), sideDir * cosA);
+          const blend = 1 - (dist / edge);
+          const targetAngle = sideAngle * blend + angle * (1 - blend);
+          const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + _pad;
+          return { x: cx + Math.cos(targetAngle) * targetR, y: cy + Math.sin(targetAngle) * targetR };
+        }
+        const influence = edge + 18 * viewScale;
+        if (dist < influence) {
+          const t = (influence - dist) / (influence - edge);
+          const pull = t * t * 0.3;
+          const nx = cx + (relX / dist) * edge;
+          const ny = cy + (relY / dist) * edge;
+          return { x: px * (1 - pull) + nx * pull, y: py * (1 - pull) + ny * pull };
         }
       }
-      return { x: px, y: py, dim: 1 };
+      return { x: px, y: py };
     }
     const alive = ww.life > 0.1;
     // Trail lines
