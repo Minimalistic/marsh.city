@@ -2355,12 +2355,10 @@ class Starfish {
 // Predator fish - larger, hunts small fish based on hunger
 class Predator {
   constructor() {
-    const edge = Math.floor(Math.random() * 4);
-    const m = 120 + Math.random() * 60;
-    if (edge === 0) { this.x = -m; this.y = Math.random() * h; this.angle = (Math.random() - 0.5) * 0.4; }
-    else if (edge === 1) { this.x = w + m; this.y = Math.random() * h; this.angle = Math.PI + (Math.random() - 0.5) * 0.4; }
-    else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
-    else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
+    // Start inside the viewport, cruising gently
+    this.x = w * (0.2 + Math.random() * 0.6);
+    this.y = h * (0.2 + Math.random() * 0.6);
+    this.angle = Math.random() * Math.PI * 2;
 
     this.len = (52 + Math.random() * 19.5) * (w < 500 ? 0.8 : 1);
     this.bodyWidth = this.len * 0.055; // sleek barracuda profile
