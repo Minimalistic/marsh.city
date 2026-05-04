@@ -3348,8 +3348,10 @@ class Seagull {
     this._turbAngle = 0;
     this._turbBank = 0;
 
-    // Height above water — affects shadow offset and size
-    this.height = 0.6 + Math.random() * 0.4;
+    // Height above water — drifts lazily, affects shadow and apparent size
+    this.height = 0.5 + Math.random() * 0.5;
+    this._targetHeight = this.height;
+    this._heightTimer = 8 + Math.random() * 15;
 
     // Lifecycle
     this.leaving = false;
@@ -3444,6 +3446,14 @@ class Seagull {
                        + Math.sin(tp * 1.3 + 6.1) * 0.005) - this._turbAngle) * 0.04;
     this._turbBank += ((Math.sin(tp * 0.8 + 1.9) * 0.03
                       + Math.sin(tp * 2.1 + 3.7) * 0.015) - this._turbBank) * 0.04;
+
+    // Height drift — lazy altitude changes
+    this._heightTimer -= dt;
+    if (this._heightTimer <= 0) {
+      this._targetHeight = 0.35 + Math.random() * 0.65; // 0.35 (low) to 1.0 (high)
+      this._heightTimer = 10 + Math.random() * 25;
+    }
+    this.height += (this._targetHeight - this.height) * 0.008;
 
     // Flapping — occasional short bursts to stay aloft
     this.flapTimer -= dt;
@@ -3540,6 +3550,9 @@ class Seagull {
     ctx.save();
     ctx.translate(this.x + this._turbX, this.y + this._turbY);
     ctx.rotate(this._renderAngle + this._turbAngle);
+    // Higher bird appears slightly larger (closer to viewer looking down)
+    const heightScale = 0.85 + this.height * 0.3; // 0.85 at lowest, 1.15 at highest
+    ctx.scale(heightScale, heightScale);
     // Body shifts laterally into the turn (bird leans into it)
     ctx.translate(0, (this._bank + this._turbBank) * this.bodyLen * 0.089);
 
