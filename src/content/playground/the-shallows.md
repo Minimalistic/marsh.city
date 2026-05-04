@@ -1665,9 +1665,21 @@ class Fish {
       }
     }
     this.speed = currentSpeed;
+    // NaN guard — if any value went non-finite, reset to safe state
+    if (!isFinite(this.x) || !isFinite(this.y) || !isFinite(this.vx) || !isFinite(this.vy)) {
+      this.x = w * 0.5; this.y = h * 0.5;
+      this.vx = Math.cos(this.angle) * this.baseSpeed;
+      this.vy = Math.sin(this.angle) * this.baseSpeed;
+      for (let j = 0; j <= this._jointCount; j++) {
+        this._joints[j].x = this.x - Math.cos(this.angle) * j * this._segLen;
+        this._joints[j].y = this.y - Math.sin(this.angle) * j * this._segLen;
+        if (this._joints[j].px !== undefined) { this._joints[j].px = this._joints[j].x; this._joints[j].py = this._joints[j].y; }
+      }
+    }
   }
 
   draw(ctx) {
+    if (!isFinite(this.x) || !isFinite(this.y)) return;
     const segs = this._jointCount;
     const totalLen = this.len;
 
@@ -2139,9 +2151,15 @@ class ReefFish {
       curr.x = prev.x + (jdx / jDist) * this._segLen;
       curr.y = prev.y + (jdy / jDist) * this._segLen;
     }
+    // NaN guard
+    if (!isFinite(this.x) || !isFinite(this.y)) {
+      this.x = this.reef.x; this.y = this.reef.y;
+      this.vx = 0; this.vy = 0;
+    }
   }
 
   draw(ctx) {
+    if (!isFinite(this.x) || !isFinite(this.y)) return;
     // Reuse the Fish draw logic but simpler — small bright body
     const segs = this._joints.length - 1;
     const totalLen = this.len;
@@ -2955,9 +2973,21 @@ class Predator {
         });
       }
     }
+    // NaN guard
+    if (!isFinite(this.x) || !isFinite(this.y) || !isFinite(this.vx) || !isFinite(this.vy)) {
+      this.x = w * 0.5; this.y = h * 0.5;
+      this.vx = Math.cos(this.angle) * this.baseSpeed;
+      this.vy = Math.sin(this.angle) * this.baseSpeed;
+      for (let j = 0; j <= this._jointCount; j++) {
+        this._joints[j].x = this.x - Math.cos(this.angle) * j * this._segLen;
+        this._joints[j].y = this.y - Math.sin(this.angle) * j * this._segLen;
+        this._joints[j].px = this._joints[j].x; this._joints[j].py = this._joints[j].y;
+      }
+    }
   }
 
   draw(ctx) {
+    if (!isFinite(this.x) || !isFinite(this.y)) return;
     const segs = this._jointCount;
     const totalLen = this.len;
     // Chomp animation
