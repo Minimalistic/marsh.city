@@ -11,6 +11,9 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
   <button id="food-toggle" class="pool-tool" title="Toggle food mode" aria-label="Toggle food mode" aria-pressed="false" role="switch">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="6" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="12" cy="18" r="1"/></svg>
   </button>
+  <button id="debug-toggle" class="pool-tool" title="Toggle debug stats" aria-label="Toggle debug stats" aria-pressed="false" role="switch">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V10"/><path d="M6 20V4"/><path d="M18 20v-6"/></svg>
+  </button>
   <div class="pool-sound-wrap">
     <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound" aria-label="Toggle ocean sound" aria-pressed="false" role="switch">
       <svg id="sound-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
@@ -24,6 +27,7 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 <button id="fs-close-btn" class="pool-tool pool-fs-close" title="Exit fullscreen" aria-label="Exit fullscreen" hidden>
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
+<div id="debug-stats" class="pool-debug-stats" hidden></div>
 <div id="sound-hint" class="pool-hint" hidden>No audio? Check your phone's silent mode switch</div>
 <div id="rotate-hint" class="pool-rotate-hint" hidden>
   <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M15 19h2a2 2 0 002-2V7"/><path d="M19 10l2-3-2-3"/></svg>
@@ -94,11 +98,28 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
   30% { transform: rotate(90deg); }
   60% { transform: rotate(90deg); }
 }
+.pool-debug-stats {
+  position: absolute; bottom: 8px; left: 8px; z-index: 10;
+  background: rgba(0,0,0,0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-radius: 6px; padding: 6px 10px;
+  font: 10px/1.5 monospace; color: rgba(255,255,255,0.7);
+  pointer-events: none; white-space: pre;
+}
 </style>
 
 <script type="module">
 const canvas = document.getElementById('pool');
 const ctx = canvas.getContext('2d');
+
+// Debug stats toggle
+let debugVisible = false;
+const debugBtn = document.getElementById('debug-toggle');
+debugBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  debugVisible = !debugVisible;
+  debugBtn.classList.toggle('active', debugVisible);
+  debugBtn.setAttribute('aria-pressed', debugVisible);
+});
 
 // Food toggle
 let activeTool = 'observe';
@@ -647,7 +668,7 @@ function screenToCanvas(clientX, clientY) {
 
 // Drop a scatter of small food pellets around a point
 function dropFood(cx, cy) {
-  const count = 4 + Math.floor(Math.random() * 4); // 4-7 pellets per drop
+  const count = 8 + Math.floor(Math.random() * 7); // 8-14 pellets per drop
   let anyInWater = false;
   for (let i = 0; i < count; i++) {
     const scatter = 6 + Math.random() * 10; // spread radius
@@ -5487,23 +5508,20 @@ function draw(time) {
   // ctx.restore();
   // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  // FPS + profiler overlay
-  ctx.save();
-  const _profKeys = Object.keys(_profDisplay);
-  const _profH = 14 + _profKeys.length * 12;
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(4, h - _profH - 8, 130, _profH + 4);
-  ctx.font = '10px monospace';
-  ctx.fillStyle = _fpsDisplay >= 55 ? '#8f8' : _fpsDisplay >= 30 ? '#ff8' : '#f88';
-  ctx.fillText(`${_fpsDisplay} fps`, 8, h - _profH + 2);
-  let _py = h - _profH + 14;
-  for (const k of _profKeys) {
-    const ms = _profDisplay[k];
-    ctx.fillStyle = k === _profWorst ? '#f88' : ms > 3 ? '#ff8' : '#aaa';
-    ctx.fillText(`${k}: ${ms.toFixed(1)}ms`, 8, _py);
-    _py += 12;
+  // Debug stats — rendered to HTML overlay (supports backdrop-filter blur)
+  const _debugEl = document.getElementById('debug-stats');
+  _debugEl.hidden = !debugVisible;
+  if (debugVisible && _fpsLast > 0) {
+    const fpsColor = _fpsDisplay >= 55 ? '#8f8' : _fpsDisplay >= 30 ? '#ff8' : '#f88';
+    let txt = `<span style="color:${fpsColor}">${_fpsDisplay} fps</span>  fish:${fish.length}`;
+    const _profKeys = Object.keys(_profDisplay);
+    for (const k of _profKeys) {
+      const ms = _profDisplay[k];
+      const c = k === _profWorst ? '#f88' : ms > 3 ? '#ff8' : 'rgba(255,255,255,0.5)';
+      txt += `\n<span style="color:${c}">${k}: ${ms.toFixed(1)}ms</span>`;
+    }
+    _debugEl.innerHTML = txt;
   }
-  ctx.restore();
 
   } catch(e) { console.error('Draw error:', e); }
 }
