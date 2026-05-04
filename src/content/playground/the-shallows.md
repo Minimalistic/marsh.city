@@ -5426,8 +5426,14 @@ function draw(time) {
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
-        // Inside crown: clamp to approach edge
+        // Inside crown
         if (dist < edge) {
+          if (along < 0) {
+            // Approaching from the front — just push outward to nearest edge
+            // Wave hasn't passed this part of the rock yet, no snapping forward
+            return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, stretch: 0 };
+          }
+          // Past the rock's midline — clamp to approach edge (snagged)
           const baseAngle = ww.angle + Math.PI;
           let bestX = cx, bestY = cy, bestDist = Infinity;
           for (let ti = -12; ti <= 12; ti++) {
@@ -5435,11 +5441,9 @@ function draw(time) {
             const tr = rf.radiusAt(ta, rf.crownRadii) + pad;
             const tx = cx + Math.cos(ta) * tr, ty = cy + Math.sin(ta) * tr;
             const tLat = (tx - cx) * (-sinA) + (ty - cy) * cosA;
-            const ld = Math.abs(tLat - lateral);
-            if (ld < bestDist) { bestDist = ld; bestX = tx; bestY = ty; }
+            if (Math.abs(tLat - lateral) < bestDist) { bestDist = Math.abs(tLat - lateral); bestX = tx; bestY = ty; }
           }
-          const stretch = Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2);
-          return { x: bestX, y: bestY, stretch };
+          return { x: bestX, y: bestY, stretch: Math.sqrt((px - bestX) ** 2 + (py - bestY) ** 2) };
         }
 
         // Past the rock in wave direction: teardrop convergence
@@ -6125,8 +6129,13 @@ function draw(time) {
         const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
         const along = relX * cosA + relY * sinA;
 
-        // Inside crown: clamp to approach edge
+        // Inside crown
         if (dist < edge) {
+          if (along < 0) {
+            // Approaching — push outward, no forward snap
+            return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, stretch: 0 };
+          }
+          // Past midline — clamp to approach edge
           const baseAngle = ww.angle + Math.PI;
           let bestX = cx, bestY = cy, bestDist = Infinity;
           for (let ti = -12; ti <= 12; ti++) {
