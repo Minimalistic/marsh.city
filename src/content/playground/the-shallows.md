@@ -3434,51 +3434,47 @@ class Seagull {
     const bankShift = this._bank * 2;
     const wingFwd = bl * 0.2;
 
-    // Flap drives outer wing fold — inner wing stays mostly extended
-    // flapAngle: 0 when gliding, oscillates during flaps
-    const flapAngle = this.flapping ? Math.sin(this.wingPhase) * 0.45 : 0;
-    // Inner wing barely moves, outer wing folds significantly
-    const innerFold = flapAngle * 0.15; // subtle inner dip
-    const outerFold = flapAngle * 0.6;  // pronounced outer fold
+    // Flap drives visible wing movement from above:
+    // - Elbow pulls inward on upstroke, pushes outward on downstroke
+    // - Outer wing sweeps back on upstroke, extends on downstroke
+    const flapT = this.flapping ? Math.sin(this.wingPhase) : 0; // -1 to 1
 
-    // Inner wing spans shoulder to elbow (~55% of total span)
-    // Outer wing spans elbow to tip (~45%)
-    const innerLen = fullHalf * 0.55;
-    const outerLen = fullHalf * 0.45;
+    // Inner wing: shoulder to elbow (~40% of span, joint closer to body)
+    // Outer wing: elbow to tip (~60%)
+    const innerLen = fullHalf * 0.4;
+    const outerLen = fullHalf * 0.6;
 
-    // From above, fold foreshortens the visible span (cos of dihedral angle)
-    const innerVisible = innerLen * Math.cos(innerFold);
-    const outerVisible = outerLen * Math.cos(outerFold);
+    // Elbow moves in/out with flap (visible lateral motion from above)
+    const elbowShift = flapT * innerLen * 0.2; // 20% of inner length
+    // Outer wing sweeps back on upstroke, extends forward on downstroke
+    const outerSweep = -flapT * bl * 0.08;
+    // Outer wing also folds inward slightly on upstroke
+    const outerFold = -flapT * outerLen * 0.15;
 
     const sides = [];
     for (const side of [-1, 1]) {
       // Shoulder (wing root on body)
       const sx = bl * 0.1 + wingFwd;
       const sy = side * bl * 0.06;
-      // Elbow — end of inner wing, swept back slightly
-      const elbowX = -bl * 0.02 + wingFwd;
-      const elbowY = side * innerVisible + bankShift * side;
-      // Wing tip — outer segment, swept back more
-      const tipLeadX = elbowX - bl * 0.13;
-      const tipLeadY = elbowY + side * outerVisible + bankShift * side * 0.3;
-      const tipTrailX = elbowX - bl * 0.25;
-      const tipTrailY = tipLeadY;
+      // Elbow — close to body, moves with flap
+      const elbowX = bl * 0.02 + wingFwd;
+      const elbowY = side * (innerLen + elbowShift) + bankShift * side;
+      // Wing tip — swept back 15% more, tapered sharper
+      const tipLeadX = elbowX - bl * 0.22 + outerSweep;
+      const tipLeadY = elbowY + side * (outerLen + outerFold) + bankShift * side * 0.3;
+      // Trailing tip converges toward leading tip for taper
+      const tipTrailX = tipLeadX - bl * 0.08;
+      const tipTrailY = tipLeadY - side * bl * 0.02; // pulled inward for taper
       // Trailing edge anchor at elbow
-      const elbowTrailX = elbowX - bl * 0.18;
+      const elbowTrailX = elbowX - bl * 0.2;
       const elbowTrailY = elbowY;
       // Trailing root
       const rootTrailX = -bl * 0.35 + wingFwd;
       const rootTrailY = side * bl * 0.06;
 
-      // Inner wing width at elbow (chord)
-      const innerChord = bl * 0.2;
-      // Outer wing width at tip (narrower)
-      const outerChord = bl * 0.12;
-
       sides.push({ side, sx, sy, elbowX, elbowY, tipLeadX, tipLeadY,
         tipTrailX, tipTrailY, elbowTrailX, elbowTrailY,
-        rootTrailX, rootTrailY, innerChord, outerChord,
-        innerVisible, outerVisible });
+        rootTrailX, rootTrailY });
     }
     return sides;
   }
@@ -3706,74 +3702,6 @@ function drawAllFishShadows(ctx, drawables) {
       }
     }
   }
-  // Seagull shadows — filled silhouette, not dot stamps
-  for (const g of seagulls) {
-    const heightScale = 1 + g.height * 0.3;
-    const gOffX = shadowOffX + g.height * 15;
-    const gOffY = shadowOffY + g.height * 20;
-    const bl = g.bodyLen * heightScale;
-    const angle = g._renderAngle;
-    const cx = g.x + gOffX, cy = g.y + gOffY;
-    const wings = g._wingGeometry();
-
-    shadowCtx.save();
-    shadowCtx.translate(cx, cy);
-    shadowCtx.rotate(angle);
-    // Scale shadow slightly larger for height
-    shadowCtx.scale(heightScale, heightScale);
-    shadowCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-
-    // Body silhouette
-    shadowCtx.beginPath();
-    shadowCtx.ellipse(0, 0, bl * 0.45, bl * 0.1, 0, 0, Math.PI * 2);
-    shadowCtx.fill();
-
-    // Wing silhouettes — trace the same shape as the visible wings
-    for (const w of wings) {
-      // Inner wing
-      shadowCtx.beginPath();
-      shadowCtx.moveTo(w.sx, w.sy);
-      shadowCtx.quadraticCurveTo(
-        (w.sx + w.elbowX) * 0.5 + bl * 0.03, (w.sy + w.elbowY) * 0.5,
-        w.elbowX, w.elbowY
-      );
-      shadowCtx.lineTo(w.elbowTrailX, w.elbowTrailY);
-      shadowCtx.quadraticCurveTo(
-        (w.elbowTrailX + w.rootTrailX) * 0.5, (w.elbowTrailY + w.rootTrailY) * 0.5,
-        w.rootTrailX, w.rootTrailY
-      );
-      shadowCtx.closePath();
-      shadowCtx.fill();
-      // Outer wing
-      shadowCtx.beginPath();
-      shadowCtx.moveTo(w.elbowX, w.elbowY);
-      shadowCtx.quadraticCurveTo(
-        (w.elbowX + w.tipLeadX) * 0.5 + bl * 0.02,
-        (w.elbowY + w.tipLeadY) * 0.5,
-        w.tipLeadX, w.tipLeadY
-      );
-      shadowCtx.lineTo(w.tipTrailX, w.tipTrailY);
-      shadowCtx.quadraticCurveTo(
-        (w.tipTrailX + w.elbowTrailX) * 0.5,
-        (w.tipTrailY + w.elbowTrailY) * 0.5,
-        w.elbowTrailX, w.elbowTrailY
-      );
-      shadowCtx.closePath();
-      shadowCtx.fill();
-    }
-
-    // Tail shadow
-    shadowCtx.beginPath();
-    shadowCtx.moveTo(-bl * 0.3, 0);
-    shadowCtx.lineTo(-bl * 0.55, bl * 0.18);
-    shadowCtx.lineTo(-bl * 0.48, 0);
-    shadowCtx.lineTo(-bl * 0.55, -bl * 0.18);
-    shadowCtx.closePath();
-    shadowCtx.fill();
-
-    shadowCtx.restore();
-  }
-
   // Single blur pass on the half-res canvas
   shadowBlurCtx.clearRect(0, 0, sw, sh);
   shadowBlurCtx.drawImage(shadowCanvas, 0, 0);
@@ -5964,6 +5892,78 @@ function draw(time) {
   }
 
   _measure('reefs');
+
+  // Seagull shadows — drawn after reefs so they cast on rocks too
+  // Highly diffused: bird is high above, shadow is soft and spread
+  for (const g of seagulls) {
+    const heightScale = 1 + g.height * 0.4;
+    const gOffX = g.height * 18;
+    const gOffY = g.height * 24;
+    const bl = g.bodyLen * heightScale;
+    const angle = g._renderAngle;
+    const cx = g.x + gOffX, cy = g.y + gOffY;
+    const wings = g._wingGeometry();
+    const alpha = 0.07 + (1 - g.height) * 0.05; // very soft
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.scale(heightScale, heightScale);
+    ctx.globalAlpha = alpha;
+    ctx.filter = `blur(${Math.round(6 + g.height * 8)}px)`;
+
+    ctx.fillStyle = 'rgba(0, 25, 35, 1)';
+
+    // Body silhouette
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bl * 0.45, bl * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wing silhouettes
+    for (const w of wings) {
+      ctx.beginPath();
+      ctx.moveTo(w.sx, w.sy);
+      ctx.quadraticCurveTo(
+        (w.sx + w.elbowX) * 0.5 + bl * 0.03, (w.sy + w.elbowY) * 0.5,
+        w.elbowX, w.elbowY
+      );
+      ctx.lineTo(w.elbowTrailX, w.elbowTrailY);
+      ctx.quadraticCurveTo(
+        (w.elbowTrailX + w.rootTrailX) * 0.5, (w.elbowTrailY + w.rootTrailY) * 0.5,
+        w.rootTrailX, w.rootTrailY
+      );
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(w.elbowX, w.elbowY);
+      ctx.quadraticCurveTo(
+        (w.elbowX + w.tipLeadX) * 0.5 + bl * 0.02,
+        (w.elbowY + w.tipLeadY) * 0.5,
+        w.tipLeadX, w.tipLeadY
+      );
+      ctx.lineTo(w.tipTrailX, w.tipTrailY);
+      ctx.quadraticCurveTo(
+        (w.tipTrailX + w.elbowTrailX) * 0.5,
+        (w.tipTrailY + w.elbowTrailY) * 0.5,
+        w.elbowTrailX, w.elbowTrailY
+      );
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Tail shadow
+    ctx.beginPath();
+    ctx.moveTo(-bl * 0.3, 0);
+    ctx.lineTo(-bl * 0.55, bl * 0.18);
+    ctx.lineTo(-bl * 0.48, 0);
+    ctx.lineTo(-bl * 0.55, -bl * 0.18);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+    ctx.filter = 'none';
+    ctx.globalAlpha = 1;
+  }
 
   // Seagulls — drawn on top of everything (flying above the water)
   for (const g of seagulls) g.draw(ctx);
