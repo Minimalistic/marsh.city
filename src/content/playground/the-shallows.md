@@ -4669,7 +4669,7 @@ function rebuildSandCanvas() {
   // Sand ripple lines — undulating ridges perpendicular to wave direction
   // Pre-computed as if waves sculpted the sand floor over time
   // Draw with blur for soft sandy look
-  sandCtx.filter = `blur(${1.5 * viewScale}px)`;
+  sandCtx.filter = `blur(${3 * viewScale}px)`;
   const waveCos = Math.cos(waveBaseAngle), waveSin = Math.sin(waveBaseAngle);
   const perpCos = -waveSin, perpSin = waveCos; // perpendicular to wave travel
   const rippleSpacing = 8 * viewScale; // distance between ridges
