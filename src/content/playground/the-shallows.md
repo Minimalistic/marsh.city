@@ -951,9 +951,9 @@ class Fish {
     }
     const schoolWeight = (this.distracted && !predNearby) ? 0.3 : 1;
     // Separation weaker in dense school centers — fish stack at different depths
-    const density = Math.min(1, cohCount / 10); // 0 = edge/alone, 1 = deep in pack
-    const densityJitter = 0.65 + this._phaseOffset % 1 * 0.15; // per-fish variation
-    const sepStr = 0.07 * (1 - density * densityJitter); // 0.07 at edge, ~0.025 at center
+    const density = Math.min(1, cohCount / 8); // 0 = edge/alone, 1 = deep in pack
+    const densityJitter = 0.78 + this._phaseOffset % 1 * 0.12; // per-fish variation
+    const sepStr = 0.07 * (1 - density * densityJitter); // 0.07 at edge, ~0.015 at center
     if (sepCount > 0) { this.vx += sepX * sepStr; this.vy += sepY * sepStr; }
     // Measure heading agreement — how aligned are nearby fish with this one?
     let headingAgreement = 1; // 1 = perfect agreement, 0 = opposing
