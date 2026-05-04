@@ -2562,16 +2562,17 @@ class Predator {
       if (prevJaw <= 0 && curJaw > 0) {
         const mx = this.x + Math.cos(this.angle) * this.len * 0.05;
         const my = this.y + Math.sin(this.angle) * this.len * 0.05;
-        const count = 2 + Math.floor(Math.random() * 3);
+        const count = 3 + Math.floor(Math.random() * 4);
         for (let k = 0; k < count; k++) {
-          const a = this.angle + (Math.random() - 0.5) * 1.2;
-          const spd = 0.8 + Math.random() * 1.5;
+          // Billow outward from mouth — fan within ~90° of facing direction
+          const a = this.angle + (Math.random() - 0.5) * 0.8;
+          const spd = 0.15 + Math.random() * 0.5;
           killFx.push({
-            x: mx + Math.cos(a) * 4, y: my + Math.sin(a) * 4,
-            vx: Math.cos(a) * spd + this.vx * 0.3,
-            vy: Math.sin(a) * spd + this.vy * 0.3,
-            type: 'scale', life: 1, maxLife: 1 + Math.random() * 1.5,
-            size: 0.4 + Math.random() * 1.2,
+            x: mx + Math.cos(a) * 3, y: my + Math.sin(a) * 3,
+            vx: Math.cos(a) * spd + this.vx * 0.15,
+            vy: Math.sin(a) * spd + this.vy * 0.15,
+            type: 'scale', life: 1, maxLife: 3 + Math.random() * 4,
+            size: 0.2 + Math.random() * 0.6,
             color: 'rgb(160,170,180)',
             sparkle: Math.random() * Math.PI * 2,
           });
@@ -2726,15 +2727,16 @@ class Predator {
         this.chompPhase = 0;
         const catchX = mouthX, catchY = mouthY;
         const preyColor = prey.color || 'rgb(140,150,160)';
-        for (let k = 0; k < 8; k++) {
-          const a = Math.random() * Math.PI * 2;
-          const spd = 0.5 + Math.random() * 2;
+        for (let k = 0; k < 11; k++) {
+          // Billow forward from mouth — soft fan, not an explosion
+          const a = this.angle + (Math.random() - 0.5) * 1.0;
+          const spd = 0.2 + Math.random() * 0.6;
           killFx.push({
-            x: catchX + Math.cos(a) * 5, y: catchY + Math.sin(a) * 5,
-            vx: Math.cos(a) * spd + this.vx * 0.4,
-            vy: Math.sin(a) * spd + this.vy * 0.4,
-            type: 'scale', life: 1, maxLife: 0.8 + Math.random() * 1.2,
-            size: 0.5 + Math.random() * 1.5, color: preyColor,
+            x: catchX + Math.cos(a) * 4, y: catchY + Math.sin(a) * 4,
+            vx: Math.cos(a) * spd + this.vx * 0.15,
+            vy: Math.sin(a) * spd + this.vy * 0.15,
+            type: 'scale', life: 1, maxLife: 3 + Math.random() * 5,
+            size: 0.25 + Math.random() * 0.75, color: preyColor,
             sparkle: Math.random() * Math.PI * 2,
           });
         }
@@ -4346,6 +4348,8 @@ function draw(time) {
     // Fill with white — identity for multiply blend, avoids hard dark edges
     _cloudCtx.fillStyle = 'rgb(255,255,255)';
     _cloudCtx.fillRect(0, 0, w, h);
+    // Draw cloud gradients with multiply so overlapping lobes darken naturally
+    _cloudCtx.globalCompositeOperation = 'multiply';
     for (const cloud of clouds) {
       const cx = cloud.x, cy = cloud.y;
       const baseR = Math.min(w, h) * cloud.size;
@@ -4355,15 +4359,19 @@ function draw(time) {
         const lr = baseR * lobe.scale;
         const breathe = 1 + Math.sin(time * 0.00015 + cloud.phase + lobe.ox * 5) * 0.06;
         const r = lr * breathe;
+        // Gradient fades to white by 0.85 — outer 15% is pure white buffer
+        // so the fillRect edge is invisible against the white background
         const sg = _cloudCtx.createRadialGradient(lx, ly, 0, lx, ly, r);
         const shade = Math.round(255 * (1 - cloud.opacity));
         sg.addColorStop(0, `rgb(${shade}, ${shade + 4}, ${shade + 6})`);
-        sg.addColorStop(0.6, `rgb(${shade + 20}, ${shade + 22}, ${shade + 24})`);
+        sg.addColorStop(0.5, `rgb(${shade + 15}, ${shade + 17}, ${shade + 19})`);
+        sg.addColorStop(0.85, `rgb(${shade + 40}, ${shade + 42}, ${shade + 44})`);
         sg.addColorStop(1, 'rgb(255, 255, 255)');
         _cloudCtx.fillStyle = sg;
         _cloudCtx.fillRect(lx - r, ly - r, r * 2, r * 2);
       }
     }
+    _cloudCtx.globalCompositeOperation = 'source-over';
   }
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
@@ -4581,19 +4589,26 @@ function draw(time) {
       ctx.fillStyle = `rgba(210, 240, 245, ${alpha * 0.6})`;
       ctx.fill();
     } else {
-      // Scale glitter - tiny bright flecks that catch light
-      kp.sparkle += dt * 8;
-      const glint = 0.4 + Math.sin(kp.sparkle) * 0.6; // flickering brightness
-      const alpha = kp.life * glint;
+      // Scale glitter — tiny flecks that flutter on/off as they tumble through water
+      kp.sparkle += dt * 5;
+      // Flutter: rapid on/off with slower drift, like a scale catching and losing light
+      const tumble = Math.sin(kp.sparkle * 2.3) * Math.sin(kp.sparkle * 0.7);
+      const visible = tumble > -0.3; // dark ~30% of the time — tumbled away from light
+      if (!visible) continue;
+      const glint = Math.max(0, tumble);
+      // Hold full size for first 70% of life, then shrink
+      const sizeCurve = kp.life > 0.3 ? 1 : kp.life / 0.3;
+      const alpha = sizeCurve * glint * 0.8;
+      if (alpha < 0.01) continue;
       ctx.beginPath();
-      ctx.arc(kp.x, kp.y, kp.size * kp.life, 0, Math.PI * 2);
+      ctx.arc(kp.x, kp.y, kp.size * sizeCurve, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(220, 230, 240, ${alpha})`;
       ctx.fill();
       // Colored reflection from prey's scales
-      if (alpha > 0.2) {
+      if (alpha > 0.15) {
         ctx.beginPath();
-        ctx.arc(kp.x, kp.y, kp.size * kp.life * 0.6, 0, Math.PI * 2);
-        ctx.fillStyle = kp.color.replace('rgb', 'rgba').replace(')', `,${alpha * 0.5})`);
+        ctx.arc(kp.x, kp.y, kp.size * sizeCurve * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = kp.color.replace('rgb', 'rgba').replace(')', `,${alpha * 0.4})`);
         ctx.fill();
       }
     }
@@ -5127,6 +5142,10 @@ function draw(time) {
       ctx.globalAlpha = d.obj.depthAlpha;
       d.obj.draw(ctx);
       ctx.restore();
+      // Defensive reset — fish draw uses screen blend for glint/belly flash;
+      // if any inner save/restore is skipped (error, NaN coords), screen mode
+      // leaks and causes progressive overexposure of everything drawn after
+      ctx.globalCompositeOperation = 'source-over';
     }
   }
 
