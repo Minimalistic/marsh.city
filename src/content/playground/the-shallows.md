@@ -1350,19 +1350,17 @@ class Fish {
       const baseSense = Math.max(baseR * 4, baseR + fishLen5 * 2);
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
+        // Only steer when actually approaching the rock
         if (approach > 0.0) {
           const prox = 1 - rDist / baseSense;
+          const urgency = prox * prox * prox * approach;
           const cross = this.vx * rdy - this.vy * rdx;
-          const side = cross >= 0 ? 1 : -1;
-          // Steer toward tangent — proportional to how head-on the approach is
-          // Head-on (approach~1) = strong steer, glancing (approach~0) = gentle curve
-          const urgency = prox * prox * approach;
-          reefSteer += side * urgency * 0.15;
+          reefSteer += (cross >= 0 ? 1 : -1) * urgency * 0.12;
         }
-        // Radial push outward — always active, ramps with proximity
+        // Radial push outward regardless of heading - prevents orbit lock
         const prox = 1 - rDist / baseSense;
         if (prox > 0.05) {
-          const outward = (prox - 0.05) * 0.25;
+          const outward = (prox - 0.05) * 0.22;
           this.vx += (rdx / rDist) * outward;
           this.vy += (rdy / rDist) * outward;
         }
@@ -1376,18 +1374,18 @@ class Fish {
       const crownSense = Math.max(crownR * 5, crownR + fishLen5 * 2);
       if (cDist < crownSense && cDist > 0.1) {
         const prox = 1 - cDist / crownSense;
-        const closeBoost = prox > 0.5 ? 1 + (prox - 0.5) * 6 : 1;
+        // Urgency ramps hard at close range — gentle far out, desperate near rock
+        const closeBoost = prox > 0.6 ? 1 + (prox - 0.6) * 8 : 1; // 1x→4.2x near surface
         const approach = -(this.vx * cdx + this.vy * cdy) / (spd * cDist);
         if (approach > -0.3) {
           const aw = Math.max(0, approach + 0.3);
+          const urgency = prox * prox * prox * aw * closeBoost;
           const cross = this.vx * cdy - this.vy * cdx;
-          const side = cross >= 0 ? 1 : -1;
-          const urgency = prox * prox * aw * closeBoost;
-          reefSteer += side * urgency * 0.4;
+          reefSteer += (cross >= 0 ? 1 : -1) * urgency * 0.35;
         }
-        // Strong radial push from crown — emergency avoidance
+        // Radial push outward from crown — exponential near rock face
         if (prox > 0.05) {
-          const outward = (prox - 0.05) * 0.35 * closeBoost;
+          const outward = (prox - 0.05) * 0.3 * closeBoost;
           this.vx += (cdx / cDist) * outward;
           this.vy += (cdy / cDist) * outward;
         }
@@ -4350,7 +4348,7 @@ function draw(time) {
     ctx.fill();
   }
 
-  // Update and draw kill effect particles (blood + scale glitter)
+  // Update and draw kill effect particles (scale glitter)
   for (let i = killFx.length - 1; i >= 0; i--) {
     const kp = killFx[i];
     kp.life -= dt / kp.maxLife;
