@@ -4658,6 +4658,14 @@ function rebuildSandCanvas() {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   sandCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+  // Full seafloor sand base — warm sand tone across the entire viewport
+  const sfGrad = sandCtx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+  sfGrad.addColorStop(0, 'rgba(180, 165, 130, 0.18)');
+  sfGrad.addColorStop(0.5, 'rgba(170, 155, 120, 0.12)');
+  sfGrad.addColorStop(1, 'rgba(160, 145, 110, 0.06)');
+  sandCtx.fillStyle = sfGrad;
+  sandCtx.fillRect(0, 0, w, h);
+
   // Sand ripple lines — undulating ridges perpendicular to wave direction
   // Pre-computed as if waves sculpted the sand floor over time
   const waveCos = Math.cos(waveBaseAngle), waveSin = Math.sin(waveBaseAngle);
@@ -4672,8 +4680,8 @@ function rebuildSandCanvas() {
     const ridgeOffset = (ri - rippleCount / 2) * rippleSpacing;
     const seed = ri * 7.13;
     // Vary alpha per ridge for organic feel
-    const ridgeAlpha = 0.015 + Math.sin(seed) * 0.008 + Math.random() * 0.005;
-    const ridgeThick = (0.5 + Math.sin(seed * 2.3) * 0.3) * viewScale;
+    const ridgeAlpha = 0.08 + Math.sin(seed) * 0.03 + Math.random() * 0.02;
+    const ridgeThick = (1.0 + Math.sin(seed * 2.3) * 0.5) * viewScale;
 
     sandCtx.beginPath();
     let first = true;
@@ -4704,8 +4712,8 @@ function rebuildSandCanvas() {
     const depX = cx + waveCos * depositDist * 0.6;
     const depY = cy + waveSin * depositDist * 0.6;
     const dg = sandCtx.createRadialGradient(depX, depY, 0, depX, depY, depositDist);
-    dg.addColorStop(0, 'rgba(200, 185, 145, 0.06)');
-    dg.addColorStop(0.4, 'rgba(195, 180, 140, 0.04)');
+    dg.addColorStop(0, 'rgba(200, 185, 145, 0.25)');
+    dg.addColorStop(0.4, 'rgba(195, 180, 140, 0.15)');
     dg.addColorStop(1, 'rgba(190, 175, 135, 0)');
     sandCtx.save();
     sandCtx.translate(depX, depY);
