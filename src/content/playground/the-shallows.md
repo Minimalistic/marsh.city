@@ -1684,11 +1684,34 @@ class Fish {
       }
     }
     this.speed = currentSpeed;
-    // NaN guard — if any value went non-finite, reset to safe state
-    if (!isFinite(this.x) || !isFinite(this.y) || !isFinite(this.vx) || !isFinite(this.vy)) {
+
+    // Effect timers — decay in update so they work even if draw is skipped
+    this._glint -= 0.016;
+    if (this._glint <= 0 && (this.speed > 1.2 || this.fleeing || this._biting) && Math.random() < 0.008) {
+      if (getSunlight(this.x, this.y) > 0.5) {
+        this._glint = 0.06 + Math.random() * 0.06;
+        this._glintSeg = 1 + Math.floor(Math.random() * (this._jointCount - 2));
+      }
+    }
+    this._bellyFlash -= 0.028;
+    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > 0.207 * 0.9 && Math.random() < 0.03) {
+      this._bellyFlash = 0.06 + Math.random() * 0.04;
+    }
+
+    // NaN guard — check fish position AND all joints for non-finite values
+    let _nan = !isFinite(this.x) || !isFinite(this.y) || !isFinite(this.vx) || !isFinite(this.vy) || !isFinite(this.angle);
+    if (!_nan) {
+      for (let j = 0; j <= this._jointCount; j++) {
+        if (!isFinite(this._joints[j].x) || !isFinite(this._joints[j].y)) { _nan = true; break; }
+      }
+    }
+    if (_nan) {
       this.x = w * 0.5; this.y = h * 0.5;
+      this.angle = Math.random() * Math.PI * 2;
       this.vx = Math.cos(this.angle) * this.baseSpeed;
       this.vy = Math.sin(this.angle) * this.baseSpeed;
+      this._bellyFlash = 0; this._glint = 0;
+      this._renderAngle = this.angle;
       for (let j = 0; j <= this._jointCount; j++) {
         this._joints[j].x = this.x - Math.cos(this.angle) * j * this._segLen;
         this._joints[j].y = this.y - Math.sin(this.angle) * j * this._segLen;
@@ -1698,7 +1721,11 @@ class Fish {
   }
 
   draw(ctx) {
+    // Bail if any position is non-finite — prevents NaN from reaching canvas API
     if (!isFinite(this.x) || !isFinite(this.y)) return;
+    for (let j = 0; j <= this._jointCount; j++) {
+      if (!isFinite(this._joints[j].x) || !isFinite(this._joints[j].y)) return;
+    }
     const segs = this._jointCount;
     const totalLen = this.len;
 
@@ -1873,21 +1900,7 @@ class Fish {
       ctx.fill();
     }
 
-    // Sun glint — rare bright flash when fish twists in sunlight
-    let angleDelta = this.angle - this._prevAngle;
-    while (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
-    while (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
-    this._prevAngle = this.angle;
-    const turning = Math.abs(angleDelta) > 0.03;
-    const active = this.speed > 1.2 || turning || this.fleeing || this._biting;
-    this._glint -= 0.016; // roughly 1 frame at 60fps
-    if (this._glint <= 0 && active && Math.random() < 0.008) {
-      const sun = getSunlight(this.x, this.y);
-      if (sun > 0.5) {
-        this._glint = 0.06 + Math.random() * 0.06; // 60-120ms flash
-        this._glintSeg = 1 + Math.floor(Math.random() * (segs - 2));
-      }
-    }
+    // Sun glint — render only, timer logic is in update()
     if (this._glint > 0) {
       const gi = this._glintSeg;
       const gx = spineX[gi], gy = spineY[gi];
@@ -1905,12 +1918,7 @@ class Fish {
       ctx.restore();
     }
 
-    // Belly flash — only when fleeing with body bend at 90%+ of max
-    this._bellyFlash -= 0.028; // 15% faster decay
-    const bendThreshold = 0.207 * 0.9; // 90% of max body bend
-    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.03) {
-      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash (15% shorter)
-    }
+    // Belly flash — render only, timer logic is in update()
     if (this._bellyFlash > 0) {
       const flashAlpha = Math.min(1, this._bellyFlash * 12) * 0.5;
       const midSeg = Math.floor(segs * 0.3);
@@ -2998,11 +3006,15 @@ class Predator {
         });
       }
     }
-    // NaN guard
-    if (!isFinite(this.x) || !isFinite(this.y) || !isFinite(this.vx) || !isFinite(this.vy)) {
+    // NaN guard — check position and all joints
+    let _pnan = !isFinite(this.x) || !isFinite(this.y) || !isFinite(this.vx) || !isFinite(this.vy) || !isFinite(this.angle);
+    if (!_pnan) { for (let j = 0; j <= this._jointCount; j++) { if (!isFinite(this._joints[j].x) || !isFinite(this._joints[j].y)) { _pnan = true; break; } } }
+    if (_pnan) {
       this.x = w * 0.5; this.y = h * 0.5;
+      this.angle = Math.random() * Math.PI * 2;
       this.vx = Math.cos(this.angle) * this.baseSpeed;
       this.vy = Math.sin(this.angle) * this.baseSpeed;
+      this._renderAngle = this.angle;
       for (let j = 0; j <= this._jointCount; j++) {
         this._joints[j].x = this.x - Math.cos(this.angle) * j * this._segLen;
         this._joints[j].y = this.y - Math.sin(this.angle) * j * this._segLen;
@@ -3013,6 +3025,9 @@ class Predator {
 
   draw(ctx) {
     if (!isFinite(this.x) || !isFinite(this.y)) return;
+    for (let j = 0; j <= this._jointCount; j++) {
+      if (!isFinite(this._joints[j].x) || !isFinite(this._joints[j].y)) return;
+    }
     const segs = this._jointCount;
     const totalLen = this.len;
     // Chomp animation
