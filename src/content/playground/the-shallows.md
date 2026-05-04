@@ -3323,7 +3323,7 @@ function makeReef(x, y, sizeMultiplier = 1) {
     for (let b = 0; b < bladeCount; b++) {
       blades.push({
         angle: -Math.PI / 2 + (Math.random() - 0.5) * 0.8, // mostly upward, some lean
-        length: (4 + Math.random() * 6) * (crownR / 30), // scale with reef
+        length: (1.3 + Math.random() * 2) * (crownR / 30), // scale with reef, kept short
         width: 0.6 + Math.random() * 0.6,
         phase: Math.random() * Math.PI * 2, // sway offset
       });
@@ -3987,10 +3987,17 @@ function draw(time) {
         }
       }
     }
-    // Waves hitting reefs: spawn foam along the crown waterline (where rock meets water)
+    // Waves hitting reefs: spawn foam and trigger ripple boost
     for (const rf of reefs) {
+      if (rf.submerged) continue;
       const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
       if (rel > -rf.crownR * 1.5 && rel < rf.crownR * 1.5 + ww.width) {
+        // Track wave impact for ripple boost
+        if (!rf._waveHit || rf._waveHit < ww.strength) {
+          rf._waveHit = ww.strength;
+          rf._waveAngle = ww.angle;
+          rf._waveTime = time;
+        }
         const splashCount = Math.ceil(3 * viewScale);
         if (foamBits.length < 300) {
           for (let si = 0; si < splashCount; si++) {
@@ -4760,37 +4767,63 @@ function draw(time) {
     const nv = rf.crownShape.length;
     const t = time * 0.001; // seconds
 
-    // Waterline ripples - animated rings that lap around the crown edge
-    // Multiple offset rings at slightly different radii create a lapping effect
-    for (let ring = 0; ring < 3; ring++) {
-      const ringPhase = t * (0.4 + ring * 0.15) + ring * 2.1;
-      const ringOffset = Math.sin(ringPhase) * 2 + ring * 1.5;
+    // Wave impact decay — boosted ripples after a wash wave hits
+    let waveBoost = 0, waveHitCos = 0, waveHitSin = 0;
+    if (rf._waveHit && rf._waveTime) {
+      const elapsed = (time - rf._waveTime) * 0.001; // seconds since impact
+      waveBoost = rf._waveHit * Math.max(0, 1 - elapsed / 5); // fades over 5s
+      waveHitCos = Math.cos(rf._waveAngle);
+      waveHitSin = Math.sin(rf._waveAngle);
+      if (waveBoost <= 0) rf._waveHit = 0;
+    }
+
+    // Waterline ripples — more rings radiating outward, chaotic with currents
+    const ringCount = 5 + Math.ceil(waveBoost * 4); // 5 base, up to 9 during wave
+    for (let ring = 0; ring < ringCount; ring++) {
+      const ringPhase = t * (0.5 + ring * 0.12) + ring * 1.7;
+      const baseOffset = ring * 2.5 + Math.sin(ringPhase) * 2;
+      // Wave boost pushes outer rings further on the hit side
+      const boostOffset = waveBoost * ring * 3;
       ctx.beginPath();
       for (let i = 0; i <= nv; i++) {
         const idx = i % nv;
         const cp = rf.crownShape[idx];
-        // Each point oscillates outward independently for organic lapping
-        const pointPhase = ringPhase + idx * 0.7;
-        const wobble = Math.sin(pointPhase) * 2.5 + Math.sin(pointPhase * 2.3 + 1.7) * 1.2;
-        const dist = Math.sqrt(cp.x * cp.x + cp.y * cp.y) || 1;
-        const nx = cp.x / dist, ny = cp.y / dist;
-        const px = cp.x + nx * (ringOffset + wobble);
-        const py = cp.y + ny * (ringOffset + wobble);
+        const cpDist = Math.sqrt(cp.x * cp.x + cp.y * cp.y) || 1;
+        const nx = cp.x / cpDist, ny = cp.y / cpDist;
+        // Per-point wobble — more chaotic with tide and turbulence
+        const pointPhase = ringPhase + idx * 0.9;
+        const wobble = Math.sin(pointPhase) * 3
+                     + Math.sin(pointPhase * 2.3 + 1.7) * 1.5
+                     + Math.sin(pointPhase * 4.1 + ring * 0.8) * 0.8;
+        // Wave-side boost: points facing the wave direction get pushed out more
+        const waveFacing = nx * waveHitCos + ny * waveHitSin; // -1 to 1
+        const dirBoost = boostOffset * Math.max(0, waveFacing);
+        const totalOffset = baseOffset + wobble + dirBoost;
+        const px = cp.x + nx * totalOffset;
+        const py = cp.y + ny * totalOffset;
         if (i === 0) ctx.moveTo(px, py);
         else {
           const prev = rf.crownShape[(i - 1) % nv];
           const prevDist = Math.sqrt(prev.x * prev.x + prev.y * prev.y) || 1;
-          const prevPhase = ringPhase + ((i - 1) % nv) * 0.7;
-          const prevWobble = Math.sin(prevPhase) * 2.5 + Math.sin(prevPhase * 2.3 + 1.7) * 1.2;
-          const prevPx = prev.x + (prev.x / prevDist) * (ringOffset + prevWobble);
-          const prevPy = prev.y + (prev.y / prevDist) * (ringOffset + prevWobble);
+          const prevNx = prev.x / prevDist, prevNy = prev.y / prevDist;
+          const prevPhase = ringPhase + ((i - 1) % nv) * 0.9;
+          const prevWobble = Math.sin(prevPhase) * 3
+                           + Math.sin(prevPhase * 2.3 + 1.7) * 1.5
+                           + Math.sin(prevPhase * 4.1 + ring * 0.8) * 0.8;
+          const prevWaveFacing = prevNx * waveHitCos + prevNy * waveHitSin;
+          const prevDirBoost = boostOffset * Math.max(0, prevWaveFacing);
+          const prevTotal = baseOffset + prevWobble + prevDirBoost;
+          const prevPx = prev.x + prevNx * prevTotal;
+          const prevPy = prev.y + prevNy * prevTotal;
           const mx = (prevPx + px) * 0.5, my = (prevPy + py) * 0.5;
           ctx.quadraticCurveTo(prevPx, prevPy, mx, my);
         }
       }
       ctx.closePath();
-      ctx.strokeStyle = `rgba(180, 210, 225, ${0.15 - ring * 0.04})`;
-      ctx.lineWidth = 1.2 - ring * 0.3;
+      // Outer rings fade out, wave boost adds intensity
+      const ringAlpha = Math.max(0.02, (0.16 - ring * 0.022) + waveBoost * 0.06);
+      ctx.strokeStyle = `rgba(180, 210, 225, ${ringAlpha})`;
+      ctx.lineWidth = Math.max(0.3, 1.4 - ring * 0.15);
       ctx.stroke();
     }
 
@@ -4892,13 +4925,13 @@ function draw(time) {
     const sway = time * 0.001;
     for (const tuft of rf.grassTufts) {
       for (const bl of tuft.blades) {
-        const wobble = Math.sin(sway * 1.5 + bl.phase) * 0.15 + Math.sin(sway * 2.7 + bl.phase * 1.6) * 0.08;
+        const wobble = Math.sin(sway * 0.6 + bl.phase) * 0.04 + Math.sin(sway * 1.1 + bl.phase * 1.6) * 0.02;
         const baseX = tuft.ox, baseY = tuft.oy;
         const tipX = baseX + Math.cos(bl.angle + wobble) * bl.length;
         const tipY = baseY + Math.sin(bl.angle + wobble) * bl.length;
         // Quadratic curve for a slight natural bow
-        const midX = (baseX + tipX) * 0.5 + Math.sin(bl.angle + wobble + 0.5) * bl.length * 0.15;
-        const midY = (baseY + tipY) * 0.5 + Math.cos(bl.angle + wobble + 0.5) * bl.length * 0.15;
+        const midX = (baseX + tipX) * 0.5 + Math.sin(bl.angle + wobble + 0.5) * bl.length * 0.08;
+        const midY = (baseY + tipY) * 0.5 + Math.cos(bl.angle + wobble + 0.5) * bl.length * 0.08;
         ctx.beginPath();
         ctx.moveTo(baseX, baseY);
         ctx.quadraticCurveTo(midX, midY, tipX, tipY);
