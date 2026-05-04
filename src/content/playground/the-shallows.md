@@ -671,7 +671,7 @@ const ripples = [];
 
 // Wave current - oscillates back and forth like real shallow water wash
 const tide = { angle: 0, strength: 0 };
-const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
+const waveBaseAngle = Math.PI * 0.75; // top-left to bottom-right
 
 // Cloud shadows — large soft blobs that drift linearly across the scene
 // Shared wind direction with slight per-cloud variation; wrap around edges
@@ -1092,15 +1092,24 @@ class Fish {
       while (headingDiff < -Math.PI) headingDiff += Math.PI * 2;
       const angleMismatch = Math.abs(headingDiff);
 
-      // Food overrides idle and distraction - fish get excited about food
+      // Food overrides idle, distraction, and dampens rock fear
       this.idle = false;
       this.idleTimer = 3;
       this.distracted = false;
       this.distractTimer = 5;
+      this._feedingMode = true;
 
-      const eatDist = 10;
-      const biteDist = 6;
-      if (closestFoodDist < eatDist && angleMismatch < 0.8) {
+      const eatDist = 12;
+      const biteDist = 7;
+      // Tight turning when close to food — snap heading toward it
+      if (closestFoodDist < 30 && angleMismatch > 0.2) {
+        const snapStr = Math.min(0.3, (1 - closestFoodDist / 30) * 0.3);
+        const toFood = Math.atan2(fdy, fdx);
+        this.vx += (Math.cos(toFood) * spd - this.vx) * snapStr;
+        this.vy += (Math.sin(toFood) * spd - this.vy) * snapStr;
+        this.angle = Math.atan2(this.vy, this.vx);
+      }
+      if (closestFoodDist < eatDist && angleMismatch < 1.0) {
         // Close and roughly facing food - slow to nibble
         this.vx *= 0.85;
         this.vy *= 0.85;
@@ -1117,7 +1126,7 @@ class Fish {
           this.vx += Math.cos(this.angle) * 0.8;
           this.vy += Math.sin(this.angle) * 0.8;
           this.eating = true;
-          this.eatTimer = 0.3 + Math.random() * 0.5; // quick pullback, come right back
+          this.eatTimer = 0.15 + Math.random() * 0.25; // rapid pullback, frenzy pace
           // Scatter fragments occasionally - food breaks apart
           if (Math.random() < 0.3 && closestFood.size > 0.8) {
             const fragAngle = Math.random() * Math.PI * 2;
@@ -1133,15 +1142,16 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Steer toward food from varied angles — fish surround it, not pile from one side
+        // Feeding frenzy — fast, aggressive, darting from all sides
         const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.08 + proximity * 0.12;
+        const steerWeight = 0.15 + proximity * 0.25;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
         // Per-fish approach offset — spreads fish around the food
         const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.3;
-        const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.1;
-        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
-        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
+        const wobble = Math.sin(this._phaseOffset + time * 0.003) * 0.15;
+        const frenzySpeed = scaledSpeed * (2.0 + proximity * 1.5);
+        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * frenzySpeed;
+        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * frenzySpeed;
         this.vx += (desiredVx - this.vx) * steerWeight;
         this.vy += (desiredVy - this.vy) * steerWeight;
       }
@@ -1347,7 +1357,7 @@ class Fish {
       const bAngle = Math.atan2(rdy, rdx);
       const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(bAngle * 3.1 + rf.y * 0.1);
       const baseR = rf.radiusAt(bAngle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
-      const baseSense = Math.max(baseR * 4, baseR + fishLen5 * 2);
+      const baseSense = Math.max(baseR * 2.5, baseR + fishLen5);
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
         // Only steer when actually approaching the rock
@@ -1371,7 +1381,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      const crownSense = Math.max(crownR * 5, crownR + fishLen5 * 2);
+      const crownSense = Math.max(crownR * 3, crownR + fishLen5);
       if (cDist < crownSense && cDist > 0.1) {
         const prox = 1 - cDist / crownSense;
         // Urgency ramps hard at close range — gentle far out, desperate near rock
@@ -1415,11 +1425,13 @@ class Fish {
     }
 
     // Blend reef steer into velocity — gentle course correction, not a hard snap
+    // Feeding fish are bolder — halved avoidance so they can reach food near rocks
+    const feedDampen = this._feedingMode ? 0.4 : 1;
+    this._feedingMode = false;
     if (Math.abs(reefSteer) > 0.001) {
-      const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer));
+      const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer * feedDampen));
       const newAngle = Math.atan2(this.vy, this.vx) + clampedSteer;
-      // Blend toward corrected heading — preserves most of the original momentum
-      const blend = Math.min(0.4, Math.abs(clampedSteer) * 3); // stronger steer = more blend
+      const blend = Math.min(0.4, Math.abs(clampedSteer) * 3) * feedDampen;
       this.vx += (Math.cos(newAngle) * spd - this.vx) * blend;
       this.vy += (Math.sin(newAngle) * spd - this.vy) * blend;
       this.angle = Math.atan2(this.vy, this.vx);
