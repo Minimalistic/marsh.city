@@ -4696,7 +4696,7 @@ function rebuildSandCanvas() {
   for (let ri = 0; ri < rippleCount; ri++) {
     const ridgeOffset = (ri - rippleCount / 2) * rippleSpacing;
     const seed = ri * 7.13;
-    const ridgeThick = (1.2 + Math.sin(seed * 2.3) * 0.5) * viewScale;
+    const ridgeThick = (3.6 + Math.sin(seed * 2.3) * 1.5) * viewScale;
 
     // Sample rock proximity at the ridge midpoint for per-ridge alpha scaling
     const midX = w / 2 + waveCos * ridgeOffset;
