@@ -4721,7 +4721,7 @@ function rebuildSandCanvas() {
       let rx = w / 2 + perpCos * pos + waveCos * (ridgeOffset + wobble * viewScale);
       let ry = h / 2 + perpSin * pos + waveSin * (ridgeOffset + wobble * viewScale);
 
-      // Bend sand lines around rocks like water does
+      // Bend sand lines around rocks + post-hit turbulent distortion
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
@@ -4732,6 +4732,17 @@ function rebuildSandCanvas() {
           const push = (1 - dist / pushR);
           rx += (dx / dist) * push * pushR * 0.4;
           ry += (dy / dist) * push * pushR * 0.4;
+        }
+        // Post-hit distortion: downstream points get chaotic displacement
+        const along = dx * waveCos + dy * waveSin;
+        if (along > 0) {
+          const turbR = rf.crownR * 5;
+          if (dist < turbR) {
+            const intensity = (1 - dist / turbR) * Math.min(1, along / (rf.crownR * 2));
+            const turbSeed = pos * 0.1 + seed + ri * 0.7;
+            rx += (Math.sin(turbSeed * 2.3) * 8 + Math.sin(turbSeed * 5.7) * 4) * viewScale * intensity;
+            ry += (Math.sin(turbSeed * 3.1 + 1.4) * 8 + Math.sin(turbSeed * 4.9) * 4) * viewScale * intensity;
+          }
         }
       }
 
