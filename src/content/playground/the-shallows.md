@@ -1508,7 +1508,7 @@ class Fish {
     this.y += this.vy;
     // Only clamp non-leaving fish
     if (!this.leaving) {
-      const overflow = 0.3;
+      const overflow = 0.12;
       this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
       this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
     }
@@ -2764,7 +2764,7 @@ class Predator {
 
     this.x += this.vx;
     this.y += this.vy;
-    const overflow = 0.2;
+    const overflow = 0.1;
     this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
     this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
 
