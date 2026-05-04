@@ -3473,11 +3473,11 @@ class Seagull {
     const sides = [];
     for (const side of [-1, 1]) {
       // Shoulder (wing root) — fixed points, never change with flap
-      // Narrow attachment at the shoulder, forward on the body
-      const sx = bl * 0.18 + wingFwd;          // leading root — at shoulder
-      const sy = side * bl * 0.04;              // close to centerline
-      const rootTrailX = bl * 0.04 + wingFwd;  // trailing root — short chord (30% narrower)
-      const rootTrailY = side * bl * 0.04;      // same lateral as leading
+      // Set back 25% from head, 15% thicker than previous
+      const sx = bl * -0.07 + wingFwd;           // leading root — set back from head
+      const sy = side * bl * 0.046;              // 15% wider lateral attachment
+      const rootTrailX = bl * -0.25 + wingFwd;   // trailing root
+      const rootTrailY = side * bl * 0.046;
 
       // Elbow — stable lateral distance, sweeps fore/aft
       const elbowX = bl * 0.02 + wingFwd + elbowSweep;
@@ -3488,12 +3488,12 @@ class Seagull {
       const elbowTrailX = elbowX - innerTrailOff;
       const elbowTrailY = elbowY;
 
-      // Wing tip — reach and sweep change with flap
-      const tipLeadX = elbowX - bl * 0.22 + outerSweepBack;
+      // Wing tip — pulled back 15%, reach and sweep change with flap
+      const tipLeadX = elbowX - bl * 0.253 + outerSweepBack;
       const tipLeadY = elbowY + side * outerReach + bankShift * side * 0.3;
 
       // Trailing tip converges for taper — more on downstroke
-      const tipTrailX = tipLeadX - bl * 0.08;
+      const tipTrailX = tipLeadX - bl * 0.092;
       const tipTrailY = tipLeadY - side * tipTaper;
 
       sides.push({ side, sx, sy, elbowX, elbowY, tipLeadX, tipLeadY,
