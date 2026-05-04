@@ -5368,8 +5368,27 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcl = reefClamp(px, py);
-        trPts.push({ x: tcl.x, y: tcl.y });
+        trPts.push({ x: tcl.x, y: tcl.y, hit: !!tcl.hit });
       }
+      // Post-rock drag for trail lines
+      const trDragSpread = Math.ceil(28 * viewScale / 4);
+      const trDrag = new Float32Array(trPts.length);
+      for (let i = 0; i < trPts.length; i++) { if (trPts[i].hit) trDrag[i] = 1; }
+      for (let i = 0; i < trPts.length; i++) {
+        if (!trPts[i].hit) continue;
+        for (let d = 1; d <= trDragSpread; d++) {
+          const ease = Math.pow(1 - d / trDragSpread, 2);
+          if (i - d >= 0) trDrag[i - d] = Math.max(trDrag[i - d], ease);
+          if (i + d < trPts.length) trDrag[i + d] = Math.max(trDrag[i + d], ease);
+        }
+      }
+      for (let i = 0; i < trPts.length; i++) {
+        if (trPts[i].hit || trDrag[i] < 0.01) continue;
+        const pull = trDrag[i] * 22 * viewScale * ww.strength;
+        trPts[i].x -= cosA * pull;
+        trPts[i].y -= sinA * pull;
+      }
+
       ctx.globalAlpha = trAlpha;
       ctx.lineWidth = tr.thick * tr.life;
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
@@ -5472,6 +5491,8 @@ function draw(time) {
         { behind: 20 * viewScale, thick: 0.4 * viewScale, alpha: 0.05, freq: 1.1, speed: 1.1 },
       ];
       let isFirstLine = true;
+      const dragSpread = Math.ceil(28 * viewScale / 4); // how many points the drag influence spreads
+      const dragStrength = 22 * viewScale; // max backward pull in pixels
       for (const ln of lines) {
         const step = 4;
         const pts = [];
@@ -5485,7 +5506,7 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const cl = reefClamp(px, py);
-          pts.push({ x: cl.x, y: cl.y });
+          pts.push({ x: cl.x, y: cl.y, hit: !!cl.hit });
           // Emit contact splashes where the primary wave line touches rock
           if (isFirstLine && cl.hit && contactSplashes.length < 300 && Math.random() < 0.35) {
             const sprayAngle = Math.atan2(cl.ny, cl.nx) + (Math.random() - 0.5) * 1.2;
@@ -5501,6 +5522,30 @@ function draw(time) {
             });
           }
         }
+        // Post-rock drag: points near rock contacts get pulled backward (against wave travel)
+        // Spread influence outward from each hit point, tapering with distance
+        const drag = new Float32Array(pts.length); // 0-1 drag intensity per point
+        for (let i = 0; i < pts.length; i++) {
+          if (pts[i].hit) drag[i] = 1;
+        }
+        // Spread drag to neighbors (both directions along the line)
+        for (let i = 0; i < pts.length; i++) {
+          if (!pts[i].hit) continue;
+          for (let d = 1; d <= dragSpread; d++) {
+            const falloff = 1 - (d / dragSpread);
+            const ease = falloff * falloff; // quadratic taper
+            if (i - d >= 0) drag[i - d] = Math.max(drag[i - d], ease);
+            if (i + d < pts.length) drag[i + d] = Math.max(drag[i + d], ease);
+          }
+        }
+        // Apply backward pull — don't move hit points themselves (they're on the rock)
+        for (let i = 0; i < pts.length; i++) {
+          if (pts[i].hit || drag[i] < 0.01) continue;
+          const pull = drag[i] * dragStrength * ww.strength;
+          pts[i].x -= cosA * pull;
+          pts[i].y -= sinA * pull;
+        }
+
         isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
         ctx.globalAlpha = baseAlpha;
@@ -6158,8 +6203,26 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcp = clampPt(px, py);
-        trPts.push({ x: tcp.x, y: tcp.y });
+        trPts.push({ x: tcp.x, y: tcp.y, hit: !!tcp.hit });
       }
+      const trDragSpread = Math.ceil(28 * viewScale / 4);
+      const trDrag = new Float32Array(trPts.length);
+      for (let i = 0; i < trPts.length; i++) { if (trPts[i].hit) trDrag[i] = 1; }
+      for (let i = 0; i < trPts.length; i++) {
+        if (!trPts[i].hit) continue;
+        for (let d = 1; d <= trDragSpread; d++) {
+          const ease = Math.pow(1 - d / trDragSpread, 2);
+          if (i - d >= 0) trDrag[i - d] = Math.max(trDrag[i - d], ease);
+          if (i + d < trPts.length) trDrag[i + d] = Math.max(trDrag[i + d], ease);
+        }
+      }
+      for (let i = 0; i < trPts.length; i++) {
+        if (trPts[i].hit || trDrag[i] < 0.01) continue;
+        const pull = trDrag[i] * 22 * viewScale * ww.strength;
+        trPts[i].x -= cosA * pull;
+        trPts[i].y -= sinA * pull;
+      }
+
       ctx.globalAlpha = trAlpha;
       ctx.lineWidth = tr.thick * tr.life;
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
@@ -6180,6 +6243,8 @@ function draw(time) {
         { behind: 4 * viewScale, thick: 3.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
       ];
       let isFirstLine = true;
+      const dragSpread = Math.ceil(28 * viewScale / 4);
+      const dragStrength = 22 * viewScale;
       for (const ln of lines) {
         const step = 4;
         const pts = [];
@@ -6191,7 +6256,7 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const fcp = clampPt(px, py);
-          pts.push({ x: fcp.x, y: fcp.y });
+          pts.push({ x: fcp.x, y: fcp.y, hit: !!fcp.hit });
           if (isFirstLine && fcp.hit && contactSplashes.length < 300 && Math.random() < 0.35) {
             const sprayAngle = Math.atan2(fcp.ny, fcp.nx) + (Math.random() - 0.5) * 1.2;
             const spd = (1.5 + Math.random() * 3.5) * viewScale * ww.strength;
@@ -6206,6 +6271,24 @@ function draw(time) {
             });
           }
         }
+        // Post-rock drag
+        const drag = new Float32Array(pts.length);
+        for (let i = 0; i < pts.length; i++) { if (pts[i].hit) drag[i] = 1; }
+        for (let i = 0; i < pts.length; i++) {
+          if (!pts[i].hit) continue;
+          for (let d = 1; d <= dragSpread; d++) {
+            const ease = Math.pow(1 - d / dragSpread, 2);
+            if (i - d >= 0) drag[i - d] = Math.max(drag[i - d], ease);
+            if (i + d < pts.length) drag[i + d] = Math.max(drag[i + d], ease);
+          }
+        }
+        for (let i = 0; i < pts.length; i++) {
+          if (pts[i].hit || drag[i] < 0.01) continue;
+          const pull = drag[i] * dragStrength * ww.strength;
+          pts[i].x -= cosA * pull;
+          pts[i].y -= sinA * pull;
+        }
+
         isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
         ctx.globalAlpha = baseAlpha;
