@@ -376,14 +376,32 @@ poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
 // Start the auto-hide timer
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
-// Auto-fullscreen via URL hash (e.g. #fullscreen)
-if (window.location.hash === '#fullscreen') {
-  // Delay slightly so the page finishes layout first
+// Auto-fullscreen via URL hash (e.g. #fullscreen or #zen)
+// #fullscreen — fullscreen only
+// #zen — fullscreen + sound (shows tap-to-start overlay for audio gesture)
+const _hash = window.location.hash;
+if (_hash === '#fullscreen' || _hash === '#zen') {
   setTimeout(() => {
     const rfs = poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen;
     if (rfs) rfs.call(poolContainer).catch(() => enterFakeFS());
     else enterFakeFS();
   }, 200);
+}
+if (_hash === '#zen') {
+  // Browsers require a user gesture to start audio — show a minimal overlay
+  const zenOverlay = document.createElement('div');
+  zenOverlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(10,50,60,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer;transition:opacity 0.5s;';
+  zenOverlay.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.85);font:16px/1.6 system-ui,sans-serif;"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="display:block;margin:0 auto 12px;opacity:0.7;"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>Tap to start</div>';
+  poolContainer.appendChild(zenOverlay);
+  function startZen() {
+    zenOverlay.removeEventListener('click', startZen);
+    zenOverlay.removeEventListener('touchend', startZen);
+    if (!soundEnabled) toggleSound();
+    zenOverlay.style.opacity = '0';
+    setTimeout(() => zenOverlay.remove(), 500);
+  }
+  zenOverlay.addEventListener('click', startZen);
+  zenOverlay.addEventListener('touchend', startZen);
 }
 let regenerateWorld = null; // set after world init
 
