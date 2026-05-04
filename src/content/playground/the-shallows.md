@@ -3876,7 +3876,7 @@ function spawnStarfish() {
 }
 spawnStarfish();
 
-let lastTime = 0;
+let lastTime = -1;
 let waveTime = 0;
 let settleTime = 0;
 
@@ -4082,8 +4082,9 @@ rebuildSandCanvas();
 function draw(time) {
   requestAnimationFrame(draw);
   try {
-  // Fixed dt — simulation always runs at 1/60s regardless of actual framerate
-  const dt = 1 / 60;
+  // Compute real elapsed time, capped to prevent spiral-of-death after tab switch
+  const realDt = lastTime < 0 ? 1 / 60 : Math.min((time - lastTime) / 1000, 1 / 15);
+  const dt = realDt;
   lastTime = time;
   if (settleTime > 0) settleTime -= dt;
 
