@@ -5359,7 +5359,7 @@ function draw(time) {
           alpha: tmpl.alpha * (0.6 + Math.random() * 0.4),
           freq: tmpl.freq,
           life: 1,
-          maxLife: 2.5 + Math.random() * 3.5,
+          maxLife: 3.75 + Math.random() * 5.25,
           driftSpeed: ww.speed * (0.4 + Math.random() * 0.3),
         });
       }
@@ -5389,7 +5389,7 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcl = reefClamp(px, py);
-        trPts.push({ x: tcl.x, y: tcl.y, hit: !!tcl.hit });
+        trPts.push({ x: tcl.x, y: tcl.y, hit: !!tcl.hit, shadow: !!tcl.shadow });
       }
       // Post-rock drag for trail lines
       const trDragSpread = Math.ceil(28 * viewScale / 4);
@@ -5408,6 +5408,16 @@ function draw(time) {
         const pull = trDrag[i] * 22 * viewScale * ww.strength;
         trPts[i].x -= cosA * pull;
         trPts[i].y -= sinA * pull;
+      }
+      // Shadow zone: extra swirl stretch for trail lines in post-rock turbulence
+      const t3 = time * 0.002 + tr.seed;
+      for (let i = 0; i < trPts.length; i++) {
+        if (!trPts[i].shadow) continue;
+        // Swirl: rotate points around their neighbors, stretch along perpendicular
+        const swirl = Math.sin(t3 + i * 0.3) * 6 * viewScale * ww.strength;
+        const stretch = Math.cos(t3 * 1.7 + i * 0.2) * 4 * viewScale * ww.strength;
+        trPts[i].x += perpX * swirl + cosA * stretch;
+        trPts[i].y += perpY * swirl + sinA * stretch;
       }
 
       waveTrailCtx.globalAlpha = trAlpha * 0.5;
@@ -6275,7 +6285,7 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcp = clampPt(px, py);
-        trPts.push({ x: tcp.x, y: tcp.y, hit: !!tcp.hit });
+        trPts.push({ x: tcp.x, y: tcp.y, hit: !!tcp.hit, shadow: !!tcp.shadow });
       }
       const trDragSpread = Math.ceil(28 * viewScale / 4);
       const trDrag = new Float32Array(trPts.length);
@@ -6293,6 +6303,14 @@ function draw(time) {
         const pull = trDrag[i] * 22 * viewScale * ww.strength;
         trPts[i].x -= cosA * pull;
         trPts[i].y -= sinA * pull;
+      }
+      const t3 = time * 0.002 + tr.seed;
+      for (let i = 0; i < trPts.length; i++) {
+        if (!trPts[i].shadow) continue;
+        const swirl = Math.sin(t3 + i * 0.3) * 6 * viewScale * ww.strength;
+        const stretch = Math.cos(t3 * 1.7 + i * 0.2) * 4 * viewScale * ww.strength;
+        trPts[i].x += perpX * swirl + cosA * stretch;
+        trPts[i].y += perpY * swirl + sinA * stretch;
       }
 
       waveTrailCtx.globalAlpha = trAlpha * 0.5;
