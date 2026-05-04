@@ -863,6 +863,8 @@ function sampleFlow(px, py, time) {
 // Wash waves - occasional wave fronts that sweep across with turbulence
 const washWaves = [];
 let washTimer = 8 + Math.random() * 10;
+// Splash ripples — arc-shaped wave lines that radiate from rocks after wave impact
+const splashRipples = [];
 
 function spawnWash() {
   const angle = waveBaseAngle + (Math.random() - 0.5) * 0.06;
@@ -4847,6 +4849,23 @@ function draw(time) {
           rf._waveHit = ww.strength;
           rf._waveAngle = ww.angle;
           rf._waveTime = time;
+          // Spawn expanding splash ripple lines from the rock
+          const hitAngle = ww.angle + Math.PI; // direction wave came from
+          const count = 2 + Math.floor(ww.strength * 3);
+          for (let si = 0; si < count; si++) {
+            splashRipples.push({
+              cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
+              radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 3,
+              maxRadius: (rf.crownR * 2.5 + si * 15) * viewScale,
+              speed: (1.2 + Math.random() * 0.8 - si * 0.15) * viewScale,
+              hitAngle, // direction wave arrived from
+              strength: ww.strength * (0.7 + Math.random() * 0.3),
+              life: 1,
+              maxLife: 3 + Math.random() * 3 + si * 0.5,
+              seed: Math.random() * 100,
+              thick: (1.5 + Math.random() * 1.0 - si * 0.3) * viewScale,
+            });
+          }
         }
         const splashCount = Math.ceil(2 * viewScale);
         if (foamBits.length < 210) {
@@ -5412,6 +5431,58 @@ function draw(time) {
   ctx.globalAlpha = 1;
 
   _measure('foam+waves');
+
+  // Splash ripples — arc-shaped wave lines radiating from rocks after wave impact
+  for (let i = splashRipples.length - 1; i >= 0; i--) {
+    const sp = splashRipples[i];
+    sp.life -= dt / sp.maxLife;
+    if (sp.life <= 0) { splashRipples.splice(i, 1); continue; }
+    sp.radius += sp.speed;
+    sp.speed *= 0.992; // gradually slows
+    if (sp.radius > sp.maxRadius) { splashRipples.splice(i, 1); continue; }
+
+    const alpha = sp.life * sp.life * sp.strength * 0.5;
+    if (alpha < 0.005) { splashRipples.splice(i, 1); continue; }
+
+    // Draw arc centered on reef, strongest on the hit side, fading on the lee side
+    const t2 = time * 0.001;
+    const steps = 48;
+    ctx.beginPath();
+    const pts = [];
+    for (let si = 0; si <= steps; si++) {
+      const a = (si / steps) * Math.PI * 2;
+      // Strength varies around the arc — strongest opposite the wave direction
+      // (wave bounces back from hit side)
+      const hitDot = Math.cos(a - sp.hitAngle); // 1 = facing wave, -1 = away
+      const arcStrength = Math.max(0.05, 0.3 + hitDot * 0.7); // strong on hit side, weak on lee
+      // Wobble for organic feel
+      const wobble = Math.sin(a * 5.3 + sp.seed) * 2 + Math.sin(a * 3.1 + sp.seed * 2.7 + t2 * 2) * 1.5;
+      const r = sp.radius + wobble * viewScale * sp.life;
+      pts.push({
+        x: sp.cx + Math.cos(a) * r,
+        y: sp.cy + Math.sin(a) * r,
+        str: arcStrength,
+      });
+    }
+    // Draw as segments with varying alpha for hit-side emphasis
+    for (let si = 1; si < pts.length; si++) {
+      const segAlpha = alpha * (pts[si - 1].str + pts[si].str) * 0.5;
+      if (segAlpha < 0.003) continue;
+      ctx.beginPath();
+      ctx.moveTo(pts[si - 1].x, pts[si - 1].y);
+      // Smooth curve through midpoint
+      const mx = (pts[si - 1].x + pts[si].x) * 0.5;
+      const my = (pts[si - 1].y + pts[si].y) * 0.5;
+      ctx.lineTo(pts[si].x, pts[si].y);
+      ctx.globalAlpha = segAlpha;
+      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+      ctx.lineWidth = sp.thick * sp.life;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+
   // Update ripples
   for (let i = ripples.length - 1; i >= 0; i--) {
     const r = ripples[i];
