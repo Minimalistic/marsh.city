@@ -4325,8 +4325,9 @@ function draw(time) {
   ctx.restore();
   ctx.setTransform(Math.min(2, window.devicePixelRatio || 1), 0, 0, Math.min(2, window.devicePixelRatio || 1), 0, 0);
 
-  // Cloud shadows — cached to offscreen canvas, refreshed every 8 frames
-  // Update cloud positions every frame (cheap), redraw gradients rarely (expensive)
+  // Cloud shadows — drawn directly to main canvas with multiply blend
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
   for (const cloud of clouds) {
     cloud.x += Math.cos(cloud.drift) * cloud.speed * dt;
     cloud.y += Math.sin(cloud.drift) * cloud.speed * dt;
@@ -4335,50 +4336,22 @@ function draw(time) {
     if (cloud.x < -margin) cloud.x = w + margin;
     if (cloud.y > h + margin) cloud.y = -margin;
     if (cloud.y < -margin) cloud.y = h + margin;
-  }
-  _cloudFrame++;
-  if (_cloudFrame >= 8) {
-    _cloudFrame = 0;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const cw = canvas.width, ch = canvas.height;
-    if (_cloudCanvas.width !== cw || _cloudCanvas.height !== ch) {
-      _cloudCanvas.width = cw; _cloudCanvas.height = ch;
+    const cx = cloud.x, cy = cloud.y;
+    const baseR = Math.min(w, h) * cloud.size;
+    for (const lobe of cloud.subBlobs) {
+      const lx = cx + lobe.ox * baseR;
+      const ly = cy + lobe.oy * baseR;
+      const r = baseR * lobe.scale;
+      const sg = ctx.createRadialGradient(lx, ly, 0, lx, ly, r);
+      const shade = Math.round(255 * (1 - cloud.opacity));
+      sg.addColorStop(0, `rgb(${shade}, ${shade + 4}, ${shade + 6})`);
+      sg.addColorStop(0.6, `rgb(${shade + 20}, ${shade + 22}, ${shade + 24})`);
+      sg.addColorStop(1, 'rgb(255, 255, 255)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(lx - r, ly - r, r * 2, r * 2);
     }
-    _cloudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Fill with white — identity for multiply blend, avoids hard dark edges
-    _cloudCtx.fillStyle = 'rgb(255,255,255)';
-    _cloudCtx.fillRect(0, 0, w, h);
-    // Draw cloud gradients with multiply so overlapping lobes darken naturally
-    _cloudCtx.globalCompositeOperation = 'multiply';
-    for (const cloud of clouds) {
-      const cx = cloud.x, cy = cloud.y;
-      const baseR = Math.min(w, h) * cloud.size;
-      for (const lobe of cloud.subBlobs) {
-        const lx = cx + lobe.ox * baseR;
-        const ly = cy + lobe.oy * baseR;
-        const lr = baseR * lobe.scale;
-        const breathe = 1 + Math.sin(time * 0.00015 + cloud.phase + lobe.ox * 5) * 0.06;
-        const r = lr * breathe;
-        // Gradient fades to white by 0.85 — outer 15% is pure white buffer
-        // so the fillRect edge is invisible against the white background
-        const sg = _cloudCtx.createRadialGradient(lx, ly, 0, lx, ly, r);
-        const shade = Math.round(255 * (1 - cloud.opacity));
-        sg.addColorStop(0, `rgb(${shade}, ${shade + 4}, ${shade + 6})`);
-        sg.addColorStop(0.5, `rgb(${shade + 15}, ${shade + 17}, ${shade + 19})`);
-        sg.addColorStop(0.85, `rgb(${shade + 40}, ${shade + 42}, ${shade + 44})`);
-        sg.addColorStop(1, 'rgb(255, 255, 255)');
-        _cloudCtx.fillStyle = sg;
-        _cloudCtx.fillRect(lx - r, ly - r, r * 2, r * 2);
-      }
-    }
-    _cloudCtx.globalCompositeOperation = 'source-over';
   }
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(_cloudCanvas, 0, 0);
   ctx.restore();
-  ctx.setTransform(Math.min(2, window.devicePixelRatio || 1), 0, 0, Math.min(2, window.devicePixelRatio || 1), 0, 0);
 
   // Sun spots — bright warm patches where light bleeds through cloud gaps
   ctx.save();
