@@ -367,6 +367,15 @@ poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
 // Start the auto-hide timer
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
+// Auto-fullscreen via URL hash (e.g. #fullscreen)
+if (window.location.hash === '#fullscreen') {
+  // Delay slightly so the page finishes layout first
+  setTimeout(() => {
+    const rfs = poolContainer.requestFullscreen || poolContainer.webkitRequestFullscreen;
+    if (rfs) rfs.call(poolContainer).catch(() => enterFakeFS());
+    else enterFakeFS();
+  }, 200);
+}
 let regenerateWorld = null; // set after world init
 
 let inFullscreen = false; // track FS state so resize handler can skip
