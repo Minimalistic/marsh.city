@@ -4207,8 +4207,8 @@ function draw(time) {
           rf._waveAngle = ww.angle;
           rf._waveTime = time;
         }
-        const splashCount = Math.ceil(3 * viewScale);
-        if (foamBits.length < 300) {
+        const splashCount = Math.ceil(2 * viewScale);
+        if (foamBits.length < 210) {
           for (let si = 0; si < splashCount; si++) {
             const edgeAngle = Math.atan2(-sinA, -cosA) + (Math.random() - 0.5) * Math.PI * 0.8;
             // Spawn at the crown edge (waterline), offset by crown position
@@ -4571,7 +4571,7 @@ function draw(time) {
 
     // Spawn foam only while the wave front is still active
     if (alive) {
-      const foamCount = Math.ceil(4 * viewScale);
+      const foamCount = Math.ceil(2.8 * viewScale);
       for (let i = 0; i < foamCount; i++) {
         const lateral = (Math.random() - 0.5) * span;
         const behind = Math.random() * 5 * viewScale;
@@ -4586,9 +4586,9 @@ function draw(time) {
           maxAge: 5 + Math.random() * 6,
         });
       }
-      // Shed tiny foam bits into the water (cap at 250)
-      if (foamBits.length < 250) {
-        for (let i = 0; i < 2; i++) {
+      // Shed tiny foam bits into the water (cap at 175)
+      if (foamBits.length < 175) {
+        for (let i = 0; i < 1; i++) {
           const lateral = (Math.random() - 0.5) * span;
           foamBits.push({
             x: ww.x - cosA * Math.random() * 10 + (-sinA) * lateral,
