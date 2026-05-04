@@ -4847,7 +4847,7 @@ function rebuildSandCanvas() {
       }
       sandCtx.closePath();
       sandCtx.fillStyle = er.color;
-      sandCtx.globalAlpha = 0.6;
+      sandCtx.globalAlpha = 0.3;
       sandCtx.fill();
       sandCtx.globalAlpha = 1;
     }
@@ -4864,7 +4864,7 @@ function rebuildSandCanvas() {
     }
     sandCtx.closePath();
     sandCtx.fillStyle = sr.color;
-    sandCtx.globalAlpha = 0.35;
+    sandCtx.globalAlpha = 0.18;
     sandCtx.fill();
     sandCtx.globalAlpha = 1;
   }
@@ -5170,7 +5170,7 @@ function draw(time) {
     ctx.translate(rf.x, rf.y);
     // Underwater shadow/glow
     const shadowGrad = ctx.createRadialGradient(0, 0, rf.baseR * 0.3, 0, 0, rf.baseR * 1.3);
-    shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.15)');
+    shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.08)');
     shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = shadowGrad;
     ctx.fillRect(-rf.baseR * 1.5, -rf.baseR * 1.5, rf.baseR * 3, rf.baseR * 3);
@@ -5187,7 +5187,7 @@ function draw(time) {
     const layers = 6;
     for (let layer = 0; layer < layers; layer++) {
       const scale = (1.2 - (layer / layers) * 0.7) * 1.5; // 1.8 outer to 0.75 inner
-      const alpha = (layer / (layers - 1)) * 0.25; // 0 outer to 0.25 inner
+      const alpha = (layer / (layers - 1)) * 0.15; // 0 outer to 0.15 inner
       // All layers blend strongly toward circle — underwater rock is eroded smooth
       const smooth = 1 - (layer / (layers - 1)) * 0.5; // 1.0 at outermost, 0.5 at innermost
       ctx.beginPath();
