@@ -1196,8 +1196,8 @@ class Fish {
             foodPellets.push({
               x: closestFood.x + Math.cos(fragAngle) * 3,
               y: closestFood.y + Math.sin(fragAngle) * 3,
-              size: closestFood.size * (0.2 + Math.random() * 0.2),
-              bites: 3 + Math.floor(Math.random() * 5),
+              size: Math.max(1.2, closestFood.size * (0.4 + Math.random() * 0.3)),
+              bites: 2 + Math.floor(Math.random() * 3),
               vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.5),
               vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
             });
@@ -4535,7 +4535,7 @@ function draw(time) {
       fp.vy *= 0.3;
     }
     fp.onRock = stillOnRock;
-    if (fp.bites <= 0 || fp.size < 0.3) { foodPellets.splice(i, 1); continue; }
+    if (fp.bites <= 0 || fp.size < 0.8) { foodPellets.splice(i, 1); continue; }
     ctx.beginPath();
     ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(180, 130, 60, ${Math.min(0.8, 0.3 + fp.size * 0.2)})`;
