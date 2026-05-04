@@ -5442,6 +5442,37 @@ function draw(time) {
       return { x: px, y: py, hidden: false, stretch: 0 };
     }
 
+    // Wave light band — screen-mode gradient showing the wave crest catching light
+    if (alive) {
+      const bandWidth = ww.width * 2.5; // total band width
+      const bandAlpha = ww.life * ww.strength * 0.18;
+      if (bandAlpha > 0.005) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        // Gradient perpendicular to wave front: from leading edge to trailing
+        const gx0 = ww.x + cosA * bandWidth * 0.3; // leading edge (ahead of wave)
+        const gy0 = ww.y + sinA * bandWidth * 0.3;
+        const gx1 = ww.x - cosA * bandWidth * 0.7; // trailing edge (behind)
+        const gy1 = ww.y - sinA * bandWidth * 0.7;
+        const wg = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
+        wg.addColorStop(0, 'rgba(80, 180, 190, 0)');        // leading edge — darker fade
+        wg.addColorStop(0.2, `rgba(100, 200, 210, ${bandAlpha * 0.5})`);
+        wg.addColorStop(0.4, `rgba(140, 220, 225, ${bandAlpha})`);  // bright turquoise center
+        wg.addColorStop(0.55, `rgba(160, 235, 240, ${bandAlpha})`); // peak brightness
+        wg.addColorStop(0.75, `rgba(120, 210, 220, ${bandAlpha * 0.4})`);
+        wg.addColorStop(1, 'rgba(80, 180, 190, 0)');        // trailing fade
+        ctx.fillStyle = wg;
+        // Draw a wide rect covering the wave band area
+        const span = Math.max(w, h) * 1.5;
+        ctx.save();
+        ctx.translate(ww.x, ww.y);
+        ctx.rotate(ww.angle);
+        ctx.fillRect(-span, -bandWidth * 0.3, span * 2, bandWidth);
+        ctx.restore();
+        ctx.restore();
+      }
+    }
+
     // Draw wave front lines only while active
     if (alive) {
       const perpX = -sinA;
@@ -6122,11 +6153,6 @@ function draw(time) {
       }
       if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
       ctx.stroke();
-      if (false) { // dead code from old run-based drawing
-          ctx.stroke();
-          tr2Run = -1;
-        }
-      }
     }
     // Wave front lines
     if (alive) {
