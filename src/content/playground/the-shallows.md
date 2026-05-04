@@ -25,10 +25,6 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
 <div id="sound-hint" class="pool-hint" hidden>No audio? Check your phone's silent mode switch</div>
-<div id="rotate-hint" class="pool-rotate-hint" hidden>
-  <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M15 19h2a2 2 0 002-2V7"/><path d="M19 10l2-3-2-3"/></svg>
-  <span>Rotate for the best view</span>
-</div>
 </div>
 <style>
 .pool-tool {
@@ -74,26 +70,10 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 #pool-container:fullscreen canvas,
 #pool-container:-webkit-full-screen canvas,
 #pool-container.fake-fullscreen canvas { width: 100% !important; height: 100% !important; }
-#pool-container.fs-rotated { transform: rotate(90deg); transform-origin: center center; width: 100vh !important; height: 100vw !important; top: 50% !important; left: 50% !important; margin-top: -50vw !important; margin-left: -50vh !important; }
 .fake-fullscreen ~ *, body:has(.fake-fullscreen) > *:not(script):not(style):not(link) { visibility: hidden !important; }
 .fake-fullscreen, .fake-fullscreen * { visibility: visible !important; }
 body:has(.fake-fullscreen) .site-foot-foliage { display: none !important; }
 body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !important; }
-.pool-rotate-hint {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-  background: rgba(10, 50, 60, 0.85); backdrop-filter: blur(6px);
-  color: rgba(255,255,255,0.8); font-size: 15px; font-family: inherit;
-  z-index: 100; opacity: 0; transition: opacity 0.4s;
-  pointer-events: none;
-}
-.pool-rotate-hint.show { opacity: 1; pointer-events: auto; }
-.pool-rotate-hint svg { animation: pool-rotate-nudge 2s ease-in-out infinite; }
-@keyframes pool-rotate-nudge {
-  0%, 100% { transform: rotate(0deg); }
-  30% { transform: rotate(90deg); }
-  60% { transform: rotate(90deg); }
-}
 </style>
 
 <script type="module">
@@ -343,28 +323,15 @@ poolContainer.addEventListener('touchstart', showUI);
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
 let regenerateWorld = null; // set after world init
 
-let inFullscreen = false; // track FS state so resize handler can skip
-const rotateHint = document.getElementById('rotate-hint');
-function isPortrait() { return window.innerHeight > window.innerWidth; }
 function handleFSChange() {
-  inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
-  fsCloseBtn.hidden = !inFullscreen;
-  fsBtn.hidden = inFullscreen;
-  // In portrait fullscreen, rotate the container 90° so it fills the screen landscape-style
-  if (inFullscreen && isPortrait()) {
-    poolContainer.classList.add('fs-rotated');
-    // Brief "rotating view" flash
-    rotateHint.hidden = false;
-    requestAnimationFrame(() => rotateHint.classList.add('show'));
-    setTimeout(() => {
-      rotateHint.classList.remove('show');
-      setTimeout(() => rotateHint.hidden = true, 400);
-    }, 2000);
-  } else {
-    poolContainer.classList.remove('fs-rotated');
-    rotateHint.classList.remove('show');
-    rotateHint.hidden = true;
-  }
+  const inFS = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
+  fsCloseBtn.hidden = !inFS;
+  fsBtn.hidden = inFS;
+  // Regenerate the entire world at new scale after layout settles
+  setTimeout(() => {
+    ({ w, h } = resize());
+    if (regenerateWorld) regenerateWorld();
+  }, 200);
   showUI();
 }
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
@@ -472,7 +439,7 @@ const foodPellets = [];
 
 // Floating foam bits - tiny particles shed by waves, drift with current
 const foamBits = [];
-// Kill effect particles - scale glitter from predator catches
+// Kill effect particles - blood cloud + scale glitter from predator catches
 const killFx = [];
 
 function resize() {
@@ -488,7 +455,7 @@ let { w, h } = resize();
 const initialArea = w * h;
 const initialW = w;
 // More fish on larger viewports - scales aggressively with area
-const initialFishCount = Math.min(214, Math.max(69, Math.floor(initialArea / 1232)));
+const initialFishCount = Math.min(171, Math.max(55, Math.floor(initialArea / 1540)));
 const initialDebrisCount = 500;
 // View scale: larger viewports get proportionally larger/faster fish
 let viewScale = 1;
@@ -512,7 +479,7 @@ function rescaleAll(oldW, oldH) {
   // Scale population to match new viewport area
   const areaRatio = (w * h) / initialArea;
   // Update organic population base for new viewport size
-  const newBasePop = Math.min(214, Math.max(45, Math.floor((w * h) / 1232)));
+  const newBasePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
   const popRatio = newBasePop / Math.max(1, basePop);
   popTarget = Math.max(newBasePop * 0.35, Math.min(newBasePop * 1.3, popTarget * popRatio));
   basePop = newBasePop;
@@ -567,7 +534,6 @@ function rescaleAll(oldW, oldH) {
   while (rocks.length > targetRocks && rocks.length > 15) rocks.pop();
 }
 function onResize() {
-  if (inFullscreen) return; // CSS handles scaling in fullscreen
   const oldW = w, oldH = h;
   ({ w, h } = resize());
   if (w !== oldW || h !== oldH) { rescaleAll(oldW, oldH); rebuildGrid(); }
@@ -614,45 +580,23 @@ function* getNeighbors(fx, fy) {
 }
 rebuildGrid();
 
-// Coordinate transform — accounts for CSS rotation in portrait fullscreen
-function screenToCanvas(clientX, clientY) {
-  const rotated = poolContainer.classList.contains('fs-rotated');
-  const rect = canvas.getBoundingClientRect();
-  if (rotated) {
-    // Container is rotated 90° CW: screen X → canvas Y, screen Y → canvas X (inverted)
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const rx = clientX - cx, ry = clientY - cy;
-    // Undo the 90° rotation: (rx, ry) → (ry, -rx)
-    const ux = ry, uy = -rx;
-    return {
-      x: (ux / (rect.height / 2) * 0.5 + 0.5) * w,
-      y: (uy / (rect.width / 2) * 0.5 + 0.5) * h,
-    };
-  }
-  return {
-    x: (clientX - rect.left) / rect.width * w,
-    y: (clientY - rect.top) / rect.height * h,
-  };
-}
-
 // Mouse
 let mouse = { x: -1000, y: -1000, prevX: -1000, prevY: -1000, active: false, speed: 0, down: false };
 canvas.addEventListener('mouseenter', e => {
-  const p = screenToCanvas(e.clientX, e.clientY);
-  mouse.x = p.x;
-  mouse.y = p.y;
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = (e.clientX - rect.left) / rect.width * w;
+  mouse.y = (e.clientY - rect.top) / rect.height * h;
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
   mouse.active = true;
   mouse.speed = 0;
 });
 canvas.addEventListener('mousemove', e => {
-  const p = screenToCanvas(e.clientX, e.clientY);
+  const rect = canvas.getBoundingClientRect();
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
-  mouse.x = p.x;
-  mouse.y = p.y;
+  mouse.x = (e.clientX - rect.left) / rect.width * w;
+  mouse.y = (e.clientY - rect.top) / rect.height * h;
   if (!mouse.active) { mouse.prevX = mouse.x; mouse.prevY = mouse.y; }
   mouse.active = true;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
@@ -661,9 +605,9 @@ canvas.addEventListener('mouseleave', () => { mouse.active = false; mouse.down =
 canvas.addEventListener('mousedown', e => {
   e.preventDefault();
   mouse.down = true;
-  const p = screenToCanvas(e.clientX, e.clientY);
-  const mx = p.x;
-  const my = p.y;
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) / rect.width * w;
+  const my = (e.clientY - rect.top) / rect.height * h;
   if (activeTool === 'food') {
     // Drop food where clicked - if on a rock it'll roll down into the water
     const b = 250 + Math.floor(Math.random() * 60);
@@ -674,7 +618,7 @@ canvas.addEventListener('mousedown', e => {
       const cAngle = Math.atan2(cdy, cdx);
       if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock = true; break; }
     }
-    foodPellets.push({ x: mx, y: my, size: 0.75, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock });
+    foodPellets.push({ x: mx, y: my, size: 3, bites: b, startBites: b, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock });
     if (!onRock) ripples.push({ x: mx, y: my, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mx, y: my, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
@@ -687,10 +631,11 @@ canvas.addEventListener('mouseup', () => { mouse.down = false; });
 // Touch
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
   const t = e.touches[0];
-  const p = screenToCanvas(t.clientX, t.clientY);
-  mouse.x = p.x;
-  mouse.y = p.y;
+  // Scale touch point from CSS rect space to logical canvas space (w, h)
+  mouse.x = (t.clientX - rect.left) / rect.width * w;
+  mouse.y = (t.clientY - rect.top) / rect.height * h;
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
   mouse.active = true;
@@ -705,7 +650,7 @@ canvas.addEventListener('touchstart', e => {
       const cAngle = Math.atan2(cdy, cdx);
       if (cDist < rf.radiusAt(cAngle, rf.crownRadii) + 3) { onRock2 = true; break; }
     }
-    foodPellets.push({ x: mouse.x, y: mouse.y, size: 0.75, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock: onRock2 });
+    foodPellets.push({ x: mouse.x, y: mouse.y, size: 3, bites: b2, startBites: b2, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, onRock: onRock2 });
     if (!onRock2) ripples.push({ x: mouse.x, y: mouse.y, radius: 2, maxRadius: 20, opacity: 0.2 });
   } else {
     ripples.push({ x: mouse.x, y: mouse.y, radius: 3, maxRadius: 120 * viewScale, opacity: 0.5 });
@@ -714,12 +659,12 @@ canvas.addEventListener('touchstart', e => {
 }, { passive: false });
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
   const t = e.touches[0];
-  const p = screenToCanvas(t.clientX, t.clientY);
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
-  mouse.x = p.x;
-  mouse.y = p.y;
+  mouse.x = (t.clientX - rect.left) / rect.width * w;
+  mouse.y = (t.clientY - rect.top) / rect.height * h;
   mouse.speed = Math.sqrt((mouse.x - mouse.prevX) ** 2 + (mouse.y - mouse.prevY) ** 2);
 }, { passive: false });
 canvas.addEventListener('touchend', () => { mouse.active = false; mouse.down = false; mouse.x = -1000; mouse.y = -1000; mouse.speed = 0; });
@@ -728,8 +673,6 @@ const ripples = [];
 
 // Wave current - oscillates back and forth like real shallow water wash
 const tide = { angle: 0, strength: 0 };
-// School waypoint — a drifting target that gently pulls the school across the viewport
-const schoolWP = { x: w * 0.5, y: h * 0.5, timer: 15 + Math.random() * 20 };
 const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
 // Cloud shadows — large soft blobs that drift linearly across the scene
@@ -759,7 +702,7 @@ for (let i = 0; i < cloudCount; i++) {
   clouds.push({
     x: w / 2 + windCos * along - windSin * across,
     y: h / 2 + windSin * along + windCos * across,
-    speed: (12 + Math.random() * 10) * 3,
+    speed: (12 + Math.random() * 10) * 1.5,
     drift: cloudWind.angle + (Math.random() - 0.5) * 0.3,
     size: (0.35 + Math.random() * 0.29) * 1.73,
     opacity: 0.08 + Math.random() * 0.06,
@@ -883,7 +826,7 @@ class Fish {
 
     // Size - scales with viewport, with ~30% variation between fish
     const sizeVar = 0.7 + Math.random() * 0.6; // 0.7 to 1.3 range
-    this.len = (10.6 + Math.random() * 5.3) * this.scale * sizeVar;
+    this.len = (12.5 + Math.random() * 6.25) * this.scale * sizeVar;
     this.bodyWidth = this.len * (0.05 + Math.random() * 0.015);
 
     // Color type = palette index (determines which fish school together)
@@ -895,12 +838,12 @@ class Fish {
 
     // Per-fish comfort distance from rocks - some swim closer than others
     this.rockComfort = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
-    // Sociability — ~7% are stragglers who drift from the school
-    this.sociability = Math.random() < 0.07 ? 0.15 + Math.random() * 0.25 : 0.7 + Math.random() * 0.3;
+    // Sociability — ~15% are stragglers who drift from the school
+    this.sociability = Math.random() < 0.15 ? 0.15 + Math.random() * 0.25 : 0.7 + Math.random() * 0.3;
     // Stragglers: shorter sensing range, weaker schooling pull
     this.separationDist = (12 + Math.random() * 5) * this.scale;
     this.alignDist = 150 * this.scale * this.sociability;
-    this.cohesionDist = 96 * this.scale * this.sociability;
+    this.cohesionDist = 200 * this.scale * this.sociability;
 
     // Stragglers are slower and wander more
     if (this.sociability < 0.5) {
@@ -921,11 +864,6 @@ class Fish {
     this._glint = 0;        // countdown timer, >0 means glinting
     this._glintSeg = 0;     // which spine segment caught the light
     this._prevAngle = this.angle;
-    // Belly flash — rare bright flash when fish turns sharply, exposing its side
-    this._bellyFlash = 0;
-    // Spin-break: track cumulative turning while being chased
-    this._chaseSpin = 0;       // accumulated signed angle while chased
-    this._spinBreakAt = 4 + Math.random() * 3; // break after 4-7 radians (~1-1.5 loops)
     // Distraction - sometimes fish wander off from the school
     this.distracted = Math.random() < 0.08;
     this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
@@ -1013,9 +951,9 @@ class Fish {
     }
     const schoolWeight = (this.distracted && !predNearby) ? 0.3 : 1;
     // Separation weaker in dense school centers — fish stack at different depths
-    const density = Math.min(1, cohCount / 5); // 0 = edge/alone, 1 = deep in pack (tighter threshold)
-    const densityJitter = 0.85 + this._phaseOffset % 1 * 0.1; // per-fish variation
-    const sepStr = 0.07 * (1 - density * densityJitter * 0.92); // 0.07 at edge, ~0.005 at center
+    const density = Math.min(1, cohCount / 8); // 0 = edge/alone, 1 = deep in pack
+    const densityJitter = 0.78 + this._phaseOffset % 1 * 0.12; // per-fish variation
+    const sepStr = 0.07 * (1 - density * densityJitter); // 0.07 at edge, ~0.015 at center
     if (sepCount > 0) { this.vx += sepX * sepStr; this.vy += sepY * sepStr; }
     // Measure heading agreement — how aligned are nearby fish with this one?
     let headingAgreement = 1; // 1 = perfect agreement, 0 = opposing
@@ -1073,8 +1011,8 @@ class Fish {
       const foreAft = (toCx * schHx + toCy * schHy) / toCDist;
       // cross: signed lateral offset from school centerline
       const cross = (toCx * schHy - toCy * schHx) / toCDist;
-      // Along-track pull toward center — stronger = tighter core with natural edge falloff
-      const alongStr = 0.018;
+      // Along-track pull toward center (gentle, keeps school compact)
+      const alongStr = 0.0062;
       const alongX = schHx * foreAft * toCDist * alongStr;
       const alongY = schHy * foreAft * toCDist * alongStr;
       // Cross-track pull toward centerline — stronger at front and back (teardrop)
@@ -1082,11 +1020,11 @@ class Fish {
       const absCross = Math.abs(cross);
       let crossStr;
       if (foreAft > 0.3) {
-        crossStr = 0.045 + absForeAft * 0.028;
+        crossStr = 0.019 + absForeAft * 0.012;
       } else if (foreAft < -0.3) {
-        crossStr = 0.028 + absForeAft * 0.015;
+        crossStr = 0.011 + absForeAft * 0.006;
       } else {
-        crossStr = 0.015 + absCross * 0.009;
+        crossStr = 0.006 + absCross * 0.0036;
       }
       // Cross-track force: perpendicular to school heading, toward centerline
       const crossForceX = -schHy * cross * toCDist * crossStr;
@@ -1110,14 +1048,6 @@ class Fish {
     this.vx -= Math.sign(normX) * edgeX * 0.015;
     this.vy -= Math.sign(normY) * edgeY * 0.015;
 
-    // School waypoint drift — very gentle pull so the school sweeps across the scene
-    if (!this.fleeing && !this.eating && !this.distracted) {
-      const wpDx = schoolWP.x - this.x, wpDy = schoolWP.y - this.y;
-      const wpDist = Math.sqrt(wpDx * wpDx + wpDy * wpDy) || 1;
-      this.vx += (wpDx / wpDist) * 0.008;
-      this.vy += (wpDy / wpDist) * 0.008;
-    }
-
     // Tidal current + local turbulence (fish resist most of it)
     this.vx += Math.cos(tide.angle) * tide.strength * 0.006 * viewScale;
     this.vy += Math.sin(tide.angle) * tide.strength * 0.006 * viewScale;
@@ -1140,10 +1070,10 @@ class Fish {
     const foodRange = 400;
     let closestFood = null;
     let closestFoodDist = foodRange;
-    // Skip food when fleeing, eating (post-bite pullback), or fearful
-    if (this.eating || this.fleeing) { closestFood = null; closestFoodDist = Infinity; }
+    // Only skip food search during the brief post-bite pullback, not a long chew
+    if (this.eating) { closestFood = null; closestFoodDist = Infinity; }
     for (const fp of foodPellets) {
-      if (this.eating || this.fleeing) break;
+      if (this.eating) break;
       if (fp.bites <= 0) continue;
       const fdx = fp.x - mouthX;
       const fdy = fp.y - mouthY;
@@ -1165,29 +1095,24 @@ class Fish {
       this.distracted = false;
       this.distractTimer = 5;
 
-      const eatDist = 8;
-      const biteDist = 4;
-      if (closestFoodDist < eatDist) {
-        // Close to food — slow down and actively turn to face it
-        this.vx *= 0.82;
-        this.vy *= 0.82;
-        // Rotate toward the food so the fish can line up for a bite
-        const turnToFood = Math.max(-0.2, Math.min(0.2, headingDiff));
-        this.angle += turnToFood * 0.4;
-        this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating) {
-          closestFood.bites -= 2;
-          // Visible size reduction - food gets eaten away fast
-          closestFood.size *= 0.93;
-          // Gentle nudge on bite — food barely moves
-          closestFood.vx += Math.cos(this.angle) * 0.1;
-          closestFood.vy += Math.sin(this.angle) * 0.1;
+      const eatDist = 10;
+      const biteDist = 6;
+      if (closestFoodDist < eatDist && angleMismatch < 0.8) {
+        // Close and roughly facing food - slow to nibble
+        this.vx *= 0.85;
+        this.vy *= 0.85;
+        if (closestFoodDist < biteDist && angleMismatch < 0.6 && !this.eating) {
+          closestFood.bites--;
+          // Visible size reduction - food gets eaten away
+          closestFood.size *= 0.97;
+          // Bump the food on bite
+          closestFood.vx += Math.cos(this.angle) * 0.6;
+          closestFood.vy += Math.sin(this.angle) * 0.6;
           // Peck lunge - dart forward then brief pullback
           this._biting = true;
           this._biteTimer = 0.12;
-          this.vx += Math.cos(this.angle) * 0.8;
-          this.vy += Math.sin(this.angle) * 0.8;
+          this.vx += Math.cos(this.angle) * 1.5;
+          this.vy += Math.sin(this.angle) * 1.5;
           this.eating = true;
           this.eatTimer = 0.3 + Math.random() * 0.5; // quick pullback, come right back
           // Scatter fragments occasionally - food breaks apart
@@ -1196,8 +1121,8 @@ class Fish {
             foodPellets.push({
               x: closestFood.x + Math.cos(fragAngle) * 3,
               y: closestFood.y + Math.sin(fragAngle) * 3,
-              size: Math.max(1.2, closestFood.size * (0.4 + Math.random() * 0.3)),
-              bites: 2 + Math.floor(Math.random() * 3),
+              size: closestFood.size * (0.2 + Math.random() * 0.2),
+              bites: 5 + Math.floor(Math.random() * 10),
               vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.5),
               vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
             });
@@ -1205,16 +1130,13 @@ class Fish {
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Steer toward food eagerly — overrides schooling at close range
+        // Steer toward food eagerly - stronger pull the closer they get
         const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.15 + proximity * 0.35;
+        const steerWeight = 0.08 + proximity * 0.12;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        // Per-fish approach offset — mild spread so they don't all pile from one side
-        const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
-        const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
-        const foodSpeed = scaledSpeed * (0.5 + (1 - proximity) * 0.4); // slow as they get closer
-        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
-        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * foodSpeed;
+        const wobble = (Math.sin(this._phaseOffset + time * 0.001) * 0.2);
+        const desiredVx = Math.cos(foodAngle + wobble) * scaledSpeed * 1.2;
+        const desiredVy = Math.sin(foodAngle + wobble) * scaledSpeed * 1.2;
         this.vx += (desiredVx - this.vx) * steerWeight;
         this.vy += (desiredVy - this.vy) * steerWeight;
       }
@@ -1276,19 +1198,20 @@ class Fish {
       const predAggression = predSpeed / (pred.baseSpeed * viewScale);
       const beingChased = pred.target === this;
 
-      // Passive avoidance — fish steer clear but don't panic at long range
-      const comfortZone = 150 * viewScale;
+      // Passive avoidance — fish always steer clear of the big fish
+      // Wide detection radius — fish react well before predator is close
+      const comfortZone = 220 * viewScale;
       if (pDist < comfortZone && pDist > 0.1) {
         const avoidance = 1 - pDist / comfortZone;
         const pushAngle = Math.atan2(pdy, pdx);
-        // Gentle push — keeps fish away without triggering full flee
-        const pushForce = avoidance * avoidance * 0.5 * viewScale;
+        // Cubic falloff — gentle at edge, sharp ramp as predator closes in
+        const pushForce = avoidance * avoidance * avoidance * 0.6 * viewScale;
         this.vx += Math.cos(pushAngle) * pushForce;
         this.vy += Math.sin(pushAngle) * pushForce;
-        // Only flee when genuinely close — inner 40% of comfort zone
-        if (avoidance > 0.6) {
+        // Any fish within comfort zone starts fleeing
+        if (avoidance > 0.2) {
           this.fleeing = true;
-          this.fleeTimer = Math.max(this.fleeTimer, 0.2 + avoidance * 0.3);
+          this.fleeTimer = Math.max(this.fleeTimer, 0.3 + avoidance * 0.5);
         }
       }
 
@@ -1299,62 +1222,40 @@ class Fish {
       if (headingDiff > Math.PI) headingDiff = Math.PI * 2 - headingDiff;
       const inPath = headingDiff < 1.0; // within ~57° of predator's heading
 
-      // Active flee — life-or-death escape response
+      // Active flee — always triggered near predator, path, or chased
       if (!beingChased && !inPath && predAggression < 0.8) continue;
-      const baseRange = beingChased ? 400 : inPath ? 300 : 150 + predAggression * 80;
+      const baseRange = beingChased ? 300 : inPath ? 220 : 100 + predAggression * 60;
       const fleeRange = baseRange * viewScale;
       if (pDist < fleeRange && pDist > 0.1) {
         const proximity = 1 - pDist / fleeRange;
         const fear = proximity * proximity;
         const fleeAngle = Math.atan2(pdy, pdx);
-        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (0.5 + fear * 1.5);
-        const force = beingChased ? (1.8 * fear + 0.7) : inPath ? (1.0 * fear + 0.3) : (0.4 * fear);
+        const jinkAngle = fleeAngle + (Math.random() - 0.5) * (0.6 + fear * 1.2);
+        const force = beingChased ? (0.8 * fear + 0.35) : inPath ? (0.5 * fear + 0.15) : (0.2 * fear);
         this.vx += Math.cos(jinkAngle) * force * viewScale;
         this.vy += Math.sin(jinkAngle) * force * viewScale;
-        if (fear > 0.03) {
+        if (fear > 0.05) {
           this.fleeing = true;
-          this.fleeTimer = beingChased ? 2.5 : 0.8 + fear * 1.2;
+          this.fleeTimer = beingChased ? 1.8 : 0.5 + fear * 0.8;
         }
         // Panic snap — predator is dangerously close, instant velocity override
-        if ((beingChased || inPath) && pDist < 100 * viewScale) {
+        if ((beingChased || inPath) && pDist < 70 * viewScale) {
           panicSprint = true;
           const despAngle = fleeAngle + (Math.random() - 0.5) * 1.5;
-          this.vx = Math.cos(despAngle) * scaledSpeed * 5.0;
-          this.vy = Math.sin(despAngle) * scaledSpeed * 5.0;
+          this.vx = Math.cos(despAngle) * scaledSpeed * 4.0;
+          this.vy = Math.sin(despAngle) * scaledSpeed * 4.0;
           this.fleeing = true;
-          this.fleeTimer = 2.5;
-        } else if (beingChased && pDist < fleeRange * 0.5) {
-          // Desperate jink — sharp random direction change
-          const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.5;
-          this.vx += Math.cos(dartAngle) * scaledSpeed * 1.5;
-          this.vy += Math.sin(dartAngle) * scaledSpeed * 1.5;
+          this.fleeTimer = 2.0;
+        } else if (beingChased && pDist < fleeRange * 0.4) {
+          const dartAngle = fleeAngle + (Math.random() - 0.5) * 2.0;
+          this.vx += Math.cos(dartAngle) * scaledSpeed * 0.8;
+          this.vy += Math.sin(dartAngle) * scaledSpeed * 0.8;
           this.distracted = true;
           this.distractTimer = 1.5 + Math.random() * 2;
         }
       }
     }
 
-    // Spin-break: accumulate turning while being chased, dart out if circling
-    let beingChasedByAny = false;
-    for (const pred of predators) { if (pred.target === this) { beingChasedByAny = true; break; } }
-    if (beingChasedByAny && this.fleeing) {
-      let spinDelta = this.angle - (this._prevSpinAngle || this.angle);
-      while (spinDelta > Math.PI) spinDelta -= Math.PI * 2;
-      while (spinDelta < -Math.PI) spinDelta += Math.PI * 2;
-      this._chaseSpin += spinDelta;
-      if (Math.abs(this._chaseSpin) > this._spinBreakAt) {
-        // Break the circle — dart roughly perpendicular, opposite the spin direction
-        const breakDir = this.angle + (this._chaseSpin > 0 ? -1 : 1) * (1.2 + Math.random() * 0.8);
-        this.vx = Math.cos(breakDir) * scaledSpeed * 4.5;
-        this.vy = Math.sin(breakDir) * scaledSpeed * 4.5;
-        this.fleeTimer = 2.5;
-        this._chaseSpin = 0;
-        this._spinBreakAt = 3 + Math.random() * 4; // vary next threshold
-      }
-    } else {
-      this._chaseSpin *= 0.95; // decay when not being chased
-    }
-    this._prevSpinAngle = this.angle;
     if (this.fleeTimer > 0) this.fleeTimer -= dt;
     else this.fleeing = false;
 
@@ -1385,16 +1286,16 @@ class Fish {
       if (pred.target === this) { beingHunted = true; break; }
     }
     let targetSpeed;
-    if (panicSprint) targetSpeed = scaledSpeed * 5.35; // explosive burst
-    else if (beingHunted) targetSpeed = scaledSpeed * 4.37; // full flight
-    else if (this.fleeing) targetSpeed = scaledSpeed * 2.92; // alarmed dash
-    else if (this.idle) targetSpeed = scaledSpeed * 0.95;
-    else targetSpeed = scaledSpeed * 1.38;
+    if (panicSprint) targetSpeed = scaledSpeed * 4.0; // last-ditch desperate burst
+    else if (beingHunted) targetSpeed = scaledSpeed * 3.0; // panic sprint
+    else if (this.fleeing) targetSpeed = scaledSpeed * 2.2;
+    else if (this.idle) targetSpeed = scaledSpeed * 1.08;
+    else targetSpeed = scaledSpeed * 1.56;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      // Near-instant acceleration when life is at stake
-      const accel = (panicSprint || beingHunted) ? 0.85 : this.fleeing ? 0.6 : 0.15;
+      // Ramp up fast when fleeing, smooth when cruising
+      const accel = (panicSprint || beingHunted) ? 0.6 : this.fleeing ? 0.4 : 0.15;
       const desired = currentSpeed + (targetSpeed - currentSpeed) * accel;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
@@ -1419,7 +1320,7 @@ class Fish {
       const bAngle = Math.atan2(rdy, rdx);
       const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(bAngle * 3.1 + rf.y * 0.1);
       const baseR = rf.radiusAt(bAngle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
-      const baseSense = Math.max(baseR * 4, baseR + fishLen5 * 2);
+      const baseSense = Math.max(baseR * 2, baseR + fishLen5);
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
         // Only steer when actually approaching the rock
@@ -1443,7 +1344,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      const crownSense = Math.max(crownR * 5, crownR + fishLen5 * 2);
+      const crownSense = Math.max(crownR * 2.45, crownR + fishLen5);
       if (cDist < crownSense && cDist > 0.1) {
         const prox = 1 - cDist / crownSense;
         // Urgency ramps hard at close range — gentle far out, desperate near rock
@@ -1486,15 +1387,12 @@ class Fish {
       }
     }
 
-    // Blend reef steer into velocity — gentle course correction, not a hard snap
+    // Apply accumulated steering to heading and rebuild velocity along new heading
     if (Math.abs(reefSteer) > 0.001) {
-      const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer));
-      const newAngle = Math.atan2(this.vy, this.vx) + clampedSteer;
-      // Blend toward corrected heading — preserves most of the original momentum
-      const blend = Math.min(0.4, Math.abs(clampedSteer) * 3); // stronger steer = more blend
-      this.vx += (Math.cos(newAngle) * spd - this.vx) * blend;
-      this.vy += (Math.sin(newAngle) * spd - this.vy) * blend;
-      this.angle = Math.atan2(this.vy, this.vx);
+      const clampedSteer = Math.max(-0.25, Math.min(0.25, reefSteer));
+      this.angle += clampedSteer;
+      this.vx = Math.cos(this.angle) * spd;
+      this.vy = Math.sin(this.angle) * spd;
     }
 
     // Fish can only swim forward - kill lateral drift and backward motion
@@ -1539,7 +1437,7 @@ class Fish {
     this.y += this.vy;
     // Only clamp non-leaving fish
     if (!this.leaving) {
-      const overflow = 0.12;
+      const overflow = 0.3;
       this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
       this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
     }
@@ -1612,7 +1510,6 @@ class Fish {
     // Update chain: joints have inertia — they carry momentum and can't vibrate
     this._joints[0].x = this.x;
     this._joints[0].y = this.y;
-    this._maxBendThisFrame = 0;
     for (let j = 1; j <= this._jointCount; j++) {
       const prev = this._joints[j - 1];
       const curr = this._joints[j];
@@ -1650,8 +1547,7 @@ class Fish {
         let bend = currAngle - prevAngle;
         while (bend > Math.PI) bend -= Math.PI * 2;
         while (bend < -Math.PI) bend += Math.PI * 2;
-        if (Math.abs(bend) > this._maxBendThisFrame) this._maxBendThisFrame = Math.abs(bend);
-        const maxBend = 0.207;
+        const maxBend = 0.18;
         if (Math.abs(bend) > maxBend) {
           const clampedAngle = prevAngle + Math.sign(bend) * maxBend;
           curr.x = prev.x + Math.cos(clampedAngle) * this._segLen;
@@ -1866,46 +1762,6 @@ class Fish {
       gg.addColorStop(1, 'rgba(200, 230, 255, 0)');
       ctx.fillStyle = gg;
       ctx.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
-      ctx.restore();
-    }
-
-    // Belly flash — only when fleeing with body bend at 90%+ of max
-    this._bellyFlash -= 0.028; // 15% faster decay
-    const bendThreshold = 0.207 * 0.9; // 90% of max body bend
-    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.03) {
-      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash (15% shorter)
-    }
-    if (this._bellyFlash > 0) {
-      const flashAlpha = Math.min(1, this._bellyFlash * 12) * 0.5;
-      const midSeg = Math.floor(segs * 0.3);
-      const midX = spineX[midSeg], midY = spineY[midSeg];
-      // Outer hazy glow — larger than the fish
-      ctx.save();
-      ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = flashAlpha * 0.35;
-      const glowR = widths[midSeg] * 6;
-      const haze = ctx.createRadialGradient(midX, midY, 0, midX, midY, glowR);
-      haze.addColorStop(0, 'rgba(230, 245, 255, 1)');
-      haze.addColorStop(0.4, 'rgba(200, 230, 250, 0.4)');
-      haze.addColorStop(1, 'rgba(200, 230, 250, 0)');
-      ctx.fillStyle = haze;
-      ctx.fillRect(midX - glowR, midY - glowR, glowR * 2, glowR * 2);
-      ctx.restore();
-      // Sharp body flash along the spine
-      ctx.save();
-      ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = flashAlpha;
-      const from = 1, to = Math.floor(segs * 0.6);
-      ctx.beginPath();
-      ctx.moveTo(spineX[from], spineY[from]);
-      for (let si = from; si <= to; si++) {
-        ctx.lineTo(spineX[si], spineY[si]);
-      }
-      ctx.lineWidth = widths[midSeg] * 2.5;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = 'rgba(255, 255, 245, 1)';
-      ctx.stroke();
       ctx.restore();
     }
 
@@ -2435,12 +2291,14 @@ class Starfish {
 // Predator fish - larger, hunts small fish based on hunger
 class Predator {
   constructor() {
-    // Start inside the viewport, cruising gently
-    this.x = w * (0.2 + Math.random() * 0.6);
-    this.y = h * (0.2 + Math.random() * 0.6);
-    this.angle = Math.random() * Math.PI * 2;
+    const edge = Math.floor(Math.random() * 4);
+    const m = 120 + Math.random() * 60;
+    if (edge === 0) { this.x = -m; this.y = Math.random() * h; this.angle = (Math.random() - 0.5) * 0.4; }
+    else if (edge === 1) { this.x = w + m; this.y = Math.random() * h; this.angle = Math.PI + (Math.random() - 0.5) * 0.4; }
+    else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
+    else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
 
-    this.len = (31 + Math.random() * 12) * (w < 500 ? 0.8 : 1);
+    this.len = (52 + Math.random() * 19.5) * (w < 500 ? 0.8 : 1);
     this.bodyWidth = this.len * 0.055; // sleek barracuda profile
     this.speed = 0.7 + Math.random() * 0.4;
     this.baseSpeed = this.speed;
@@ -2454,7 +2312,7 @@ class Predator {
 
     // Hunger: 0 = full, 1 = starving. Threshold varies per fish
     this.hunger = 0.2 + Math.random() * 0.2;
-    this._hungerRate = 0.0032 + Math.random() * 0.0032; // variable metabolism — slow burn
+    this._hungerRate = 0.008 + Math.random() * 0.008; // variable metabolism
     this._huntThreshold = 0.4 + Math.random() * 0.25; // some hunt sooner than others
     this.hunting = false;
     this.target = null;
@@ -2587,24 +2445,6 @@ class Predator {
       }
 
       if (this.target) {
-        // Opportunistic switch — if another fish blunders closer, take the easy meal
-        const mDx = this.target.x - mouthX, mDy = this.target.y - mouthY;
-        const targetDist = Math.sqrt(mDx * mDx + mDy * mDy);
-        for (const f of getNeighbors(this.x, this.y)) {
-          if (f === this.target) continue;
-          const fdx = f.x - mouthX, fdy = f.y - mouthY;
-          const fDist = Math.sqrt(fdx * fdx + fdy * fdy);
-          // Must be ahead of the predator and much closer than current target
-          const aheadDot = fdx * cosA + fdy * sinA;
-          if (fDist < 50 * viewScale && fDist < targetDist * 0.5 && aheadDot > 0) {
-            this.target = f;
-            this.burstTimer = 0.5;
-            this._burstFlick = 0.8;
-            this._burstFlickDir = -this._burstFlickDir;
-            break;
-          }
-        }
-
         // Shark-like pursuit — relentless, adjusts course, multiple attack dashes
         const dx = this.target.x - this.x, dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -2621,7 +2461,7 @@ class Predator {
         } else {
         // Aggressive ramp: faster base chase, harder steering at close range
         const closeness = Math.max(0, 1 - dist / (220 * viewScale));
-        const chaseSpeed = this.baseSpeed * (2.38 + closeness * 2.13) * viewScale;
+        const chaseSpeed = this.baseSpeed * (2.8 + closeness * 2.5) * viewScale;
         const steer = 0.08 + closeness * 0.2;
         this.vx += (Math.cos(pursuitAngle) * chaseSpeed - this.vx) * steer;
         this.vy += (Math.sin(pursuitAngle) * chaseSpeed - this.vy) * steer;
@@ -2668,6 +2508,17 @@ class Predator {
         this.chompPhase = 0;
         const catchX = mouthX, catchY = mouthY;
         const preyColor = prey.color || 'rgb(140,150,160)';
+        for (let k = 0; k < 12; k++) {
+          const a = Math.random() * Math.PI * 2;
+          const spd = 0.3 + Math.random() * 1.2;
+          killFx.push({
+            x: catchX + Math.cos(a) * 3, y: catchY + Math.sin(a) * 3,
+            vx: Math.cos(a) * spd + this.vx * 0.3,
+            vy: Math.sin(a) * spd + this.vy * 0.3,
+            type: 'blood', life: 1, maxLife: 1.5 + Math.random() * 1.5,
+            size: 1.4 + Math.random() * 2.8,
+          });
+        }
         for (let k = 0; k < 8; k++) {
           const a = Math.random() * Math.PI * 2;
           const spd = 0.5 + Math.random() * 2;
@@ -2692,11 +2543,11 @@ class Predator {
 
     const predScale = viewScale;
     let targetSpeed;
-    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 5.95 * predScale; this.burstTimer -= dt; }
-    else if (this.target) targetSpeed = this.baseSpeed * (1.49 + this.hunger * 0.6) * predScale;
-    else if (this.hunting) targetSpeed = this.baseSpeed * (0.30 + this.hunger * 0.24) * predScale;
+    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 7.0 * predScale; this.burstTimer -= dt; }
+    else if (this.target) targetSpeed = this.baseSpeed * (1.75 + this.hunger * 0.7) * predScale;
+    else if (this.hunting) targetSpeed = this.baseSpeed * (0.35 + this.hunger * 0.28) * predScale;
     // Hovering — slow deliberate cruise, not motionless
-    else targetSpeed = this.baseSpeed * (0.26 + this.hunger * 0.26) * predScale;
+    else targetSpeed = this.baseSpeed * (0.3 + this.hunger * 0.3) * predScale;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     // Slow to change speed when well-fed, responsive when hungry/hunting
@@ -2767,42 +2618,25 @@ class Predator {
     this.vx -= (-headY) * latSpeed * 0.6;
     this.vy -= headX * latSpeed * 0.6;
     if (fwdSpeed < 0) { this.vx -= headX * fwdSpeed * 0.7; this.vy -= headY * fwdSpeed * 0.7; }
-    // Always moving forward — big fish can't hover in place
-    const minFwd = this.target ? this.baseSpeed * 0.4 * viewScale : this.baseSpeed * 0.2 * viewScale;
+    // Near-zero minimum when not chasing — barracuda can hover
+    const minFwd = this.target ? this.baseSpeed * 0.3 * viewScale : this.baseSpeed * 0.05 * viewScale;
     const fwdNow = this.vx * headX + this.vy * headY;
     if (fwdNow < minFwd) { this.vx += headX * (minFwd - fwdNow) * 0.2; this.vy += headY * (minFwd - fwdNow) * 0.2; }
 
     this.vx *= 0.99;
     this.vy *= 0.99;
 
-    // Skip boundary forces when departing the scene
-    if (!this._departing) {
-    // Soft boundary — starts pushing 10% from edge, hard push when offscreen
-    const bMargin = 0.1;
-    const bx = this.x / w, by = this.y / h; // 0-1 when in viewport
-    if (bx < bMargin) { const t = (bMargin - bx) / bMargin; this.vx += t * t * 1.5; }
-    if (bx > 1 - bMargin) { const t = (bx - (1 - bMargin)) / bMargin; this.vx -= t * t * 1.5; }
-    if (by < bMargin) { const t = (bMargin - by) / bMargin; this.vy += t * t * 1.5; }
-    if (by > 1 - bMargin) { const t = (by - (1 - bMargin)) / bMargin; this.vy -= t * t * 1.5; }
-    // Hard push when offscreen
-    if (this.x < 0) this.vx += 0.8;
-    if (this.x > w) this.vx -= 0.8;
-    if (this.y < 0) this.vy += 0.8;
-    if (this.y > h) this.vy -= 0.8;
-    // Drop target if stuck at edge — don't chase into walls
-    if (this.target && (bx < 0.02 || bx > 0.98 || by < 0.02 || by > 0.98)) {
-      this.target = null;
-      this._retargetCooldown = 2 + Math.random() * 2;
-    }
-    } // end if (!this._departing)
+    // Return to viewport — force ramps hard when far offscreen
+    const offX = this.x < 0 ? -this.x / w : this.x > w ? (this.x - w) / w : 0;
+    const offY = this.y < 0 ? -this.y / h : this.y > h ? (this.y - h) / h : 0;
+    if (offX > 0) { const f = 0.4 + offX * 2; this.vx += (this.x < 0 ? f : -f); }
+    if (offY > 0) { const f = 0.4 + offY * 2; this.vy += (this.y < 0 ? f : -f); }
 
     this.x += this.vx;
     this.y += this.vy;
-    if (!this._departing) {
-    const overflow = 0.1;
+    const overflow = 0.2;
     this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
     this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
-    }
 
     // Reef collision push
     for (const rf of reefs) {
@@ -2846,11 +2680,11 @@ class Predator {
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    // Turn rate scales with speed — must move forward to turn, no nose pivoting
+    // Sluggish turns when full, snappier as hunger builds
     const turnMult = 0.4 + this.hunger * 0.6;
+    // Snap turns get extra turn rate so the head whips fast
     const snapBoost = this._snapping ? 2.0 : 1.0;
-    const speedRatio = Math.min(1, currentSpeed / (this.baseSpeed * 1.5 * viewScale));
-    const maxTurn = (0.02 + speedRatio * 0.14) * turnMult * snapBoost;
+    const maxTurn = (0.12 + currentSpeed * 0.12) * turnMult * snapBoost;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
     // Smooth render angle — body follows heading
     let rDiff = this.angle - this._renderAngle;
@@ -2873,7 +2707,7 @@ class Predator {
       curr.px = curr.x; curr.py = curr.y;
       const t = j / this._jointCount;
       // Drag — stiff at snout, loosens toward tail. Lower = springs back faster
-      const headStiff = t < 0.4 ? 0.78 : 0.45;
+      const headStiff = j <= 3 ? 0.75 : 0.45;
       const drag = headStiff - t * 0.1;
       curr.x += velX * drag;
       curr.y += velY * drag;
@@ -2894,7 +2728,7 @@ class Predator {
       // Head joints get much stronger straightening to stay rigid
       const speedFactor = Math.min(1, currentSpeed / (this.baseSpeed * 2));
       const spawnBoost = this._spawnFrames > 0 ? 0.15 : 0;
-      const headBoost = t < 0.4 ? 0.07 : 0;
+      const headBoost = j <= 3 ? 0.05 : 0;
       const straighten = (0.008 + speedFactor * 0.015 + spawnBoost + headBoost) * (1 - t * 0.4);
       curr.x += (restX - curr.x) * straighten;
       curr.y += (restY - curr.y) * straighten;
@@ -2912,9 +2746,8 @@ class Predator {
         let bend = currAng - prevAng;
         while (bend > Math.PI) bend -= Math.PI * 2;
         while (bend < -Math.PI) bend += Math.PI * 2;
-        // Max bend per joint: stiffer front half, looser tail
-        const frontStiff = t < 0.4 ? 0.16 : 0.26; // ~9 deg front, ~15 deg mid
-        const maxBend = (frontStiff + t * 0.18);
+        // Max bend per joint: ~15 deg at head, ~25 deg at tail
+        const maxBend = (0.26 + t * 0.18);
         if (Math.abs(bend) > maxBend) {
           const clamped = prevAng + Math.sign(bend) * maxBend;
           curr.x = prev.x + Math.cos(clamped) * this._segLen;
@@ -3256,7 +3089,7 @@ function drawAllFishShadows(ctx, drawables) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-const fishCount = Math.min(214, Math.max(69, Math.floor((w * h) / 1232)));
+const fishCount = Math.min(171, Math.max(55, Math.floor((w * h) / 1540)));
 const fish = [];
 // Fish swim in as school groups from edges
 let fishToSpawn = fishCount;
@@ -3310,17 +3143,12 @@ const schoolEntries = schoolColors.map(() => {
   return { x, y, angle };
 });
 
-// Predator(s) — comes and goes, not always present
+// Predator(s) - one per pool, maybe two on large viewports
 const predators = [];
-const predatorMax = w * h > 600000 ? 2 : 1;
-// Predator lifecycle: present → leaves → absent (bonus fish arrive) → returns aggressively
-let predAbsentTimer = 0; // countdown while predator is gone
-let predReturnTimer = 40 + Math.random() * 60; // time until first departure
-let predDepartTimer = 0; // countdown for predator to swim offscreen
-let predBonusFish = 0; // how many bonus fish arrived during absence
-for (let i = 0; i < predatorMax; i++) predators.push(new Predator());
+const predatorCount = w * h > 600000 ? 2 : 1;
+for (let i = 0; i < predatorCount; i++) predators.push(new Predator());
 // Organic population — wanders around a midpoint, fish come and go
-let basePop = Math.min(214, Math.max(45, Math.floor((w * h) / 1232)));
+let basePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
 let popTarget = basePop * (0.7 + Math.random() * 0.3); // start a little varied
 let popDriftTimer = 10 + Math.random() * 20; // time until next target shift
 let schoolArrivalTimer = 15 + Math.random() * 30; // next wave of newcomers
@@ -3337,55 +3165,6 @@ function makeSand(x, y) {
 const rocks = [];
 for (let i = 0; i < 15; i++) {
   rocks.push(makeSand(Math.random() * w, Math.random() * h));
-}
-
-// Seabed pebbles — small irregular gray rocks scattered across the floor
-// Slightly denser near reefs (added after reefs are placed), with loose clusters
-const seabedRocks = [];
-function generateSeabedRocks() {
-  seabedRocks.length = 0;
-  const count = Math.floor(18 + (w * h) / 25000); // scales with viewport, not too dense
-  // Seed a few cluster centers for natural grouping
-  const clusterCount = 3 + Math.floor(Math.random() * 3);
-  const clusters = Array.from({ length: clusterCount }, () => ({
-    x: Math.random() * w, y: Math.random() * h,
-    r: 60 + Math.random() * 100, // cluster radius
-  }));
-  for (let i = 0; i < count; i++) {
-    let px, py;
-    if (Math.random() < 0.4 && clusters.length > 0) {
-      // Place near a random cluster center
-      const cl = clusters[Math.floor(Math.random() * clusters.length)];
-      const a = Math.random() * Math.PI * 2;
-      const d = Math.random() * cl.r;
-      px = cl.x + Math.cos(a) * d;
-      py = cl.y + Math.sin(a) * d;
-    } else {
-      px = Math.random() * w;
-      py = Math.random() * h;
-    }
-    // Skip if on top of a reef crown (will be added near-reef after reefs exist)
-    const rockSize = (1.5 + Math.random() * 3.5) * viewScale;
-    const gray = 60 + Math.floor(Math.random() * 35);
-    const warm = Math.floor(Math.random() * 6);
-    // Check if touching previous rock — share color
-    const neighbor = seabedRocks.find(sr => {
-      const dx = sr.x - px, dy = sr.y - py;
-      return Math.sqrt(dx * dx + dy * dy) < sr.size + rockSize + 1;
-    });
-    const g = neighbor ? neighbor._gray : gray;
-    const wm = neighbor ? neighbor._warm : warm;
-    const vertCount = 5 + Math.floor(Math.random() * 3);
-    seabedRocks.push({
-      x: px, y: py, size: rockSize,
-      _gray: g, _warm: wm,
-      color: `rgb(${g + wm}, ${g - 2}, ${g - wm - 3})`,
-      verts: Array.from({ length: vertCount }, (_, j) => ({
-        a: (j / vertCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4,
-        r: 0.65 + Math.random() * 0.5,
-      })),
-    });
-  }
 }
 
 // Reef structures - partially submerged obstacles
@@ -3440,80 +3219,10 @@ function makeReef(x, y, sizeMultiplier = 1) {
     return radii[i0] * (1 - frac) + radii[i1] * frac;
   }
 
-  // Edge rocks — scattered gray boulders concentrated near the reef, dissipating outward
-  const edgeRocks = [];
-  const edgeCount = 10 + Math.floor(Math.random() * 8);
-  for (let i = 0; i < edgeCount; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const edgeR = radiusAt(a, crownRadii);
-    // Concentrated near the edge, scattering outward — exponential falloff
-    const scatter = Math.pow(Math.random(), 0.6); // biased toward 0 (near edge)
-    const offsetFrac = -0.2 + scatter * 1.2; // -0.2 (inside) to 1.0 (far outside)
-    const dist = edgeR * (1 + offsetFrac);
-    // Rocks shrink as they get further from the reef
-    const sizeFalloff = 1 - scatter * 0.6;
-    const rockR = (2.5 + Math.random() * 5) * (baseR / 60) * sizeFalloff;
-    // Generate position first, assign color after checking neighbors
-    const ox = crownOffX + Math.cos(a) * dist;
-    const oy = crownOffY + Math.sin(a) * dist;
-    const vertCount = 5 + Math.floor(Math.random() * 3);
-    const verts = Array.from({ length: vertCount }, (_, j) => ({
-      a: (j / vertCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4,
-      r: 0.7 + Math.random() * 0.5,
-    }));
-    // Check if touching any existing rock — share its color if so
-    let gray, warm;
-    const touchNeighbor = edgeRocks.find(er => {
-      const dx = er.ox - ox, dy = er.oy - oy;
-      return Math.sqrt(dx * dx + dy * dy) < er.r + rockR + 1;
-    });
-    if (touchNeighbor) {
-      gray = touchNeighbor._gray;
-      warm = touchNeighbor._warm;
-    } else {
-      gray = 55 + Math.floor(Math.random() * 40);
-      warm = Math.floor(Math.random() * 8);
-    }
-    edgeRocks.push({
-      ox, oy, r: rockR, verts,
-      _gray: gray, _warm: warm,
-      color: `rgb(${gray + warm}, ${gray - 2}, ${gray - warm - 3})`,
-      rimColor: `rgba(${gray + 20 + warm}, ${gray + 18}, ${gray + 15 - warm}, 0.5)`,
-      aboveWater: offsetFrac < 0.25,
-    });
-  }
-
-  // Grass tufts — sparse clumps on the exposed rock surface
-  const grassTufts = [];
-  const tuftCount = 2 + Math.floor(Math.random() * 3); // 2-4 per reef
-  for (let i = 0; i < tuftCount; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const cr = radiusAt(a, crownRadii);
-    const dist = Math.random() * cr * 0.7; // within the crown area
-    const bladeCount = 3 + Math.floor(Math.random() * 4); // 3-6 blades per tuft
-    const green = 45 + Math.floor(Math.random() * 30);
-    const blades = [];
-    for (let b = 0; b < bladeCount; b++) {
-      blades.push({
-        angle: -Math.PI / 2 + (Math.random() - 0.5) * 0.8, // mostly upward, some lean
-        length: (1.3 + Math.random() * 2) * (crownR / 30), // scale with reef, kept short
-        width: 0.6 + Math.random() * 0.6,
-        phase: Math.random() * Math.PI * 2, // sway offset
-      });
-    }
-    grassTufts.push({
-      ox: crownOffX + Math.cos(a) * dist,
-      oy: crownOffY + Math.sin(a) * dist,
-      blades,
-      color: `rgb(${green + 15}, ${green + 40}, ${green - 5})`,
-      tipColor: `rgb(${green + 25}, ${green + 55}, ${green + 5})`,
-    });
-  }
-
   return {
     x, y, baseR, crownR, crownOffX, crownOffY,
     baseShape, crownShape, baseColor, crownColor, rimColor,
-    baseRadii, crownRadii, radiusAt, edgeRocks, grassTufts,
+    baseRadii, crownRadii, radiusAt,
     // Avoidance uses shape-aware radius
     avoidR: baseR * 0.85,
   };
@@ -3562,38 +3271,6 @@ for (let i = 0; i < satelliteCount; i++) {
     const sr = makeReef(rx, ry, sizeMult);
     sr.submerged = true; // fully underwater, fish swim over them
     reefs.push(sr);
-  }
-}
-
-// Generate seabed pebbles — extra density near non-submerged reefs
-generateSeabedRocks();
-for (const rf of reefs) {
-  if (rf.submerged) continue;
-  const nearCount = 5 + Math.floor(Math.random() * 5);
-  for (let i = 0; i < nearCount; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const d = rf.baseR * (1.1 + Math.random() * 0.8);
-    const px = rf.x + Math.cos(a) * d;
-    const py = rf.y + Math.sin(a) * d;
-    const rockSize = (1.5 + Math.random() * 3) * viewScale;
-    const gray = 60 + Math.floor(Math.random() * 35);
-    const warm = Math.floor(Math.random() * 6);
-    const neighbor = seabedRocks.find(sr => {
-      const dx = sr.x - px, dy = sr.y - py;
-      return Math.sqrt(dx * dx + dy * dy) < sr.size + rockSize + 1;
-    });
-    const g = neighbor ? neighbor._gray : gray;
-    const wm = neighbor ? neighbor._warm : warm;
-    const vertCount = 5 + Math.floor(Math.random() * 3);
-    seabedRocks.push({
-      x: px, y: py, size: rockSize,
-      _gray: g, _warm: wm,
-      color: `rgb(${g + wm}, ${g - 2}, ${g - wm - 3})`,
-      verts: Array.from({ length: vertCount }, (_, j) => ({
-        a: (j / vertCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4,
-        r: 0.65 + Math.random() * 0.5,
-      })),
-    });
   }
 }
 
@@ -3932,28 +3609,6 @@ regenerateWorld = function() {
       reefs.push(sr);
     }
   }
-  // Seabed pebbles
-  generateSeabedRocks();
-  for (const rf of reefs) {
-    if (rf.submerged) continue;
-    const nearCount = 5 + Math.floor(Math.random() * 5);
-    for (let i = 0; i < nearCount; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const d = rf.baseR * (1.1 + Math.random() * 0.8);
-      const px = rf.x + Math.cos(a) * d, py = rf.y + Math.sin(a) * d;
-      const rockSize = (1.5 + Math.random() * 3) * viewScale;
-      const gray = 60 + Math.floor(Math.random() * 35);
-      const warm = Math.floor(Math.random() * 6);
-      const nb = seabedRocks.find(sr => Math.sqrt((sr.x-px)**2+(sr.y-py)**2) < sr.size+rockSize+1);
-      const g = nb ? nb._gray : gray, wm = nb ? nb._warm : warm;
-      const vc = 5 + Math.floor(Math.random() * 3);
-      seabedRocks.push({ x: px, y: py, size: rockSize, _gray: g, _warm: wm,
-        color: `rgb(${g+wm},${g-2},${g-wm-3})`,
-        verts: Array.from({length:vc},(_,j)=>({a:(j/vc)*Math.PI*2+(Math.random()-0.5)*0.4,r:0.65+Math.random()*0.5})),
-      });
-    }
-  }
-
   // Reef fish — 2-5 total
   const totalTangs2 = 2 + Math.floor(Math.random() * 4);
   for (let i = 0; i < totalTangs2; i++) {
@@ -3977,9 +3632,9 @@ regenerateWorld = function() {
   spawnStarfish();
 
   // Fish — swim in from edges
-  basePop = Math.min(214, Math.max(45, Math.floor((w * h) / 1232)));
+  basePop = Math.min(171, Math.max(36, Math.floor((w * h) / 1540)));
   popTarget = basePop * (0.7 + Math.random() * 0.3);
-  const newFishCount = Math.min(214, Math.max(69, Math.floor((w * h) / 1232)));
+  const newFishCount = Math.min(171, Math.max(55, Math.floor((w * h) / 1540)));
   spawnWaves = makeSpawnWaves(newFishCount, w, h);
   spawnTimer = 0;
 
@@ -4030,41 +3685,6 @@ function rebuildSandCanvas() {
     sandCtx.fill();
     sandCtx.restore();
   }
-  // Submerged edge rocks — baked into sand layer for zero per-frame cost
-  for (const rf of reefs) {
-    for (const er of rf.edgeRocks) {
-      if (er.aboveWater) continue;
-      sandCtx.beginPath();
-      for (let vi = 0; vi <= er.verts.length; vi++) {
-        const v = er.verts[vi % er.verts.length];
-        const px = rf.x + er.ox + Math.cos(v.a) * v.r * er.r;
-        const py = rf.y + er.oy + Math.sin(v.a) * v.r * er.r;
-        if (vi === 0) sandCtx.moveTo(px, py);
-        else sandCtx.lineTo(px, py);
-      }
-      sandCtx.closePath();
-      sandCtx.fillStyle = er.color;
-      sandCtx.globalAlpha = 0.6;
-      sandCtx.fill();
-      sandCtx.globalAlpha = 1;
-    }
-  }
-  // Seabed pebbles — small irregular gray rocks baked into the sand layer
-  for (const sr of seabedRocks) {
-    sandCtx.beginPath();
-    for (let vi = 0; vi <= sr.verts.length; vi++) {
-      const v = sr.verts[vi % sr.verts.length];
-      const px = sr.x + Math.cos(v.a) * v.r * sr.size;
-      const py = sr.y + Math.sin(v.a) * v.r * sr.size;
-      if (vi === 0) sandCtx.moveTo(px, py);
-      else sandCtx.lineTo(px, py);
-    }
-    sandCtx.closePath();
-    sandCtx.fillStyle = sr.color;
-    sandCtx.globalAlpha = 0.35;
-    sandCtx.fill();
-    sandCtx.globalAlpha = 1;
-  }
 }
 rebuildSandCanvas();
 
@@ -4104,14 +3724,6 @@ function draw(time) {
   tide.angle = waveBaseAngle + secondaryWave;
   tide.strength = 0.25 + waveCycle * 0.35;
 
-  // School waypoint — periodically pick a new target so the school sweeps across
-  schoolWP.timer -= dt;
-  if (schoolWP.timer <= 0) {
-    schoolWP.x = w * (0.1 + Math.random() * 0.8);
-    schoolWP.y = h * (0.1 + Math.random() * 0.8);
-    schoolWP.timer = 20 + Math.random() * 30;
-  }
-
   updateOceanSound();
 
   // Drift vortices slowly around the pool, vary strength over time
@@ -4149,7 +3761,7 @@ function draw(time) {
     ww.traveled += ww.speed;
     ww.life = 1 - ww.traveled / ww.maxTravel;
     // Don't remove dead waves until their foam blobs have faded out
-    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0) && (!ww.trails || ww.trails.length === 0)) { washWaves.splice(i, 1); continue; }
+    if (ww.life <= 0 && (!ww.blobs || ww.blobs.length === 0)) { washWaves.splice(i, 1); continue; }
     // Push things in the wave's path
     const pushForce = ww.strength * ww.life;
     const cosA = Math.cos(ww.angle);
@@ -4187,17 +3799,10 @@ function draw(time) {
         }
       }
     }
-    // Waves hitting reefs: spawn foam and trigger ripple boost
+    // Waves hitting reefs: spawn foam along the crown waterline (where rock meets water)
     for (const rf of reefs) {
-      if (rf.submerged) continue;
       const rel = (rf.x - ww.x) * cosA + (rf.y - ww.y) * sinA;
       if (rel > -rf.crownR * 1.5 && rel < rf.crownR * 1.5 + ww.width) {
-        // Track wave impact for ripple boost
-        if (!rf._waveHit || rf._waveHit < ww.strength) {
-          rf._waveHit = ww.strength;
-          rf._waveAngle = ww.angle;
-          rf._waveTime = time;
-        }
         const splashCount = Math.ceil(3 * viewScale);
         if (foamBits.length < 300) {
           for (let si = 0; si < splashCount; si++) {
@@ -4309,29 +3914,17 @@ function draw(time) {
       Math.round(cm0[1] * 0.4 + 150 * 0.6),
       Math.round(cm0[2] * 0.4 + 120 * 0.6),
     ];
-    // Average radius for blending toward circle (eroded underwater)
-    const avgBaseR = rf.baseRadii.reduce((a, b) => a + b, 0) / rf.baseRadii.length;
     const layers = 6;
     for (let layer = 0; layer < layers; layer++) {
       const scale = (1.2 - (layer / layers) * 0.7) * 1.5; // 1.8 outer to 0.75 inner
       const alpha = (layer / (layers - 1)) * 0.25; // 0 outer to 0.25 inner
-      // All layers blend strongly toward circle — underwater rock is eroded smooth
-      const smooth = 1 - (layer / (layers - 1)) * 0.5; // 1.0 at outermost, 0.5 at innermost
       ctx.beginPath();
-      const n = rf.baseShape.length;
-      // Compute smoothed points — blend between original shape and circle
-      const pts = rf.baseShape.map((p, i) => {
-        const r = rf.baseRadii[i];
-        const blended = r * (1 - smooth * 0.9) + avgBaseR * smooth * 0.9;
-        const a = Math.atan2(p.y, p.x);
-        return { x: Math.cos(a) * blended * scale, y: Math.sin(a) * blended * scale };
-      });
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 0; i < n; i++) {
-        const next = pts[(i + 1) % n];
-        const mx = (pts[i].x + next.x) * 0.5;
-        const my = (pts[i].y + next.y) * 0.5;
-        ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+      ctx.moveTo(rf.baseShape[0].x * scale, rf.baseShape[0].y * scale);
+      for (let i = 0; i < rf.baseShape.length; i++) {
+        const next = rf.baseShape[(i + 1) % rf.baseShape.length];
+        const mx = (rf.baseShape[i].x + next.x) * 0.5 * scale;
+        const my = (rf.baseShape[i].y + next.y) * 0.5 * scale;
+        ctx.quadraticCurveTo(rf.baseShape[i].x * scale, rf.baseShape[i].y * scale, mx, my);
       }
       ctx.closePath();
       ctx.fillStyle = `rgba(${cm[0]},${cm[1]},${cm[2]},${alpha})`;
@@ -4441,7 +4034,7 @@ function draw(time) {
     ctx.fill();
   }
 
-  // Update and draw kill effect particles (scale glitter)
+  // Update and draw kill effect particles (blood + scale glitter)
   for (let i = killFx.length - 1; i >= 0; i--) {
     const kp = killFx[i];
     kp.life -= dt / kp.maxLife;
@@ -4452,7 +4045,20 @@ function draw(time) {
     kp.vy += Math.sin(tide.angle) * tide.strength * 0.005;
     kp.x += kp.vx;
     kp.y += kp.vy;
-    if (kp.type === 'bubble') {
+    if (kp.type === 'blood') {
+      // Expanding red cloud puff
+      const r = kp.size * (1 + (1 - kp.life) * 1.5);
+      const alpha = kp.life * 0.35;
+      ctx.beginPath();
+      ctx.arc(kp.x, kp.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(140, 30, 20, ${alpha})`;
+      ctx.fill();
+      // Softer outer glow
+      ctx.beginPath();
+      ctx.arc(kp.x, kp.y, r * 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(120, 25, 15, ${alpha * 0.3})`;
+      ctx.fill();
+    } else if (kp.type === 'bubble') {
       // Turbulence bubbles — pale circles that shrink and rise slightly
       kp.vy -= 0.02; // bubbles drift upward slightly
       const r = kp.size * (0.5 + kp.life * 0.5);
@@ -4490,19 +4096,10 @@ function draw(time) {
   // Update and draw food pellets
   for (let i = foodPellets.length - 1; i >= 0; i--) {
     const fp = foodPellets[i];
-    fp.vx *= 0.92;
-    fp.vy *= 0.92;
-    // Gentle drift with tide and current
-    fp.vx += Math.cos(tide.angle) * tide.strength * 0.004;
-    fp.vy += Math.sin(tide.angle) * tide.strength * 0.004;
-    // Bob and float — slow organic drift with local turbulence
-    if (!fp._bobPhase) fp._bobPhase = Math.random() * Math.PI * 20;
-    const bob = time * 0.001;
-    fp.vx += Math.sin(bob * 0.7 + fp._bobPhase) * 0.015;
-    fp.vy += Math.cos(bob * 0.9 + fp._bobPhase * 1.3) * 0.012;
-    const flow = sampleFlow(fp.x, fp.y, time);
-    fp.vx += flow.fx * 0.02;
-    fp.vy += flow.fy * 0.02;
+    fp.vx *= 0.98;
+    fp.vy *= 0.98;
+    fp.vx += Math.cos(tide.angle) * tide.strength * 0.003;
+    fp.vy += Math.sin(tide.angle) * tide.strength * 0.003;
     fp.x += fp.vx;
     fp.y += fp.vy;
     // Food on or near a reef slides out to where fish can reach it
@@ -4545,7 +4142,7 @@ function draw(time) {
       fp.vy *= 0.3;
     }
     fp.onRock = stillOnRock;
-    if (fp.bites <= 0 || fp.size < 0.8) { foodPellets.splice(i, 1); continue; }
+    if (fp.bites <= 0 || fp.size < 0.3) { foodPellets.splice(i, 1); continue; }
     ctx.beginPath();
     ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(180, 130, 60, ${Math.min(0.8, 0.3 + fp.size * 0.2)})`;
@@ -4593,97 +4190,17 @@ function draw(time) {
       }
     }
 
-    // Shed trail lines behind the wave — irregular ripples left in its wake
-    if (!ww.trails) ww.trails = [];
-    if (!ww._nextTrail) ww._nextTrail = 20 + Math.random() * 40;
-    if (alive && ww.traveled > ww._nextTrail) {
-      ww._nextTrail = ww.traveled + 30 + Math.random() * 60; // irregular spacing
-      // Pick one of the thinner line styles to shed
-      const pick = 1 + Math.floor(Math.random() * 3); // index 1-3
-      const templates = [
-        null,
-        { thick: 1.2 * viewScale, alpha: 0.18, freq: 1.3 },
-        { thick: 0.8 * viewScale, alpha: 0.10, freq: 0.8 },
-        { thick: 0.5 * viewScale, alpha: 0.06, freq: 1.6 },
-      ];
-      const tmpl = templates[pick];
-      ww.trails.push({
-        x: ww.x, y: ww.y,
-        seed: (ww.seed || 0) + Math.random() * 10,
-        traveled: ww.traveled,
-        thick: tmpl.thick,
-        alpha: tmpl.alpha * (0.6 + Math.random() * 0.4),
-        freq: tmpl.freq,
-        life: 1,
-        maxLife: 3 + Math.random() * 4,
-        driftSpeed: ww.speed * (0.08 + Math.random() * 0.12),
-      });
-    }
-    // Update and draw trail lines
-    for (let ti = ww.trails.length - 1; ti >= 0; ti--) {
-      const tr = ww.trails[ti];
-      tr.life -= dt / tr.maxLife;
-      if (tr.life <= 0) { ww.trails.splice(ti, 1); continue; }
-      tr.x += cosA * tr.driftSpeed;
-      tr.y += sinA * tr.driftSpeed;
-      const trAlpha = tr.life * tr.life * tr.alpha;
-      if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
-      const perpX = -sinA, perpY = cosA;
-      const t2 = time * 0.0012;
-      ctx.beginPath();
-      const step = 4;
-      let first = true;
-      for (let pos = -span; pos <= span; pos += step) {
-        const f = tr.freq;
-        const vs = viewScale;
-        const offset = (Math.sin(pos * 0.04 * f + t2 * 3.1 + tr.seed) * 6
-                     + Math.sin(pos * 0.09 * f + t2 * 5.7 + tr.seed * 2.3) * 4
-                     + Math.sin(pos * 0.18 * f + t2 * 9.3 + tr.seed * 4.7) * 2) * vs;
-        let px = tr.x + perpX * pos + cosA * offset;
-        let py = tr.y + perpY * pos + sinA * offset;
-        const deflect = reefDeflect(px, py);
-        if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
-        if (first) { ctx.moveTo(px, py); first = false; }
-        else ctx.lineTo(px, py);
-      }
-      ctx.globalAlpha = trAlpha;
-      ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-      ctx.lineWidth = tr.thick * tr.life;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
-    }
-
-    // Wave-reef interaction: push wave line points backward around above-water reefs
-    // Returns extra backward offset (positive = pushed back against wave direction)
-    function reefDeflect(px, py) {
-      let push = 0;
-      for (const rf of reefs) {
-        if (rf.submerged) continue;
-        const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
-        const dx = px - cx, dy = py - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx);
-        const edge = rf.radiusAt(angle, rf.crownRadii);
-        const influence = edge + 25 * viewScale; // deflection starts before contact
-        if (dist < influence) {
-          const t = 1 - dist / influence; // 0 at edge of influence, 1 at reef center
-          push = Math.max(push, t * t * 35 * viewScale); // quadratic falloff
-        }
-      }
-      return push;
-    }
-
     // Draw wave front lines only while active
     if (alive) {
       const perpX = -sinA;
       const perpY = cosA;
       if (!ww.seed) ww.seed = Math.random() * 100;
-      const t = time * 0.0012;
+      const t = ww.traveled * 0.02;
       const lines = [
         { behind: 0, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
-        { behind: 6 * viewScale, thick: 1.0 * viewScale, alpha: 0.18, freq: 1.1 },
-        { behind: 14 * viewScale, thick: 0.5 * viewScale, alpha: 0.08, freq: 1.5 },
+        { behind: 4 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 1.3 },
+        { behind: 9 * viewScale, thick: 0.8 * viewScale, alpha: 0.12, freq: 0.8 },
+        { behind: 15 * viewScale, thick: 0.5 * viewScale, alpha: 0.07, freq: 1.6 },
       ];
       for (const ln of lines) {
         ctx.beginPath();
@@ -4692,15 +4209,13 @@ function draw(time) {
         for (let pos = -span; pos <= span; pos += step) {
           const f = ln.freq;
           const vs = viewScale;
-          // Time-driven oscillation so wave shape constantly evolves
-          const offset = (Math.sin(pos * 0.04 * f + t * 3.1 + ww.seed) * 6
-                       + Math.sin(pos * 0.09 * f + t * 5.7 + ww.seed * 2.3) * 4
-                       + Math.sin(pos * 0.18 * f + t * 9.3 + ww.seed * 4.7) * 2
-                       + Math.sin(pos * 0.35 * f + t * 14 + ww.seed * 7) * 1) * vs;
-          let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
-          let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
-          const deflect = reefDeflect(px, py);
-          if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
+          // Higher base frequency so the wave reads as choppy texture, not a diagonal lean
+          const offset = (Math.sin(pos * 0.04 * f + t * 0.6 + ww.seed) * 6
+                       + Math.sin(pos * 0.09 * f + t * 1.1 + ww.seed * 2.3) * 4
+                       + Math.sin(pos * 0.18 * f + t * 2.3 + ww.seed * 4.7) * 2
+                       + Math.sin(pos * 0.35 * f + t * 3.1 + ww.seed * 7) * 1) * vs;
+          const px = ww.x + perpX * pos + cosA * (offset - ln.behind);
+          const py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           if (first) { ctx.moveTo(px, py); first = false; }
           else ctx.lineTo(px, py);
       }
@@ -4777,87 +4292,6 @@ function draw(time) {
   }
 
   // Organic population — target wanders, fish come and go naturally
-  // Predator lifecycle — departure, absence (bonus fish), dramatic return
-  if (predators.length > 0 && predAbsentTimer <= 0) {
-    predReturnTimer -= dt;
-    if (predReturnTimer <= 0 && predDepartTimer <= 0) {
-      // Signal predator to leave — swim toward nearest edge
-      for (const pred of predators) {
-        pred._departing = true;
-        pred.target = null;
-        pred.hunting = false;
-        const toLeft = pred.x, toRight = w - pred.x;
-        const toTop = pred.y, toBottom = h - pred.y;
-        const minEdge = Math.min(toLeft, toRight, toTop, toBottom);
-        if (minEdge === toLeft) pred.angle = Math.PI;
-        else if (minEdge === toRight) pred.angle = 0;
-        else if (minEdge === toTop) pred.angle = -Math.PI / 2;
-        else pred.angle = Math.PI / 2;
-      }
-      predDepartTimer = 8; // give it 8s to leave
-    }
-    if (predDepartTimer > 0) {
-      predDepartTimer -= dt;
-      // Push departing predators toward their exit
-      for (const pred of predators) {
-        if (pred._departing) {
-          pred.vx += Math.cos(pred.angle) * 0.15;
-          pred.vy += Math.sin(pred.angle) * 0.15;
-        }
-      }
-      // Remove once offscreen
-      for (let i = predators.length - 1; i >= 0; i--) {
-        const p = predators[i];
-        if (p._departing && (p.x < -50 || p.x > w + 50 || p.y < -50 || p.y > h + 50)) {
-          predators.splice(i, 1);
-        }
-      }
-      if (predators.length === 0) {
-        predAbsentTimer = 25 + Math.random() * 35; // gone for 25-60s
-        predDepartTimer = 0;
-        predBonusFish = 0;
-      }
-    }
-  }
-  if (predAbsentTimer > 0) {
-    predAbsentTimer -= dt;
-    // Bonus fish trickle in during peace
-    if (predBonusFish < 20 && Math.random() < 0.02) {
-      const edge = Math.floor(Math.random() * 4);
-      const f = new Fish(edge);
-      f._bonusFish = true; // mark so they flee when predator returns
-      fish.push(f);
-      predBonusFish++;
-    }
-    // Predator returns
-    if (predAbsentTimer <= 0) {
-      // Dramatic entrance — fast, from an edge, targeting a fish
-      const pred = new Predator();
-      // Override spawn to come from edge at speed
-      const edge = Math.floor(Math.random() * 4);
-      if (edge === 0) { pred.x = -40; pred.y = h * (0.2 + Math.random() * 0.6); pred.angle = (Math.random() - 0.5) * 0.3; }
-      else if (edge === 1) { pred.x = w + 40; pred.y = h * (0.2 + Math.random() * 0.6); pred.angle = Math.PI + (Math.random() - 0.5) * 0.3; }
-      else if (edge === 2) { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = -40; pred.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
-      else { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = h + 40; pred.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
-      pred.vx = Math.cos(pred.angle) * pred.baseSpeed * 2.55 * viewScale;
-      pred.vy = Math.sin(pred.angle) * pred.baseSpeed * 2.55 * viewScale;
-      pred.hunger = 0.8; // comes back hungry
-      pred.hunting = true;
-      pred._burstFlick = 1.0;
-      predators.push(pred);
-      // Bonus fish panic and flee offscreen
-      for (const f of fish) {
-        if (f._bonusFish) {
-          f.leaving = true;
-          f.fleeing = true;
-          f.fleeTimer = 5;
-          f.distracted = true;
-        }
-      }
-      predReturnTimer = 60 + Math.random() * 90; // next departure in 60-150s
-    }
-  }
-
   popDriftTimer -= dt;
   if (popDriftTimer <= 0) {
     // Shift the target: sometimes sparser, sometimes denser
@@ -5005,7 +4439,6 @@ function draw(time) {
   // Like light refracting through gentle ocean swells passing overhead
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  const wdx = Math.cos(waveBaseAngle), wdy = Math.sin(waveBaseAngle);
   for (let i = 0; i < 5; i++) {
     const phase = time * 0.00008 + i * 1.7;
     const drift = time * 0.00003 * (0.8 + i * 0.15);
@@ -5014,16 +4447,14 @@ function draw(time) {
     if (life < 0.15) continue; // skip when too faint
     const fade = (life - 0.15) / 0.85;
     const alpha = fade * fade * 0.04;
-    // Drift along the same direction as the main wash waves
-    const travel = ((drift * w * 3 + i * w * 0.6) % (w * 1.4)) - w * 0.2;
-    const spread = Math.sin(phase * 1.3 + i * 2.3) * h * 0.35;
-    const wx = w * 0.5 + wdx * travel - wdy * spread;
-    const wy = h * 0.5 + wdy * travel + wdx * spread;
+    // Elongated patches that drift with the wave angle
+    const wx = w * 0.1 + ((drift * w * 3 + i * w * 0.6) % (w * 1.4)) - w * 0.2;
+    const wy = h * 0.15 + Math.sin(phase * 1.3 + i * 2.3) * h * 0.7;
     const wLen = 80 + Math.sin(phase * 0.7) * 40; // length along wave direction
     const wWid = 20 + Math.sin(phase * 1.1 + i) * 10; // narrow cross-section
     ctx.save();
     ctx.translate(wx, wy);
-    ctx.rotate(waveBaseAngle);
+    ctx.rotate(waveBaseAngle + Math.sin(phase + i) * 0.15);
     const wg = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
     wg.addColorStop(0, `rgba(180, 230, 240, ${alpha})`);
     wg.addColorStop(0.5, `rgba(160, 220, 230, ${alpha * 0.5})`);
@@ -5043,65 +4474,37 @@ function draw(time) {
     const nv = rf.crownShape.length;
     const t = time * 0.001; // seconds
 
-    // Wave impact — ramps in over 0.5s, then fades out over 5s
-    let waveBoost = 0, waveHitCos = 0, waveHitSin = 0;
-    if (rf._waveHit && rf._waveTime) {
-      const elapsed = (time - rf._waveTime) * 0.001; // seconds since impact
-      const rampIn = Math.min(1, elapsed / 0.5); // 0→1 over first 0.5s
-      const fadeOut = Math.max(0, 1 - Math.max(0, elapsed - 0.5) / 5); // 1→0 over next 5s
-      waveBoost = rf._waveHit * rampIn * fadeOut;
-      waveHitCos = Math.cos(rf._waveAngle);
-      waveHitSin = Math.sin(rf._waveAngle);
-      if (elapsed > 5.5) rf._waveHit = 0;
-    }
-
-    // Waterline ripples — more rings radiating outward, chaotic with currents
-    const ringCount = 4 + Math.ceil(waveBoost * 3); // 4 base, up to 7 during wave
-    for (let ring = 0; ring < ringCount; ring++) {
-      const ringPhase = t * (0.5 + ring * 0.12) + ring * 1.7;
-      const baseOffset = ring * 2.5 + Math.sin(ringPhase) * 2;
-      // Wave boost pushes outer rings further on the hit side
-      const boostOffset = waveBoost * ring * 3;
+    // Waterline ripples - animated rings that lap around the crown edge
+    // Multiple offset rings at slightly different radii create a lapping effect
+    for (let ring = 0; ring < 3; ring++) {
+      const ringPhase = t * (0.4 + ring * 0.15) + ring * 2.1;
+      const ringOffset = Math.sin(ringPhase) * 2 + ring * 1.5;
       ctx.beginPath();
       for (let i = 0; i <= nv; i++) {
         const idx = i % nv;
         const cp = rf.crownShape[idx];
-        const cpDist = Math.sqrt(cp.x * cp.x + cp.y * cp.y) || 1;
-        const nx = cp.x / cpDist, ny = cp.y / cpDist;
-        // Per-point wobble — more chaotic with tide and turbulence
-        const pointPhase = ringPhase + idx * 0.9;
-        const wobble = Math.sin(pointPhase) * 3
-                     + Math.sin(pointPhase * 2.3 + 1.7) * 1.5
-                     + Math.sin(pointPhase * 4.1 + ring * 0.8) * 0.8;
-        // Wave-side boost: points facing the wave direction get pushed out more
-        const waveFacing = nx * waveHitCos + ny * waveHitSin; // -1 to 1
-        const dirBoost = boostOffset * Math.max(0, waveFacing);
-        const totalOffset = baseOffset + wobble + dirBoost;
-        const px = cp.x + nx * totalOffset;
-        const py = cp.y + ny * totalOffset;
+        // Each point oscillates outward independently for organic lapping
+        const pointPhase = ringPhase + idx * 0.7;
+        const wobble = Math.sin(pointPhase) * 2.5 + Math.sin(pointPhase * 2.3 + 1.7) * 1.2;
+        const dist = Math.sqrt(cp.x * cp.x + cp.y * cp.y) || 1;
+        const nx = cp.x / dist, ny = cp.y / dist;
+        const px = cp.x + nx * (ringOffset + wobble);
+        const py = cp.y + ny * (ringOffset + wobble);
         if (i === 0) ctx.moveTo(px, py);
         else {
           const prev = rf.crownShape[(i - 1) % nv];
           const prevDist = Math.sqrt(prev.x * prev.x + prev.y * prev.y) || 1;
-          const prevNx = prev.x / prevDist, prevNy = prev.y / prevDist;
-          const prevPhase = ringPhase + ((i - 1) % nv) * 0.9;
-          const prevWobble = Math.sin(prevPhase) * 3
-                           + Math.sin(prevPhase * 2.3 + 1.7) * 1.5
-                           + Math.sin(prevPhase * 4.1 + ring * 0.8) * 0.8;
-          const prevWaveFacing = prevNx * waveHitCos + prevNy * waveHitSin;
-          const prevDirBoost = boostOffset * Math.max(0, prevWaveFacing);
-          const prevTotal = baseOffset + prevWobble + prevDirBoost;
-          const prevPx = prev.x + prevNx * prevTotal;
-          const prevPy = prev.y + prevNy * prevTotal;
+          const prevPhase = ringPhase + ((i - 1) % nv) * 0.7;
+          const prevWobble = Math.sin(prevPhase) * 2.5 + Math.sin(prevPhase * 2.3 + 1.7) * 1.2;
+          const prevPx = prev.x + (prev.x / prevDist) * (ringOffset + prevWobble);
+          const prevPy = prev.y + (prev.y / prevDist) * (ringOffset + prevWobble);
           const mx = (prevPx + px) * 0.5, my = (prevPy + py) * 0.5;
           ctx.quadraticCurveTo(prevPx, prevPy, mx, my);
         }
       }
       ctx.closePath();
-      // Outer rings fade out, wave boost adds intensity
-      const ringAlpha = Math.max(0.02, (0.16 - ring * 0.022) + waveBoost * 0.06);
-      ctx.strokeStyle = `rgba(180, 210, 225, ${ringAlpha})`;
-      ctx.lineWidth = Math.max(0.3, 1.4 - ring * 0.15);
+      ctx.strokeStyle = `rgba(180, 210, 225, ${0.15 - ring * 0.04})`;
+      ctx.lineWidth = 1.2 - ring * 0.3;
       ctx.stroke();
     }
 
@@ -5133,8 +4536,6 @@ function draw(time) {
     sheenGrad.addColorStop(0, 'rgba(180, 230, 240, 0.1)');
     sheenGrad.addColorStop(1, 'rgba(180, 230, 240, 0)');
 
-    // Submerged edge rocks are baked into sand canvas
-
     // Crown shape - the dry rock poking out of the water
     ctx.beginPath();
     ctx.moveTo(rf.crownShape[0].x, rf.crownShape[0].y);
@@ -5163,79 +4564,6 @@ function draw(time) {
         ctx.arc(p.x * 0.6, p.y * 0.6, speckR, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0,0,0,0.15)';
         ctx.fill();
-      }
-    }
-    // Above-water edge rocks — fill only, no outline
-    for (const er of rf.edgeRocks) {
-      if (!er.aboveWater) continue;
-      ctx.beginPath();
-      for (let vi = 0; vi <= er.verts.length; vi++) {
-        const v = er.verts[vi % er.verts.length];
-        const px = er.ox + Math.cos(v.a) * v.r * er.r;
-        const py = er.oy + Math.sin(v.a) * v.r * er.r;
-        if (vi === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.fillStyle = er.color;
-      ctx.fill();
-      // Waterline ripples around edge rocks that straddle the water
-      const erDist = Math.sqrt(er.ox * er.ox + er.oy * er.oy);
-      const crAngle = Math.atan2(er.oy - rf.crownOffY, er.ox - rf.crownOffX);
-      const crEdge = rf.radiusAt(crAngle, rf.crownRadii);
-      // Only ripple rocks near the crown edge (within 1.5x their radius of the waterline)
-      if (Math.abs(erDist - crEdge) < er.r * 1.5) {
-        for (let ring = 0; ring < 2; ring++) {
-          const rPhase = t * (0.6 + ring * 0.2) + er.ox * 0.1 + er.oy * 0.1;
-          const baseR = er.r * (1.2 + ring * 0.8) + Math.sin(rPhase) * 1.5;
-          // Wave distortion, skip points inside the reef crown
-          const ringSteps = 24;
-          ctx.beginPath();
-          let drawing = false;
-          for (let si = 0; si <= ringSteps; si++) {
-            const a = (si / ringSteps) * Math.PI * 2;
-            const dirX = Math.cos(a), dirY = Math.sin(a);
-            const facing = dirX * waveHitCos + dirY * waveHitSin;
-            const distort = waveBoost * (ring + 1) * 2.5;
-            const r = baseR - facing * distort;
-            const px = er.ox + dirX * r;
-            const py = er.oy + dirY * r;
-            // Check if this point is inside the reef crown
-            const toCrownDx = px - rf.crownOffX, toCrownDy = py - rf.crownOffY;
-            const toCrownDist = Math.sqrt(toCrownDx * toCrownDx + toCrownDy * toCrownDy);
-            const crownAngle = Math.atan2(toCrownDy, toCrownDx);
-            const crownEdge = rf.radiusAt(crownAngle, rf.crownRadii);
-            if (toCrownDist < crownEdge + 2) {
-              drawing = false; // inside crown, break the path
-              continue;
-            }
-            if (!drawing) { ctx.moveTo(px, py); drawing = true; }
-            else ctx.lineTo(px, py);
-          }
-          ctx.strokeStyle = `rgba(180, 210, 225, ${0.1 - ring * 0.035 + waveBoost * 0.04})`;
-          ctx.lineWidth = 0.8 - ring * 0.2;
-          ctx.stroke();
-        }
-      }
-    }
-    // Grass tufts — small blades swaying on the rock surface
-    const sway = time * 0.001;
-    for (const tuft of rf.grassTufts) {
-      for (const bl of tuft.blades) {
-        const wobble = Math.sin(sway * 0.6 + bl.phase) * 0.04 + Math.sin(sway * 1.1 + bl.phase * 1.6) * 0.02;
-        const baseX = tuft.ox, baseY = tuft.oy;
-        const tipX = baseX + Math.cos(bl.angle + wobble) * bl.length;
-        const tipY = baseY + Math.sin(bl.angle + wobble) * bl.length;
-        // Quadratic curve for a slight natural bow
-        const midX = (baseX + tipX) * 0.5 + Math.sin(bl.angle + wobble + 0.5) * bl.length * 0.08;
-        const midY = (baseY + tipY) * 0.5 + Math.cos(bl.angle + wobble + 0.5) * bl.length * 0.08;
-        ctx.beginPath();
-        ctx.moveTo(baseX, baseY);
-        ctx.quadraticCurveTo(midX, midY, tipX, tipY);
-        ctx.strokeStyle = tuft.color;
-        ctx.lineWidth = bl.width;
-        ctx.lineCap = 'round';
-        ctx.stroke();
       }
     }
     ctx.restore();
