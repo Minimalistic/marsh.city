@@ -328,7 +328,12 @@ function handleFSChange() {
   inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
   fsCloseBtn.hidden = !inFullscreen;
   fsBtn.hidden = inFullscreen;
-  // Don't resize canvas or regenerate — CSS scales the existing pixels
+  // Resize canvas + rescale entity positions — no world regeneration
+  setTimeout(() => {
+    const oldW = w, oldH = h;
+    ({ w, h } = resize());
+    if (w !== oldW || h !== oldH) { rescaleAll(oldW, oldH); rebuildGrid(); }
+  }, 100);
   showUI();
 }
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
@@ -440,13 +445,12 @@ const foamBits = [];
 const killFx = [];
 
 function resize() {
-  // Always render at full screen resolution so fullscreen is instant & crisp
+  const rect = canvas.getBoundingClientRect();
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const sw = screen.width, sh = screen.height;
-  canvas.width = sw * dpr;
-  canvas.height = sh * dpr;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { w: sw, h: sh };
+  return { w: rect.width, h: rect.height };
 }
 
 let { w, h } = resize();
