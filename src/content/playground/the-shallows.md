@@ -3648,35 +3648,45 @@ regenerateWorld = function() {
   for (const c of clouds) { c.x *= sx; c.y *= sy; }
 
   settleTime = 0;
+  // Rebuild cached render assets for new viewport size
+  rebuildBgGradient();
+  rebuildSandCanvas();
 };
 
-// Cached background gradient — never changes, created once
-const bgGradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-bgGradient.addColorStop(0, '#2a8a9a');
-bgGradient.addColorStop(0.6, '#1e7585');
-bgGradient.addColorStop(1, '#156068');
-
-// Pre-rendered sand patches — static geometry, rendered once to offscreen canvas
-const sandCanvas = document.createElement('canvas');
-sandCanvas.width = canvas.width;
-sandCanvas.height = canvas.height;
-const sandCtx = sandCanvas.getContext('2d');
-const sandDpr = Math.min(2, window.devicePixelRatio || 1);
-sandCtx.setTransform(sandDpr, 0, 0, sandDpr, 0, 0);
-for (const r of rocks) {
-  sandCtx.save();
-  sandCtx.translate(r.x, r.y);
-  sandCtx.rotate(r.angle);
-  const sg = sandCtx.createRadialGradient(0, 0, 0, 0, 0, r.size);
-  sg.addColorStop(0, `rgba(200, 190, 160, ${r.brightness})`);
-  sg.addColorStop(0.6, `rgba(190, 180, 150, ${r.brightness * 0.5})`);
-  sg.addColorStop(1, 'rgba(190, 180, 150, 0)');
-  sandCtx.fillStyle = sg;
-  sandCtx.beginPath();
-  sandCtx.ellipse(0, 0, r.size, r.size * r.elongation, 0, 0, Math.PI * 2);
-  sandCtx.fill();
-  sandCtx.restore();
+// Background gradient — recreated on resize
+let bgGradient;
+function rebuildBgGradient() {
+  bgGradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+  bgGradient.addColorStop(0, '#2a8a9a');
+  bgGradient.addColorStop(0.6, '#1e7585');
+  bgGradient.addColorStop(1, '#156068');
 }
+rebuildBgGradient();
+
+// Pre-rendered sand patches — rebuilt on resize
+const sandCanvas = document.createElement('canvas');
+const sandCtx = sandCanvas.getContext('2d');
+function rebuildSandCanvas() {
+  sandCanvas.width = canvas.width;
+  sandCanvas.height = canvas.height;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  sandCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  for (const r of rocks) {
+    sandCtx.save();
+    sandCtx.translate(r.x, r.y);
+    sandCtx.rotate(r.angle);
+    const sg = sandCtx.createRadialGradient(0, 0, 0, 0, 0, r.size);
+    sg.addColorStop(0, `rgba(200, 190, 160, ${r.brightness})`);
+    sg.addColorStop(0.6, `rgba(190, 180, 150, ${r.brightness * 0.5})`);
+    sg.addColorStop(1, 'rgba(190, 180, 150, 0)');
+    sandCtx.fillStyle = sg;
+    sandCtx.beginPath();
+    sandCtx.ellipse(0, 0, r.size, r.size * r.elongation, 0, 0, Math.PI * 2);
+    sandCtx.fill();
+    sandCtx.restore();
+  }
+}
+rebuildSandCanvas();
 
 function draw(time) {
   const dt = Math.min((time - lastTime) / 1000, 0.05);
