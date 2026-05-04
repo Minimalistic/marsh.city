@@ -4667,17 +4667,14 @@ function rebuildSandCanvas() {
   sandCtx.fillRect(0, 0, w, h);
 
   // Sand ripple lines — undulating ridges perpendicular to wave direction
-  // Pre-computed as if waves sculpted the sand floor over time
-  // Draw with blur for soft sandy look
-  sandCtx.filter = `blur(${3 * viewScale}px)`;
+  // Drawn to temp canvas then blurred via multiple draws for guaranteed soft look
   const waveCos = Math.cos(waveBaseAngle), waveSin = Math.sin(waveBaseAngle);
-  const perpCos = -waveSin, perpSin = waveCos; // perpendicular to wave travel
-  const rippleSpacing = 8 * viewScale; // distance between ridges
+  const perpCos = -waveSin, perpSin = waveCos;
+  const rippleSpacing = 8 * viewScale;
   const diagonal = Math.sqrt(w * w + h * h);
   const rippleCount = Math.ceil(diagonal / rippleSpacing);
-  const rippleStep = 3; // px between points along each line
+  const rippleStep = 3;
 
-  // Helper: proximity factor to nearest exposed rock (1 = close, 0 = far)
   function rockProximity(x, y) {
     let best = 0;
     for (const rf of reefs) {
@@ -4685,27 +4682,30 @@ function rebuildSandCanvas() {
       const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
       const dx = x - cx, dy = y - cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const influence = rf.crownR * 6; // how far the rock's sand influence extends
-      if (dist < influence) {
-        best = Math.max(best, 1 - dist / influence);
-      }
+      const influence = rf.crownR * 6;
+      if (dist < influence) best = Math.max(best, 1 - dist / influence);
     }
     return best;
   }
+
+  // Draw ripples to a temp canvas
+  const rippleCv = document.createElement('canvas');
+  rippleCv.width = sandCanvas.width;
+  rippleCv.height = sandCanvas.height;
+  const rippleCtx = rippleCv.getContext('2d');
+  rippleCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   for (let ri = 0; ri < rippleCount; ri++) {
     const ridgeOffset = (ri - rippleCount / 2) * rippleSpacing;
     const seed = ri * 7.13;
     const ridgeThick = (3.6 + Math.sin(seed * 2.3) * 1.5) * viewScale;
 
-    // Sample rock proximity at the ridge midpoint for per-ridge alpha scaling
     const midX = w / 2 + waveCos * ridgeOffset;
     const midY = h / 2 + waveSin * ridgeOffset;
     const prox = rockProximity(midX, midY);
-    // Base alpha faded far from rocks, stronger near them
     const ridgeAlpha = (0.03 + prox * 0.12) + Math.sin(seed) * 0.02 + Math.random() * 0.01;
 
-    sandCtx.beginPath();
+    rippleCtx.beginPath();
     let first = true;
     for (let pos = -diagonal * 0.6; pos <= diagonal * 0.6; pos += rippleStep) {
       const wobble = Math.sin(pos * 0.015 + seed) * 3.5
@@ -4714,15 +4714,27 @@ function rebuildSandCanvas() {
       const rx = w / 2 + perpCos * pos + waveCos * (ridgeOffset + wobble * viewScale);
       const ry = h / 2 + perpSin * pos + waveSin * (ridgeOffset + wobble * viewScale);
       if (rx < -20 || rx > w + 20 || ry < -20 || ry > h + 20) { first = true; continue; }
-      if (first) { sandCtx.moveTo(rx, ry); first = false; }
-      else sandCtx.lineTo(rx, ry);
+      if (first) { rippleCtx.moveTo(rx, ry); first = false; }
+      else rippleCtx.lineTo(rx, ry);
     }
-    sandCtx.strokeStyle = `rgba(210, 195, 160, ${ridgeAlpha})`;
-    sandCtx.lineWidth = ridgeThick;
-    sandCtx.lineCap = 'round';
-    sandCtx.stroke();
+    rippleCtx.strokeStyle = `rgba(210, 195, 160, ${ridgeAlpha})`;
+    rippleCtx.lineWidth = ridgeThick;
+    rippleCtx.lineCap = 'round';
+    rippleCtx.stroke();
   }
-  sandCtx.filter = 'none';
+
+  // Gaussian blur via multiple offset draws (works in all browsers)
+  sandCtx.save();
+  sandCtx.setTransform(1, 0, 0, 1, 0, 0);
+  const blurR = Math.ceil(4 * viewScale * dpr);
+  sandCtx.globalAlpha = 0.25;
+  for (let dx = -blurR; dx <= blurR; dx += blurR) {
+    for (let dy = -blurR; dy <= blurR; dy += blurR) {
+      sandCtx.drawImage(rippleCv, dx, dy);
+    }
+  }
+  sandCtx.globalAlpha = 1;
+  sandCtx.restore();
 
   // Sand buildup downstream of exposed rocks — deposited by wave action
   for (const rf of reefs) {
