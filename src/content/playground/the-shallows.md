@@ -4660,9 +4660,9 @@ function rebuildSandCanvas() {
 
   // Full seafloor sand base — warm sand tone across the entire viewport
   const sfGrad = sandCtx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-  sfGrad.addColorStop(0, 'rgba(150, 160, 145, 0.18)');
-  sfGrad.addColorStop(0.5, 'rgba(140, 150, 135, 0.12)');
-  sfGrad.addColorStop(1, 'rgba(130, 140, 125, 0.06)');
+  sfGrad.addColorStop(0, 'rgba(155, 150, 140, 0.18)');
+  sfGrad.addColorStop(0.5, 'rgba(145, 140, 130, 0.12)');
+  sfGrad.addColorStop(1, 'rgba(135, 130, 120, 0.06)');
   sandCtx.fillStyle = sfGrad;
   sandCtx.fillRect(0, 0, w, h);
 
@@ -4775,7 +4775,7 @@ function rebuildSandCanvas() {
       const segAlpha = Math.min(p0.a, p1.a);
       if (segAlpha < 0.003) continue;
       rippleCtx.globalAlpha = segAlpha;
-      rippleCtx.strokeStyle = 'rgba(130, 145, 135, 1)';
+      rippleCtx.strokeStyle = 'rgba(150, 145, 135, 1)';
       rippleCtx.beginPath();
       rippleCtx.moveTo(p0.x, p0.y);
       rippleCtx.lineTo(p1.x, p1.y);
@@ -4817,9 +4817,9 @@ function rebuildSandCanvas() {
     const depX = cx + waveCos * depositDist * 0.6;
     const depY = cy + waveSin * depositDist * 0.6;
     const dg = sandCtx.createRadialGradient(depX, depY, 0, depX, depY, depositDist);
-    dg.addColorStop(0, 'rgba(150, 160, 140, 0.25)');
-    dg.addColorStop(0.4, 'rgba(140, 150, 135, 0.15)');
-    dg.addColorStop(1, 'rgba(130, 140, 125, 0)');
+    dg.addColorStop(0, 'rgba(155, 150, 140, 0.25)');
+    dg.addColorStop(0.4, 'rgba(145, 140, 130, 0.15)');
+    dg.addColorStop(1, 'rgba(135, 130, 120, 0)');
     sandCtx.save();
     sandCtx.translate(depX, depY);
     sandCtx.rotate(waveBaseAngle);
