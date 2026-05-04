@@ -5650,7 +5650,7 @@ function draw(time) {
           const blend = Math.min(1, penetration * 3 + 0.4) * lateralFalloff;
           const bx = px * (1 - blend) + ox * blend;
           const by = py * (1 - blend) + oy * blend;
-          return { x: bx, y: by, hit: blend > 0.5, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
+          return { x: bx, y: by, hit: blend > 0.15, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
         }
 
         // Influence zone: points approaching get gently bent, strongest head-on
@@ -6452,7 +6452,7 @@ function draw(time) {
           const oy = cy + Math.sin(targetAngle) * targetR;
           const penetration = 1 - dist / edge;
           const blend = Math.min(1, penetration * 3 + 0.4) * lateralFalloff;
-          return { x: px * (1 - blend) + ox * blend, y: py * (1 - blend) + oy * blend, hit: blend > 0.5, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
+          return { x: px * (1 - blend) + ox * blend, y: py * (1 - blend) + oy * blend, hit: blend > 0.15, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
         }
         const influence = edge + 20 * viewScale;
         if (dist < influence && dist > edge) {
