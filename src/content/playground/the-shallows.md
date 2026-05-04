@@ -4685,18 +4685,18 @@ function rebuildSandCanvas() {
       const along = dx * waveCos + dy * waveSin;
       const lateral = Math.abs(dx * (-waveSin) + dy * waveCos);
       // Teardrop shape: extends much further downstream, narrow laterally
-      const downstreamReach = rf.crownR * 12; // long plume behind rock
-      const upstreamReach = rf.crownR * 3;    // short in front
-      const lateralReach = rf.crownR * 5;     // moderate width
+      const downstreamReach = rf.crownR * 36; // long plume behind rock
+      const upstreamReach = rf.crownR * 9;    // short in front
+      const lateralReach = rf.crownR * 15;    // moderate width
       const reach = along > 0 ? downstreamReach : upstreamReach;
       // Normalized distance in the elongated shape
       const alongNorm = Math.abs(along) / reach;
       const lateralNorm = lateral / lateralReach;
       const combined = Math.sqrt(alongNorm * alongNorm + lateralNorm * lateralNorm);
       if (combined >= 1) continue;
-      // Smooth cubic falloff instead of linear — gentle fade at edges
-      const falloff = (1 - combined);
-      const smooth = falloff * falloff * (3 - 2 * falloff); // smoothstep
+      // Extra-long feather: square root stretches the falloff curve further out
+      const falloff = Math.sqrt(1 - combined);
+      const smooth = falloff * falloff * (3 - 2 * falloff); // smoothstep on stretched curve
       // Downstream bias
       const dirBias = along > 0 ? 1 : 0.15;
       best = Math.max(best, smooth * dirBias);
@@ -4771,7 +4771,7 @@ function rebuildSandCanvas() {
       const segAlpha = Math.min(p0.a, p1.a);
       if (segAlpha < 0.003) continue;
       rippleCtx.globalAlpha = segAlpha;
-      rippleCtx.strokeStyle = 'rgba(195, 188, 167, 1)';
+      rippleCtx.strokeStyle = 'rgba(90, 120, 130, 1)';
       rippleCtx.beginPath();
       rippleCtx.moveTo(p0.x, p0.y);
       rippleCtx.lineTo(p1.x, p1.y);
