@@ -3367,6 +3367,11 @@ class Seagull {
     this._turbAngle = 0;
     this._turbBank = 0;
 
+    // Head look — turns toward turn direction + independent glances
+    this._headAngle = 0; // current head offset from body axis
+    this._headTarget = 0;
+    this._headTimer = 2 + Math.random() * 5; // time until next independent glance
+
     // Height above water — drifts lazily, affects shadow and apparent size
     this.height = 0.5 + Math.random() * 0.5;
     this._targetHeight = this.height;
@@ -3451,20 +3456,33 @@ class Seagull {
     // Bank into turns — visual only
     this._bank += (this.turnRate * 40 - this._bank) * 0.06;
 
-    // Wind buffeting — layered turbulence affects position, angle, and bank
+    // Wind buffeting — more pronounced turbulence, micro corrections
     this._turbPhase += dt;
     const tp = this._turbPhase;
-    // Smooth random nudges — multiple frequencies for organic feel
-    this._turbX += ((Math.sin(tp * 0.7 + 1.3) * 0.15
-                   + Math.sin(tp * 1.9 + 4.7) * 0.08
-                   + Math.sin(tp * 3.3 + 2.1) * 0.04) - this._turbX) * 0.03;
-    this._turbY += ((Math.sin(tp * 0.6 + 3.1) * 0.15
-                   + Math.sin(tp * 1.7 + 0.9) * 0.08
-                   + Math.sin(tp * 2.9 + 5.3) * 0.04) - this._turbY) * 0.03;
-    this._turbAngle += ((Math.sin(tp * 0.5 + 2.7) * 0.008
-                       + Math.sin(tp * 1.3 + 6.1) * 0.005) - this._turbAngle) * 0.04;
-    this._turbBank += ((Math.sin(tp * 0.8 + 1.9) * 0.03
-                      + Math.sin(tp * 2.1 + 3.7) * 0.015) - this._turbBank) * 0.04;
+    this._turbX += ((Math.sin(tp * 0.7 + 1.3) * 0.4
+                   + Math.sin(tp * 1.9 + 4.7) * 0.25
+                   + Math.sin(tp * 3.3 + 2.1) * 0.12
+                   + Math.sin(tp * 5.1 + 0.7) * 0.06) - this._turbX) * 0.05;
+    this._turbY += ((Math.sin(tp * 0.6 + 3.1) * 0.4
+                   + Math.sin(tp * 1.7 + 0.9) * 0.25
+                   + Math.sin(tp * 2.9 + 5.3) * 0.12
+                   + Math.sin(tp * 4.7 + 2.3) * 0.06) - this._turbY) * 0.05;
+    this._turbAngle += ((Math.sin(tp * 0.5 + 2.7) * 0.018
+                       + Math.sin(tp * 1.3 + 6.1) * 0.01
+                       + Math.sin(tp * 3.7 + 1.1) * 0.005) - this._turbAngle) * 0.06;
+    this._turbBank += ((Math.sin(tp * 0.8 + 1.9) * 0.06
+                      + Math.sin(tp * 2.1 + 3.7) * 0.03) - this._turbBank) * 0.06;
+
+    // Head look — follows turn direction + independent glances
+    this._headTimer -= dt;
+    if (this._headTimer <= 0) {
+      this._headTarget = (Math.random() - 0.5) * 0.35; // random independent glance
+      this._headTimer = 2 + Math.random() * 6;
+    }
+    // Blend toward turn-based look + independent glance
+    const turnLook = this.turnRate * 15; // head turns into the turn
+    const targetHead = turnLook + this._headTarget;
+    this._headAngle += (targetHead - this._headAngle) * 0.04;
 
     // Height drift — lazy altitude changes
     this._heightTimer -= dt;
@@ -3641,17 +3659,23 @@ class Seagull {
     ctx.fillStyle = 'rgba(245, 248, 250, 0.92)';
     ctx.fill();
 
-    // Head cap — extended forward
+    // Head + beak — rotates with head look direction
+    ctx.save();
+    ctx.translate(bl * 0.3, 0); // pivot at neck
+    ctx.rotate(this._headAngle);
+    ctx.translate(-bl * 0.3, 0);
+
+    // Head cap
     ctx.beginPath();
     ctx.arc(bl * 0.35, 0, bl * 0.08, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(240, 242, 245, 0.9)';
     ctx.fill();
 
-    // Beak — yellow, pointed, extends from head
+    // Beak — yellow, pointed
     ctx.beginPath();
-    ctx.moveTo(bl * 0.5, 0); // tip of head
-    ctx.lineTo(bl * 0.65, 0); // beak tip
-    ctx.lineTo(bl * 0.5, bl * 0.025); // lower jaw
+    ctx.moveTo(bl * 0.5, 0);
+    ctx.lineTo(bl * 0.65, 0);
+    ctx.lineTo(bl * 0.5, bl * 0.025);
     ctx.closePath();
     ctx.fillStyle = 'rgba(230, 190, 50, 0.95)';
     ctx.fill();
@@ -3663,6 +3687,7 @@ class Seagull {
     ctx.closePath();
     ctx.fillStyle = 'rgba(210, 170, 40, 0.9)';
     ctx.fill();
+    ctx.restore();
 
     // Tail feathers — wider fan
     ctx.beginPath();
