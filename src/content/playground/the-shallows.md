@@ -5555,17 +5555,17 @@ function draw(time) {
           const cl = reefClamp(px, py);
           pts.push({ x: cl.x, y: cl.y, hit: !!cl.hit });
           // Emit contact splashes where the primary wave line touches rock
-          if (isFirstLine && cl.hit && contactSplashes.length < 300 && Math.random() < 0.35) {
-            const sprayAngle = Math.atan2(cl.ny, cl.nx) + (Math.random() - 0.5) * 1.2;
-            const spd = (1.5 + Math.random() * 3.5) * viewScale * ww.strength;
+          if (isFirstLine && cl.hit && contactSplashes.length < 500 && Math.random() < 0.6) {
+            const sprayAngle = Math.atan2(cl.ny, cl.nx) + (Math.random() - 0.5) * 1.6;
+            const spd = (2.5 + Math.random() * 5) * viewScale * ww.strength;
             contactSplashes.push({
               x: cl.x, y: cl.y,
-              vx: Math.cos(sprayAngle) * spd + cosA * ww.speed * 0.3,
-              vy: Math.sin(sprayAngle) * spd + sinA * ww.speed * 0.3,
-              size: (0.4 + Math.random() * 1.8) * viewScale,
+              vx: Math.cos(sprayAngle) * spd + cosA * ww.speed * 0.4,
+              vy: Math.sin(sprayAngle) * spd + sinA * ww.speed * 0.4,
+              size: (0.5 + Math.random() * 2.5) * viewScale,
               life: 1,
-              maxLife: 0.4 + Math.random() * 0.8,
-              drag: 0.92 + Math.random() * 0.05,
+              maxLife: 0.5 + Math.random() * 1.0,
+              drag: 0.90 + Math.random() * 0.05,
             });
           }
         }
