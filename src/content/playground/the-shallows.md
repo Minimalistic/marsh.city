@@ -1915,8 +1915,8 @@ class ReefFish {
     }
 
     // Damping — reef fish drift, they don't jet
-    this.vx *= 0.96;
-    this.vy *= 0.96;
+    this.vx *= 0.97;
+    this.vy *= 0.97;
 
     // Soft leash — only pulls when really far, and gently
     const curReef = this.reef;
@@ -1941,30 +1941,43 @@ class ReefFish {
       this.vy += (cdy / cDist) * push;
     }
 
-    // Speed control — reef fish hover slowly, only burst when scared
+    // Speed control — reef fish potter about, burst when scared
     const scaledSpeed = this.baseSpeed * (1 + (viewScale - 1) * 0.8);
-    const targetSpeed = this.fleeing ? scaledSpeed * 2.5 : scaledSpeed * 0.25;
+    const targetSpeed = this.fleeing ? scaledSpeed * 2.5 : scaledSpeed * 0.5;
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.06;
+      const desired = currentSpeed + (targetSpeed - currentSpeed) * 0.08;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
       this.vy *= ratio;
     }
 
+    // Forward-only constraint — reef fish can't swim backward
+    const headX = Math.cos(this.angle), headY = Math.sin(this.angle);
+    const fwdSpeed = this.vx * headX + this.vy * headY;
+    const latSpeed = this.vx * (-headY) + this.vy * headX;
+    // Kill lateral drift
+    this.vx -= (-headY) * latSpeed * 0.5;
+    this.vy -= headX * latSpeed * 0.5;
+    // Prevent backward movement
+    if (fwdSpeed < 0) {
+      this.vx -= headX * fwdSpeed * 0.8;
+      this.vy -= headY * fwdSpeed * 0.8;
+    }
+
     this.x += this.vx;
     this.y += this.vy;
 
-    // Angle tracking — slow lazy turns
+    // Angle tracking — responsive turns so fish faces where it's going
     const targetAngle = Math.atan2(this.vy, this.vx);
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    this.angle += Math.max(-0.05, Math.min(0.05, angleDiff));
+    this.angle += Math.max(-0.1, Math.min(0.1, angleDiff));
     let renderDiff = this.angle - this._renderAngle;
     while (renderDiff > Math.PI) renderDiff -= Math.PI * 2;
     while (renderDiff < -Math.PI) renderDiff += Math.PI * 2;
-    this._renderAngle += renderDiff * 0.08;
+    this._renderAngle += renderDiff * 0.14;
 
     // Chain update
     this._joints[0].x = this.x;
