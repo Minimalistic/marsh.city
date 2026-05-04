@@ -5339,8 +5339,20 @@ function draw(time) {
                      + Math.sin(pos * 0.012 * f + tr.seed * 5.1) * (1.5 + Math.sin(t2 * 6.5 + tr.seed * 3.1) * 1)) * vs;
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
-        const deflect = reefDeflect(px, py);
-        if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
+        // Wrap around reef crowns — push outward from crown center
+        for (const rf of reefs) {
+          if (rf.submerged) continue;
+          const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+          const dx = px - cx, dy = py - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 0.1) continue;
+          const angle = Math.atan2(dy, dx);
+          const edge = rf.radiusAt(angle, rf.crownRadii) + 5 * viewScale;
+          if (dist < edge) {
+            px = cx + (dx / dist) * edge;
+            py = cy + (dy / dist) * edge;
+          }
+        }
         trPts.push({ x: px, y: py });
       }
       ctx.beginPath();
@@ -5405,8 +5417,8 @@ function draw(time) {
                        + Math.sin(pos * 0.012 * f + ww.seed * 5.1) * (2 + Math.sin(t * 6.5 * ts + ww.seed * 3.9) * 1.5)) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
-          // Per-point reef proximity — fade near reefs instead of hard deflect
-          let reefFade = 1;
+          // Check if point is inside a reef crown — only those points are hidden
+          let insideReef = false;
           for (const rf of reefs) {
             if (rf.submerged) continue;
             const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
@@ -5414,27 +5426,21 @@ function draw(time) {
             const dist = Math.sqrt(dx * dx + dy * dy);
             const angle = Math.atan2(dy, dx);
             const edge = rf.radiusAt(angle, rf.crownRadii);
-            if (dist < edge) { reefFade = 0; break; } // inside crown — invisible
-            const fadeZone = edge + 20 * viewScale;
-            if (dist < fadeZone) {
-              reefFade = Math.min(reefFade, (dist - edge) / (fadeZone - edge));
-            }
+            if (dist < edge + 3 * viewScale) { insideReef = true; break; }
           }
-          pts.push({ x: px, y: py, fade: reefFade });
+          pts.push({ x: px, y: py, visible: !insideReef });
         }
-        // Draw as segments with per-point alpha for reef fading
+        // Draw visible runs at full opacity — only points inside rocks are hidden
         const baseAlpha = ww.life * ln.alpha;
         ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
-        // Find runs of visible points (fade > 0.01) and draw each run
         let runStart = -1;
         for (let i = 0; i <= pts.length; i++) {
-          const visible = i < pts.length && pts[i].fade > 0.01;
-          if (visible && runStart < 0) runStart = i;
-          if (!visible && runStart >= 0) {
-            // Draw this visible run with faded edges
+          const vis = i < pts.length && pts[i].visible;
+          if (vis && runStart < 0) runStart = i;
+          if (!vis && runStart >= 0) {
             ctx.beginPath();
             ctx.moveTo(pts[runStart].x, pts[runStart].y);
             for (let j = runStart + 1; j < i; j++) {
@@ -5446,10 +5452,7 @@ function draw(time) {
                 ctx.lineTo(pts[j].x, pts[j].y);
               }
             }
-            // Use minimum fade in this run for the segment alpha
-            let minFade = 1;
-            for (let j = runStart; j < i; j++) minFade = Math.min(minFade, pts[j].fade);
-            ctx.globalAlpha = baseAlpha * (0.3 + minFade * 0.7);
+            ctx.globalAlpha = baseAlpha; // full opacity — no dimming
             ctx.stroke();
             runStart = -1;
           }
