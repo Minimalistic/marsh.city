@@ -875,6 +875,7 @@ class Fish {
     // Idle behavior - rare, brief slow-downs
     this.idleTimer = 5 + Math.random() * 10;
     this.idle = false;
+    this._idleDrift = 0; // gentle curve direction during idle meander
 
     // Depth - continuous distribution, fish naturally overlap at different levels
     this.depth = Math.random() * 0.5; // 0 = surface, 0.5 = deepest
@@ -1169,18 +1170,17 @@ class Fish {
       this.distracted = false;
       this.distractTimer = 5;
 
+      const eatDist = 8;
       const biteDist = 4;
-      // Per-fish accuracy — some nail it, some overshoot and circle back
-      const accuracy = 0.4 + (this._phaseOffset % 1) * 0.6; // 0.4-1.0
-      const eatDist = 6 + accuracy * 4; // accurate fish slow down earlier (6-10)
-      if (closestFoodDist < eatDist && angleMismatch < 1.2) {
-        // Near food — steer toward it, maintain speed, arc in
-        const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        const steer = (0.15 + accuracy * 0.15) * dt * 60;
-        const foodVx = Math.cos(desiredAngle) * curSpd;
-        const foodVy = Math.sin(desiredAngle) * curSpd;
-        this.vx += (foodVx - this.vx) * steer;
-        this.vy += (foodVy - this.vy) * steer;
+      if (closestFoodDist < eatDist) {
+        // Close to food — steer sharply toward it but keep gliding
+        this.vx *= 0.92;
+        this.vy *= 0.92;
+        // Quick turn to face food - fish arc in rather than braking
+        const turnToFood = Math.max(-0.25, Math.min(0.25, headingDiff));
+        this.angle += turnToFood * 0.5;
+        this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating) {
           closestFood.bites -= 2;
           // Visible size reduction - food gets eaten away fast
@@ -1209,23 +1209,15 @@ class Fish {
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
-      } else if (closestFoodDist < eatDist && angleMismatch >= 1.2) {
-        // Too misaligned to eat — fly-by, bank around for another pass
-        const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        const steer = 0.06 * dt * 60;
-        const foodVx = Math.cos(desiredAngle) * curSpd;
-        const foodVy = Math.sin(desiredAngle) * curSpd;
-        this.vx += (foodVx - this.vx) * steer;
-        this.vy += (foodVy - this.vy) * steer;
       } else {
-        // Steer toward food eagerly — swift dart, no hesitation
+        // Steer toward food eagerly — overrides schooling at close range
         const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.25 + proximity * 0.35;
+        const steerWeight = 0.15 + proximity * 0.35;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
         // Per-fish approach offset — mild spread so they don't all pile from one side
         const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
         const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
-        const foodSpeed = scaledSpeed * (1.1 + proximity * 0.3); // accelerate toward food
+        const foodSpeed = scaledSpeed * (0.7 + (1 - proximity) * 0.3); // gentle decel on approach
         const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
         const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * foodSpeed;
         this.vx += (desiredVx - this.vx) * steerWeight;
@@ -1375,11 +1367,22 @@ class Fish {
     if (this.fleeTimer > 0) this.fleeTimer -= dt;
     else this.fleeing = false;
 
-    // Idle state - rare and brief, fish almost always actively swimming
+    // Idle state - fish meander instead of braking, gentle course drift
     this.idleTimer -= dt;
     if (this.idleTimer <= 0) {
       this.idle = !this.idle;
-      this.idleTimer = this.idle ? 1 + Math.random() * 2 : 8 + Math.random() * 15;
+      this.idleTimer = this.idle ? 2 + Math.random() * 3 : 8 + Math.random() * 15;
+      if (this.idle) {
+        // Pick a lazy drift direction instead of slowing down
+        this._idleDrift = (Math.random() - 0.5) * 0.6;
+      }
+    }
+    // Idle fish gently curve instead of slowing down
+    if (this.idle && !this.fleeing && !this.eating) {
+      const spd2 = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+      const driftAngle = Math.atan2(this.vy, this.vx) + this._idleDrift * dt;
+      this.vx = Math.cos(driftAngle) * spd2;
+      this.vy = Math.sin(driftAngle) * spd2;
     }
 
     // Course-correction twitch — quick heading flick, like real fish do
@@ -1395,43 +1398,30 @@ class Fish {
       }
     }
 
-    // Speed management — smooth urgency blend, no hard state jumps
+    // Speed management - fish dart and zip, quick speed changes
+    // Check if actively being chased by a predator
     let beingHunted = false;
     for (const pred of predators) {
       if (pred.target === this) { beingHunted = true; break; }
     }
-    // Target urgency: 0 = idle, 1 = normal, 2+ = alarmed/fleeing
-    let targetUrgency;
-    if (panicSprint) targetUrgency = 5.0;
-    else if (beingHunted) targetUrgency = 4.0;
-    else if (this.fleeing) targetUrgency = 2.5;
-    else if (this.idle) targetUrgency = 0.5;
-    else targetUrgency = 1.0;
-    // Smooth urgency — ramps up fast (threat response), settles down gradually (calming)
-    if (!this._urgency) this._urgency = 1.0;
-    const urgencyUp = 1 - Math.pow(0.02, dt); // ~12% per frame at 60fps, dt-independent
-    const urgencyDown = 1 - Math.pow(0.15, dt); // ~3% per frame at 60fps
-    const urgencyRate = targetUrgency > this._urgency ? urgencyUp : urgencyDown;
-    this._urgency += (targetUrgency - this._urgency) * urgencyRate;
-    // Map urgency to speed — continuous curve instead of discrete jumps
-    // u=0.5→0.95, u=1→1.38, u=2.5→2.9, u=4→4.4, u=5→5.4
-    const u = this._urgency;
-    const speedMult = 0.52 + u * 0.86 + Math.max(0, u - 2) * 0.35;
-    const targetSpeed = scaledSpeed * speedMult;
+    let targetSpeed;
+    if (panicSprint) targetSpeed = scaledSpeed * 5.35; // explosive burst
+    else if (beingHunted) targetSpeed = scaledSpeed * 4.37; // full flight
+    else if (this.fleeing) targetSpeed = scaledSpeed * 2.92; // alarmed dash
+    else targetSpeed = scaledSpeed * 1.38; // always gliding at full cruise
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (currentSpeed > 0.01) {
-      // Dt-independent speed convergence
-      const accelRate = this._urgency > 2 ? 0.02 : 0.08; // tighter tracking when alarmed
-      const accel = 1 - Math.pow(accelRate, dt);
+      // Smooth speed convergence - snappier so fish never feel sluggish
+      const accel = (panicSprint || beingHunted) ? 0.85 : this.fleeing ? 0.6 : 0.3;
       const desired = currentSpeed + (targetSpeed - currentSpeed) * accel;
       const ratio = desired / currentSpeed;
       this.vx *= ratio;
       this.vy *= ratio;
     } else {
-      // Fish stalled - kick forward
-      this.vx = Math.cos(this.angle) * targetSpeed * 0.5;
-      this.vy = Math.sin(this.angle) * targetSpeed * 0.5;
+      // Fish stalled - kick forward immediately
+      this.vx = Math.cos(this.angle) * targetSpeed * 0.7;
+      this.vy = Math.sin(this.angle) * targetSpeed * 0.7;
     }
 
     // Reef avoidance - steers the fish's heading directly so it survives
@@ -1526,32 +1516,30 @@ class Fish {
       this.angle = Math.atan2(this.vy, this.vx);
     }
 
-    // Fish always swim forward — never stall, never pivot in place
+    // Fish can only swim forward - kill lateral drift and backward motion
     const headX = Math.cos(this.angle);
     const headY = Math.sin(this.angle);
     const fwdSpeed = this.vx * headX + this.vy * headY;
     const latSpeed = this.vx * (-headY) + this.vy * headX;
-    // Dampen lateral drift gently — keep some for banking arcs
-    const latDamp = Math.pow(0.5, dt * 60);
-    this.vx -= (-headY) * latSpeed * (1 - latDamp);
-    this.vy -= headX * latSpeed * (1 - latDamp);
-    // Backward momentum → banking arc, never a stop
+    // Kill sideways drift aggressively - fish dart forward
+    this.vx -= (-headY) * latSpeed * 0.7;
+    this.vy -= headX * latSpeed * 0.7;
+    // Prevent backward movement
     if (fwdSpeed < 0) {
-      const turnSign = latSpeed > 0 ? 1 : latSpeed < 0 ? -1 : (Math.random() < 0.5 ? 1 : -1);
-      const backwardEnergy = Math.abs(fwdSpeed);
-      // Remove backward, convert fully to lateral for a tight arc
-      this.vx -= headX * fwdSpeed;
-      this.vy -= headY * fwdSpeed;
-      this.vx += (-headY) * turnSign * backwardEnergy * 0.8;
-      this.vy += headX * turnSign * backwardEnergy * 0.8;
+      this.vx -= headX * fwdSpeed * 0.8;
+      this.vy -= headY * fwdSpeed * 0.8;
     }
-    // Hard floor: fish ALWAYS move forward at base speed minimum — no exceptions
-    const minFwd = scaledSpeed * 0.8;
+    // Enforce minimum forward speed - fish always glide, never stall
+    const minFwd = scaledSpeed * 0.7;
     const fwdNow = this.vx * headX + this.vy * headY;
     if (fwdNow < minFwd) {
-      this.vx += headX * (minFwd - fwdNow);
-      this.vy += headY * (minFwd - fwdNow);
+      this.vx += headX * (minFwd - fwdNow) * 0.5;
+      this.vy += headY * (minFwd - fwdNow) * 0.5;
     }
+
+    // Drag - smooths out micro-jitter
+    this.vx *= 0.99;
+    this.vy *= 0.99;
 
     // Soft return from offscreen — unless this fish is leaving
     if (!this.leaving) {
@@ -1626,20 +1614,19 @@ class Fish {
       }
     }
 
-    // Angle tracks velocity direction — fish arc, never pivot
+    // Angle tracks velocity direction but with turn rate limit
+    // Fish must move forward to turn - can't pivot in place
     const targetAngle = Math.atan2(this.vy, this.vx);
     let angleDiff = targetAngle - this.angle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    // Fast turn rate — fish are agile, quick banking arcs
-    const maxTurn = (0.2 + currentSpeed * 0.08) * dt * 60;
+    const maxTurn = 0.10 + currentSpeed * 0.10;
     this.angle += Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
-    // Smooth render angle — body visuals lag slightly behind physics heading
+    // Smooth render angle — body follows physics heading with slight lag
     let renderDiff = this.angle - this._renderAngle;
     while (renderDiff > Math.PI) renderDiff -= Math.PI * 2;
     while (renderDiff < -Math.PI) renderDiff += Math.PI * 2;
-    const renderBlend = 1 - Math.pow(0.15, dt);
-    this._renderAngle += renderDiff * renderBlend;
+    this._renderAngle += renderDiff * 0.25;
 
     // Update chain: joints have inertia — they carry momentum and can't vibrate
     this._joints[0].x = this.x;
@@ -1876,8 +1863,7 @@ class Fish {
     this._prevAngle = this.angle;
     const turning = Math.abs(angleDelta) > 0.03;
     const active = this.speed > 1.2 || turning || this.fleeing || this._biting;
-    this._glint = Math.max(0, this._glint - dt); // dt-scaled decay
-    if (this._glint > 0.15) this._glint = 0; // hard cap — kill stuck flashes
+    this._glint -= 0.016; // roughly 1 frame at 60fps
     if (this._glint <= 0 && active && Math.random() < 0.008) {
       const sun = getSunlight(this.x, this.y);
       if (sun > 0.5) {
@@ -1903,11 +1889,10 @@ class Fish {
     }
 
     // Belly flash — only when fleeing with body bend at 90%+ of max
-    this._bellyFlash = Math.max(0, this._bellyFlash - dt * 1.7); // dt-scaled decay
-    if (this._bellyFlash > 0.12) this._bellyFlash = 0; // hard cap — kill stuck flashes
+    this._bellyFlash -= 0.028; // 15% faster decay
     const bendThreshold = 0.207 * 0.9; // 90% of max body bend
     if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.03) {
-      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash
+      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash (15% shorter)
     }
     if (this._bellyFlash > 0) {
       const flashAlpha = Math.min(1, this._bellyFlash * 12) * 0.5;
@@ -3902,7 +3887,7 @@ function spawnStarfish() {
 }
 spawnStarfish();
 
-let lastTime = -1;
+let lastTime = 0;
 let waveTime = 0;
 let settleTime = 0;
 
@@ -4108,9 +4093,8 @@ rebuildSandCanvas();
 function draw(time) {
   requestAnimationFrame(draw);
   try {
-  // Compute real elapsed time, capped to prevent spiral-of-death after tab switch
-  const realDt = lastTime < 0 ? 1 / 60 : Math.min((time - lastTime) / 1000, 1 / 15);
-  const dt = realDt;
+  // Fixed dt — simulation always runs at 1/60s regardless of actual framerate
+  const dt = 1 / 60;
   lastTime = time;
   if (settleTime > 0) settleTime -= dt;
 
@@ -4262,9 +4246,6 @@ function draw(time) {
   }
 
   // Clear - bright tropical shallow water (cached gradient)
-  // Reset composite state to prevent any leaked screen/multiply from prior frame
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 1;
   ctx.fillStyle = bgGradient;
   ctx.fillRect(0, 0, w, h);
 
