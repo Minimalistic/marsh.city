@@ -1303,8 +1303,10 @@ class Fish {
 
       // Active flee — life-or-death escape response
       if (!beingChased && !inPath && predAggression < 0.8) continue;
-      const baseRange = beingChased ? 400 : inPath ? 300 : 150 + predAggression * 80;
-      const fleeRange = baseRange * viewScale;
+      // Per-fish boldness — some react closer, some further (±30% variation)
+      const boldness = 0.7 + (this._phaseOffset % 1) * 0.6;
+      const baseRange = beingChased ? 270 : inPath ? 200 : 100 + predAggression * 55;
+      const fleeRange = baseRange * viewScale * boldness;
       if (pDist < fleeRange && pDist > 0.1) {
         const proximity = 1 - pDist / fleeRange;
         const fear = proximity * proximity;
@@ -1318,7 +1320,7 @@ class Fish {
           this.fleeTimer = beingChased ? 2.5 : 0.8 + fear * 1.2;
         }
         // Panic snap — predator is dangerously close, instant velocity override
-        if ((beingChased || inPath) && pDist < 100 * viewScale) {
+        if ((beingChased || inPath) && pDist < 65 * viewScale) {
           panicSprint = true;
           const despAngle = fleeAngle + (Math.random() - 0.5) * 1.5;
           this.vx = Math.cos(despAngle) * scaledSpeed * 5.0;
