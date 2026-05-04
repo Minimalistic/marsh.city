@@ -1132,17 +1132,25 @@ class Fish {
           const awayAngle = this.angle + Math.PI + (Math.random() - 0.5) * 1.2;
           this.vx = Math.cos(awayAngle) * scaledSpeed * 1.5;
           this.vy = Math.sin(awayAngle) * scaledSpeed * 1.5;
-          // Scatter fragments occasionally - food breaks apart
-          if (Math.random() < 0.3 && closestFood.size > 0.8) {
-            const fragAngle = Math.random() * Math.PI * 2;
-            foodPellets.push({
-              x: closestFood.x + Math.cos(fragAngle) * 3,
-              y: closestFood.y + Math.sin(fragAngle) * 3,
-              size: closestFood.size * (0.2 + Math.random() * 0.2),
-              bites: 5 + Math.floor(Math.random() * 10),
-              vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.5),
-              vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
-            });
+          // Food breaks apart on bite — 2-4 fragments scatter outward
+          if (closestFood.size > 0.5) {
+            const fragCount = 2 + Math.floor(Math.random() * 3);
+            for (let fi = 0; fi < fragCount; fi++) {
+              const fragAngle = Math.random() * Math.PI * 2;
+              const fragSize = closestFood.size * (0.1 + Math.random() * 0.15);
+              // Smaller fragments = fewer bites (crumbs get snapped up fast)
+              const fragBites = fragSize > 0.8 ? 4 + Math.floor(Math.random() * 6) : 1 + Math.floor(Math.random() * 2);
+              foodPellets.push({
+                x: closestFood.x + Math.cos(fragAngle) * 4,
+                y: closestFood.y + Math.sin(fragAngle) * 4,
+                size: fragSize,
+                bites: fragBites,
+                startBites: fragBites,
+                vx: Math.cos(fragAngle) * (0.4 + Math.random() * 0.8),
+                vy: Math.sin(fragAngle) * (0.4 + Math.random() * 0.8),
+              });
+            }
+            closestFood.size *= 0.7; // original shrinks faster from breakage
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
@@ -1815,10 +1823,10 @@ class Fish {
     }
 
     // Belly flash — only when fleeing with body bend at 90%+ of max
-    this._bellyFlash -= 0.028; // 15% faster decay
+    this._bellyFlash -= 0.032; // fast decay
     const bendThreshold = 0.207 * 0.9; // 90% of max body bend
-    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.008) {
-      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash (15% shorter)
+    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.004) {
+      this._bellyFlash = 0.05 + Math.random() * 0.035; // 50-85ms flash
     }
     if (this._bellyFlash > 0) {
       const flashAlpha = Math.min(1, this._bellyFlash * 12) * 0.5;
