@@ -3318,7 +3318,7 @@ class Seagull {
     else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
     else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
 
-    this.speed = (0.7 + Math.random() * 0.3) * viewScale;
+    this.speed = (0.6 + Math.random() * 0.25) * viewScale;
     this.vx = Math.cos(this.angle) * this.speed;
     this.vy = Math.sin(this.angle) * this.speed;
 
