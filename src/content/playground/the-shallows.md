@@ -581,6 +581,11 @@ if (window.visualViewport) {
 const blurCanvas = document.createElement('canvas');
 const blurCtx = blurCanvas.getContext('2d');
 
+// Cloud shadow cache — redrawn every 8 frames, composited every frame
+const _cloudCanvas = document.createElement('canvas');
+const _cloudCtx = _cloudCanvas.getContext('2d');
+let _cloudFrame = 8; // start at 8 so first frame triggers a draw
+
 // Spatial grid for fast neighbor lookup (replaces O(n^2) boids)
 const GRID_CELL = 200; // px per cell — covers the largest boids radius
 let gridCols = 1, gridRows = 1;
@@ -965,6 +970,15 @@ class Fish {
         y: this.y - Math.sin(this.angle) * j * this._segLen,
       });
     }
+    // Pre-allocated draw arrays — reused every frame, avoids GC pressure
+    const n = numJoints + 1;
+    this._spineX = new Float64Array(n);
+    this._spineY = new Float64Array(n);
+    this._widths = new Float64Array(n);
+    this._rightX = new Float64Array(n);
+    this._rightY = new Float64Array(n);
+    this._leftX = new Float64Array(n);
+    this._leftY = new Float64Array(n);
   }
 
   update(dt, fish, time) {
@@ -1717,9 +1731,9 @@ class Fish {
 
     // Build spine from world-space joints, using smoothed render angle
     const cosH = Math.cos(-this._renderAngle), sinH = Math.sin(-this._renderAngle);
-    const spineX = new Array(segs + 1);
-    const spineY = new Array(segs + 1);
-    const widths = new Array(segs + 1);
+    const spineX = this._spineX;
+    const spineY = this._spineY;
+    const widths = this._widths;
 
     for (let i = 0; i <= segs; i++) {
       const jx = this._joints[i].x - this.x;
@@ -1758,8 +1772,8 @@ class Fish {
     // No viewport scaling - fish are consistent size everywhere
 
     // Compute perpendiculars and outline points
-    const rightX = new Array(segs + 1), rightY = new Array(segs + 1);
-    const leftX = new Array(segs + 1), leftY = new Array(segs + 1);
+    const rightX = this._rightX, rightY = this._rightY;
+    const leftX = this._leftX, leftY = this._leftY;
     for (let i = 0; i <= segs; i++) {
       let nx, ny;
       if (i === 0) { nx = -(spineY[1] - spineY[0]); ny = spineX[1] - spineX[0]; }
@@ -4288,40 +4302,52 @@ function draw(time) {
   ctx.restore();
   ctx.setTransform(Math.min(2, window.devicePixelRatio || 1), 0, 0, Math.min(2, window.devicePixelRatio || 1), 0, 0);
 
-  // Cloud shadows — drifting patches of shade across the water
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
+  // Cloud shadows — cached to offscreen canvas, refreshed every 8 frames
+  // Update cloud positions every frame (cheap), redraw gradients rarely (expensive)
   for (const cloud of clouds) {
-    // Linear drift — move along wind direction, wrap around edges
     cloud.x += Math.cos(cloud.drift) * cloud.speed * dt;
     cloud.y += Math.sin(cloud.drift) * cloud.speed * dt;
-    const margin = Math.min(w, h) * cloud.size * 1.5; // wrap with enough buffer to avoid pop
+    const margin = Math.min(w, h) * cloud.size * 1.5;
     if (cloud.x > w + margin) cloud.x = -margin;
     if (cloud.x < -margin) cloud.x = w + margin;
     if (cloud.y > h + margin) cloud.y = -margin;
     if (cloud.y < -margin) cloud.y = h + margin;
-    const cx = cloud.x;
-    const cy = cloud.y;
-    const baseR = Math.min(w, h) * cloud.size;
-    // Each cloud is several overlapping soft circles for organic blobby shape
-    for (const lobe of cloud.subBlobs) {
-      const lx = cx + lobe.ox * baseR;
-      const ly = cy + lobe.oy * baseR;
-      const lr = baseR * lobe.scale;
-      // Gentle size breathing so edges aren't static
-      const breathe = 1 + Math.sin(time * 0.00015 + cloud.phase + lobe.ox * 5) * 0.06;
-      const r = lr * breathe;
-      const sg = ctx.createRadialGradient(lx, ly, 0, lx, ly, r);
-      // multiply blend: rgb(255,255,255) = no change, darker = shadow
-      const shade = Math.round(255 * (1 - cloud.opacity));
-      sg.addColorStop(0, `rgb(${shade}, ${shade + 4}, ${shade + 6})`); // slight cool tint in shadow core
-      sg.addColorStop(0.6, `rgb(${shade + 20}, ${shade + 22}, ${shade + 24})`);
-      sg.addColorStop(1, 'rgb(255, 255, 255)');
-      ctx.fillStyle = sg;
-      ctx.fillRect(lx - r, ly - r, r * 2, r * 2);
+  }
+  _cloudFrame++;
+  if (_cloudFrame >= 8) {
+    _cloudFrame = 0;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const cw = canvas.width, ch = canvas.height;
+    if (_cloudCanvas.width !== cw || _cloudCanvas.height !== ch) {
+      _cloudCanvas.width = cw; _cloudCanvas.height = ch;
+    }
+    _cloudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    _cloudCtx.clearRect(0, 0, w, h);
+    for (const cloud of clouds) {
+      const cx = cloud.x, cy = cloud.y;
+      const baseR = Math.min(w, h) * cloud.size;
+      for (const lobe of cloud.subBlobs) {
+        const lx = cx + lobe.ox * baseR;
+        const ly = cy + lobe.oy * baseR;
+        const lr = baseR * lobe.scale;
+        const breathe = 1 + Math.sin(time * 0.00015 + cloud.phase + lobe.ox * 5) * 0.06;
+        const r = lr * breathe;
+        const sg = _cloudCtx.createRadialGradient(lx, ly, 0, lx, ly, r);
+        const shade = Math.round(255 * (1 - cloud.opacity));
+        sg.addColorStop(0, `rgb(${shade}, ${shade + 4}, ${shade + 6})`);
+        sg.addColorStop(0.6, `rgb(${shade + 20}, ${shade + 22}, ${shade + 24})`);
+        sg.addColorStop(1, 'rgb(255, 255, 255)');
+        _cloudCtx.fillStyle = sg;
+        _cloudCtx.fillRect(lx - r, ly - r, r * 2, r * 2);
+      }
     }
   }
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(_cloudCanvas, 0, 0);
   ctx.restore();
+  ctx.setTransform(Math.min(2, window.devicePixelRatio || 1), 0, 0, Math.min(2, window.devicePixelRatio || 1), 0, 0);
 
   // Sun spots — bright warm patches where light bleeds through cloud gaps
   ctx.save();
@@ -5032,6 +5058,15 @@ function draw(time) {
   for (const rf of reefFish) rf.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
   for (const s of starfish) s.update(dt, time);
+  // Draw debris as a simple batch — no y-sorting needed for sub-pixel dots
+  for (let di = 0; di < debris.length; di++) {
+    const d = debris[di];
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(210, 235, 240, ${d.opacity})`;
+    ctx.fill();
+  }
+
   // Draw swimmers and plants interleaved by y-position (top-down perspective)
   // Items higher on screen (lower y) are "further back" and drawn first
   const drawables = [];
@@ -5039,10 +5074,9 @@ function draw(time) {
   for (const rf of reefFish) drawables.push({ y: rf.y, type: 'fish', obj: rf });
   for (const p of predators) drawables.push({ y: p.y, type: 'fish', obj: p });
   for (const p of plants) drawables.push({ y: p.y, type: 'plant', obj: p });
-  for (const d of debris) drawables.push({ y: d.y, type: 'debris', obj: d });
   for (const s of starfish) drawables.push({ y: s.y, type: 'starfish', obj: s });
   // Layer priority: bottom-dwellers first, then fish on top
-  const layerOrder = { plant: 0, debris: 0, starfish: 0, fish: 1 };
+  const layerOrder = { plant: 0, starfish: 0, fish: 1 };
   drawables.sort((a, b) => (layerOrder[a.type] - layerOrder[b.type]) || (a.y - b.y));
 
   // Batch all fish shadows into offscreen canvas, blur once, composite
@@ -5051,11 +5085,6 @@ function draw(time) {
   for (const d of drawables) {
     if (d.type === 'plant') {
       d.obj.draw(ctx, time);
-    } else if (d.type === 'debris') {
-      ctx.beginPath();
-      ctx.arc(d.obj.x, d.obj.y, d.obj.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(210, 235, 240, ${d.obj.opacity})`;
-      ctx.fill();
     } else if (d.type === 'starfish') {
       ctx.save();
       ctx.globalAlpha = d.obj.depthAlpha;
