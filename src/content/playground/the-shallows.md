@@ -5445,11 +5445,9 @@ function draw(time) {
         if (dist < edge && dist > 0.1) {
           // Clamp to upstream half only — never wrap to the downstream face
           let targetAngle = angle;
-          // How far is this angle from the upstream direction?
           let diff = targetAngle - upAngle;
           while (diff > Math.PI) diff -= Math.PI * 2;
           while (diff < -Math.PI) diff += Math.PI * 2;
-          // If angle is on the downstream half (>90° from upstream), clamp to ±90°
           const maxSpread = Math.PI * 0.5;
           if (diff > maxSpread) targetAngle = upAngle + maxSpread;
           else if (diff < -maxSpread) targetAngle = upAngle - maxSpread;
@@ -5457,7 +5455,31 @@ function draw(time) {
           const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + pad;
           const ox = cx + Math.cos(targetAngle) * targetR;
           const oy = cy + Math.sin(targetAngle) * targetR;
-          return { x: ox, y: oy, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
+          // Soft blend: points barely inside get gentle nudge, deep points fully clamped
+          const penetration = 1 - dist / edge; // 0 at edge, 1 at center
+          const blend = Math.min(1, penetration * 3 + 0.4); // starts at 0.4, ramps to 1
+          const bx = px * (1 - blend) + ox * blend;
+          const by = py * (1 - blend) + oy * blend;
+          return { x: bx, y: by, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
+        }
+
+        // Influence zone: points approaching the rock get gently bent toward it
+        const influence = edge + 20 * viewScale;
+        if (dist < influence && dist > edge) {
+          const t = (influence - dist) / (influence - edge); // 0 at outer edge, 1 at rock edge
+          const bendStrength = t * t * 0.25;
+          // Bend toward the upstream face
+          let targetAngle = angle;
+          let diff = targetAngle - upAngle;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          const maxSpread = Math.PI * 0.5;
+          if (diff > maxSpread) targetAngle = upAngle + maxSpread;
+          else if (diff < -maxSpread) targetAngle = upAngle - maxSpread;
+          const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + pad;
+          const ox = cx + Math.cos(targetAngle) * targetR;
+          const oy = cy + Math.sin(targetAngle) * targetR;
+          return { x: px * (1 - bendStrength) + ox * bendStrength, y: py * (1 - bendStrength) + oy * bendStrength };
         }
 
         // Shadow zone: downstream of rock, within its lateral width
@@ -5481,15 +5503,6 @@ function draw(time) {
           }
         }
 
-        // Bunching zone: points approaching the upstream face get pulled toward it
-        const influence = edge + 18 * viewScale;
-        if (dist < influence) {
-          const t = (influence - dist) / (influence - edge);
-          const pull = t * t * 0.3;
-          const nx = cx + (relX / dist) * edge;
-          const ny = cy + (relY / dist) * edge;
-          return { x: px * (1 - pull) + nx * pull, y: py * (1 - pull) + ny * pull };
-        }
       }
       return { x: px, y: py };
     }
@@ -6237,8 +6250,30 @@ function draw(time) {
           if (diff > maxSpread) targetAngle = _upAngle + maxSpread;
           else if (diff < -maxSpread) targetAngle = _upAngle - maxSpread;
           const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + _pad;
-          return { x: cx + Math.cos(targetAngle) * targetR, y: cy + Math.sin(targetAngle) * targetR, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
+          const ox = cx + Math.cos(targetAngle) * targetR;
+          const oy = cy + Math.sin(targetAngle) * targetR;
+          const penetration = 1 - dist / edge;
+          const blend = Math.min(1, penetration * 3 + 0.4);
+          return { x: px * (1 - blend) + ox * blend, y: py * (1 - blend) + oy * blend, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
         }
+        // Influence zone: gentle bend toward upstream face
+        const influence = edge + 20 * viewScale;
+        if (dist < influence && dist > edge) {
+          const t = (influence - dist) / (influence - edge);
+          const bendStrength = t * t * 0.25;
+          let targetAngle = angle;
+          let diff = targetAngle - _upAngle;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          const maxSpread = Math.PI * 0.5;
+          if (diff > maxSpread) targetAngle = _upAngle + maxSpread;
+          else if (diff < -maxSpread) targetAngle = _upAngle - maxSpread;
+          const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + _pad;
+          const ox = cx + Math.cos(targetAngle) * targetR;
+          const oy = cy + Math.sin(targetAngle) * targetR;
+          return { x: px * (1 - bendStrength) + ox * bendStrength, y: py * (1 - bendStrength) + oy * bendStrength };
+        }
+        // Shadow zone
         const along = relX * cosA + relY * sinA;
         const lateral = relX * (-sinA) + relY * cosA;
         if (along > 0) {
@@ -6255,14 +6290,6 @@ function draw(time) {
             const curlY = -lateral * curlStrength * cosA;
             return { x: px + jitterX + curlX, y: py + jitterY + curlY, shadow: true };
           }
-        }
-        const influence = edge + 18 * viewScale;
-        if (dist < influence) {
-          const t = (influence - dist) / (influence - edge);
-          const pull = t * t * 0.3;
-          const nx = cx + (relX / dist) * edge;
-          const ny = cy + (relY / dist) * edge;
-          return { x: px * (1 - pull) + nx * pull, y: py * (1 - pull) + ny * pull };
         }
       }
       return { x: px, y: py };
