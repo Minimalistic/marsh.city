@@ -4682,8 +4682,13 @@ function rebuildSandCanvas() {
       const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
       const dx = x - cx, dy = y - cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const influence = rf.crownR * 6;
-      if (dist < influence) best = Math.max(best, 1 - dist / influence);
+      // How far downstream of the rock is this point? (positive = downstream)
+      const along = dx * waveCos + dy * waveSin;
+      // Heavily favor downstream: 90% of visibility is post-rock
+      // Upstream gets only 10% influence, downstream gets full
+      const dirBias = along > 0 ? 1 : 0.1;
+      const influence = rf.crownR * 7;
+      if (dist < influence) best = Math.max(best, (1 - dist / influence) * dirBias);
     }
     return best;
   }
