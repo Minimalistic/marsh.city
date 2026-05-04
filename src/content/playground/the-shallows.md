@@ -1276,13 +1276,13 @@ class Fish {
       const predAggression = predSpeed / (pred.baseSpeed * viewScale);
       const beingChased = pred.target === this;
 
-      // Passive avoidance — fish steer clear but don't panic at long range
-      const comfortZone = 150 * viewScale;
+      // Passive avoidance — cautious but not panicked, tight berth
+      const comfortZone = 80 * viewScale;
       if (pDist < comfortZone && pDist > 0.1) {
         const avoidance = 1 - pDist / comfortZone;
         const pushAngle = Math.atan2(pdy, pdx);
-        // Gentle push — keeps fish away without triggering full flee
-        const pushForce = avoidance * avoidance * 0.5 * viewScale;
+        // Gentle nudge — aware but not alarmed
+        const pushForce = avoidance * avoidance * 0.3 * viewScale;
         this.vx += Math.cos(pushAngle) * pushForce;
         this.vy += Math.sin(pushAngle) * pushForce;
         // Only flee when genuinely close — inner 40% of comfort zone
