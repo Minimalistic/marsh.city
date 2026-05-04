@@ -4862,28 +4862,12 @@ function draw(time) {
           rf._waveHit = ww.strength;
           rf._waveAngle = ww.angle;
           rf._waveTime = time;
-          // Track impact for ongoing ripple emission
+          // Track impact for ongoing ripple emission — delay before first ripple
           rf._splashEmit = ww.strength;
           rf._splashAngle = ww.angle + Math.PI;
-          rf._splashTimer = 0; // time since impact
-          rf._splashNext = 0; // next spawn time
-          // Immediate initial burst — thickest, most active ripples
-          const hitAngle = rf._splashAngle;
-          const burstCount = 2 + Math.floor(ww.strength * 2);
-          for (let si = 0; si < burstCount; si++) {
-            splashRipples.push({
-              cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
-              radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 3,
-              maxRadius: (rf.crownR * 3 + si * 18) * viewScale,
-              speed: (1.4 + Math.random() * 0.8) * viewScale,
-              hitAngle,
-              strength: ww.strength * (0.8 + Math.random() * 0.2),
-              life: 1,
-              maxLife: 4 + Math.random() * 3,
-              seed: Math.random() * 100,
-              thick: (2.0 + Math.random() * 1.2) * viewScale, // thickest on impact
-            });
-          }
+          rf._splashTimer = -0.25; // 0.25s delay before ripples start
+          rf._splashNext = 0;
+          rf._splashFirst = true; // first burst is thickest
         }
         const splashCount = Math.ceil(2 * viewScale);
         if (foamBits.length < 210) {
@@ -5450,31 +5434,52 @@ function draw(time) {
 
   _measure('foam+waves');
 
-  // Ongoing splash emission — reefs continue spawning ripples after impact, decaying
+  // Ongoing splash emission — reefs spawn ripples after 0.25s delay, then decay
   for (const rf of reefs) {
     if (!rf._splashEmit || rf._splashEmit <= 0) continue;
     rf._splashTimer += dt;
-    const emitDuration = 2.5; // seconds of continued emission after impact
+    if (rf._splashTimer < 0) continue; // still in delay period
+    const emitDuration = 2.75; // total emission window after delay
     if (rf._splashTimer > emitDuration) { rf._splashEmit = 0; continue; }
-    // Intensity decays over emission period
     const decay = 1 - rf._splashTimer / emitDuration;
     rf._splashNext -= dt;
     if (rf._splashNext <= 0) {
-      // Spawn interval increases as intensity fades
-      rf._splashNext = 0.2 + (1 - decay) * 0.6;
       const hitAngle = rf._splashAngle;
-      splashRipples.push({
-        cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
-        radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2,
-        maxRadius: (rf.crownR * 2.2 + decay * 12) * viewScale,
-        speed: (0.8 + decay * 0.6) * viewScale,
-        hitAngle,
-        strength: rf._splashEmit * decay * (0.5 + Math.random() * 0.3),
-        life: 1,
-        maxLife: 3 + decay * 2,
-        seed: Math.random() * 100,
-        thick: (0.8 + decay * 0.8) * viewScale, // thinner as it fades
-      });
+      // First burst after delay: thick, fast, multiple lines
+      if (rf._splashFirst) {
+        rf._splashFirst = false;
+        rf._splashNext = 0.15;
+        const burstCount = 2 + Math.floor(rf._splashEmit * 2);
+        for (let si = 0; si < burstCount; si++) {
+          splashRipples.push({
+            cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
+            radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 3,
+            maxRadius: (rf.crownR * 3 + si * 18) * viewScale,
+            speed: (1.4 + Math.random() * 0.8) * viewScale,
+            hitAngle,
+            strength: rf._splashEmit * (0.8 + Math.random() * 0.2),
+            life: 1,
+            maxLife: 4 + Math.random() * 3,
+            seed: Math.random() * 100,
+            thick: (2.0 + Math.random() * 1.2) * viewScale,
+          });
+        }
+      } else {
+        // Subsequent ripples — thinner, slower, spacing out
+        rf._splashNext = 0.2 + (1 - decay) * 0.6;
+        splashRipples.push({
+          cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
+          radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2,
+          maxRadius: (rf.crownR * 2.2 + decay * 12) * viewScale,
+          speed: (0.8 + decay * 0.6) * viewScale,
+          hitAngle,
+          strength: rf._splashEmit * decay * (0.5 + Math.random() * 0.3),
+          life: 1,
+          maxLife: 3 + decay * 2,
+          seed: Math.random() * 100,
+          thick: (0.8 + decay * 0.8) * viewScale,
+        });
+      }
     }
   }
 
