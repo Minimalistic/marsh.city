@@ -74,6 +74,7 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 #pool-container:fullscreen canvas,
 #pool-container:-webkit-full-screen canvas,
 #pool-container.fake-fullscreen canvas { width: 100% !important; height: 100% !important; }
+#pool-container.fs-rotated { transform: rotate(90deg); transform-origin: center center; width: 100vh !important; height: 100vw !important; top: 50% !important; left: 50% !important; margin-top: -50vw !important; margin-left: -50vh !important; }
 .fake-fullscreen ~ *, body:has(.fake-fullscreen) > *:not(script):not(style):not(link) { visibility: hidden !important; }
 .fake-fullscreen, .fake-fullscreen * { visibility: visible !important; }
 body:has(.fake-fullscreen) .site-foot-foliage { display: none !important; }
@@ -345,28 +346,27 @@ let regenerateWorld = null; // set after world init
 let inFullscreen = false; // track FS state so resize handler can skip
 const rotateHint = document.getElementById('rotate-hint');
 function isPortrait() { return window.innerHeight > window.innerWidth; }
-function updateRotateHint() {
-  if (inFullscreen && isPortrait()) {
-    rotateHint.hidden = false;
-    requestAnimationFrame(() => rotateHint.classList.add('show'));
-  } else {
-    rotateHint.classList.remove('show');
-    setTimeout(() => { if (!rotateHint.classList.contains('show')) rotateHint.hidden = true; }, 400);
-  }
-}
 function handleFSChange() {
   inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
   fsCloseBtn.hidden = !inFullscreen;
   fsBtn.hidden = inFullscreen;
-  // Don't resize canvas or regenerate — CSS scales the existing pixels
-  updateRotateHint();
+  // In portrait fullscreen, rotate the container 90° so it fills the screen landscape-style
+  if (inFullscreen && isPortrait()) {
+    poolContainer.classList.add('fs-rotated');
+    // Brief "rotating view" flash
+    rotateHint.hidden = false;
+    requestAnimationFrame(() => rotateHint.classList.add('show'));
+    setTimeout(() => {
+      rotateHint.classList.remove('show');
+      setTimeout(() => rotateHint.hidden = true, 400);
+    }, 2000);
+  } else {
+    poolContainer.classList.remove('fs-rotated');
+    rotateHint.classList.remove('show');
+    rotateHint.hidden = true;
+  }
   showUI();
 }
-// Hide rotate hint when user rotates to landscape
-window.addEventListener('orientationchange', () => setTimeout(updateRotateHint, 200));
-if (screen.orientation) screen.orientation.addEventListener('change', () => setTimeout(updateRotateHint, 200));
-// Also check on resize (covers devices that don't fire orientationchange)
-window.addEventListener('resize', () => { if (inFullscreen) updateRotateHint(); });
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
 document.addEventListener(fsChangeEvent, handleFSChange);
 // Escape exits fake fullscreen
