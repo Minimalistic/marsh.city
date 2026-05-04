@@ -5911,7 +5911,7 @@ function draw(time) {
     const angle = g._renderAngle;
     const cx = g.x + gOffX, cy = g.y + gOffY;
     const wings = g._wingGeometry();
-    const alpha = 0.07 + (1 - g.height) * 0.05; // very soft
+    const alpha = 0.07 + (1 - g.height) * 0.05;
 
     ctx.save();
     ctx.translate(cx, cy);
@@ -5920,16 +5920,15 @@ function draw(time) {
     ctx.globalAlpha = alpha;
     ctx.filter = `blur(${Math.round(6 + g.height * 8)}px)`;
 
-    ctx.fillStyle = 'rgba(0, 25, 35, 1)';
-
-    // Body silhouette
+    // Single combined path — all parts as subpaths, one fill, no overlap artifacts
     ctx.beginPath();
-    ctx.ellipse(0, 0, bl * 0.45, bl * 0.12, 0, 0, Math.PI * 2);
-    ctx.fill();
 
-    // Wing silhouettes
+    // Body ellipse
+    ctx.ellipse(0, 0, bl * 0.45, bl * 0.12, 0, 0, Math.PI * 2);
+
+    // Wings
     for (const w of wings) {
-      ctx.beginPath();
+      // Inner wing
       ctx.moveTo(w.sx, w.sy);
       ctx.quadraticCurveTo(
         (w.sx + w.elbowX) * 0.5 + bl * 0.03, (w.sy + w.elbowY) * 0.5,
@@ -5941,8 +5940,7 @@ function draw(time) {
         w.rootTrailX, w.rootTrailY
       );
       ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
+      // Outer wing
       ctx.moveTo(w.elbowX, w.elbowY);
       ctx.quadraticCurveTo(
         (w.elbowX + w.tipLeadX) * 0.5 + bl * 0.02,
@@ -5956,16 +5954,22 @@ function draw(time) {
         w.elbowTrailX, w.elbowTrailY
       );
       ctx.closePath();
-      ctx.fill();
     }
 
-    // Tail shadow
-    ctx.beginPath();
+    // Tail
     ctx.moveTo(-bl * 0.3, 0);
     ctx.lineTo(-bl * 0.55, bl * 0.18);
     ctx.lineTo(-bl * 0.48, 0);
     ctx.lineTo(-bl * 0.55, -bl * 0.18);
     ctx.closePath();
+
+    // Radial gradient fill — denser center, lighter edges
+    const gradR = g.wingspan * heightScale * 0.5;
+    const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, gradR);
+    sg.addColorStop(0, 'rgba(0, 25, 35, 1)');
+    sg.addColorStop(0.5, 'rgba(0, 25, 35, 0.7)');
+    sg.addColorStop(1, 'rgba(0, 25, 35, 0.35)');
+    ctx.fillStyle = sg;
     ctx.fill();
 
     ctx.restore();
