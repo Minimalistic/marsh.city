@@ -1414,12 +1414,15 @@ class Fish {
       }
     }
 
-    // Apply accumulated steering to heading and rebuild velocity along new heading
+    // Blend reef steer into velocity — gentle course correction, not a hard snap
     if (Math.abs(reefSteer) > 0.001) {
-      const clampedSteer = Math.max(-0.25, Math.min(0.25, reefSteer));
-      this.angle += clampedSteer;
-      this.vx = Math.cos(this.angle) * spd;
-      this.vy = Math.sin(this.angle) * spd;
+      const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer));
+      const newAngle = Math.atan2(this.vy, this.vx) + clampedSteer;
+      // Blend toward corrected heading — preserves most of the original momentum
+      const blend = Math.min(0.4, Math.abs(clampedSteer) * 3); // stronger steer = more blend
+      this.vx += (Math.cos(newAngle) * spd - this.vx) * blend;
+      this.vy += (Math.sin(newAngle) * spd - this.vy) * blend;
+      this.angle = Math.atan2(this.vy, this.vx);
     }
 
     // Fish can only swim forward - kill lateral drift and backward motion
