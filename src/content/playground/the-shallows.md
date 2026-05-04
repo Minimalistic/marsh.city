@@ -671,7 +671,7 @@ const ripples = [];
 
 // Wave current - oscillates back and forth like real shallow water wash
 const tide = { angle: 0, strength: 0 };
-const waveBaseAngle = Math.PI * 0.75; // top-left to bottom-right
+const waveBaseAngle = Math.random() * Math.PI * 2; // primary wave direction
 
 // Cloud shadows — large soft blobs that drift linearly across the scene
 // Shared wind direction with slight per-cloud variation; wrap around edges
@@ -1092,25 +1092,15 @@ class Fish {
       while (headingDiff < -Math.PI) headingDiff += Math.PI * 2;
       const angleMismatch = Math.abs(headingDiff);
 
-      // Food overrides idle, distraction, and dampens rock fear
+      // Food overrides idle and distraction - fish get excited about food
       this.idle = false;
       this.idleTimer = 3;
       this.distracted = false;
       this.distractTimer = 5;
-      this._feedingMode = true;
 
-      const eatDist = 12;
-      const biteDist = 7;
-      // Tight turning when close to food — snap heading toward it
-      if (closestFoodDist < 30 && angleMismatch > 0.2) {
-        const snapStr = Math.min(0.3, (1 - closestFoodDist / 30) * 0.3);
-        const toFood = Math.atan2(fdy, fdx);
-        const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
-        this.vx += (Math.cos(toFood) * curSpd - this.vx) * snapStr;
-        this.vy += (Math.sin(toFood) * curSpd - this.vy) * snapStr;
-        this.angle = Math.atan2(this.vy, this.vx);
-      }
-      if (closestFoodDist < eatDist && angleMismatch < 1.0) {
+      const eatDist = 10;
+      const biteDist = 6;
+      if (closestFoodDist < eatDist && angleMismatch < 0.8) {
         // Close and roughly facing food - slow to nibble
         this.vx *= 0.85;
         this.vy *= 0.85;
@@ -1127,44 +1117,31 @@ class Fish {
           this.vx += Math.cos(this.angle) * 0.8;
           this.vy += Math.sin(this.angle) * 0.8;
           this.eating = true;
-          this.eatTimer = 1.5 + Math.random() * 2.5; // swim off to chew before coming back
-          // Dart away from food after biting — go digest
-          const awayAngle = this.angle + Math.PI + (Math.random() - 0.5) * 1.2;
-          this.vx = Math.cos(awayAngle) * scaledSpeed * 1.5;
-          this.vy = Math.sin(awayAngle) * scaledSpeed * 1.5;
-          // Food breaks apart on bite — 2-4 fragments scatter outward
-          if (closestFood.size > 0.5) {
-            const fragCount = 2 + Math.floor(Math.random() * 3);
-            for (let fi = 0; fi < fragCount; fi++) {
-              const fragAngle = Math.random() * Math.PI * 2;
-              const fragSize = closestFood.size * (0.1 + Math.random() * 0.15);
-              // Smaller fragments = fewer bites (crumbs get snapped up fast)
-              const fragBites = fragSize > 0.8 ? 4 + Math.floor(Math.random() * 6) : 1 + Math.floor(Math.random() * 2);
-              foodPellets.push({
-                x: closestFood.x + Math.cos(fragAngle) * 4,
-                y: closestFood.y + Math.sin(fragAngle) * 4,
-                size: fragSize,
-                bites: fragBites,
-                startBites: fragBites,
-                vx: Math.cos(fragAngle) * (0.4 + Math.random() * 0.8),
-                vy: Math.sin(fragAngle) * (0.4 + Math.random() * 0.8),
-              });
-            }
-            closestFood.size *= 0.7; // original shrinks faster from breakage
+          this.eatTimer = 0.3 + Math.random() * 0.5; // quick pullback, come right back
+          // Scatter fragments occasionally - food breaks apart
+          if (Math.random() < 0.3 && closestFood.size > 0.8) {
+            const fragAngle = Math.random() * Math.PI * 2;
+            foodPellets.push({
+              x: closestFood.x + Math.cos(fragAngle) * 3,
+              y: closestFood.y + Math.sin(fragAngle) * 3,
+              size: closestFood.size * (0.2 + Math.random() * 0.2),
+              bites: 5 + Math.floor(Math.random() * 10),
+              vx: Math.cos(fragAngle) * (0.3 + Math.random() * 0.5),
+              vy: Math.sin(fragAngle) * (0.3 + Math.random() * 0.5),
+            });
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
       } else {
-        // Feeding frenzy — fast, aggressive, darting from all sides
+        // Steer toward food from varied angles — fish surround it, not pile from one side
         const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.15 + proximity * 0.25;
+        const steerWeight = 0.08 + proximity * 0.12;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
         // Per-fish approach offset — spreads fish around the food
         const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.3;
-        const wobble = Math.sin(this._phaseOffset + time * 0.003) * 0.15;
-        const frenzySpeed = scaledSpeed * (1.2 + proximity * 0.6);
-        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * frenzySpeed;
-        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * frenzySpeed;
+        const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.1;
+        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
+        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * scaledSpeed * 1.2;
         this.vx += (desiredVx - this.vx) * steerWeight;
         this.vy += (desiredVy - this.vy) * steerWeight;
       }
@@ -1370,7 +1347,7 @@ class Fish {
       const bAngle = Math.atan2(rdy, rdx);
       const bNoise = 0.85 + 0.3 * Math.sin(bAngle * 5.7 + rf.x * 0.1) + 0.15 * Math.sin(bAngle * 3.1 + rf.y * 0.1);
       const baseR = rf.radiusAt(bAngle, rf.baseRadii) * 0.42 * bNoise + this.len * 0.5;
-      const baseSense = Math.max(baseR * 2.5, baseR + fishLen5);
+      const baseSense = Math.max(baseR * 4, baseR + fishLen5 * 2);
       if (rDist < baseSense && rDist > 0.1) {
         const approach = -(this.vx * rdx + this.vy * rdy) / (spd * rDist);
         // Only steer when actually approaching the rock
@@ -1394,7 +1371,7 @@ class Fish {
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
       const cAngle = Math.atan2(cdy, cdx);
       const crownR = rf.radiusAt(cAngle, rf.crownRadii) + this.len * 0.4;
-      const crownSense = Math.max(crownR * 3, crownR + fishLen5);
+      const crownSense = Math.max(crownR * 5, crownR + fishLen5 * 2);
       if (cDist < crownSense && cDist > 0.1) {
         const prox = 1 - cDist / crownSense;
         // Urgency ramps hard at close range — gentle far out, desperate near rock
@@ -1438,13 +1415,11 @@ class Fish {
     }
 
     // Blend reef steer into velocity — gentle course correction, not a hard snap
-    // Feeding fish are bolder — halved avoidance so they can reach food near rocks
-    const feedDampen = this._feedingMode ? 0.4 : 1;
-    this._feedingMode = false;
     if (Math.abs(reefSteer) > 0.001) {
-      const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer * feedDampen));
+      const clampedSteer = Math.max(-0.15, Math.min(0.15, reefSteer));
       const newAngle = Math.atan2(this.vy, this.vx) + clampedSteer;
-      const blend = Math.min(0.4, Math.abs(clampedSteer) * 3) * feedDampen;
+      // Blend toward corrected heading — preserves most of the original momentum
+      const blend = Math.min(0.4, Math.abs(clampedSteer) * 3); // stronger steer = more blend
       this.vx += (Math.cos(newAngle) * spd - this.vx) * blend;
       this.vy += (Math.sin(newAngle) * spd - this.vy) * blend;
       this.angle = Math.atan2(this.vy, this.vx);
@@ -1823,10 +1798,10 @@ class Fish {
     }
 
     // Belly flash — only when fleeing with body bend at 90%+ of max
-    this._bellyFlash -= 0.032; // fast decay
+    this._bellyFlash -= 0.028; // 15% faster decay
     const bendThreshold = 0.207 * 0.9; // 90% of max body bend
-    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.004) {
-      this._bellyFlash = 0.05 + Math.random() * 0.035; // 50-85ms flash
+    if (this._bellyFlash <= 0 && this.fleeing && this._maxBendThisFrame > bendThreshold && Math.random() < 0.03) {
+      this._bellyFlash = 0.06 + Math.random() * 0.04; // 60-100ms flash (15% shorter)
     }
     if (this._bellyFlash > 0) {
       const flashAlpha = Math.min(1, this._bellyFlash * 12) * 0.5;
