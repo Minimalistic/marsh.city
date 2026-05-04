@@ -24,6 +24,10 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 <button id="fs-close-btn" class="pool-tool pool-fs-close" title="Exit fullscreen" aria-label="Exit fullscreen" hidden>
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
+<div id="rotate-hint" class="pool-rotate-hint" hidden>
+  <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M15 19h2a2 2 0 002-2V7"/><path d="M19 10l2-3-2-3"/></svg>
+  <span>Rotate for the best view</span>
+</div>
 <div id="sound-hint" class="pool-hint" hidden>No audio? Check your phone's silent mode switch</div>
 </div>
 <style>
@@ -70,10 +74,26 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 #pool-container:fullscreen canvas,
 #pool-container:-webkit-full-screen canvas,
 #pool-container.fake-fullscreen canvas { width: 100% !important; height: 100% !important; }
+#pool-container.fs-rotated { transform: rotate(90deg); transform-origin: center center; width: 100vh !important; height: 100vw !important; top: 50% !important; left: 50% !important; margin-top: -50vw !important; margin-left: -50vh !important; }
 .fake-fullscreen ~ *, body:has(.fake-fullscreen) > *:not(script):not(style):not(link) { visibility: hidden !important; }
 .fake-fullscreen, .fake-fullscreen * { visibility: visible !important; }
 body:has(.fake-fullscreen) .site-foot-foliage { display: none !important; }
 body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !important; }
+.pool-rotate-hint {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  background: rgba(10, 50, 60, 0.85); backdrop-filter: blur(6px);
+  color: rgba(255,255,255,0.8); font-size: 15px; font-family: inherit;
+  z-index: 100; opacity: 0; transition: opacity 0.4s;
+  pointer-events: none;
+}
+.pool-rotate-hint.show { opacity: 1; pointer-events: auto; }
+.pool-rotate-hint svg { animation: pool-rotate-nudge 2s ease-in-out infinite; }
+@keyframes pool-rotate-nudge {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(90deg); }
+  60% { transform: rotate(90deg); }
+}
 </style>
 
 <script type="module">
@@ -323,15 +343,27 @@ poolContainer.addEventListener('touchstart', showUI);
 hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
 let regenerateWorld = null; // set after world init
 
+let inFullscreen = false;
+const rotateHint = document.getElementById('rotate-hint');
+function isPortrait() { return window.innerHeight > window.innerWidth; }
 function handleFSChange() {
-  const inFS = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
-  fsCloseBtn.hidden = !inFS;
-  fsBtn.hidden = inFS;
-  // Regenerate the entire world at new scale after layout settles
-  setTimeout(() => {
-    ({ w, h } = resize());
-    if (regenerateWorld) regenerateWorld();
-  }, 200);
+  inFullscreen = isFakeFS() || !!(document.fullscreenElement || document.webkitFullscreenElement);
+  fsCloseBtn.hidden = !inFullscreen;
+  fsBtn.hidden = inFullscreen;
+  // In portrait fullscreen, rotate the container 90° so it fills the screen landscape-style
+  if (inFullscreen && isPortrait()) {
+    poolContainer.classList.add('fs-rotated');
+    rotateHint.hidden = false;
+    requestAnimationFrame(() => rotateHint.classList.add('show'));
+    setTimeout(() => {
+      rotateHint.classList.remove('show');
+      setTimeout(() => rotateHint.hidden = true, 400);
+    }, 2000);
+  } else {
+    poolContainer.classList.remove('fs-rotated');
+    rotateHint.classList.remove('show');
+    rotateHint.hidden = true;
+  }
   showUI();
 }
 const fsChangeEvent = 'onfullscreenchange' in document ? 'fullscreenchange' : 'webkitfullscreenchange';
