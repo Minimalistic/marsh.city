@@ -4763,7 +4763,7 @@ function rebuildSandCanvas() {
       // Depth factor: darker top-left, lighter bottom-right (last 30%)
       const depthT = (rx / w + ry / h) / 2; // 0=top-left, 1=bottom-right
       const depthDim = depthT > 0.7 ? 1 : 0.6 + (depthT / 0.7) * 0.4;
-      pts.push({ x: rx, y: ry, a: ptProx * 0.118 * depthDim });
+      pts.push({ x: rx, y: ry, a: ptProx * 0.089 * depthDim });
     }
 
     // Draw per-segment with fading alpha along the line
