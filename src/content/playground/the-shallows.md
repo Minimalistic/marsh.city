@@ -1105,8 +1105,9 @@ class Fish {
       if (closestFoodDist < 30 && angleMismatch > 0.2) {
         const snapStr = Math.min(0.3, (1 - closestFoodDist / 30) * 0.3);
         const toFood = Math.atan2(fdy, fdx);
-        this.vx += (Math.cos(toFood) * spd - this.vx) * snapStr;
-        this.vy += (Math.sin(toFood) * spd - this.vy) * snapStr;
+        const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+        this.vx += (Math.cos(toFood) * curSpd - this.vx) * snapStr;
+        this.vy += (Math.sin(toFood) * curSpd - this.vy) * snapStr;
         this.angle = Math.atan2(this.vy, this.vx);
       }
       if (closestFoodDist < eatDist && angleMismatch < 1.0) {
