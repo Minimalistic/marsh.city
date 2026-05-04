@@ -5442,8 +5442,13 @@ function draw(time) {
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
+        // Lateral falloff: how far this point is from the head-on collision zone
+        // Points directly in front of rock (lateral≈0) get full effect, flanks get less
+        const lateral = relX * (-sinA) + relY * cosA;
+        const lateralRatio = Math.abs(lateral) / (rf.crownR + pad); // 0=center, 1=edge, >1=past
+        const lateralFalloff = Math.max(0, 1 - lateralRatio * 0.7); // full at center, 30% at edge
+
         if (dist < edge && dist > 0.1) {
-          // Clamp to upstream half only — never wrap to the downstream face
           let targetAngle = angle;
           let diff = targetAngle - upAngle;
           while (diff > Math.PI) diff -= Math.PI * 2;
@@ -5455,20 +5460,20 @@ function draw(time) {
           const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + pad;
           const ox = cx + Math.cos(targetAngle) * targetR;
           const oy = cy + Math.sin(targetAngle) * targetR;
-          // Soft blend: points barely inside get gentle nudge, deep points fully clamped
-          const penetration = 1 - dist / edge; // 0 at edge, 1 at center
-          const blend = Math.min(1, penetration * 3 + 0.4); // starts at 0.4, ramps to 1
+          // Blend scaled by penetration depth AND lateral distance from impact zone
+          const penetration = 1 - dist / edge;
+          const blend = Math.min(1, penetration * 3 + 0.4) * lateralFalloff;
           const bx = px * (1 - blend) + ox * blend;
           const by = py * (1 - blend) + oy * blend;
-          return { x: bx, y: by, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
+          return { x: bx, y: by, hit: blend > 0.5, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
         }
 
-        // Influence zone: points approaching the rock get gently bent toward it
+        // Influence zone: points approaching get gently bent, strongest head-on
         const influence = edge + 20 * viewScale;
         if (dist < influence && dist > edge) {
-          const t = (influence - dist) / (influence - edge); // 0 at outer edge, 1 at rock edge
-          const bendStrength = t * t * 0.25;
-          // Bend toward the upstream face
+          const t = (influence - dist) / (influence - edge);
+          const bendStrength = t * t * 0.25 * lateralFalloff;
+          if (bendStrength < 0.01) continue;
           let targetAngle = angle;
           let diff = targetAngle - upAngle;
           while (diff > Math.PI) diff -= Math.PI * 2;
@@ -6241,6 +6246,10 @@ function draw(time) {
         const dist = Math.sqrt(relX * relX + relY * relY);
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
+        const lateral = relX * (-sinA) + relY * cosA;
+        const lateralRatio = Math.abs(lateral) / (rf.crownR + _pad);
+        const lateralFalloff = Math.max(0, 1 - lateralRatio * 0.7);
+
         if (dist < edge && dist > 0.1) {
           let targetAngle = angle;
           let diff = targetAngle - _upAngle;
@@ -6253,14 +6262,14 @@ function draw(time) {
           const ox = cx + Math.cos(targetAngle) * targetR;
           const oy = cy + Math.sin(targetAngle) * targetR;
           const penetration = 1 - dist / edge;
-          const blend = Math.min(1, penetration * 3 + 0.4);
-          return { x: px * (1 - blend) + ox * blend, y: py * (1 - blend) + oy * blend, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
+          const blend = Math.min(1, penetration * 3 + 0.4) * lateralFalloff;
+          return { x: px * (1 - blend) + ox * blend, y: py * (1 - blend) + oy * blend, hit: blend > 0.5, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
         }
-        // Influence zone: gentle bend toward upstream face
         const influence = edge + 20 * viewScale;
         if (dist < influence && dist > edge) {
           const t = (influence - dist) / (influence - edge);
-          const bendStrength = t * t * 0.25;
+          const bendStrength = t * t * 0.25 * lateralFalloff;
+          if (bendStrength < 0.01) continue;
           let targetAngle = angle;
           let diff = targetAngle - _upAngle;
           while (diff > Math.PI) diff -= Math.PI * 2;
