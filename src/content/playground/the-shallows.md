@@ -1,6 +1,6 @@
 ---
 title: The Shallows
-description: A living canvas of schooling fish, drifting clouds, and a patient predator in warm tropical water.
+description: A living canvas of schooling fish, circling seagulls, and a patient predator in warm tropical water.
 ---
 
 Warm water over sand and rock. A school of tuna moves as one - splitting around obstacles, merging back together, scattering when something bigger passes through.
@@ -169,8 +169,13 @@ function initAudio() {
 
   oceanFilter = audioCtx.createBiquadFilter();
   oceanFilter.type = 'bandpass';
-  oceanFilter.frequency.value = 250;
-  oceanFilter.Q.value = 0.5;
+  oceanFilter.frequency.value = 220;
+  oceanFilter.Q.value = 0.6;
+
+  const trebleCut = audioCtx.createBiquadFilter();
+  trebleCut.type = 'lowpass';
+  trebleCut.frequency.value = 350;
+  trebleCut.Q.value = 0.4;
 
   const lowShelf = audioCtx.createBiquadFilter();
   lowShelf.type = 'lowshelf';
@@ -193,7 +198,8 @@ function initAudio() {
   oceanPanner.pan.value = 0;
 
   noise.connect(oceanFilter);
-  oceanFilter.connect(lowShelf);
+  oceanFilter.connect(trebleCut);
+  trebleCut.connect(lowShelf);
   lowShelf.connect(oceanGain);
   oceanGain.connect(oceanPanner);
   oceanPanner.connect(audioCtx.destination);
@@ -567,6 +573,7 @@ function rescaleAll(oldW, oldH) {
   for (const d of debris) { d.x *= sx; d.y *= sy; }
   for (const f of fish) { f.x *= sx; f.y *= sy; }
   for (const p of predators) { p.x *= sx; p.y *= sy; }
+  for (const g of seagulls) { g.x *= sx; g.y *= sy; }
   for (const s of starfish) { s.x *= sx; s.y *= sy; s.homeX *= sx; s.homeY *= sy; }
 
   // Scale population to match new viewport area
@@ -3294,6 +3301,250 @@ class Predator {
   }
 }
 
+// Seagull — flies overhead, seen from above, casts shadow on water
+class Seagull {
+  constructor() {
+    // Enter from a random edge
+    const edge = Math.floor(Math.random() * 4);
+    const m = 120;
+    if (edge === 0) { this.x = -m; this.y = Math.random() * h; this.angle = (Math.random() - 0.5) * 0.4; }
+    else if (edge === 1) { this.x = w + m; this.y = Math.random() * h; this.angle = Math.PI + (Math.random() - 0.5) * 0.4; }
+    else if (edge === 2) { this.x = Math.random() * w; this.y = -m; this.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
+    else { this.x = Math.random() * w; this.y = h + m; this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
+
+    this.speed = (0.6 + Math.random() * 0.3) * viewScale;
+    this.vx = Math.cos(this.angle) * this.speed;
+    this.vy = Math.sin(this.angle) * this.speed;
+
+    // Wing animation — 0 = gliding (wings spread), flapping modulates wingspan
+    this.wingPhase = 0;
+    this.flapping = false;
+    this.flapTimer = 4 + Math.random() * 8;
+    this.flapCycles = 0; // how many flaps in current burst
+
+    // Flight path — gentle lazy turns
+    this.turnRate = (Math.random() - 0.5) * 0.008;
+    this.targetTurn = this.turnRate;
+    this.turnTimer = 6 + Math.random() * 12;
+
+    // Size — scales with viewport
+    this.wingspan = (30 + Math.random() * 10) * viewScale;
+    this.bodyLen = this.wingspan * 0.35;
+
+    // Bank angle — visual tilt into turns
+    this._bank = 0;
+    this._renderAngle = this.angle;
+
+    // Height above water — affects shadow offset and size
+    this.height = 0.6 + Math.random() * 0.4;
+
+    // Lifecycle
+    this.leaving = false;
+    this._age = 0;
+    this._lifespan = 40 + Math.random() * 80; // seconds before it decides to leave
+  }
+
+  update(dt) {
+    this._age += dt;
+
+    // After lifespan, head for nearest edge
+    if (!this.leaving && this._age > this._lifespan) {
+      this.leaving = true;
+      const toLeft = this.x, toRight = w - this.x;
+      const toTop = this.y, toBottom = h - this.y;
+      const min = Math.min(toLeft, toRight, toTop, toBottom);
+      if (min === toLeft) this.targetTurn = 0;
+      else if (min === toRight) this.targetTurn = 0;
+      else if (min === toTop) this.targetTurn = 0;
+      else this.targetTurn = 0;
+      // Point toward nearest edge
+      if (min === toLeft) this.angle = Math.PI;
+      else if (min === toRight) this.angle = 0;
+      else if (min === toTop) this.angle = -Math.PI / 2;
+      else this.angle = Math.PI / 2;
+    }
+
+    // Turn rate changes — slow lazy direction shifts
+    if (!this.leaving) {
+      this.turnTimer -= dt;
+      if (this.turnTimer <= 0) {
+        this.targetTurn = (Math.random() - 0.5) * 0.018;
+        // Occasionally circle tighter
+        if (Math.random() < 0.15) this.targetTurn *= 2.5;
+        this.turnTimer = 5 + Math.random() * 15;
+      }
+
+      // Soft edge avoidance — steer away before reaching edges
+      const margin = Math.min(w, h) * 0.2;
+      const toCenter = Math.atan2(h * 0.5 - this.y, w * 0.5 - this.x);
+      let edgeUrgency = 0;
+      if (this.x < margin) edgeUrgency = (margin - this.x) / margin;
+      else if (this.x > w - margin) edgeUrgency = (this.x - (w - margin)) / margin;
+      if (this.y < margin) edgeUrgency = Math.max(edgeUrgency, (margin - this.y) / margin);
+      else if (this.y > h - margin) edgeUrgency = Math.max(edgeUrgency, (this.y - (h - margin)) / margin);
+      if (edgeUrgency > 0) {
+        // Steer toward center
+        let diff = toCenter - this.angle;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        this.angle += diff * edgeUrgency * 0.03;
+      }
+    }
+
+    this.turnRate += (this.targetTurn - this.turnRate) * 0.015;
+    this.angle += this.turnRate;
+
+    // Smooth velocity from angle
+    const targetVx = Math.cos(this.angle) * this.speed;
+    const targetVy = Math.sin(this.angle) * this.speed;
+    this.vx += (targetVx - this.vx) * 0.04;
+    this.vy += (targetVy - this.vy) * 0.04;
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Smooth render angle
+    let aDiff = this.angle - this._renderAngle;
+    while (aDiff > Math.PI) aDiff -= Math.PI * 2;
+    while (aDiff < -Math.PI) aDiff += Math.PI * 2;
+    this._renderAngle += aDiff * 0.08;
+
+    // Bank into turns — visual only
+    this._bank += (this.turnRate * 30 - this._bank) * 0.04;
+
+    // Flapping — occasional short bursts to stay aloft
+    this.flapTimer -= dt;
+    if (!this.flapping && this.flapTimer <= 0) {
+      this.flapping = true;
+      this.wingPhase = 0;
+      this.flapCycles = 2 + Math.floor(Math.random() * 2); // 2-3 flaps
+    }
+    if (this.flapping) {
+      this.wingPhase += dt * 7; // flap speed
+      if (this.wingPhase > this.flapCycles * Math.PI * 2) {
+        this.flapping = false;
+        this.wingPhase = 0;
+        this.flapTimer = 5 + Math.random() * 12;
+      }
+    }
+  }
+
+  // Draw shadow on the water surface
+  drawShadow(ctx) {
+    const shadowScale = 1 + this.height * 0.3; // higher = larger shadow
+    const shadowOffX = this.height * 15; // offset from bird position
+    const shadowOffY = this.height * 20;
+    const sx = this.x + shadowOffX;
+    const sy = this.y + shadowOffY;
+    const alpha = 0.08 + (1 - this.height) * 0.06; // lower = darker shadow
+
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(this._renderAngle);
+
+    // Wing spread factor — 1.0 when gliding, dips during flaps
+    const wingSpread = this.flapping
+      ? 0.7 + Math.cos(this.wingPhase) * 0.3
+      : 1.0;
+    const ws = this.wingspan * shadowScale * wingSpread;
+    const bl = this.bodyLen * shadowScale;
+
+    // Soft oval shadow for body + wings
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, ws * 0.5, bl * 0.3, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 30, 40, 1)';
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this._renderAngle);
+
+    // Wing spread — 1.0 when gliding, oscillates during flaps
+    const wingSpread = this.flapping
+      ? 0.75 + Math.cos(this.wingPhase) * 0.25
+      : 1.0;
+
+    const halfSpan = this.wingspan * 0.5 * wingSpread;
+    const bl = this.bodyLen;
+
+    // Wing dihedral — slight V angle from banking
+    const bankShift = this._bank * 2;
+
+    // Wings — swept-back shape, wider at base, tapered to tips
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      // Wing root (at body)
+      ctx.moveTo(bl * 0.1, side * bl * 0.12);
+      // Leading edge — sweeps back slightly
+      ctx.quadraticCurveTo(
+        -bl * 0.05, side * halfSpan * 0.5 + bankShift * side,
+        -bl * 0.15, side * halfSpan + bankShift * side
+      );
+      // Wing tip (rounded)
+      ctx.lineTo(-bl * 0.3, side * halfSpan + bankShift * side);
+      // Trailing edge — curves back to body
+      ctx.quadraticCurveTo(
+        -bl * 0.15, side * halfSpan * 0.5 + bankShift * side,
+        -bl * 0.35, side * bl * 0.1
+      );
+      ctx.closePath();
+
+      // Main wing — white/light gray
+      ctx.fillStyle = 'rgba(235, 240, 245, 0.9)';
+      ctx.fill();
+
+      // Dark wing tips
+      ctx.beginPath();
+      ctx.moveTo(-bl * 0.1, side * halfSpan * 0.8 + bankShift * side);
+      ctx.quadraticCurveTo(
+        -bl * 0.12, side * halfSpan * 0.9 + bankShift * side,
+        -bl * 0.15, side * halfSpan + bankShift * side
+      );
+      ctx.lineTo(-bl * 0.3, side * halfSpan + bankShift * side);
+      ctx.quadraticCurveTo(
+        -bl * 0.22, side * halfSpan * 0.85 + bankShift * side,
+        -bl * 0.2, side * halfSpan * 0.78 + bankShift * side
+      );
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(50, 55, 60, 0.7)';
+      ctx.fill();
+    }
+
+    // Body — elongated teardrop, head to tail
+    ctx.beginPath();
+    ctx.moveTo(bl * 0.4, 0); // head (beak tip)
+    ctx.quadraticCurveTo(bl * 0.25, bl * 0.08, bl * 0.05, bl * 0.1);
+    ctx.quadraticCurveTo(-bl * 0.2, bl * 0.07, -bl * 0.35, 0);
+    ctx.quadraticCurveTo(-bl * 0.2, -bl * 0.07, bl * 0.05, -bl * 0.1);
+    ctx.quadraticCurveTo(bl * 0.25, -bl * 0.08, bl * 0.4, 0);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(245, 248, 250, 0.92)';
+    ctx.fill();
+
+    // Head — slightly darker cap
+    ctx.beginPath();
+    ctx.arc(bl * 0.28, 0, bl * 0.08, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(240, 242, 245, 0.9)';
+    ctx.fill();
+
+    // Tail feathers — small V behind body
+    ctx.beginPath();
+    ctx.moveTo(-bl * 0.32, 0);
+    ctx.lineTo(-bl * 0.52, bl * 0.06);
+    ctx.lineTo(-bl * 0.45, 0);
+    ctx.lineTo(-bl * 0.52, -bl * 0.06);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(180, 185, 190, 0.8)';
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
 // Tuna palette — dark muted backs with lighter bellies
 const schoolColors = [
   { color: 'rgb(30, 50, 85)', belly: 'rgb(130, 155, 185)' },      // dark steel
@@ -3460,6 +3711,12 @@ let predReturnTimer = 40 + Math.random() * 60; // time until first departure
 let predDepartTimer = 0; // countdown for predator to swim offscreen
 let predBonusFish = 0; // how many bonus fish arrived during absence
 for (let i = 0; i < predatorMax; i++) predators.push(new Predator());
+
+// Seagulls — fly overhead, cast shadows, come and go
+const seagulls = [];
+let seagullSpawnTimer = 10 + Math.random() * 30; // first one arrives after a bit
+const seagullMax = w * h > 400000 ? 2 : 1;
+
 // Organic population — wanders around a midpoint, fish come and go
 let basePop = Math.min(300, Math.max(80, Math.floor((w * h) / 850)));
 let popTarget = basePop * (0.7 + Math.random() * 0.3); // start a little varied
@@ -4365,7 +4622,7 @@ function draw(time) {
     } else {
       spawnWash();
       // Very irregular timing - sometimes rapid sets, sometimes long lulls
-      washTimer = 10 + Math.random() * 18 + (Math.random() < 0.2 ? 12 : 0);
+      washTimer = 25 + Math.random() * 18 + (Math.random() < 0.2 ? 12 : 0);
     }
   }
 
@@ -5129,6 +5386,24 @@ function draw(time) {
     }
   }
 
+  // Seagull lifecycle — spawn, fly, leave, respawn
+  for (const g of seagulls) g.update(dt);
+  // Remove seagulls that have left the scene
+  for (let i = seagulls.length - 1; i >= 0; i--) {
+    const g = seagulls[i];
+    if (g.leaving && (g.x < -150 || g.x > w + 150 || g.y < -150 || g.y > h + 150)) {
+      seagulls.splice(i, 1);
+    }
+  }
+  // Spawn new seagulls
+  if (seagulls.length < seagullMax) {
+    seagullSpawnTimer -= dt;
+    if (seagullSpawnTimer <= 0) {
+      seagulls.push(new Seagull());
+      seagullSpawnTimer = 20 + Math.random() * 50;
+    }
+  }
+
   popDriftTimer -= dt;
   if (popDriftTimer <= 0) {
     // Shift the target: sometimes sparser, sometimes denser
@@ -5549,6 +5824,12 @@ function draw(time) {
   }
 
   _measure('reefs');
+
+  // Seagull shadows — on the water, under the bird
+  for (const g of seagulls) g.drawShadow(ctx);
+  // Seagulls — drawn on top of everything (flying above the water)
+  for (const g of seagulls) g.draw(ctx);
+
   // DOF haze — disabled for performance testing
   // const dpr = Math.min(2, window.devicePixelRatio || 1);
   // const dofScale = 0.25;
@@ -5574,7 +5855,7 @@ function draw(time) {
   _debugEl.hidden = !debugVisible;
   if (debugVisible && _fpsLast > 0) {
     const fpsColor = _fpsDisplay >= 55 ? '#8f8' : _fpsDisplay >= 30 ? '#ff8' : '#f88';
-    let txt = `<span style="color:${fpsColor}">${_fpsDisplay} fps</span>  fish:${fish.length}`;
+    let txt = `<span style="color:${fpsColor}">${_fpsDisplay} fps</span>  fish:${fish.length}  gulls:${seagulls.length}`;
     const _profKeys = Object.keys(_profDisplay);
     for (const k of _profKeys) {
       const ms = _profDisplay[k];
