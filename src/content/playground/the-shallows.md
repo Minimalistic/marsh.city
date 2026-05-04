@@ -4784,7 +4784,7 @@ function rebuildSandCanvas() {
   // Close passes (sharp near rocks)
   sandCtx.save();
   sandCtx.setTransform(1, 0, 0, 1, 0, 0);
-  const blurR = Math.ceil(6.25 * viewScale * dpr);
+  const blurR = Math.ceil(12.5 * viewScale * dpr);
   sandCtx.globalAlpha = 0.084;
   for (let dx = -blurR; dx <= blurR; dx += Math.ceil(blurR / 2)) {
     for (let dy = -blurR; dy <= blurR; dy += Math.ceil(blurR / 2)) {
