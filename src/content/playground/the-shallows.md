@@ -700,7 +700,7 @@ for (let i = 0; i < cloudCount; i++) {
   clouds.push({
     x: w / 2 + windCos * along - windSin * across,
     y: h / 2 + windSin * along + windCos * across,
-    speed: (12 + Math.random() * 10) * 1.5,
+    speed: (12 + Math.random() * 10) * 3,
     drift: cloudWind.angle + (Math.random() - 0.5) * 0.3,
     size: (0.35 + Math.random() * 0.29) * 1.73,
     opacity: 0.08 + Math.random() * 0.06,
