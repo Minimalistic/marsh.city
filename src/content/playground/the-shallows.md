@@ -594,9 +594,11 @@ function rebuildGrid() {
 function populateGrid(fishArr) {
   for (let i = 0; i < spatialGrid.length; i++) spatialGrid[i].length = 0;
   for (const f of fishArr) {
+    if (!isFinite(f.x) || !isFinite(f.y)) continue;
     const col = Math.max(0, Math.min(gridCols - 1, Math.floor(f.x / GRID_CELL)));
     const row = Math.max(0, Math.min(gridRows - 1, Math.floor(f.y / GRID_CELL)));
-    spatialGrid[row * gridCols + col].push(f);
+    const idx = row * gridCols + col;
+    if (spatialGrid[idx]) spatialGrid[idx].push(f);
   }
 }
 function* getNeighbors(fx, fy) {
