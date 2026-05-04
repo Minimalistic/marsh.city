@@ -5559,15 +5559,15 @@ function draw(time) {
             maxRadius: (rf.crownR * 1.95 + si * 12) * viewScale,
             speed: (0.4 + Math.random() * 0.25) * viewScale,
             hitAngle,
-            strength: rf._splashEmit * (0.52 + Math.random() * 0.13),
+            strength: rf._splashEmit * (1.4 + Math.random() * 0.4), // very pronounced initial
             life: 1,
             maxLife: 4 + Math.random() * 3,
             seed: Math.random() * 100,
-            thick: (1.3 + Math.random() * 0.8) * viewScale,
+            thick: (3.0 + Math.random() * 1.5) * viewScale, // thick initial ripple
           });
         }
       } else {
-        // Subsequent ripples — thinner, slower, spacing out
+        // Subsequent ripples — progressively thinner, dimmer
         rf._splashNext = 0.2 + (1 - decay) * 0.6;
         splashRipples.push({
           cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
@@ -5575,11 +5575,11 @@ function draw(time) {
           maxRadius: (rf.crownR * 1.43 + decay * 8) * viewScale,
           speed: (0.25 + decay * 0.2) * viewScale,
           hitAngle,
-          strength: rf._splashEmit * decay * (0.33 + Math.random() * 0.2),
+          strength: rf._splashEmit * decay * decay * (0.4 + Math.random() * 0.2), // fades faster
           life: 1,
           maxLife: 3 + decay * 2,
           seed: Math.random() * 100,
-          thick: (0.52 + decay * 0.52) * viewScale,
+          thick: (0.5 + decay * decay * 1.5) * viewScale, // thins quickly with decay²
         });
       }
     }
