@@ -5867,7 +5867,7 @@ function draw(time) {
   }
   ctx.globalAlpha = 1;
 
-  // Contact splashes — small organic particles where wave lines meet rock edges
+  // Contact splashes — update positions (drawing happens after reef crowns)
   for (let i = contactSplashes.length - 1; i >= 0; i--) {
     const sp = contactSplashes[i];
     sp.life -= dt / sp.maxLife;
@@ -5876,16 +5876,6 @@ function draw(time) {
     sp.vy *= sp.drag;
     sp.x += sp.vx;
     sp.y += sp.vy;
-    // Fade in quickly, fade out over last 40%
-    const fadeIn = Math.min(1, (1 - sp.life) * sp.maxLife / 0.08);
-    const fadeOut = sp.life < 0.4 ? sp.life / 0.4 : 1;
-    const alpha = fadeIn * fadeOut * 0.6;
-    const sz = sp.size * (0.5 + sp.life * 0.5);
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.arc(sp.x, sp.y, sz, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(210, 235, 245, 1)';
-    ctx.fill();
   }
   ctx.globalAlpha = 1;
 
@@ -6835,6 +6825,20 @@ function draw(time) {
   }
 
   _measure('reefs');
+
+  // Contact splashes — drawn OVER reef crowns so spray flies over rocks
+  for (const sp of contactSplashes) {
+    const fadeIn = Math.min(1, (1 - sp.life) * sp.maxLife / 0.08);
+    const fadeOut = sp.life < 0.4 ? sp.life / 0.4 : 1;
+    const alpha = fadeIn * fadeOut * 0.6;
+    const sz = sp.size * (0.5 + sp.life * 0.5);
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, sz, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(220, 240, 250, 1)';
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 
   // Seagull shadows — rendered to offscreen canvas then composited once
   // Guarantees a single unified shape with no internal overlap artifacts
