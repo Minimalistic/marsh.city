@@ -4903,19 +4903,25 @@ function draw(time) {
           rf._splashNext = 0;
           rf._splashFirst = true; // first burst is thickest
         }
-        const splashCount = Math.ceil(2 * viewScale);
+        const splashCount = Math.ceil(3 * viewScale);
         if (foamBits.length < 210) {
           for (let si = 0; si < splashCount; si++) {
-            const edgeAngle = Math.atan2(-sinA, -cosA) + (Math.random() - 0.5) * Math.PI * 0.8;
-            // Spawn at the crown edge (waterline), offset by crown position
+            // Wide angular spread around the hit side for scattered spray
+            const edgeAngle = Math.atan2(-sinA, -cosA) + (Math.random() - 0.5) * Math.PI * 1.4;
             const crownEdgeR = rf.radiusAt(edgeAngle, rf.crownRadii);
-            const spawnR = crownEdgeR * (0.9 + Math.random() * 0.25);
+            // Scatter position: offset randomly from the crown edge
+            const spawnR = crownEdgeR * (0.7 + Math.random() * 0.6);
+            const scatter = (Math.random() - 0.5) * 12 * viewScale; // lateral scatter
+            const perpAngle = edgeAngle + Math.PI * 0.5;
+            // Random velocity direction — spray fans out chaotically
+            const velAngle = edgeAngle + (Math.random() - 0.5) * 1.5;
+            const velMag = (0.3 + Math.random() * 0.8) * pushForce * 0.3;
             foamBits.push({
-              x: rf.x + rf.crownOffX + Math.cos(edgeAngle) * spawnR,
-              y: rf.y + rf.crownOffY + Math.sin(edgeAngle) * spawnR,
-              size: (0.2 + Math.random() * 1.0) * viewScale,
-              vx: Math.cos(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
-              vy: Math.sin(edgeAngle) * (0.5 + Math.random()) * pushForce * 0.3,
+              x: rf.x + rf.crownOffX + Math.cos(edgeAngle) * spawnR + Math.cos(perpAngle) * scatter,
+              y: rf.y + rf.crownOffY + Math.sin(edgeAngle) * spawnR + Math.sin(perpAngle) * scatter,
+              size: (0.15 + Math.random() * 0.8) * viewScale,
+              vx: Math.cos(velAngle) * velMag + (Math.random() - 0.5) * 0.3,
+              vy: Math.sin(velAngle) * velMag + (Math.random() - 0.5) * 0.3,
               life: 1,
               maxLife: 6 + Math.random() * 12,
             });
