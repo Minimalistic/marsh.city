@@ -5274,22 +5274,28 @@ function draw(time) {
       if (trAlpha < 0.003) { ww.trails.splice(ti, 1); continue; }
       const perpX = -sinA, perpY = cosA;
       const t2 = time * 0.0012;
-      ctx.beginPath();
-      const step = 4;
-      let first = true;
+      const step = 8;
+      const trPts = [];
       for (let pos = -span; pos <= span; pos += step) {
         const f = tr.freq;
         const vs = viewScale;
-        const offset = (Math.sin(pos * 0.04 * f + tr.seed) * (3 + Math.sin(t2 * 3.1 + tr.seed) * 3)
-                     + Math.sin(pos * 0.09 * f + tr.seed * 2.3) * (2 + Math.sin(t2 * 5.7 + tr.seed * 1.7) * 2)
-                     + Math.sin(pos * 0.18 * f + tr.seed * 4.7) * (1 + Math.sin(t2 * 9.3 + tr.seed * 3.1) * 1)) * vs;
+        const offset = (Math.sin(pos * 0.025 * f + tr.seed) * (3 + Math.sin(t2 * 2.5 + tr.seed) * 2.5)
+                     + Math.sin(pos * 0.055 * f + tr.seed * 2.3) * (2 + Math.sin(t2 * 4.3 + tr.seed * 1.7) * 1.5)
+                     + Math.sin(pos * 0.012 * f + tr.seed * 5.1) * (1.5 + Math.sin(t2 * 6.5 + tr.seed * 3.1) * 1)) * vs;
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const deflect = reefDeflect(px, py);
         if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
-        if (first) { ctx.moveTo(px, py); first = false; }
-        else ctx.lineTo(px, py);
+        trPts.push({ x: px, y: py });
       }
+      ctx.beginPath();
+      if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
+      for (let i = 1; i < trPts.length - 1; i++) {
+        const mx = (trPts[i].x + trPts[i + 1].x) * 0.5;
+        const my = (trPts[i].y + trPts[i + 1].y) * 0.5;
+        ctx.quadraticCurveTo(trPts[i].x, trPts[i].y, mx, my);
+      }
+      if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
       ctx.globalAlpha = trAlpha;
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
       ctx.lineWidth = tr.thick * tr.life;
@@ -5325,35 +5331,43 @@ function draw(time) {
       if (!ww.seed) ww.seed = Math.random() * 100;
       const t = time * 0.0012;
       const lines = [
-        { behind: 0, thick: 3.2 * viewScale, alpha: 1.0, freq: 2.8, speed: 2.0 },
+        { behind: 0, thick: 3.2 * viewScale, alpha: 1.0, freq: 1.6, speed: 1.8 },
         { behind: 2 * viewScale, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0, speed: 1.0 },
-        { behind: 4 * viewScale, thick: 2.5 * viewScale, alpha: 0.85, freq: 2.2, speed: 1.6 },
-        { behind: 9 * viewScale, thick: 1.0 * viewScale, alpha: 0.2, freq: 1.1, speed: 0.9 },
-        { behind: 14 * viewScale, thick: 0.6 * viewScale, alpha: 0.1, freq: 1.5, speed: 1.1 },
-        { behind: 20 * viewScale, thick: 0.35 * viewScale, alpha: 0.05, freq: 1.8, speed: 1.3 },
+        { behind: 4 * viewScale, thick: 2.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
+        { behind: 9 * viewScale, thick: 1.0 * viewScale, alpha: 0.2, freq: 0.9, speed: 0.9 },
+        { behind: 14 * viewScale, thick: 0.6 * viewScale, alpha: 0.1, freq: 1.0, speed: 1.0 },
+        { behind: 20 * viewScale, thick: 0.35 * viewScale, alpha: 0.05, freq: 1.1, speed: 1.1 },
       ];
       for (const ln of lines) {
-        ctx.beginPath();
-        const step = 3;
-        let first = true;
+        // Compute smooth curve points, then draw with quadratic curves
+        const step = 8; // wider spacing for smoother curves
+        const pts = [];
         for (let pos = -span; pos <= span; pos += step) {
           const f = ln.freq;
           const vs = viewScale;
           const ts = ln.speed;
-          // Standing-wave pattern: spatial shape modulated by time, no diagonal travel
-          // Each harmonic's amplitude pulses independently over time
-          const offset = (Math.sin(pos * 0.04 * f + ww.seed) * (3 + Math.sin(t * 3.1 * ts + ww.seed) * 3)
-                       + Math.sin(pos * 0.09 * f + ww.seed * 2.3) * (2 + Math.sin(t * 5.7 * ts + ww.seed * 1.7) * 2)
-                       + Math.sin(pos * 0.18 * f + ww.seed * 4.7) * (1.2 + Math.sin(t * 9.3 * ts + ww.seed * 3.1) * 1.3)
-                       + Math.sin(pos * 0.35 * f + ww.seed * 7) * (0.7 + Math.sin(t * 14 * ts + ww.seed * 5.3) * 0.8)
-                       + Math.sin(pos * 0.07 * f + ww.seed * 11) * (0.8 + Math.sin(t * 18 * ts + ww.seed * 8.1) * 0.7)) * vs;
+          // Low-frequency harmonics only — smooth, watery undulation
+          const offset = (Math.sin(pos * 0.025 * f + ww.seed) * (4 + Math.sin(t * 2.5 * ts + ww.seed) * 3)
+                       + Math.sin(pos * 0.055 * f + ww.seed * 2.3) * (2.5 + Math.sin(t * 4.3 * ts + ww.seed * 1.7) * 2)
+                       + Math.sin(pos * 0.012 * f + ww.seed * 5.1) * (2 + Math.sin(t * 6.5 * ts + ww.seed * 3.9) * 1.5)) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const deflect = reefDeflect(px, py);
           if (deflect > 0) { px -= cosA * deflect; py -= sinA * deflect; }
-          if (first) { ctx.moveTo(px, py); first = false; }
-          else ctx.lineTo(px, py);
-      }
+          pts.push({ x: px, y: py });
+        }
+        // Draw smooth quadratic curves through the points
+        ctx.beginPath();
+        if (pts.length > 0) ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i + 1].x) * 0.5;
+          const my = (pts[i].y + pts[i + 1].y) * 0.5;
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+        }
+        if (pts.length > 1) {
+          const last = pts[pts.length - 1];
+          ctx.lineTo(last.x, last.y);
+        }
         ctx.globalAlpha = ww.life * ln.alpha;
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
         ctx.lineWidth = ln.thick;
