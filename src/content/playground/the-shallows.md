@@ -1055,6 +1055,8 @@ class Fish {
       // Push cohesion target well clear of reefs so the school doesn't orbit them
       for (const rf of reefs) {
         if (rf.submerged) continue;
+        // Quick reject — manhattan distance to reef center vs max influence
+        if (Math.abs(cx - rf.x) > rf.baseR * 4 && Math.abs(cy - rf.y) > rf.baseR * 4) continue;
         const cdx = cx - (rf.x + rf.crownOffX), cdy = cy - (rf.y + rf.crownOffY);
         const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
         const cAngle = Math.atan2(cdy, cdx);
@@ -1442,6 +1444,9 @@ class Fish {
     let reefSteer = 0; // accumulated angle adjustment
     for (const rf of reefs) {
       if (rf.submerged) continue;
+      // Quick manhattan reject — skip reefs that are clearly too far
+      const _rdx = Math.abs(this.x - rf.x), _rdy = Math.abs(this.y - rf.y);
+      if (_rdx > rf.baseR * 5 && _rdy > rf.baseR * 5) continue;
       // --- Underwater base ---
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
@@ -1576,6 +1581,7 @@ class Fish {
     // Hard collision — fish can never be inside a reef crown
     for (const rf of reefs) {
       if (rf.submerged) continue;
+      if (Math.abs(this.x - rf.x) > rf.baseR * 2 && Math.abs(this.y - rf.y) > rf.baseR * 2) continue;
       const cdx = this.x - (rf.x + rf.crownOffX);
       const cdy = this.y - (rf.y + rf.crownOffY);
       const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
@@ -1596,6 +1602,7 @@ class Fish {
     // Reef collision - pure gradient, no hard snaps
     for (const rf of reefs) {
       if (rf.submerged) continue;
+      if (Math.abs(this.x - rf.x) > rf.baseR * 2 && Math.abs(this.y - rf.y) > rf.baseR * 2) continue;
       const rdx = this.x - rf.x;
       const rdy = this.y - rf.y;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
@@ -4396,19 +4403,24 @@ function draw(time) {
     for (const p of plants) p.displace(pred.x, pred.y, 35, pred.speed * 0.2);
   }
 
-  // Debris update - affected by tide (drawing happens in y-sorted pass)
-  for (const d of debris) {
-    d.vx += Math.cos(tide.angle) * tide.strength * 0.008 * viewScale;
-    d.vy += Math.sin(tide.angle) * tide.strength * 0.008 * viewScale;
-    const dFlow = sampleFlow(d.x, d.y, time);
-    d.vx += dFlow.fx * 0.015 * viewScale;
-    d.vy += dFlow.fy * 0.015 * viewScale;
+  // Debris update — tide-only drift, no per-particle flow sampling
+  // Precompute shared tide vector once instead of per-particle
+  const tideCos = Math.cos(tide.angle) * tide.strength * 0.008 * viewScale;
+  const tideSin = Math.sin(tide.angle) * tide.strength * 0.008 * viewScale;
+  for (let di = 0; di < debris.length; di++) {
+    const d = debris[di];
+    d.vx += tideCos;
+    d.vy += tideSin;
     d.vx *= 0.97;
     d.vy *= 0.97;
     d.x += d.vx;
     d.y += d.vy;
+    // Only check non-submerged reefs (2-4 main ones, not 15+ satellites)
     for (const rf of reefs) {
+      if (rf.submerged) continue;
       const rdx = d.x - rf.x, rdy = d.y - rf.y;
+      // Quick manhattan reject — skip if clearly far away
+      if (Math.abs(rdx) > rf.baseR || Math.abs(rdy) > rf.baseR) continue;
       const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
       const angle = Math.atan2(rdy, rdx);
       const edgeR = rf.radiusAt(angle, rf.baseRadii);
