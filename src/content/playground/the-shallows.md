@@ -12,17 +12,15 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="6" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="12" cy="18" r="1"/></svg>
     Feed
   </button>
-  <div class="pool-sound-wrap">
-    <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound" aria-label="Toggle ocean sound" aria-pressed="false" role="switch">
-      <svg id="sound-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-      Sound
-    </button>
-    <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume">
-  </div>
   <button id="debug-toggle" class="pool-tool" title="Toggle debug stats" aria-label="Toggle debug stats" aria-pressed="false" role="switch">
     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V10"/><path d="M6 20V4"/><path d="M18 20v-6"/></svg>
     Stats
   </button>
+  <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound" aria-label="Toggle ocean sound" aria-pressed="false" role="switch">
+    <svg id="sound-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    Sound
+  </button>
+  <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume" aria-label="Volume">
 </div>
 <button id="fullscreen-btn" class="pool-tool icon-only pool-fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
@@ -48,19 +46,16 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 .pool-tool.icon-only { width: 28px; padding: 0; }
 .pool-tool:hover { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.8); }
 .pool-tool.active { border-color: rgba(255,255,255,0.5); color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.1); }
-.pool-sound-wrap { position: relative; }
 .pool-volume {
-  position: absolute; top: 36px; left: 50%; transform: translateX(-50%);
-  width: 4px; height: 0; opacity: 0; transition: height 0.2s, opacity 0.2s;
+  width: 100%; height: 4px;
   accent-color: rgba(150,200,220,0.8); cursor: pointer;
-  writing-mode: vertical-lr; direction: rtl;
-  appearance: slider-vertical;
-  padding: 4px;
+  -webkit-appearance: none; appearance: none;
+  background: rgba(255,255,255,0.15); border-radius: 2px;
 }
-.pool-sound-wrap:hover .pool-volume,
-.pool-sound-wrap.vol-open .pool-volume,
-.pool-volume:hover,
-.pool-volume:active { height: 60px; opacity: 1; }
+.pool-volume::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: rgba(150,200,220,0.9); cursor: pointer;
+}
 .pool-hint {
   position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
   background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
@@ -243,7 +238,6 @@ function toggleSound() {
 }
 
 const soundBtn = document.getElementById('sound-toggle');
-const soundWrap = document.querySelector('.pool-sound-wrap');
 const volSlider = document.getElementById('volume-slider');
 
 const soundHint = document.getElementById('sound-hint');
@@ -258,30 +252,23 @@ function handleSoundTap(e) {
   if (now - lastSoundTap < 300) return;
   lastSoundTap = now;
   toggleSound();
-  if ('ontouchstart' in window) {
-    soundWrap.classList.toggle('vol-open', soundEnabled);
+  if ('ontouchstart' in window && soundEnabled) {
     // Brief reminder about silent mode when enabling sound on mobile
-    if (soundEnabled) {
-      soundHint.hidden = false;
-      soundHint.classList.add('show');
-      clearTimeout(hintTimer);
-      hintTimer = setTimeout(() => {
-        soundHint.classList.remove('show');
-        setTimeout(() => { soundHint.hidden = true; }, 300);
-      }, 3000);
-    } else {
+    soundHint.hidden = false;
+    soundHint.classList.add('show');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => {
       soundHint.classList.remove('show');
-      soundHint.hidden = true;
-    }
+      setTimeout(() => { soundHint.hidden = true; }, 300);
+    }, 3000);
+  } else {
+    soundHint.classList.remove('show');
+    soundHint.hidden = true;
   }
 }
 soundBtn.addEventListener('click', handleSoundTap);
 soundBtn.addEventListener('touchend', handleSoundTap);
 
-// Close volume slider when tapping elsewhere
-document.addEventListener('touchstart', e => {
-  if (!soundWrap.contains(e.target)) soundWrap.classList.remove('vol-open');
-});
 
 let masterVolume = 0.5;
 volSlider.addEventListener('input', e => {
@@ -5047,8 +5034,13 @@ function draw(time) {
     predAbsentTimer -= dt;
     // Bonus fish trickle in during peace
     if (predBonusFish < 20 && Math.random() < 0.02) {
-      const edge = Math.floor(Math.random() * 4);
-      const f = new Fish(edge);
+      const school = Math.floor(Math.random() * schoolColors.length);
+      const entry = schoolEntries[school];
+      const f = new Fish(entry);
+      f.school = school;
+      f.colorType = school;
+      f.color = jitterTunaColor(schoolColors[school].color);
+      f.bellyColor = jitterTunaColor(schoolColors[school].belly);
       f._bonusFish = true; // mark so they flee when predator returns
       fish.push(f);
       predBonusFish++;
