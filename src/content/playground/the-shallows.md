@@ -5130,10 +5130,10 @@ function draw(time) {
   ctx.fillStyle = bgGradient;
   ctx.fillRect(0, 0, w, h);
 
-  // Depth gradient: darker top-left (deeper) to lighter bottom-right (shallower)
+  // Depth gradient: darker most of the view, only gets shallower in last 30%
   const depthGrad = ctx.createLinearGradient(0, 0, w, h);
   depthGrad.addColorStop(0, 'rgba(0, 15, 25, 0.25)');
-  depthGrad.addColorStop(0.5, 'rgba(0, 10, 15, 0.08)');
+  depthGrad.addColorStop(0.7, 'rgba(0, 12, 20, 0.2)');
   depthGrad.addColorStop(1, 'rgba(40, 70, 60, 0.0)');
   ctx.fillStyle = depthGrad;
   ctx.fillRect(0, 0, w, h);
