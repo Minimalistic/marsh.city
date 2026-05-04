@@ -5200,31 +5200,35 @@ function draw(time) {
       }
     }
 
-    // Shed trail lines behind the wave — irregular ripples left in its wake
+    // Shed trail lines behind the wave — frequent ripples left in its wake
     if (!ww.trails) ww.trails = [];
-    if (!ww._nextTrail) ww._nextTrail = 20 + Math.random() * 40;
+    if (!ww._nextTrail) ww._nextTrail = 8 + Math.random() * 15;
     if (alive && ww.traveled > ww._nextTrail) {
-      ww._nextTrail = ww.traveled + 30 + Math.random() * 60; // irregular spacing
-      // Pick one of the thinner line styles to shed
-      const pick = 1 + Math.floor(Math.random() * 3); // index 1-3
+      // Shed 1-2 trails at a time, close spacing
+      const count = Math.random() < 0.4 ? 2 : 1;
+      ww._nextTrail = ww.traveled + 10 + Math.random() * 25;
       const templates = [
-        null,
+        { thick: 1.8 * viewScale, alpha: 0.25, freq: 1.1 },  // bold near-front trail
         { thick: 1.2 * viewScale, alpha: 0.18, freq: 1.3 },
-        { thick: 0.8 * viewScale, alpha: 0.10, freq: 0.8 },
-        { thick: 0.5 * viewScale, alpha: 0.06, freq: 1.6 },
+        { thick: 0.8 * viewScale, alpha: 0.12, freq: 0.8 },
+        { thick: 0.5 * viewScale, alpha: 0.07, freq: 1.6 },
+        { thick: 0.3 * viewScale, alpha: 0.04, freq: 2.0 },  // wispy far trail
       ];
-      const tmpl = templates[pick];
-      ww.trails.push({
-        x: ww.x, y: ww.y,
-        seed: (ww.seed || 0) + Math.random() * 10,
-        traveled: ww.traveled,
-        thick: tmpl.thick,
-        alpha: tmpl.alpha * (0.6 + Math.random() * 0.4),
-        freq: tmpl.freq,
-        life: 1,
-        maxLife: 3 + Math.random() * 4,
-        driftSpeed: ww.speed * (0.08 + Math.random() * 0.12),
-      });
+      for (let ti = 0; ti < count; ti++) {
+        const pick = Math.floor(Math.random() * templates.length);
+        const tmpl = templates[pick];
+        ww.trails.push({
+          x: ww.x - cosA * ti * 5, y: ww.y - sinA * ti * 5,
+          seed: (ww.seed || 0) + Math.random() * 10,
+          traveled: ww.traveled,
+          thick: tmpl.thick,
+          alpha: tmpl.alpha * (0.6 + Math.random() * 0.4),
+          freq: tmpl.freq,
+          life: 1,
+          maxLife: 5 + Math.random() * 7,
+          driftSpeed: ww.speed * (0.05 + Math.random() * 0.1),
+        });
+      }
     }
     // Update and draw trail lines
     for (let ti = ww.trails.length - 1; ti >= 0; ti--) {
@@ -5288,12 +5292,12 @@ function draw(time) {
       if (!ww.seed) ww.seed = Math.random() * 100;
       const t = time * 0.0012;
       const lines = [
-        { behind: 0, thick: 3.2 * viewScale, alpha: 0.9, freq: 1.8 },     // near-opaque leading edge
-        { behind: 2 * viewScale, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0 },
-        { behind: 4 * viewScale, thick: 2.5 * viewScale, alpha: 0.85, freq: 2.2 },  // near-opaque secondary
-        { behind: 9 * viewScale, thick: 1.0 * viewScale, alpha: 0.2, freq: 1.1 },
-        { behind: 14 * viewScale, thick: 0.6 * viewScale, alpha: 0.1, freq: 1.5 },
-        { behind: 20 * viewScale, thick: 0.35 * viewScale, alpha: 0.05, freq: 1.8 },
+        { behind: 0, thick: 3.2 * viewScale, alpha: 0.9, freq: 1.8, speed: 1.4 },
+        { behind: 2 * viewScale, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0, speed: 1.0 },
+        { behind: 4 * viewScale, thick: 2.5 * viewScale, alpha: 0.85, freq: 2.2, speed: 1.6 },
+        { behind: 9 * viewScale, thick: 1.0 * viewScale, alpha: 0.2, freq: 1.1, speed: 0.9 },
+        { behind: 14 * viewScale, thick: 0.6 * viewScale, alpha: 0.1, freq: 1.5, speed: 1.1 },
+        { behind: 20 * viewScale, thick: 0.35 * viewScale, alpha: 0.05, freq: 1.8, speed: 1.3 },
       ];
       for (const ln of lines) {
         ctx.beginPath();
@@ -5302,11 +5306,13 @@ function draw(time) {
         for (let pos = -span; pos <= span; pos += step) {
           const f = ln.freq;
           const vs = viewScale;
-          // Time-driven oscillation so wave shape constantly evolves
-          const offset = (Math.sin(pos * 0.04 * f + t * 3.1 + ww.seed) * 6
-                       + Math.sin(pos * 0.09 * f + t * 5.7 + ww.seed * 2.3) * 4
-                       + Math.sin(pos * 0.18 * f + t * 9.3 + ww.seed * 4.7) * 2
-                       + Math.sin(pos * 0.35 * f + t * 14 + ww.seed * 7) * 1) * vs;
+          const ts = ln.speed; // per-line animation speed
+          // More varied, faster-evolving wave shapes
+          const offset = (Math.sin(pos * 0.04 * f + t * 3.1 * ts + ww.seed) * 6
+                       + Math.sin(pos * 0.09 * f + t * 5.7 * ts + ww.seed * 2.3) * 4
+                       + Math.sin(pos * 0.18 * f + t * 9.3 * ts + ww.seed * 4.7) * 2.5
+                       + Math.sin(pos * 0.35 * f + t * 14 * ts + ww.seed * 7) * 1.5
+                       + Math.sin(pos * 0.07 * f + t * 18 * ts + ww.seed * 11) * 1.5) * vs;
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const deflect = reefDeflect(px, py);
