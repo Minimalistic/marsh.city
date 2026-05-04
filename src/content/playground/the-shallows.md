@@ -5293,11 +5293,11 @@ function draw(time) {
       const count = Math.random() < 0.4 ? 2 : 1;
       ww._nextTrail = ww.traveled + 10 + Math.random() * 25;
       const templates = [
-        { thick: 1.8 * viewScale, alpha: 0.25, freq: 1.1 },  // bold near-front trail
-        { thick: 1.2 * viewScale, alpha: 0.18, freq: 1.3 },
-        { thick: 0.8 * viewScale, alpha: 0.12, freq: 0.8 },
-        { thick: 0.5 * viewScale, alpha: 0.07, freq: 1.6 },
-        { thick: 0.3 * viewScale, alpha: 0.04, freq: 2.0 },  // wispy far trail
+        { thick: 3.0 * viewScale, alpha: 0.3, freq: 1.1 },   // starts near wave thickness
+        { thick: 2.2 * viewScale, alpha: 0.22, freq: 1.3 },
+        { thick: 1.5 * viewScale, alpha: 0.15, freq: 0.8 },
+        { thick: 1.0 * viewScale, alpha: 0.09, freq: 1.6 },
+        { thick: 0.6 * viewScale, alpha: 0.05, freq: 2.0 },
       ];
       for (let ti = 0; ti < count; ti++) {
         const pick = Math.floor(Math.random() * templates.length);
@@ -5398,12 +5398,12 @@ function draw(time) {
       if (!ww.seed) ww.seed = Math.random() * 100;
       const t = time * 0.0012;
       const lines = [
-        { behind: 0, thick: 3.2 * viewScale, alpha: 1.0, freq: 1.6, speed: 1.8 },
-        { behind: 2 * viewScale, thick: 1.8 * viewScale, alpha: 0.35, freq: 1.0, speed: 1.0 },
-        { behind: 4 * viewScale, thick: 2.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
-        { behind: 9 * viewScale, thick: 1.0 * viewScale, alpha: 0.2, freq: 0.9, speed: 0.9 },
-        { behind: 14 * viewScale, thick: 0.6 * viewScale, alpha: 0.1, freq: 1.0, speed: 1.0 },
-        { behind: 20 * viewScale, thick: 0.35 * viewScale, alpha: 0.05, freq: 1.1, speed: 1.1 },
+        { behind: 0, thick: 4.5 * viewScale, alpha: 1.0, freq: 1.6, speed: 1.8 },
+        { behind: 2 * viewScale, thick: 3.0 * viewScale, alpha: 0.4, freq: 1.0, speed: 1.0 },
+        { behind: 4 * viewScale, thick: 3.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
+        { behind: 9 * viewScale, thick: 1.2 * viewScale, alpha: 0.2, freq: 0.9, speed: 0.9 },
+        { behind: 14 * viewScale, thick: 0.7 * viewScale, alpha: 0.1, freq: 1.0, speed: 1.0 },
+        { behind: 20 * viewScale, thick: 0.4 * viewScale, alpha: 0.05, freq: 1.1, speed: 1.1 },
       ];
       for (const ln of lines) {
         const step = 8;
