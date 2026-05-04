@@ -4657,6 +4657,67 @@ function rebuildSandCanvas() {
   sandCanvas.height = canvas.height;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   sandCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Sand ripple lines — undulating ridges perpendicular to wave direction
+  // Pre-computed as if waves sculpted the sand floor over time
+  const waveCos = Math.cos(waveBaseAngle), waveSin = Math.sin(waveBaseAngle);
+  const perpCos = -waveSin, perpSin = waveCos; // perpendicular to wave travel
+  const rippleSpacing = 8 * viewScale; // distance between ridges
+  const diagonal = Math.sqrt(w * w + h * h);
+  const rippleCount = Math.ceil(diagonal / rippleSpacing);
+  const rippleStep = 3; // px between points along each line
+
+  for (let ri = 0; ri < rippleCount; ri++) {
+    // Each ridge starts from edge, extends perpendicular to wave direction
+    const ridgeOffset = (ri - rippleCount / 2) * rippleSpacing;
+    const seed = ri * 7.13;
+    // Vary alpha per ridge for organic feel
+    const ridgeAlpha = 0.015 + Math.sin(seed) * 0.008 + Math.random() * 0.005;
+    const ridgeThick = (0.5 + Math.sin(seed * 2.3) * 0.3) * viewScale;
+
+    sandCtx.beginPath();
+    let first = true;
+    for (let pos = -diagonal * 0.6; pos <= diagonal * 0.6; pos += rippleStep) {
+      // Undulation: sine waves of different frequencies for organic ripple shape
+      const wobble = Math.sin(pos * 0.015 + seed) * 3.5
+                   + Math.sin(pos * 0.037 + seed * 2.1) * 1.8
+                   + Math.sin(pos * 0.008 + seed * 0.7) * 5;
+      const rx = w / 2 + perpCos * pos + waveCos * (ridgeOffset + wobble * viewScale);
+      const ry = h / 2 + perpSin * pos + waveSin * (ridgeOffset + wobble * viewScale);
+      if (rx < -20 || rx > w + 20 || ry < -20 || ry > h + 20) { first = true; continue; }
+      if (first) { sandCtx.moveTo(rx, ry); first = false; }
+      else sandCtx.lineTo(rx, ry);
+    }
+    sandCtx.strokeStyle = `rgba(210, 195, 160, ${ridgeAlpha})`;
+    sandCtx.lineWidth = ridgeThick;
+    sandCtx.lineCap = 'round';
+    sandCtx.stroke();
+  }
+
+  // Sand buildup downstream of exposed rocks — deposited by wave action
+  for (const rf of reefs) {
+    if (rf.submerged) continue;
+    const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
+    const depositDist = rf.crownR * 3.5;
+    const depositWidth = rf.crownR * 1.8;
+    // Fan-shaped deposit behind the rock (downstream in wave direction)
+    const depX = cx + waveCos * depositDist * 0.6;
+    const depY = cy + waveSin * depositDist * 0.6;
+    const dg = sandCtx.createRadialGradient(depX, depY, 0, depX, depY, depositDist);
+    dg.addColorStop(0, 'rgba(200, 185, 145, 0.06)');
+    dg.addColorStop(0.4, 'rgba(195, 180, 140, 0.04)');
+    dg.addColorStop(1, 'rgba(190, 175, 135, 0)');
+    sandCtx.save();
+    sandCtx.translate(depX, depY);
+    sandCtx.rotate(waveBaseAngle);
+    sandCtx.scale(1.8, 1); // elongated in wave direction
+    sandCtx.fillStyle = dg;
+    sandCtx.beginPath();
+    sandCtx.arc(0, 0, depositDist, 0, Math.PI * 2);
+    sandCtx.fill();
+    sandCtx.restore();
+  }
+
   for (const r of rocks) {
     sandCtx.save();
     sandCtx.translate(r.x, r.y);
@@ -5628,28 +5689,6 @@ function draw(time) {
           pts[i].y -= sinA * pull;
         }
 
-        // Macro distortion: broad rubber-band stretch around collision points
-        // Very wide influence — bends the entire wave shape smoothly
-        const macroSpread = Math.ceil(1120 * viewScale / 4); // ~1120px influence radius
-        const macroStrength = 45 * viewScale;
-        const macro = new Float32Array(pts.length);
-        for (let i = 0; i < pts.length; i++) {
-          if (!pts[i].hit) continue;
-          for (let d = 1; d <= macroSpread; d++) {
-            // Smooth bell curve falloff (approximated cosine)
-            const t = d / macroSpread;
-            const ease = 0.5 + 0.5 * Math.cos(t * Math.PI); // 1 at center, 0 at edge
-            if (i - d >= 0) macro[i - d] = Math.max(macro[i - d], ease);
-            if (i + d < pts.length) macro[i + d] = Math.max(macro[i + d], ease);
-          }
-        }
-        for (let i = 0; i < pts.length; i++) {
-          if (pts[i].hit || macro[i] < 0.01) continue;
-          const pull = macro[i] * macroStrength * ww.strength;
-          pts[i].x -= cosA * pull;
-          pts[i].y -= sinA * pull;
-        }
-
         isFirstLine = false;
         // Fade in over first 10% of travel so waves don't pop in at full brightness
         const waveProgress = 1 - ww.life;
@@ -6439,25 +6478,6 @@ function draw(time) {
         for (let i = 0; i < pts.length; i++) {
           if (pts[i].hit || drag[i] < 0.01) continue;
           const pull = drag[i] * dragStrength * ww.strength;
-          pts[i].x -= cosA * pull;
-          pts[i].y -= sinA * pull;
-        }
-        // Macro rubber-band distortion
-        const macroSpread = Math.ceil(140 * viewScale / 4);
-        const macroStrength = 35 * viewScale;
-        const macro = new Float32Array(pts.length);
-        for (let i = 0; i < pts.length; i++) {
-          if (!pts[i].hit) continue;
-          for (let d = 1; d <= macroSpread; d++) {
-            const t = d / macroSpread;
-            const ease = 0.5 + 0.5 * Math.cos(t * Math.PI);
-            if (i - d >= 0) macro[i - d] = Math.max(macro[i - d], ease);
-            if (i + d < pts.length) macro[i + d] = Math.max(macro[i + d], ease);
-          }
-        }
-        for (let i = 0; i < pts.length; i++) {
-          if (pts[i].hit || macro[i] < 0.01) continue;
-          const pull = macro[i] * macroStrength * ww.strength;
           pts[i].x -= cosA * pull;
           pts[i].y -= sinA * pull;
         }
