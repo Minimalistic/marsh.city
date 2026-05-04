@@ -581,11 +581,6 @@ if (window.visualViewport) {
 const blurCanvas = document.createElement('canvas');
 const blurCtx = blurCanvas.getContext('2d');
 
-// Cloud shadow cache — redrawn every 8 frames, composited every frame
-const _cloudCanvas = document.createElement('canvas');
-const _cloudCtx = _cloudCanvas.getContext('2d');
-let _cloudFrame = 8; // start at 8 so first frame triggers a draw
-
 // Spatial grid for fast neighbor lookup (replaces O(n^2) boids)
 const GRID_CELL = 200; // px per cell — covers the largest boids radius
 let gridCols = 1, gridRows = 1;
@@ -748,53 +743,8 @@ const tide = { angle: 0, strength: 0 };
 const schoolWP = { x: w * 0.5, y: h * 0.5, timer: 15 + Math.random() * 20 };
 const waveBaseAngle = Math.PI * 0.25; // top-left to bottom-right
 
-// Cloud shadows — large soft blobs that drift linearly across the scene
-// Shared wind direction with slight per-cloud variation; wrap around edges
-const cloudWind = { angle: Math.random() * Math.PI * 2 };
-const cloudCount = 8;
-const clouds = [];
-// Stagger clouds along the wind axis so they're evenly spaced in the
-// "incoming" direction — continuous stream, not a clump that drifts away
-const windCos = Math.cos(cloudWind.angle);
-const windSin = Math.sin(cloudWind.angle);
-const maxDim = Math.max(w, h);
-for (let i = 0; i < cloudCount; i++) {
-  const lobes = 2 + Math.floor(Math.random() * 2);
-  const subBlobs = [];
-  for (let j = 0; j < lobes; j++) {
-    subBlobs.push({
-      ox: (Math.random() - 0.5) * 0.4,
-      oy: (Math.random() - 0.5) * 0.3,
-      scale: 0.6 + Math.random() * 0.5,
-    });
-  }
-  // Space clouds along the wind direction across 3x the viewport so
-  // there's always another one coming into view
-  const along = (i / cloudCount) * maxDim * 3 - maxDim * 0.5;
-  const across = (Math.random() - 0.5) * maxDim * 1.2;
-  clouds.push({
-    x: w / 2 + windCos * along - windSin * across,
-    y: h / 2 + windSin * along + windCos * across,
-    speed: (12 + Math.random() * 10) * 3,
-    drift: cloudWind.angle + (Math.random() - 0.5) * 0.3,
-    size: (0.35 + Math.random() * 0.29) * 1.73,
-    opacity: 0.08 + Math.random() * 0.06,
-    phase: Math.random() * Math.PI * 2,
-    subBlobs,
-  });
-}
-
-// Sunlight check — returns 0 (full shadow) to 1 (full sun) at a point
-function getSunlight(px, py) {
-  let shadow = 0;
-  for (const c of clouds) {
-    const dx = px - c.x, dy = py - c.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const r = Math.min(w, h) * c.size;
-    if (dist < r) shadow = Math.max(shadow, (1 - dist / r) * c.opacity * 8);
-  }
-  return Math.max(0, 1 - shadow);
-}
+// Sunlight check — stub, always full sun (clouds removed for rebuild)
+function getSunlight(px, py) { return 1; }
 
 // Turbulence - drifting vortices that create local flow variation
 const vortices = [];
@@ -4051,8 +4001,7 @@ regenerateWorld = function() {
 
   // Vortices
   for (const v of vortices) { v.x = Math.random() * w; v.y = Math.random() * h; }
-  // Reposition clouds within new bounds
-  for (const c of clouds) { c.x *= sx; c.y *= sy; }
+  // (clouds removed — will be rebuilt)
 
   settleTime = 0;
   // Rebuild cached render assets for new viewport size
@@ -4325,33 +4274,7 @@ function draw(time) {
   ctx.restore();
   ctx.setTransform(Math.min(2, window.devicePixelRatio || 1), 0, 0, Math.min(2, window.devicePixelRatio || 1), 0, 0);
 
-  // Cloud shadows — drawn directly to main canvas with multiply blend
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  for (const cloud of clouds) {
-    cloud.x += Math.cos(cloud.drift) * cloud.speed * dt;
-    cloud.y += Math.sin(cloud.drift) * cloud.speed * dt;
-    const margin = Math.min(w, h) * cloud.size * 1.5;
-    if (cloud.x > w + margin) cloud.x = -margin;
-    if (cloud.x < -margin) cloud.x = w + margin;
-    if (cloud.y > h + margin) cloud.y = -margin;
-    if (cloud.y < -margin) cloud.y = h + margin;
-    const cx = cloud.x, cy = cloud.y;
-    const baseR = Math.min(w, h) * cloud.size;
-    for (const lobe of cloud.subBlobs) {
-      const lx = cx + lobe.ox * baseR;
-      const ly = cy + lobe.oy * baseR;
-      const r = baseR * lobe.scale;
-      const sg = ctx.createRadialGradient(lx, ly, 0, lx, ly, r);
-      const shade = Math.round(255 * (1 - cloud.opacity));
-      sg.addColorStop(0, `rgb(${shade}, ${shade + 4}, ${shade + 6})`);
-      sg.addColorStop(0.6, `rgb(${shade + 20}, ${shade + 22}, ${shade + 24})`);
-      sg.addColorStop(1, 'rgb(255, 255, 255)');
-      ctx.fillStyle = sg;
-      ctx.fillRect(lx - r, ly - r, r * 2, r * 2);
-    }
-  }
-  ctx.restore();
+  // (Cloud shadows removed — will be rebuilt)
 
   // Sun spots — bright warm patches where light bleeds through cloud gaps
   ctx.save();
