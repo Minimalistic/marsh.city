@@ -3218,31 +3218,46 @@ function makeReef(x, y, sizeMultiplier = 1) {
     return radii[i0] * (1 - frac) + radii[i1] * frac;
   }
 
-  // Edge rocks — small gray boulders straddling the reef boundary
+  // Edge rocks — scattered gray boulders concentrated near the reef, dissipating outward
   const edgeRocks = [];
-  const edgeCount = 4 + Math.floor(Math.random() * 4);
+  const edgeCount = 10 + Math.floor(Math.random() * 8);
   for (let i = 0; i < edgeCount; i++) {
     const a = Math.random() * Math.PI * 2;
     const edgeR = radiusAt(a, crownRadii);
-    // Place some inside (-0.3 to 0), some outside (0 to 0.5) the crown edge
-    const offsetFrac = -0.3 + Math.random() * 0.8;
+    // Concentrated near the edge, scattering outward — exponential falloff
+    const scatter = Math.pow(Math.random(), 0.6); // biased toward 0 (near edge)
+    const offsetFrac = -0.2 + scatter * 1.2; // -0.2 (inside) to 1.0 (far outside)
     const dist = edgeR * (1 + offsetFrac);
-    const rockR = (3 + Math.random() * 6) * (baseR / 60); // scale with reef size
-    const gray = 55 + Math.floor(Math.random() * 40); // varied gray
-    const warm = Math.floor(Math.random() * 8); // slight warm/cool shift
+    // Rocks shrink as they get further from the reef
+    const sizeFalloff = 1 - scatter * 0.6;
+    const rockR = (2.5 + Math.random() * 5) * (baseR / 60) * sizeFalloff;
+    // Generate position first, assign color after checking neighbors
+    const ox = crownOffX + Math.cos(a) * dist;
+    const oy = crownOffY + Math.sin(a) * dist;
+    const vertCount = 5 + Math.floor(Math.random() * 3);
+    const verts = Array.from({ length: vertCount }, (_, j) => ({
+      a: (j / vertCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4,
+      r: 0.7 + Math.random() * 0.5,
+    }));
+    // Check if touching any existing rock — share its color if so
+    let gray, warm;
+    const touchNeighbor = edgeRocks.find(er => {
+      const dx = er.ox - ox, dy = er.oy - oy;
+      return Math.sqrt(dx * dx + dy * dy) < er.r + rockR + 1;
+    });
+    if (touchNeighbor) {
+      gray = touchNeighbor._gray;
+      warm = touchNeighbor._warm;
+    } else {
+      gray = 55 + Math.floor(Math.random() * 40);
+      warm = Math.floor(Math.random() * 8);
+    }
     edgeRocks.push({
-      ox: crownOffX + Math.cos(a) * dist,
-      oy: crownOffY + Math.sin(a) * dist,
-      r: rockR,
-      // Irregular shape via 5-7 vertices
-      verts: Array.from({ length: 5 + Math.floor(Math.random() * 3) }, (_, j) => {
-        const va = (j / (5 + Math.floor(Math.random() * 0.01))) * Math.PI * 2;
-        const vr = 0.7 + Math.random() * 0.5;
-        return { a: (j / 6) * Math.PI * 2 + (Math.random() - 0.5) * 0.4, r: vr };
-      }),
+      ox, oy, r: rockR, verts,
+      _gray: gray, _warm: warm,
       color: `rgb(${gray + warm}, ${gray - 2}, ${gray - warm - 3})`,
       rimColor: `rgba(${gray + 20 + warm}, ${gray + 18}, ${gray + 15 - warm}, 0.5)`,
-      aboveWater: offsetFrac < 0.15, // rocks closer to center poke above water
+      aboveWater: offsetFrac < 0.25,
     });
   }
 
