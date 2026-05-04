@@ -1292,14 +1292,12 @@ class Fish {
       }
     }
 
-    // Mouse avoidance - reduced scare radius in food mode so fish can eat
-    if (mouse.active) {
+    // Mouse avoidance — only when clicking/tapping, idle cursor doesn't spook fish
+    if (mouse.active && mouse.down) {
       const mdx = this.x - mouse.x;
       const mdy = this.y - mouse.y;
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-      const fleeR = activeTool === 'food'
-        ? (mouse.down ? 20 : 10 + mouse.speed * 2) // small scare zone near food
-        : (mouse.down ? 80 : 25 + mouse.speed * 4);
+      const fleeR = activeTool === 'food' ? 20 : 80;
       if (mDist < fleeR && mDist > 0.1) {
         const force = 0.15 * (1 - mDist / fleeR);
         this.vx += (mdx / mDist) * force;
@@ -2101,8 +2099,8 @@ class ReefFish {
       }
     }
 
-    // Flee from mouse
-    if (mouse.active) {
+    // Flee from mouse — only when clicking/tapping
+    if (mouse.active && mouse.down) {
       const mdx = this.x - mouse.x, mdy = this.y - mouse.y;
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
       const fleeR = 50;
