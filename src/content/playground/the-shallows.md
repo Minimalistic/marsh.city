@@ -1134,13 +1134,18 @@ class Fish {
       this.distracted = false;
       this.distractTimer = 5;
 
-      const eatDist = 10;
-      const biteDist = 6;
-      if (closestFoodDist < eatDist && angleMismatch < 0.8) {
-        // Close and roughly facing food - slow to nibble
-        this.vx *= 0.85;
-        this.vy *= 0.85;
-        if (closestFoodDist < biteDist && angleMismatch < 0.6 && !this.eating) {
+      const eatDist = 12;
+      const biteDist = 7;
+      if (closestFoodDist < eatDist) {
+        // Close to food — slow down and actively turn to face it
+        this.vx *= 0.82;
+        this.vy *= 0.82;
+        // Rotate toward the food so the fish can line up for a bite
+        const turnToFood = Math.max(-0.2, Math.min(0.2, headingDiff));
+        this.angle += turnToFood * 0.4;
+        this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating) {
           closestFood.bites -= 2;
           // Visible size reduction - food gets eaten away fast
           closestFood.size *= 0.93;
@@ -1173,8 +1178,8 @@ class Fish {
         const proximity = 1 - closestFoodDist / foodRange;
         const steerWeight = 0.15 + proximity * 0.35;
         const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        // Per-fish approach offset — spreads fish around the food
-        const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.25;
+        // Per-fish approach offset — mild spread so they don't all pile from one side
+        const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
         const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
         const foodSpeed = scaledSpeed * (1.0 + proximity * 0.3);
         const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
