@@ -5284,9 +5284,10 @@ function draw(time) {
   }
 
   // Fade wave trail canvas — old wave positions disappear quickly
-  // Use globalAlpha trick to avoid sub-pixel rounding that prevents full fade-out
+  // Reset transform for raw pixel copy, then restore DPR transform
   waveTrailCtx.save();
-  waveTrailCtx.globalAlpha = 0.78; // multiply existing content by 78% each frame
+  waveTrailCtx.setTransform(1, 0, 0, 1, 0, 0);
+  waveTrailCtx.globalAlpha = 0.78;
   waveTrailCtx.globalCompositeOperation = 'copy';
   waveTrailCtx.drawImage(waveTrailCanvas, 0, 0);
   waveTrailCtx.restore();
