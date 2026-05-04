@@ -222,9 +222,11 @@ function initAudio() {
   window._crashGain.connect(crashPanner);
   crashPanner.connect(audioCtx.destination);
 
-  noise.start();
-  oceanLfo.start();
-  crashNoise.start();
+  // Delay source start slightly so gain nodes are settled at 0 — prevents click on init
+  const startDelay = audioCtx.currentTime + 0.05;
+  noise.start(startDelay);
+  oceanLfo.start(startDelay);
+  crashNoise.start(startDelay);
 }
 
 function toggleSound() {
@@ -236,9 +238,13 @@ function toggleSound() {
   btn.setAttribute('aria-pressed', soundEnabled);
   if (soundEnabled) {
     soundFadeIn = 0;
-    soundFadeStart = audioCtx.currentTime;
+    soundFadeStart = audioCtx.currentTime + 0.05; // match source start delay on first init
     oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
     oceanGain.gain.value = 0;
+    if (window._crashGain) {
+      window._crashGain.gain.cancelScheduledValues(audioCtx.currentTime);
+      window._crashGain.gain.value = 0;
+    }
     document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>';
   } else {
     oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
