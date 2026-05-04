@@ -841,7 +841,7 @@ class Fish {
     // Stragglers: shorter sensing range, weaker schooling pull
     this.separationDist = (12 + Math.random() * 5) * this.scale;
     this.alignDist = 150 * this.scale * this.sociability;
-    this.cohesionDist = 160 * this.scale * this.sociability;
+    this.cohesionDist = 128 * this.scale * this.sociability;
 
     // Stragglers are slower and wander more
     if (this.sociability < 0.5) {
@@ -864,6 +864,9 @@ class Fish {
     this._prevAngle = this.angle;
     // Belly flash — rare bright flash when fish turns sharply, exposing its side
     this._bellyFlash = 0;
+    // Spin-break: track cumulative turning while being chased
+    this._chaseSpin = 0;       // accumulated signed angle while chased
+    this._spinBreakAt = 4 + Math.random() * 3; // break after 4-7 radians (~1-1.5 loops)
     // Distraction - sometimes fish wander off from the school
     this.distracted = Math.random() < 0.08;
     this.distractTimer = this.distracted ? 2 + Math.random() * 4 : 10 + Math.random() * 20;
@@ -1012,7 +1015,7 @@ class Fish {
       // cross: signed lateral offset from school centerline
       const cross = (toCx * schHy - toCy * schHx) / toCDist;
       // Along-track pull toward center — stronger = tighter core with natural edge falloff
-      const alongStr = 0.012;
+      const alongStr = 0.0144;
       const alongX = schHx * foreAft * toCDist * alongStr;
       const alongY = schHy * foreAft * toCDist * alongStr;
       // Cross-track pull toward centerline — stronger at front and back (teardrop)
@@ -1020,11 +1023,11 @@ class Fish {
       const absCross = Math.abs(cross);
       let crossStr;
       if (foreAft > 0.3) {
-        crossStr = 0.030 + absForeAft * 0.018;
+        crossStr = 0.036 + absForeAft * 0.022;
       } else if (foreAft < -0.3) {
-        crossStr = 0.018 + absForeAft * 0.010;
+        crossStr = 0.022 + absForeAft * 0.012;
       } else {
-        crossStr = 0.010 + absCross * 0.006;
+        crossStr = 0.012 + absCross * 0.007;
       }
       // Cross-track force: perpendicular to school heading, toward centerline
       const crossForceX = -schHy * cross * toCDist * crossStr;
@@ -1256,6 +1259,27 @@ class Fish {
       }
     }
 
+    // Spin-break: accumulate turning while being chased, dart out if circling
+    let beingChasedByAny = false;
+    for (const pred of predators) { if (pred.target === this) { beingChasedByAny = true; break; } }
+    if (beingChasedByAny && this.fleeing) {
+      let spinDelta = this.angle - (this._prevSpinAngle || this.angle);
+      while (spinDelta > Math.PI) spinDelta -= Math.PI * 2;
+      while (spinDelta < -Math.PI) spinDelta += Math.PI * 2;
+      this._chaseSpin += spinDelta;
+      if (Math.abs(this._chaseSpin) > this._spinBreakAt) {
+        // Break the circle — dart roughly perpendicular, opposite the spin direction
+        const breakDir = this.angle + (this._chaseSpin > 0 ? -1 : 1) * (1.2 + Math.random() * 0.8);
+        this.vx = Math.cos(breakDir) * scaledSpeed * 4.5;
+        this.vy = Math.sin(breakDir) * scaledSpeed * 4.5;
+        this.fleeTimer = 2.5;
+        this._chaseSpin = 0;
+        this._spinBreakAt = 3 + Math.random() * 4; // vary next threshold
+      }
+    } else {
+      this._chaseSpin *= 0.95; // decay when not being chased
+    }
+    this._prevSpinAngle = this.angle;
     if (this.fleeTimer > 0) this.fleeTimer -= dt;
     else this.fleeing = false;
 
