@@ -2561,7 +2561,7 @@ class Predator {
     this.y = h * (0.2 + Math.random() * 0.6);
     this.angle = Math.random() * Math.PI * 2;
 
-    this.len = (20.8 + Math.random() * 8) * (w < 500 ? 0.8 : 1);
+    this.len = (20.8 + Math.random() * 8.8) * (w < 500 ? 0.8 : 1);
     this.bodyWidth = this.len * 0.055; // sleek barracuda profile
     this.speed = 0.7 + Math.random() * 0.4;
     this.baseSpeed = this.speed;
@@ -3452,22 +3452,22 @@ class Seagull {
     const innerLen = fullHalf * 0.4;
     const outerLen = fullHalf * 0.6;
 
-    // Elbow stays mostly at same distance from body:
-    // upstroke (flapT<0): pulls slightly inward, appears wider (angled toward viewer)
-    // downstroke (flapT>0): pushes slightly outward, appears narrower
-    // Elbow barely moves — locked distance from body
-    const elbowShift = flapT * innerLen * 0.03;
+    // Elbow: locked lateral distance, but sweeps fore/aft with flap
+    // downstroke: elbow pushes forward (bird pulls wings forward on power stroke)
+    // upstroke: elbow pulls back (wings fold back on recovery)
+    const elbowShift = flapT * innerLen * 0.03; // lateral — near zero
+    const elbowSweep = flapT * bl * 0.06; // fore/aft — forward on downstroke
 
     // Inner wing chord (apparent width from above):
-    const innerChordScale = 1 - flapT * 0.1; // 1.1 up, 0.9 down
+    const innerChordScale = 1 - flapT * 0.1;
 
-    // Outer wing: tips do the moving, elbow stays put
-    // upstroke: tips fold inward + sweep back
-    // downstroke: tips extend slightly outward + sweep forward
-    const outerReach = outerLen * (1 + flapT * 0.1); // 0.9 up, 1.1 down
-    const outerSweepBack = -flapT * bl * 0.08; // tips pull back on upstroke
+    // Outer wing: tips follow the elbow sweep with a lag/amplification
+    // downstroke: tips extend outward and sweep forward (following elbow)
+    // upstroke: tips fold inward and trail back behind the elbow
+    const outerReach = outerLen * (1 + flapT * 0.1);
+    const outerSweepBack = -flapT * bl * 0.12; // amplified version of elbow sweep
 
-    // Tip taper — tips shrink on downstroke, widen on upstroke
+    // Tip taper
     const tipTaper = bl * (0.02 + (1 - flapT) * 0.006);
 
     const sides = [];
@@ -3476,8 +3476,8 @@ class Seagull {
       const sx = bl * 0.1 + wingFwd;
       const sy = side * bl * 0.06;
 
-      // Elbow — mostly stable distance, slight shift
-      const elbowX = bl * 0.02 + wingFwd;
+      // Elbow — stable lateral distance, sweeps fore/aft
+      const elbowX = bl * 0.02 + wingFwd + elbowSweep;
       const elbowY = side * (innerLen + elbowShift) + bankShift * side;
 
       // Inner wing trailing edge width varies with chord scale
