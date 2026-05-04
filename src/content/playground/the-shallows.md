@@ -1143,6 +1143,16 @@ class Fish {
       const fd = Math.sqrt(fdx * fdx + fdy * fdy);
       if (fd < closestFoodDist) { closestFood = fp; closestFoodDist = fd; }
     }
+    // Scales from predator kills are edible scraps — fish treat them like food
+    if (!this.eating && !this.fleeing) {
+      for (const kp of killFx) {
+        if (kp.type !== 'scale' || !kp.bites || kp.bites <= 0) continue;
+        const fdx = kp.x - mouthX;
+        const fdy = kp.y - mouthY;
+        const fd = Math.sqrt(fdx * fdx + fdy * fdy);
+        if (fd < closestFoodDist) { closestFood = kp; closestFoodDist = fd; }
+      }
+    }
     if (closestFood) {
       const fdx = closestFood.x - mouthX;
       const fdy = closestFood.y - mouthY;
@@ -2552,6 +2562,8 @@ class Predator {
             size: 0.2 + Math.random() * 0.6,
             color: 'rgb(160,170,180)',
             sparkle: Math.random() * Math.PI * 2,
+            _freq: 4 + Math.random() * 3, _f1: 1.8 + Math.random() * 1.2, _f2: 0.5 + Math.random() * 0.6,
+            bites: 3 + Math.floor(Math.random() * 3),
           });
         }
       }
@@ -2715,6 +2727,8 @@ class Predator {
             type: 'scale', life: 1, maxLife: 3 + Math.random() * 5,
             size: 0.25 + Math.random() * 0.75, color: preyColor,
             sparkle: Math.random() * Math.PI * 2,
+            _freq: 4 + Math.random() * 3, _f1: 1.8 + Math.random() * 1.2, _f2: 0.5 + Math.random() * 0.6,
+            bites: 3 + Math.floor(Math.random() * 3),
           });
         }
         } catch(e) { console.error('Catch error:', e); }
@@ -4603,9 +4617,9 @@ function draw(time) {
       ctx.fill();
     } else {
       // Scale glitter — tiny flecks that flutter on/off as they tumble through water
-      kp.sparkle += dt * 5;
-      // Flutter: rapid on/off with slower drift, like a scale catching and losing light
-      const tumble = Math.sin(kp.sparkle * 2.3) * Math.sin(kp.sparkle * 0.7);
+      kp.sparkle += dt * (kp._freq || 5);
+      // Flutter: per-particle frequency variation so they don't sync up
+      const tumble = Math.sin(kp.sparkle * (kp._f1 || 2.3)) * Math.sin(kp.sparkle * (kp._f2 || 0.7));
       const visible = tumble > -0.3; // dark ~30% of the time — tumbled away from light
       if (!visible) continue;
       const glint = Math.max(0, tumble);
