@@ -145,6 +145,8 @@ let oceanFilter = null;
 let oceanLfo = null;
 let oceanLfoGain = null;
 let soundEnabled = false;
+let soundFadeIn = 1; // 0→1 over 2s when sound first enabled
+let soundFadeStart = 0;
 
 // All audio init must be synchronous within the user gesture call stack.
 // iOS Safari breaks the gesture context across await/then boundaries.
@@ -233,8 +235,10 @@ function toggleSound() {
   const btn = document.getElementById('sound-toggle');
   btn.setAttribute('aria-pressed', soundEnabled);
   if (soundEnabled) {
+    soundFadeIn = 0;
+    soundFadeStart = audioCtx.currentTime;
     oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    oceanGain.gain.value = masterVolume * 0.3;
+    oceanGain.gain.value = 0;
     document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>';
   } else {
     oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -410,6 +414,10 @@ function updateOceanSound() {
   if (!soundEnabled || !audioCtx) return;
   const waveIntensity = Math.abs(tide.strength);
   const now = audioCtx.currentTime;
+  // Fade in over 2 seconds when sound is first enabled
+  if (soundFadeIn < 1) {
+    soundFadeIn = Math.min(1, (now - soundFadeStart) / 2);
+  }
 
   // Track waves by their actual distance from the viewport, not progress %
   let washPresence = 0;
@@ -457,7 +465,7 @@ function updateOceanSound() {
   const baseVol = 0.06 + waveIntensity * 0.03; // constant low rumble
   const waveVol = washPresence * 0.22;
   oceanGain.gain.setTargetAtTime(
-    (baseVol + waveVol) * masterVolume * 2,
+    (baseVol + waveVol) * masterVolume * 2 * soundFadeIn,
     audioCtx.currentTime, 0.1
   );
   if (oceanPanner) {
@@ -504,7 +512,7 @@ function updateOceanSound() {
       }
     }
     window._crashGain.gain.setTargetAtTime(
-      (crashVol + ambientRumble + reefRumble) * masterVolume * 2,
+      (crashVol + ambientRumble + reefRumble) * masterVolume * 2 * soundFadeIn,
       audioCtx.currentTime, (crashVol + reefRumble) > 0.01 ? 0.1 : 0.8
     );
     // Blend crash panning toward reef hit location when reef rumble dominates
@@ -565,7 +573,7 @@ function rescaleAll(oldW, oldH) {
   popTarget = Math.max(newBasePop * 0.35, Math.min(newBasePop * 1.3, popTarget * popRatio));
   basePop = newBasePop;
   const targetDebris = Math.min(1200, Math.floor(initialDebrisCount * areaRatio * 0.75));
-  const targetPlants = Math.min(60, Math.floor(30 * Math.sqrt(areaRatio)));
+  const targetPlants = Math.min(80, Math.floor(40 * Math.sqrt(areaRatio)));
   const targetRocks = Math.min(30, Math.floor(15 * Math.sqrt(areaRatio)));
 
   // Gently adjust fish population toward new target — don't hard-snap
@@ -606,7 +614,7 @@ function rescaleAll(oldW, oldH) {
       plants.push(new Frond(Math.random() * w, h * (0.5 + Math.random() * 0.5)));
     }
   }
-  while (plants.length > targetPlants && plants.length > 30) plants.pop();
+  while (plants.length > targetPlants && plants.length > 40) plants.pop();
 
   // Add sand patches if needed
   while (rocks.length < targetRocks) {
@@ -3763,9 +3771,10 @@ class Frond {
     this.y = y;
     // Grow upward with slight random lean (-PI/2 = straight up on screen)
     this.growAngle = -Math.PI / 2 + (Math.random() - 0.5) * 0.3;
-    const plantScale = viewScale * 0.945;
+    const sizeVar = 0.5 + Math.random() * 1.0; // 0.5x to 1.5x — wide variety
+    const plantScale = viewScale * 0.945 * sizeVar;
     this.len = (30 + Math.random() * 45) * plantScale;
-    this.branches = 3 + Math.floor(Math.random() * 4);
+    this.branches = Math.max(2, Math.floor((3 + Math.floor(Math.random() * 4)) * sizeVar));
     this.phase = Math.random() * Math.PI * 2;
     this.branchSide = Math.random() < 0.5 ? 1 : -1;
     this._plantScale = plantScale;
@@ -3968,7 +3977,7 @@ const plants = [];
 // Kelp placement: bottom edge, around reefs, and random patches
 function spawnKelp() {
   // Bottom edge — scattered along the lower portion
-  const bottomCount = 8 + Math.floor(Math.random() * 6);
+  const bottomCount = 11 + Math.floor(Math.random() * 8);
   for (let i = 0; i < bottomCount; i++) {
     const px = Math.random() * w;
     const py = h * (0.75 + Math.random() * 0.25);
@@ -3976,7 +3985,7 @@ function spawnKelp() {
   }
   // Around reefs — 2-5 per reef, clustered near the base
   for (const rf of reefs) {
-    const count = 2 + Math.floor(Math.random() * 4);
+    const count = 3 + Math.floor(Math.random() * 5);
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
       const dist = rf.baseR * (0.8 + Math.random() * 0.5);
@@ -3984,11 +3993,11 @@ function spawnKelp() {
     }
   }
   // Random patches — 2-3 clusters of 2-4 kelp each
-  const patchCount = 2 + Math.floor(Math.random() * 2);
+  const patchCount = 3 + Math.floor(Math.random() * 3);
   for (let p = 0; p < patchCount; p++) {
     const cx = w * 0.15 + Math.random() * w * 0.7;
     const cy = h * 0.4 + Math.random() * h * 0.45;
-    const clusterSize = 2 + Math.floor(Math.random() * 3);
+    const clusterSize = 3 + Math.floor(Math.random() * 3);
     for (let i = 0; i < clusterSize; i++) {
       plants.push(new Frond(cx + (Math.random() - 0.5) * 30, cy + (Math.random() - 0.5) * 20));
     }
