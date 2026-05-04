@@ -2775,6 +2775,8 @@ class Predator {
     this.vx *= 0.99;
     this.vy *= 0.99;
 
+    // Skip boundary forces when departing the scene
+    if (!this._departing) {
     // Soft boundary — starts pushing 10% from edge, hard push when offscreen
     const bMargin = 0.1;
     const bx = this.x / w, by = this.y / h; // 0-1 when in viewport
@@ -2792,12 +2794,15 @@ class Predator {
       this.target = null;
       this._retargetCooldown = 2 + Math.random() * 2;
     }
+    } // end if (!this._departing)
 
     this.x += this.vx;
     this.y += this.vy;
+    if (!this._departing) {
     const overflow = 0.1;
     this.x = Math.max(-w * overflow, Math.min(w * (1 + overflow), this.x));
     this.y = Math.max(-h * overflow, Math.min(h * (1 + overflow), this.y));
+    }
 
     // Reef collision push
     for (const rf of reefs) {
@@ -3305,10 +3310,15 @@ const schoolEntries = schoolColors.map(() => {
   return { x, y, angle };
 });
 
-// Predator(s) - one per pool, maybe two on large viewports
+// Predator(s) — comes and goes, not always present
 const predators = [];
-const predatorCount = w * h > 600000 ? 2 : 1;
-for (let i = 0; i < predatorCount; i++) predators.push(new Predator());
+const predatorMax = w * h > 600000 ? 2 : 1;
+// Predator lifecycle: present → leaves → absent (bonus fish arrive) → returns aggressively
+let predAbsentTimer = 0; // countdown while predator is gone
+let predReturnTimer = 40 + Math.random() * 60; // time until first departure
+let predDepartTimer = 0; // countdown for predator to swim offscreen
+let predBonusFish = 0; // how many bonus fish arrived during absence
+for (let i = 0; i < predatorMax; i++) predators.push(new Predator());
 // Organic population — wanders around a midpoint, fish come and go
 let basePop = Math.min(214, Math.max(45, Math.floor((w * h) / 1232)));
 let popTarget = basePop * (0.7 + Math.random() * 0.3); // start a little varied
@@ -4767,6 +4777,87 @@ function draw(time) {
   }
 
   // Organic population — target wanders, fish come and go naturally
+  // Predator lifecycle — departure, absence (bonus fish), dramatic return
+  if (predators.length > 0 && predAbsentTimer <= 0) {
+    predReturnTimer -= dt;
+    if (predReturnTimer <= 0 && predDepartTimer <= 0) {
+      // Signal predator to leave — swim toward nearest edge
+      for (const pred of predators) {
+        pred._departing = true;
+        pred.target = null;
+        pred.hunting = false;
+        const toLeft = pred.x, toRight = w - pred.x;
+        const toTop = pred.y, toBottom = h - pred.y;
+        const minEdge = Math.min(toLeft, toRight, toTop, toBottom);
+        if (minEdge === toLeft) pred.angle = Math.PI;
+        else if (minEdge === toRight) pred.angle = 0;
+        else if (minEdge === toTop) pred.angle = -Math.PI / 2;
+        else pred.angle = Math.PI / 2;
+      }
+      predDepartTimer = 8; // give it 8s to leave
+    }
+    if (predDepartTimer > 0) {
+      predDepartTimer -= dt;
+      // Push departing predators toward their exit
+      for (const pred of predators) {
+        if (pred._departing) {
+          pred.vx += Math.cos(pred.angle) * 0.15;
+          pred.vy += Math.sin(pred.angle) * 0.15;
+        }
+      }
+      // Remove once offscreen
+      for (let i = predators.length - 1; i >= 0; i--) {
+        const p = predators[i];
+        if (p._departing && (p.x < -50 || p.x > w + 50 || p.y < -50 || p.y > h + 50)) {
+          predators.splice(i, 1);
+        }
+      }
+      if (predators.length === 0) {
+        predAbsentTimer = 25 + Math.random() * 35; // gone for 25-60s
+        predDepartTimer = 0;
+        predBonusFish = 0;
+      }
+    }
+  }
+  if (predAbsentTimer > 0) {
+    predAbsentTimer -= dt;
+    // Bonus fish trickle in during peace
+    if (predBonusFish < 20 && Math.random() < 0.02) {
+      const edge = Math.floor(Math.random() * 4);
+      const f = new Fish(edge);
+      f._bonusFish = true; // mark so they flee when predator returns
+      fish.push(f);
+      predBonusFish++;
+    }
+    // Predator returns
+    if (predAbsentTimer <= 0) {
+      // Dramatic entrance — fast, from an edge, targeting a fish
+      const pred = new Predator();
+      // Override spawn to come from edge at speed
+      const edge = Math.floor(Math.random() * 4);
+      if (edge === 0) { pred.x = -40; pred.y = h * (0.2 + Math.random() * 0.6); pred.angle = (Math.random() - 0.5) * 0.3; }
+      else if (edge === 1) { pred.x = w + 40; pred.y = h * (0.2 + Math.random() * 0.6); pred.angle = Math.PI + (Math.random() - 0.5) * 0.3; }
+      else if (edge === 2) { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = -40; pred.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
+      else { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = h + 40; pred.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
+      pred.vx = Math.cos(pred.angle) * pred.baseSpeed * 3 * viewScale;
+      pred.vy = Math.sin(pred.angle) * pred.baseSpeed * 3 * viewScale;
+      pred.hunger = 0.8; // comes back hungry
+      pred.hunting = true;
+      pred._burstFlick = 1.0;
+      predators.push(pred);
+      // Bonus fish panic and flee offscreen
+      for (const f of fish) {
+        if (f._bonusFish) {
+          f.leaving = true;
+          f.fleeing = true;
+          f.fleeTimer = 5;
+          f.distracted = true;
+        }
+      }
+      predReturnTimer = 60 + Math.random() * 90; // next departure in 60-150s
+    }
+  }
+
   popDriftTimer -= dt;
   if (popDriftTimer <= 0) {
     // Shift the target: sometimes sparser, sometimes denser
