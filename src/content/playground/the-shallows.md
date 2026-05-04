@@ -1187,7 +1187,7 @@ class Fish {
 
       const eatDist = 8;
       const biteDist = 4;
-      // Steer toward food by rotating heading — never reduce speed
+      // Steer toward food by rotating heading — tighter turns and speed boost close in
       const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
       const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
       const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
@@ -1196,20 +1196,24 @@ class Fish {
       let steerDiff = targetHeading - Math.atan2(this.vy, this.vx);
       while (steerDiff > Math.PI) steerDiff -= Math.PI * 2;
       while (steerDiff < -Math.PI) steerDiff += Math.PI * 2;
-      // Stronger turn when closer, but always just a heading change
+      // proximity: 0 at max range, 1 at the food
       const proximity = 1 - Math.min(closestFoodDist, foodRange) / foodRange;
-      const turnRate = 0.03 + proximity * 0.07;
+      // Turn rate ramps up aggressively inside ~100px — eager darting turns
+      const turnRate = 0.03 + proximity * 0.07 + (proximity > 0.85 ? (proximity - 0.85) * 0.6 : 0);
       const curAngle = Math.atan2(this.vy, this.vx);
       const newHeading = curAngle + steerDiff * turnRate;
-      this.vx = Math.cos(newHeading) * curSpd;
-      this.vy = Math.sin(newHeading) * curSpd;
+      // Slight speed boost when homing in — excited burst toward the food
+      const foodBoost = proximity > 0.7 ? 1 + (proximity - 0.7) * 0.5 : 1; // up to 1.15x at contact
+      const boostedSpd = curSpd * foodBoost;
+      this.vx = Math.cos(newHeading) * boostedSpd;
+      this.vy = Math.sin(newHeading) * boostedSpd;
 
       if (closestFoodDist < eatDist) {
-        // Within striking range — tighter turn, same speed
-        const snapDiff = Math.max(-0.15, Math.min(0.15, headingDiff));
-        this.angle += snapDiff * 0.4;
-        this.vx = Math.cos(this.angle) * curSpd;
-        this.vy = Math.sin(this.angle) * curSpd;
+        // Within striking range — snap hard toward food
+        const snapDiff = Math.max(-0.25, Math.min(0.25, headingDiff));
+        this.angle += snapDiff * 0.5;
+        this.vx = Math.cos(this.angle) * boostedSpd;
+        this.vy = Math.sin(this.angle) * boostedSpd;
         if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating) {
           closestFood.bites -= 2;
           closestFood.size *= 0.93;
