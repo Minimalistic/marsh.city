@@ -2621,7 +2621,7 @@ class Predator {
         } else {
         // Aggressive ramp: faster base chase, harder steering at close range
         const closeness = Math.max(0, 1 - dist / (220 * viewScale));
-        const chaseSpeed = this.baseSpeed * (2.38 + closeness * 2.13) * viewScale;
+        const chaseSpeed = this.baseSpeed * (1.90 + closeness * 1.70) * viewScale;
         const steer = 0.08 + closeness * 0.2;
         this.vx += (Math.cos(pursuitAngle) * chaseSpeed - this.vx) * steer;
         this.vy += (Math.sin(pursuitAngle) * chaseSpeed - this.vy) * steer;
@@ -2692,11 +2692,11 @@ class Predator {
 
     const predScale = viewScale;
     let targetSpeed;
-    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 5.95 * predScale; this.burstTimer -= dt; }
-    else if (this.target) targetSpeed = this.baseSpeed * (1.49 + this.hunger * 0.6) * predScale;
-    else if (this.hunting) targetSpeed = this.baseSpeed * (0.30 + this.hunger * 0.24) * predScale;
+    if (this.burstTimer > 0) { targetSpeed = this.baseSpeed * 4.76 * predScale; this.burstTimer -= dt; }
+    else if (this.target) targetSpeed = this.baseSpeed * (1.19 + this.hunger * 0.48) * predScale;
+    else if (this.hunting) targetSpeed = this.baseSpeed * (0.24 + this.hunger * 0.19) * predScale;
     // Hovering — slow deliberate cruise, not motionless
-    else targetSpeed = this.baseSpeed * (0.26 + this.hunger * 0.26) * predScale;
+    else targetSpeed = this.baseSpeed * (0.21 + this.hunger * 0.21) * predScale;
 
     const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     // Slow to change speed when well-fed, responsive when hungry/hunting
@@ -4839,8 +4839,8 @@ function draw(time) {
       else if (edge === 1) { pred.x = w + 40; pred.y = h * (0.2 + Math.random() * 0.6); pred.angle = Math.PI + (Math.random() - 0.5) * 0.3; }
       else if (edge === 2) { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = -40; pred.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
       else { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = h + 40; pred.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
-      pred.vx = Math.cos(pred.angle) * pred.baseSpeed * 2.55 * viewScale;
-      pred.vy = Math.sin(pred.angle) * pred.baseSpeed * 2.55 * viewScale;
+      pred.vx = Math.cos(pred.angle) * pred.baseSpeed * 2.04 * viewScale;
+      pred.vy = Math.sin(pred.angle) * pred.baseSpeed * 2.04 * viewScale;
       pred.hunger = 0.8; // comes back hungry
       pred.hunting = true;
       pred._burstFlick = 1.0;
