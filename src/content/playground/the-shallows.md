@@ -1030,10 +1030,16 @@ class Fish {
       const mySpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
       // Dot product of normalized headings: 1 = same dir, -1 = opposite
       headingAgreement = Math.max(0, (this.vx * avgVx + this.vy * avgVy) / (mySpd * avgSpd));
-      // Alignment force: stronger when headings disagree (merging), normal when aligned
+      // Alignment: rotate heading toward school direction, preserve own speed
       const alignStr = headingAgreement < 0.7 ? 0.22 : 0.12;
-      this.vx += (avgVx - this.vx) * alignStr * schoolWeight;
-      this.vy += (avgVy - this.vy) * alignStr * schoolWeight;
+      const avgHeading = Math.atan2(avgVy, avgVx);
+      const myHeading = Math.atan2(this.vy, this.vx);
+      let alignDiff = avgHeading - myHeading;
+      while (alignDiff > Math.PI) alignDiff -= Math.PI * 2;
+      while (alignDiff < -Math.PI) alignDiff += Math.PI * 2;
+      const blendedHeading = myHeading + alignDiff * alignStr * schoolWeight;
+      this.vx = Math.cos(blendedHeading) * mySpd;
+      this.vy = Math.sin(blendedHeading) * mySpd;
     }
     if (cohCount > 0) {
       let cx = cohX / cohCount, cy = cohY / cohCount;
@@ -1172,30 +1178,41 @@ class Fish {
 
       const eatDist = 8;
       const biteDist = 4;
+      // Steer toward food by rotating heading — never reduce speed
+      const curSpd = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.01;
+      const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
+      const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
+      const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
+      const targetHeading = foodAngle + approachOffset + wobble;
+      let steerDiff = targetHeading - Math.atan2(this.vy, this.vx);
+      while (steerDiff > Math.PI) steerDiff -= Math.PI * 2;
+      while (steerDiff < -Math.PI) steerDiff += Math.PI * 2;
+      // Stronger turn when closer, but always just a heading change
+      const proximity = 1 - Math.min(closestFoodDist, foodRange) / foodRange;
+      const turnRate = 0.03 + proximity * 0.07;
+      const curAngle = Math.atan2(this.vy, this.vx);
+      const newHeading = curAngle + steerDiff * turnRate;
+      this.vx = Math.cos(newHeading) * curSpd;
+      this.vy = Math.sin(newHeading) * curSpd;
+
       if (closestFoodDist < eatDist) {
-        // Close to food — steer sharply toward it but keep gliding
-        this.vx *= 0.92;
-        this.vy *= 0.92;
-        // Quick turn to face food - fish arc in rather than braking
-        const turnToFood = Math.max(-0.25, Math.min(0.25, headingDiff));
-        this.angle += turnToFood * 0.5;
-        this.vx = Math.cos(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        this.vy = Math.sin(this.angle) * Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // Within striking range — tighter turn, same speed
+        const snapDiff = Math.max(-0.15, Math.min(0.15, headingDiff));
+        this.angle += snapDiff * 0.4;
+        this.vx = Math.cos(this.angle) * curSpd;
+        this.vy = Math.sin(this.angle) * curSpd;
         if (closestFoodDist < biteDist && angleMismatch < 0.8 && !this.eating) {
           closestFood.bites -= 2;
-          // Visible size reduction - food gets eaten away fast
           closestFood.size *= 0.93;
-          // Gentle nudge on bite — food barely moves
           closestFood.vx += Math.cos(this.angle) * 0.1;
           closestFood.vy += Math.sin(this.angle) * 0.1;
-          // Peck lunge - dart forward then brief pullback
+          // Peck lunge - dart forward through the food
           this._biting = true;
           this._biteTimer = 0.12;
           this.vx += Math.cos(this.angle) * 0.8;
           this.vy += Math.sin(this.angle) * 0.8;
           this.eating = true;
-          this.eatTimer = 0.3 + Math.random() * 0.5; // quick pullback, come right back
-          // Scatter fragments occasionally - food breaks apart
+          this.eatTimer = 0.3 + Math.random() * 0.5;
           if (Math.random() < 0.3 && closestFood.size > 0.8) {
             const fragAngle = Math.random() * Math.PI * 2;
             foodPellets.push({
@@ -1209,19 +1226,6 @@ class Fish {
           }
           if (closestFood.bites <= 0) closestFood.size = 0;
         }
-      } else {
-        // Steer toward food eagerly — overrides schooling at close range
-        const proximity = 1 - closestFoodDist / foodRange;
-        const steerWeight = 0.15 + proximity * 0.35;
-        const foodAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        // Per-fish approach offset — mild spread so they don't all pile from one side
-        const approachOffset = ((this._phaseOffset % (Math.PI * 2)) - Math.PI) * 0.12;
-        const wobble = Math.sin(this._phaseOffset + time * 0.001) * 0.08;
-        const foodSpeed = scaledSpeed * (0.7 + (1 - proximity) * 0.3); // gentle decel on approach
-        const desiredVx = Math.cos(foodAngle + approachOffset + wobble) * foodSpeed;
-        const desiredVy = Math.sin(foodAngle + approachOffset + wobble) * foodSpeed;
-        this.vx += (desiredVx - this.vx) * steerWeight;
-        this.vy += (desiredVy - this.vy) * steerWeight;
       }
     }
 
