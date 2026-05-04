@@ -4072,11 +4072,20 @@ function rebuildSandCanvas() {
 }
 rebuildSandCanvas();
 
+const FIXED_DT = 1 / 60; // simulation runs at fixed 60Hz
+let timeAccumulator = 0;
 function draw(time) {
   requestAnimationFrame(draw);
   try {
-  const dt = Math.min((time - lastTime) / 1000, 0.05);
+  const realDt = Math.min((time - lastTime) / 1000, 0.1);
   lastTime = time;
+  timeAccumulator += realDt;
+  // Run simulation steps at fixed 60Hz — max 4 to prevent spiral of death
+  const steps = Math.min(4, Math.floor(timeAccumulator / FIXED_DT));
+  timeAccumulator -= steps * FIXED_DT;
+  const dt = FIXED_DT; // fixed timestep available to both sim and render
+  // Use fixed dt for all simulation, run multiple steps if behind
+  for (let _step = 0; _step < steps; _step++) {
   if (settleTime > 0) settleTime -= dt;
 
   // Spawn fish as staggered waves swimming in from edges
@@ -4966,6 +4975,7 @@ function draw(time) {
   for (const rf of reefFish) rf.update(dt, fish, time);
   for (const p of predators) p.update(dt, fish, time);
   for (const s of starfish) s.update(dt, time);
+  } // end fixed timestep loop
 
   // Draw swimmers and plants interleaved by y-position (top-down perspective)
   // Items higher on screen (lower y) are "further back" and drawn first
