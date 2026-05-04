@@ -4759,7 +4759,7 @@ function rebuildSandCanvas() {
 
       if (rx < -20 || rx > w + 20 || ry < -20 || ry > h + 20) { pts.push(null); continue; }
       const ptProx = rockProximity(rx, ry);
-      pts.push({ x: rx, y: ry, a: ptProx * 0.08 });
+      pts.push({ x: rx, y: ry, a: ptProx * 0.25 });
     }
 
     // Draw per-segment with fading alpha along the line
