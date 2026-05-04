@@ -4046,8 +4046,8 @@ function makeReef(x, y, sizeMultiplier = 1) {
       gray = touchNeighbor._gray;
       warm = touchNeighbor._warm;
     } else {
-      gray = 55 + Math.floor(Math.random() * 40);
-      warm = Math.floor(Math.random() * 8);
+      gray = 95 + Math.floor(Math.random() * 35);
+      warm = Math.floor(Math.random() * 6);
     }
     edgeRocks.push({
       ox, oy, r: rockR, verts,
