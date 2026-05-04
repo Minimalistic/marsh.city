@@ -882,6 +882,8 @@ const washWaves = [];
 let washTimer = 8 + Math.random() * 10;
 // Splash ripples — arc-shaped wave lines that radiate from rocks after wave impact
 const splashRipples = [];
+// Contact splashes — small organic particles where wave lines touch rock edges
+const contactSplashes = [];
 // Reef cling lines — wave remnants snagged on rocks, stretch and fade
 const reefClings = [];
 
@@ -5391,32 +5393,22 @@ function draw(time) {
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
         if (dist < edge && dist > 0.1) {
-          // Point is inside rock — push laterally to nearest side (rope wrap)
-          // Perpendicular to wave direction: which side is this point closer to?
           const lateral = relX * (-sinA) + relY * cosA;
           const sideDir = lateral >= 0 ? 1 : -1;
-          // Find the edge angle on that side of the rock
           const sideAngle = Math.atan2(sideDir * (-sinA), sideDir * cosA);
-          const fullAngle = Math.atan2(
-            cy + Math.sin(sideAngle) - cy,
-            cx + Math.cos(sideAngle) - cx
-          );
-          const sideR = rf.radiusAt(sideAngle, rf.crownRadii) + pad;
-          // Place point on the perimeter at the side, preserving wave-travel position
-          // Blend between radial push-out and lateral side to create arc
-          const along = relX * cosA + relY * sinA;
-          // Sweep angle: from the point's radial angle toward the side
-          const blend = 1 - (dist / edge); // 0 at edge, 1 at center
+          const blend = 1 - (dist / edge);
           const targetAngle = sideAngle * blend + angle * (1 - blend);
           const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + pad;
-          return { x: cx + Math.cos(targetAngle) * targetR, y: cy + Math.sin(targetAngle) * targetR };
+          const ox = cx + Math.cos(targetAngle) * targetR;
+          const oy = cy + Math.sin(targetAngle) * targetR;
+          return { x: ox, y: oy, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
         }
 
         // Bunching zone: points just outside the rock get pulled slightly toward it
         const influence = edge + 18 * viewScale;
         if (dist < influence) {
-          const t = (influence - dist) / (influence - edge); // 0 at influence edge, 1 at rock edge
-          const pull = t * t * 0.3; // gentle pull toward rock
+          const t = (influence - dist) / (influence - edge);
+          const pull = t * t * 0.3;
           const nx = cx + (relX / dist) * edge;
           const ny = cy + (relY / dist) * edge;
           return { x: px * (1 - pull) + nx * pull, y: py * (1 - pull) + ny * pull };
@@ -5479,6 +5471,7 @@ function draw(time) {
         { behind: 14 * viewScale, thick: 0.7 * viewScale, alpha: 0.1, freq: 1.0, speed: 1.0 },
         { behind: 20 * viewScale, thick: 0.4 * viewScale, alpha: 0.05, freq: 1.1, speed: 1.1 },
       ];
+      let isFirstLine = true;
       for (const ln of lines) {
         const step = 4;
         const pts = [];
@@ -5493,7 +5486,22 @@ function draw(time) {
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const cl = reefClamp(px, py);
           pts.push({ x: cl.x, y: cl.y });
+          // Emit contact splashes where the primary wave line touches rock
+          if (isFirstLine && cl.hit && contactSplashes.length < 300 && Math.random() < 0.35) {
+            const sprayAngle = Math.atan2(cl.ny, cl.nx) + (Math.random() - 0.5) * 1.2;
+            const spd = (1.5 + Math.random() * 3.5) * viewScale * ww.strength;
+            contactSplashes.push({
+              x: cl.x, y: cl.y,
+              vx: Math.cos(sprayAngle) * spd + cosA * ww.speed * 0.3,
+              vy: Math.sin(sprayAngle) * spd + sinA * ww.speed * 0.3,
+              size: (0.4 + Math.random() * 1.8) * viewScale,
+              life: 1,
+              maxLife: 0.4 + Math.random() * 0.8,
+              drag: 0.92 + Math.random() * 0.05,
+            });
+          }
         }
+        isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
         ctx.globalAlpha = baseAlpha;
         ctx.lineWidth = ln.thick;
@@ -5538,6 +5546,28 @@ function draw(time) {
       ctx.fill();
       ctx.restore();
     }
+  }
+  ctx.globalAlpha = 1;
+
+  // Contact splashes — small organic particles where wave lines meet rock edges
+  for (let i = contactSplashes.length - 1; i >= 0; i--) {
+    const sp = contactSplashes[i];
+    sp.life -= dt / sp.maxLife;
+    if (sp.life <= 0) { contactSplashes.splice(i, 1); continue; }
+    sp.vx *= sp.drag;
+    sp.vy *= sp.drag;
+    sp.x += sp.vx;
+    sp.y += sp.vy;
+    // Fade in quickly, fade out over last 40%
+    const fadeIn = Math.min(1, (1 - sp.life) * sp.maxLife / 0.08);
+    const fadeOut = sp.life < 0.4 ? sp.life / 0.4 : 1;
+    const alpha = fadeIn * fadeOut * 0.6;
+    const sz = sp.size * (0.5 + sp.life * 0.5);
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, sz, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(210, 235, 245, 1)';
+    ctx.fill();
   }
   ctx.globalAlpha = 1;
 
@@ -6097,7 +6127,7 @@ function draw(time) {
           const blend = 1 - (dist / edge);
           const targetAngle = sideAngle * blend + angle * (1 - blend);
           const targetR = rf.radiusAt(targetAngle, rf.crownRadii) + _pad;
-          return { x: cx + Math.cos(targetAngle) * targetR, y: cy + Math.sin(targetAngle) * targetR };
+          return { x: cx + Math.cos(targetAngle) * targetR, y: cy + Math.sin(targetAngle) * targetR, hit: true, nx: Math.cos(targetAngle), ny: Math.sin(targetAngle) };
         }
         const influence = edge + 18 * viewScale;
         if (dist < influence) {
@@ -6149,6 +6179,7 @@ function draw(time) {
         { behind: 2 * viewScale, thick: 3.0 * viewScale, alpha: 0.4, freq: 1.0, speed: 1.0 },
         { behind: 4 * viewScale, thick: 3.5 * viewScale, alpha: 0.85, freq: 1.3, speed: 1.4 },
       ];
+      let isFirstLine = true;
       for (const ln of lines) {
         const step = 4;
         const pts = [];
@@ -6161,11 +6192,25 @@ function draw(time) {
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const fcp = clampPt(px, py);
           pts.push({ x: fcp.x, y: fcp.y });
+          if (isFirstLine && fcp.hit && contactSplashes.length < 300 && Math.random() < 0.35) {
+            const sprayAngle = Math.atan2(fcp.ny, fcp.nx) + (Math.random() - 0.5) * 1.2;
+            const spd = (1.5 + Math.random() * 3.5) * viewScale * ww.strength;
+            contactSplashes.push({
+              x: fcp.x, y: fcp.y,
+              vx: Math.cos(sprayAngle) * spd + cosA * ww.speed * 0.3,
+              vy: Math.sin(sprayAngle) * spd + sinA * ww.speed * 0.3,
+              size: (0.4 + Math.random() * 1.8) * viewScale,
+              life: 1,
+              maxLife: 0.4 + Math.random() * 0.8,
+              drag: 0.92 + Math.random() * 0.05,
+            });
+          }
         }
+        isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
         ctx.globalAlpha = baseAlpha;
         ctx.lineWidth = ln.thick;
-        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
         ctx.beginPath();
         ctx.moveTo(pts[0].x, pts[0].y);
