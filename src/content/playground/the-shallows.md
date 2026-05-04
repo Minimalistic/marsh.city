@@ -5576,6 +5576,32 @@ function draw(time) {
 
         isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
+
+        // Ghost trails: wispy faded copies trailing behind the wave front
+        // Only for the 3 main visible lines (alpha >= 0.4)
+        if (ln.alpha >= 0.4) {
+          const ghosts = [
+            { dist: 6 * viewScale, alpha: 0.18, width: 1.3 },
+            { dist: 14 * viewScale, alpha: 0.10, width: 1.6 },
+            { dist: 24 * viewScale, alpha: 0.05, width: 2.0 },
+            { dist: 38 * viewScale, alpha: 0.025, width: 2.5 },
+          ];
+          ctx.lineCap = 'butt';
+          ctx.lineJoin = 'round';
+          ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+          for (const gh of ghosts) {
+            ctx.globalAlpha = baseAlpha * gh.alpha;
+            ctx.lineWidth = ln.thick * gh.width;
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x - cosA * gh.dist, pts[0].y - sinA * gh.dist);
+            for (let i = 1; i < pts.length; i++) {
+              ctx.lineTo(pts[i].x - cosA * gh.dist, pts[i].y - sinA * gh.dist);
+            }
+            ctx.stroke();
+          }
+        }
+
+        // Main line
         ctx.globalAlpha = baseAlpha;
         ctx.lineWidth = ln.thick;
         ctx.lineCap = 'butt';
@@ -6339,6 +6365,29 @@ function draw(time) {
 
         isFirstLine = false;
         const baseAlpha = ww.life * ln.alpha;
+
+        // Ghost trails for main visible lines
+        if (ln.alpha >= 0.4) {
+          const ghosts = [
+            { dist: 6 * viewScale, alpha: 0.18, width: 1.3 },
+            { dist: 14 * viewScale, alpha: 0.10, width: 1.6 },
+            { dist: 24 * viewScale, alpha: 0.05, width: 2.0 },
+            { dist: 38 * viewScale, alpha: 0.025, width: 2.5 },
+          ];
+          ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+          ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
+          for (const gh of ghosts) {
+            ctx.globalAlpha = baseAlpha * gh.alpha;
+            ctx.lineWidth = ln.thick * gh.width;
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x - cosA * gh.dist, pts[0].y - sinA * gh.dist);
+            for (let i = 1; i < pts.length; i++) {
+              ctx.lineTo(pts[i].x - cosA * gh.dist, pts[i].y - sinA * gh.dist);
+            }
+            ctx.stroke();
+          }
+        }
+
         ctx.globalAlpha = baseAlpha;
         ctx.lineWidth = ln.thick;
         ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
