@@ -5368,29 +5368,20 @@ function draw(time) {
         const tcl = reefClamp(px, py);
         trPts.push({ x: tcl.x, y: tcl.y, hidden: tcl.hidden });
       }
-      // Draw visible runs — gaps at rocks
+      // Draw continuous curve — wraps around rocks
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
       ctx.lineWidth = tr.thick * tr.life;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       ctx.globalAlpha = trAlpha;
-      let trRun = -1;
-      for (let i = 0; i <= trPts.length; i++) {
-        const vis = i < trPts.length && !trPts[i].hidden;
-        if (vis && trRun < 0) trRun = i;
-        if (!vis && trRun >= 0) {
-          ctx.beginPath();
-          ctx.moveTo(trPts[trRun].x, trPts[trRun].y);
-          for (let j = trRun + 1; j < i; j++) {
-            if (j < i - 1) {
-              const mx = (trPts[j].x + trPts[j + 1].x) * 0.5;
-              const my = (trPts[j].y + trPts[j + 1].y) * 0.5;
-              ctx.quadraticCurveTo(trPts[j].x, trPts[j].y, mx, my);
-            } else ctx.lineTo(trPts[j].x, trPts[j].y);
-          }
-          ctx.stroke();
-          trRun = -1;
-        }
+      ctx.beginPath();
+      if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
+      for (let i = 1; i < trPts.length - 1; i++) {
+        const mx = (trPts[i].x + trPts[i + 1].x) * 0.5;
+        const my = (trPts[i].y + trPts[i + 1].y) * 0.5;
+        ctx.quadraticCurveTo(trPts[i].x, trPts[i].y, mx, my);
       }
+      if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
+      ctx.stroke();
     }
 
     // Wave-reef interaction: push wave line points backward around above-water reefs
@@ -5413,13 +5404,9 @@ function draw(time) {
       return push;
     }
 
-    // Clamp point to approach side: checks if the ray from the point backward
-    // along wave direction intersects any reef. If so, pins to the entry edge.
-    // Works regardless of how far past the rock the point has traveled.
-    // Simple reef interaction: points inside crown are hidden (natural gap),
-    // points behind the rock gently converge to close the wake
+    // Wave wraps around rocks: points inside crown push to edge, tracing contour
     function reefClamp(px, py) {
-      const pad = 3 * viewScale;
+      const pad = 4 * viewScale;
       for (const rf of reefs) {
         if (rf.submerged) continue;
         const cx = rf.x + rf.crownOffX, cy = rf.y + rf.crownOffY;
@@ -5428,9 +5415,11 @@ function draw(time) {
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + pad;
 
-        // Inside crown: hidden
-        if (dist < edge) {
-          return { x: px, y: py, hidden: true, stretch: 0 };
+        // Inside crown: push outward to nearest edge (wrap around rock)
+        if (dist < edge && dist > 0.1) {
+          const wx = cx + (relX / dist) * edge;
+          const wy = cy + (relY / dist) * edge;
+          return { x: wx, y: wy, hidden: false, stretch: 0 };
         }
 
         // Behind the rock: teardrop convergence, dampens quickly with distance
@@ -5480,33 +5469,24 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const cl = reefClamp(px, py);
-          pts.push({ x: cl.x, y: cl.y, hidden: cl.hidden });
+          pts.push({ x: cl.x, y: cl.y });
         }
-        // Draw visible runs — hidden points create natural gaps at rocks
+        // Draw continuous smooth curve — wraps around rocks
         const baseAlpha = ww.life * ln.alpha;
         ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
         ctx.globalAlpha = baseAlpha;
-        let runStart = -1;
-        for (let i = 0; i <= pts.length; i++) {
-          const vis = i < pts.length && !pts[i].hidden;
-          if (vis && runStart < 0) runStart = i;
-          if (!vis && runStart >= 0) {
-            ctx.beginPath();
-            ctx.moveTo(pts[runStart].x, pts[runStart].y);
-            for (let j = runStart + 1; j < i; j++) {
-              if (j < i - 1) {
-                const mx = (pts[j].x + pts[j + 1].x) * 0.5;
-                const my = (pts[j].y + pts[j + 1].y) * 0.5;
-                ctx.quadraticCurveTo(pts[j].x, pts[j].y, mx, my);
-              } else ctx.lineTo(pts[j].x, pts[j].y);
-            }
-            ctx.stroke();
-            runStart = -1;
-          }
+        ctx.beginPath();
+        if (pts.length > 0) ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i + 1].x) * 0.5;
+          const my = (pts[i].y + pts[i + 1].y) * 0.5;
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
         }
+        if (pts.length > 1) ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+        ctx.stroke();
       }
     } // end if (alive) — blob drawing continues below for lingering foam
 
@@ -6083,8 +6063,8 @@ function draw(time) {
   for (const ww of washWaves) {
     const cosA = Math.cos(ww.angle), sinA = Math.sin(ww.angle);
     const span = Math.max(w, h) * 1.2;
-    // Simple: hidden inside crown, teardrop convergence behind
-    const _pad = 3 * viewScale;
+    // Wrap around rocks: push to edge, teardrop convergence behind
+    const _pad = 4 * viewScale;
     function clampPt(px, py) {
       for (const rf of reefs) {
         if (rf.submerged) continue;
@@ -6093,7 +6073,7 @@ function draw(time) {
         const dist = Math.sqrt(relX * relX + relY * relY);
         const angle = Math.atan2(relY, relX);
         const edge = rf.radiusAt(angle, rf.crownRadii) + _pad;
-        if (dist < edge) return { x: px, y: py, hidden: true };
+        if (dist < edge && dist > 0.1) return { x: cx + (relX / dist) * edge, y: cy + (relY / dist) * edge, hidden: false };
         const along = relX * cosA + relY * sinA;
         const lateral = relX * (-sinA) + relY * cosA;
         if (along > 0 && Math.abs(lateral) < rf.crownR + _pad) {
@@ -6127,26 +6107,22 @@ function draw(time) {
         let px = tr.x + perpX * pos + cosA * offset;
         let py = tr.y + perpY * pos + sinA * offset;
         const tcp = clampPt(px, py);
-        trPts.push({ x: tcp.x, y: tcp.y, hidden: tcp.hidden });
+        trPts.push({ x: tcp.x, y: tcp.y });
       }
       ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
       ctx.lineWidth = tr.thick * tr.life;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       ctx.globalAlpha = trAlpha;
-      let tr2Run = -1;
-      for (let j = 0; j <= trPts.length; j++) {
-        const vis = j < trPts.length && !trPts[j].hidden;
-        if (vis && tr2Run < 0) tr2Run = j;
-        if (!vis && tr2Run >= 0) {
-          ctx.beginPath();
-          ctx.moveTo(trPts[tr2Run].x, trPts[tr2Run].y);
-          for (let k = tr2Run + 1; k < j; k++) {
-            if (k < j - 1) {
-              const mx = (trPts[k].x + trPts[k+1].x) * 0.5;
-              const my = (trPts[k].y + trPts[k+1].y) * 0.5;
-              ctx.quadraticCurveTo(trPts[k].x, trPts[k].y, mx, my);
-            } else ctx.lineTo(trPts[k].x, trPts[k].y);
-          }
+      ctx.beginPath();
+      if (trPts.length > 0) ctx.moveTo(trPts[0].x, trPts[0].y);
+      for (let j = 1; j < trPts.length - 1; j++) {
+        const mx = (trPts[j].x + trPts[j + 1].x) * 0.5;
+        const my = (trPts[j].y + trPts[j + 1].y) * 0.5;
+        ctx.quadraticCurveTo(trPts[j].x, trPts[j].y, mx, my);
+      }
+      if (trPts.length > 1) ctx.lineTo(trPts[trPts.length - 1].x, trPts[trPts.length - 1].y);
+      ctx.stroke();
+      if (false) { // dead code from old run-based drawing
           ctx.stroke();
           tr2Run = -1;
         }
@@ -6173,31 +6149,22 @@ function draw(time) {
           let px = ww.x + perpX * pos + cosA * (offset - ln.behind);
           let py = ww.y + perpY * pos + sinA * (offset - ln.behind);
           const fcp = clampPt(px, py);
-          pts.push({ x: fcp.x, y: fcp.y, hidden: fcp.hidden });
+          pts.push({ x: fcp.x, y: fcp.y });
         }
         const baseAlpha = ww.life * ln.alpha;
         ctx.lineWidth = ln.thick;
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.strokeStyle = 'rgba(200, 230, 245, 1)';
         ctx.globalAlpha = baseAlpha;
-        let fRun = -1;
-        for (let i = 0; i <= pts.length; i++) {
-          const vis = i < pts.length && !pts[i].hidden;
-          if (vis && fRun < 0) fRun = i;
-          if (!vis && fRun >= 0) {
-            ctx.beginPath();
-            ctx.moveTo(pts[fRun].x, pts[fRun].y);
-            for (let j = fRun + 1; j < i; j++) {
-              if (j < i - 1) {
-                const mx = (pts[j].x + pts[j+1].x) * 0.5;
-                const my = (pts[j].y + pts[j+1].y) * 0.5;
-                ctx.quadraticCurveTo(pts[j].x, pts[j].y, mx, my);
-              } else ctx.lineTo(pts[j].x, pts[j].y);
-            }
-            ctx.stroke();
-            fRun = -1;
-          }
+        ctx.beginPath();
+        if (pts.length > 0) ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i + 1].x) * 0.5;
+          const my = (pts[i].y + pts[i + 1].y) * 0.5;
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
         }
+        if (pts.length > 1) ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+        ctx.stroke();
       }
     }
   }
