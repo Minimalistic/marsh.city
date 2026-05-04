@@ -436,7 +436,7 @@ const foodPellets = [];
 
 // Floating foam bits - tiny particles shed by waves, drift with current
 const foamBits = [];
-// Kill effect particles - blood cloud + scale glitter from predator catches
+// Kill effect particles - scale glitter from predator catches
 const killFx = [];
 
 function resize() {
@@ -2602,17 +2602,6 @@ class Predator {
         this.chompPhase = 0;
         const catchX = mouthX, catchY = mouthY;
         const preyColor = prey.color || 'rgb(140,150,160)';
-        for (let k = 0; k < 12; k++) {
-          const a = Math.random() * Math.PI * 2;
-          const spd = 0.3 + Math.random() * 1.2;
-          killFx.push({
-            x: catchX + Math.cos(a) * 3, y: catchY + Math.sin(a) * 3,
-            vx: Math.cos(a) * spd + this.vx * 0.3,
-            vy: Math.sin(a) * spd + this.vy * 0.3,
-            type: 'blood', life: 1, maxLife: 1.5 + Math.random() * 1.5,
-            size: 1.4 + Math.random() * 2.8,
-          });
-        }
         for (let k = 0; k < 8; k++) {
           const a = Math.random() * Math.PI * 2;
           const spd = 0.5 + Math.random() * 2;
@@ -4379,20 +4368,7 @@ function draw(time) {
     kp.vy += Math.sin(tide.angle) * tide.strength * 0.005;
     kp.x += kp.vx;
     kp.y += kp.vy;
-    if (kp.type === 'blood') {
-      // Expanding red cloud puff
-      const r = kp.size * (1 + (1 - kp.life) * 1.5);
-      const alpha = kp.life * 0.35;
-      ctx.beginPath();
-      ctx.arc(kp.x, kp.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(140, 30, 20, ${alpha})`;
-      ctx.fill();
-      // Softer outer glow
-      ctx.beginPath();
-      ctx.arc(kp.x, kp.y, r * 1.6, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(120, 25, 15, ${alpha * 0.3})`;
-      ctx.fill();
-    } else if (kp.type === 'bubble') {
+    if (kp.type === 'bubble') {
       // Turbulence bubbles — pale circles that shrink and rise slightly
       kp.vy -= 0.02; // bubbles drift upward slightly
       const r = kp.size * (0.5 + kp.life * 0.5);
