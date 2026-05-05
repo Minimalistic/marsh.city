@@ -1776,6 +1776,15 @@ class Fish {
         this.idle = false;
         this.idleTimer = 3 + Math.random() * 4;
       }
+    } else {
+      // Persistent drive toward nearest edge — overrides schooling pull
+      const toLeft = this.x, toRight = w - this.x, toTop = this.y, toBottom = h - this.y;
+      const minEdge = Math.min(toLeft, toRight, toTop, toBottom);
+      const exitForce = 0.12;
+      if (minEdge === toLeft) this.vx -= exitForce;
+      else if (minEdge === toRight) this.vx += exitForce;
+      else if (minEdge === toTop) this.vy -= exitForce;
+      else this.vy += exitForce;
     }
 
     // Move
@@ -5104,7 +5113,7 @@ function draw(time) {
   if (settleTime > 0) settleTime -= dt;
 
   // Spawn fish as staggered waves swimming in from edges
-  if (spawnWaves.length > 0) {
+  if (spawnWaves.length > 0 && fish.length < popTarget) {
     spawnTimer += dt;
     for (let wi = spawnWaves.length - 1; wi >= 0; wi--) {
       const wave = spawnWaves[wi];
@@ -6440,20 +6449,15 @@ function draw(time) {
   const activeFish = fish.filter(f => !f.leaving);
   if (activeFish.length > popTarget) {
     const excess = activeFish.length - Math.floor(popTarget);
-    const toShed = Math.min(Math.max(5, Math.ceil(excess * 0.15)), excess);
+    const toShed = Math.min(Math.max(5, Math.ceil(excess * 0.2)), excess);
     let shed = 0;
     for (const f of activeFish) {
       if (shed >= toShed) break;
       if (!f.eating) {
         f.leaving = true;
+        f.fleeing = true;
+        f.fleeTimer = 4 + Math.random() * 2; // panic for several seconds
         f.distracted = true;
-        // Point toward nearest edge for faster exit
-        const toLeft = f.x, toRight = w - f.x, toTop = f.y, toBottom = h - f.y;
-        const minEdge = Math.min(toLeft, toRight, toTop, toBottom);
-        if (minEdge === toLeft) f.vx -= 1;
-        else if (minEdge === toRight) f.vx += 1;
-        else if (minEdge === toTop) f.vy -= 1;
-        else f.vy += 1;
         shed++;
       }
     }
@@ -6505,9 +6509,11 @@ function draw(time) {
     }
   }
 
-  // Occasional school arrival — a wave of new fish swims in
+  // Occasional school arrival — a wave of new fish swims in (only if below target)
   schoolArrivalTimer -= dt;
-  if (schoolArrivalTimer <= 0) {
+  if (schoolArrivalTimer <= 0 && fish.length >= popTarget) {
+    schoolArrivalTimer = 20 + Math.random() * 60; // reset timer, skip spawn
+  } else if (schoolArrivalTimer <= 0 && fish.length < popTarget) {
     const waveSize = 3 + Math.floor(Math.random() * 10);
     const school = Math.floor(Math.random() * schoolColors.length);
     // Fresh entry point for this wave
