@@ -59,7 +59,7 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 <style>
 .pool-tool {
   height: 28px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); cursor: pointer;
+  background: rgba(0,0,0,0.45); cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 5px;
   color: rgba(255,255,255,0.5); transition: all 0.2s;
   font: 10px/1 system-ui, sans-serif; padding: 0 8px; white-space: nowrap;
@@ -79,7 +79,7 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 }
 .pool-hint {
   position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.6);
   color: rgba(255,255,255,0.85); font-size: 12px; padding: 6px 12px;
   border-radius: 6px; white-space: nowrap; z-index: 10;
   opacity: 0; transition: opacity 0.3s;
@@ -113,7 +113,7 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
 .pool-rotate-hint {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-  background: rgba(10, 50, 60, 0.85); backdrop-filter: blur(6px);
+  background: rgba(10, 50, 60, 0.85);
   color: rgba(255,255,255,0.8); font-size: 15px; font-family: inherit;
   z-index: 100; opacity: 0; transition: opacity 0.4s;
   pointer-events: none;
@@ -127,7 +127,7 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
 }
 .pool-debug-stats {
   position: absolute; bottom: 8px; left: 8px; z-index: 10;
-  background: rgba(0,0,0,0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.4);
   border-radius: 6px; padding: 6px 10px;
   font: 16px/1.5 monospace; color: rgba(255,255,255,0.7);
   pointer-events: none; white-space: pre;
@@ -135,7 +135,7 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
 .pool-adv-btn { position: absolute; top: 110px; right: 8px; z-index: 10; }
 .pool-advanced-panel {
   position: absolute; top: 142px; right: 8px; z-index: 10;
-  background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.5);
   border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
   padding: 8px 10px; flex-direction: column; gap: 6px;
   max-height: 60%; overflow-y: auto; display: none;
@@ -439,7 +439,7 @@ function isFakeFS() { return poolContainer.classList.contains('fake-fullscreen')
 let _fakefsParent = null; // original parent to restore on exit
 let _fakefsNext = null;   // next sibling for reinsertion position
 function enterFakeFS() {
-  // Move container to body to escape backdrop-filter containing block
+  // Move container to body to escape containing block
   _fakefsParent = poolContainer.parentElement;
   _fakefsNext = poolContainer.nextSibling;
   document.body.appendChild(poolContainer);
@@ -7320,7 +7320,7 @@ function draw(time) {
   // ctx.restore();
   // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  // Debug stats — rendered to HTML overlay (supports backdrop-filter blur)
+  // Debug stats — rendered to HTML overlay
   const _debugEl = document.getElementById('debug-stats');
   _debugEl.hidden = !debugVisible;
   if (debugVisible && _fpsLast > 0) {
