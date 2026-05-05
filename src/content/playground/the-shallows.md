@@ -134,7 +134,7 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
 }
 .pool-adv-btn { position: absolute; top: 110px; right: 8px; z-index: 10; }
 .pool-advanced-panel {
-  position: absolute; top: 110px; right: 80px; z-index: 10;
+  position: absolute; top: 142px; right: 8px; z-index: 10;
   background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
   padding: 8px 10px; flex-direction: column; gap: 6px;
@@ -168,8 +168,8 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
 .fake-fullscreen .pool-advanced-panel,
 #pool-container:fullscreen .pool-advanced-panel,
 #pool-container:-webkit-full-screen .pool-advanced-panel {
-  top: calc(110px + env(safe-area-inset-top, 0px)) !important;
-  right: calc(max(20px, env(safe-area-inset-right, 0px)) + 80px) !important;
+  top: calc(142px + env(safe-area-inset-top, 0px)) !important;
+  right: calc(max(20px, env(safe-area-inset-right, 0px)) + 8px) !important;
 }
 </style>
 
