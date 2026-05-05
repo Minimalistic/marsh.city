@@ -4043,10 +4043,11 @@ function makeReef(x, y, sizeMultiplier = 1) {
       return Math.sqrt(dx * dx + dy * dy) < er.r + rockR + 1;
     });
     if (touchNeighbor) {
-      gray = touchNeighbor._gray;
+      gray = touchNeighbor._gray + Math.floor(Math.random() * 6 - 3);
       warm = touchNeighbor._warm;
     } else {
-      gray = 95 + Math.floor(Math.random() * 35);
+      // Derive from parent reef color with slight variation
+      gray = g + 15 + Math.floor(Math.random() * 20);
       warm = Math.floor(Math.random() * 6);
     }
     edgeRocks.push({
