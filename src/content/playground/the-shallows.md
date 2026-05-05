@@ -136,9 +136,10 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
   position: absolute; top: 8px; right: 140px; z-index: 10;
   background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
-  padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;
-  max-height: 80%; overflow-y: auto;
+  padding: 8px 10px; flex-direction: column; gap: 6px;
+  max-height: 80%; overflow-y: auto; display: none;
 }
+.pool-advanced-panel.open { display: flex; }
 .pool-slider-label {
   display: flex; align-items: center; justify-content: space-between; gap: 6px;
   font: 10px/1 system-ui, sans-serif; color: rgba(255,255,255,0.7);
@@ -163,7 +164,6 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
   top: calc(12px + env(safe-area-inset-top, 0px)) !important;
   right: calc(max(20px, env(safe-area-inset-right, 0px)) + 140px) !important;
 }
-.pool-advanced-panel.hidden { opacity: 0; pointer-events: none; }
 </style>
 
 <script type="module">
@@ -179,7 +179,7 @@ advancedBtn.addEventListener('click', e => {
   advancedOpen = !advancedOpen;
   advancedBtn.classList.toggle('active', advancedOpen);
   advancedBtn.setAttribute('aria-pressed', advancedOpen);
-  advancedPanel.hidden = !advancedOpen;
+  advancedPanel.classList.toggle('open', advancedOpen);
 });
 // Prevent panel interactions from bubbling to canvas
 advancedPanel.addEventListener('click', e => e.stopPropagation());
@@ -215,6 +215,7 @@ fishSlider.addEventListener('input', e => {
   e.stopPropagation();
   advParams.fishCount = parseInt(e.target.value);
   document.getElementById('fish-val').textContent = advParams.fishCount;
+  popTarget = advParams.fishCount;
 });
 waveFreqSlider.addEventListener('input', e => {
   e.stopPropagation();
@@ -480,13 +481,11 @@ function showUI() {
   toolbar.classList.remove('hidden');
   if (!fsCloseBtn.hidden) fsCloseBtn.classList.remove('hidden');
   if (!fsBtn.hidden) fsBtn.classList.remove('hidden');
-  if (advancedOpen) advancedPanel.classList.remove('hidden');
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
     toolbar.classList.add('hidden');
     fsBtn.classList.add('hidden');
     fsCloseBtn.classList.add('hidden');
-    advancedPanel.classList.add('hidden');
   }, 3000);
 }
 poolContainer.addEventListener('mousemove', showUI);
@@ -6409,15 +6408,24 @@ function draw(time) {
   // Override population target when fish slider is set
   const effectiveBasePop = advParams.fishCount != null ? advParams.fishCount : basePop;
   popDriftTimer -= dt;
-  if (popDriftTimer <= 0) {
+  if (advParams.fishCount != null) {
+    // Slider overrides drift — lock popTarget to slider value
+    popTarget = advParams.fishCount;
+  } else if (popDriftTimer <= 0) {
     // Shift the target: sometimes sparser, sometimes denser
     const drift = (Math.random() - 0.5) * effectiveBasePop * 0.4;
     popTarget = Math.max(effectiveBasePop * 0.35, Math.min(effectiveBasePop * 1.3, popTarget + drift));
     popDriftTimer = 12 + Math.random() * 40;
   }
-  // Nudge popTarget toward slider value when fish count is overridden
-  if (advParams.fishCount != null) {
-    popTarget = popTarget * 0.95 + advParams.fishCount * 0.05;
+  // Aggressively shed fish when well over target (slider reduced)
+  if (fish.length > popTarget * 1.2) {
+    const excess = fish.length - Math.floor(popTarget);
+    const toShed = Math.min(3, excess); // shed up to 3 per frame
+    let shed = 0;
+    for (const f of fish) {
+      if (shed >= toShed) break;
+      if (!f.leaving && !f.eating) { f.leaving = true; f.distracted = true; shed++; }
+    }
   }
 
   // Subgroup split — occasionally a cluster of nearby fish all break off together
