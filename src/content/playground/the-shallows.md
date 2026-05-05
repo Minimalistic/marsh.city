@@ -7345,5 +7345,10 @@ function draw(time) {
   } catch(e) { console.error('Draw error:', e); }
 }
 
+// Expose entities for external tooling (screenshots, debug)
+if (location.search.includes('capture')) {
+  window._shallows = { fish, predators, seagulls, starfish, reefs, w, h };
+}
+
 requestAnimationFrame(draw);
 </script>
