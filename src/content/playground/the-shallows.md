@@ -5788,14 +5788,14 @@ function draw(time) {
                 maxLife: 0.5 + Math.random() * 1.0,
                 drag: 0.90 + Math.random() * 0.05,
               });
-              // Overspray — launches forward in wave direction, flies over the rock
+              // Overspray — mostly lateral/upward, slight forward drift over rock
               if (headOn > 0.4 && Math.random() < headOn * 0.5) {
-                const overSpd = (3 + Math.random() * 6) * viewScale * ww.strength;
-                const spread = (Math.random() - 0.5) * 0.8;
+                const overSpd = (2 + Math.random() * 3.5) * viewScale * ww.strength;
+                const spread = (Math.random() - 0.5) * 2.2; // wide lateral spread
                 contactSplashes.push({
                   x: cl.x, y: cl.y,
-                  vx: cosA * overSpd + Math.cos(ww.angle + spread) * overSpd * 0.3,
-                  vy: sinA * overSpd + Math.sin(ww.angle + spread) * overSpd * 0.3,
+                  vx: cosA * overSpd * 0.2 + Math.cos(ww.angle + spread) * overSpd,
+                  vy: sinA * overSpd * 0.2 + Math.sin(ww.angle + spread) * overSpd,
                   size: (0.4 + Math.random() * 1.8) * viewScale,
                   life: 1,
                   maxLife: 0.6 + Math.random() * 0.8,
