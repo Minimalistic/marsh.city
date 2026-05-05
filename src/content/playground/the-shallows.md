@@ -5659,17 +5659,16 @@ function draw(time) {
         trPts[i].x += perpX * swirl + cosA * stretch;
         trPts[i].y += perpY * swirl + sinA * stretch;
       }
-      // Smooth out extreme kinks
-      for (let _p = 0; _p < 2; _p++) {
-        for (let i = 1; i < trPts.length - 1; i++) {
-          const ax = trPts[i].x - trPts[i - 1].x, ay = trPts[i].y - trPts[i - 1].y;
-          const bx = trPts[i + 1].x - trPts[i].x, by = trPts[i + 1].y - trPts[i].y;
-          const bend = Math.atan2(ax * by - ay * bx, ax * bx + ay * by);
-          if (Math.abs(bend) > 0.4) {
-            const s = (1 - 0.4 / Math.abs(bend)) * 0.5;
-            trPts[i].x += ((trPts[i - 1].x + trPts[i + 1].x) * 0.5 - trPts[i].x) * s;
-            trPts[i].y += ((trPts[i - 1].y + trPts[i + 1].y) * 0.5 - trPts[i].y) * s;
-          }
+      // Smooth out extreme kinks (cheap: cross/dot ratio, no atan2)
+      for (let i = 1; i < trPts.length - 1; i++) {
+        const ax = trPts[i].x - trPts[i - 1].x, ay = trPts[i].y - trPts[i - 1].y;
+        const bx = trPts[i + 1].x - trPts[i].x, by = trPts[i + 1].y - trPts[i].y;
+        const cross = ax * by - ay * bx;
+        const dot = ax * bx + ay * by;
+        // |cross/dot| ≈ |tan(bend)|; threshold 0.42 ≈ tan(23°)
+        if (cross * cross > 0.176 * dot * dot || dot < 0) {
+          trPts[i].x = (trPts[i - 1].x + trPts[i].x + trPts[i + 1].x) / 3;
+          trPts[i].y = (trPts[i - 1].y + trPts[i].y + trPts[i + 1].y) / 3;
         }
       }
 
@@ -5893,23 +5892,15 @@ function draw(time) {
           pts[i].y -= sinA * pull;
         }
 
-        // Smooth out extreme kinks — clamp bend angle at each vertex
-        const maxBend = 0.4; // ~23 degrees max bend per joint
-        for (let pass = 0; pass < 2; pass++) {
-          for (let i = 1; i < pts.length - 1; i++) {
-            const ax = pts[i].x - pts[i - 1].x, ay = pts[i].y - pts[i - 1].y;
-            const bx = pts[i + 1].x - pts[i].x, by = pts[i + 1].y - pts[i].y;
-            const cross = ax * by - ay * bx;
-            const dot = ax * bx + ay * by;
-            const bend = Math.atan2(cross, dot);
-            if (Math.abs(bend) > maxBend) {
-              // Nudge middle point toward the midpoint of its neighbors
-              const mx = (pts[i - 1].x + pts[i + 1].x) * 0.5;
-              const my = (pts[i - 1].y + pts[i + 1].y) * 0.5;
-              const strength = 1 - maxBend / Math.abs(bend);
-              pts[i].x += (mx - pts[i].x) * strength * 0.5;
-              pts[i].y += (my - pts[i].y) * strength * 0.5;
-            }
+        // Smooth out extreme kinks (cheap: cross/dot ratio, no atan2)
+        for (let i = 1; i < pts.length - 1; i++) {
+          const ax = pts[i].x - pts[i - 1].x, ay = pts[i].y - pts[i - 1].y;
+          const bx = pts[i + 1].x - pts[i].x, by = pts[i + 1].y - pts[i].y;
+          const cross = ax * by - ay * bx;
+          const dot = ax * bx + ay * by;
+          if (cross * cross > 0.176 * dot * dot || dot < 0) {
+            pts[i].x = (pts[i - 1].x + pts[i].x + pts[i + 1].x) / 3;
+            pts[i].y = (pts[i - 1].y + pts[i].y + pts[i + 1].y) / 3;
           }
         }
 
@@ -6627,17 +6618,16 @@ function draw(time) {
         trPts[i].x += perpX * swirl + cosA * stretch;
         trPts[i].y += perpY * swirl + sinA * stretch;
       }
-      // Smooth out extreme kinks
-      for (let _p = 0; _p < 2; _p++) {
-        for (let i = 1; i < trPts.length - 1; i++) {
-          const ax = trPts[i].x - trPts[i - 1].x, ay = trPts[i].y - trPts[i - 1].y;
-          const bx = trPts[i + 1].x - trPts[i].x, by = trPts[i + 1].y - trPts[i].y;
-          const bend = Math.atan2(ax * by - ay * bx, ax * bx + ay * by);
-          if (Math.abs(bend) > 0.4) {
-            const s = (1 - 0.4 / Math.abs(bend)) * 0.5;
-            trPts[i].x += ((trPts[i - 1].x + trPts[i + 1].x) * 0.5 - trPts[i].x) * s;
-            trPts[i].y += ((trPts[i - 1].y + trPts[i + 1].y) * 0.5 - trPts[i].y) * s;
-          }
+      // Smooth out extreme kinks (cheap: cross/dot ratio, no atan2)
+      for (let i = 1; i < trPts.length - 1; i++) {
+        const ax = trPts[i].x - trPts[i - 1].x, ay = trPts[i].y - trPts[i - 1].y;
+        const bx = trPts[i + 1].x - trPts[i].x, by = trPts[i + 1].y - trPts[i].y;
+        const cross = ax * by - ay * bx;
+        const dot = ax * bx + ay * by;
+        // |cross/dot| ≈ |tan(bend)|; threshold 0.42 ≈ tan(23°)
+        if (cross * cross > 0.176 * dot * dot || dot < 0) {
+          trPts[i].x = (trPts[i - 1].x + trPts[i].x + trPts[i + 1].x) / 3;
+          trPts[i].y = (trPts[i - 1].y + trPts[i].y + trPts[i + 1].y) / 3;
         }
       }
 
