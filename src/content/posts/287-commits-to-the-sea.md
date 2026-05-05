@@ -17,7 +17,7 @@ The very first version had fish and a tidal current. That's it. They moved, but 
 
 If you've played [SimLife](https://en.wikipedia.org/wiki/SimLife) or [El-Fish](https://en.wikipedia.org/wiki/El-Fish) - Maxis-era sims where simple creature rules produced complex behavior - that's the lineage here. A fish with no food around and no predator nearby wants to stick with its school and roam. A fish near food wants to eat, but not if the big fish is between it and the pellet. A curious fish wanders off. A lazy one trails behind. Stack enough of these simple drives and you get emergent behavior that's genuinely fun to watch - not because any single rule is clever, but because they interact in ways you didn't explicitly program.
 
-![Fish schooling near reef rocks with seaweed swaying in the current](/images/the-shallows/overview.webp)
+![Two schools of fish sweep through the scene, navigating around reef rocks and seaweed](/images/the-shallows/scene-late.webp)
 
 Some specific problems that took more iterations than expected:
 
@@ -31,13 +31,15 @@ Some specific problems that took more iterations than expected:
 
 The environment grew organically. Fish needed something to swim around, so we added rocks. Rocks needed to sit on something, so we added sand. Sand needed to feel like it was underwater, so we added ripples. Then a depth gradient - darker in the top-left (deeper), lighter bottom-right (shallower) - and suddenly the flat canvas had a sense of space.
 
+![Close-up of reef rocks, seaweed, and the subtle sand ripple texture between two reef formations](/images/the-shallows/reef-detail.webp)
+
 The sand ripples alone took about ten commits. Too prominent and they competed with the fish. Wrong color temperature and they looked like a texture from a different scene. Too sharp and they read as drawn lines rather than light refracting through moving water. The final version uses thick blurred strokes at very low opacity, built up in layers. They're barely there - which is the point.
 
 Jason has a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - not because anyone would consciously notice if they didn't, but because the *absence* of that interaction reads as fake to anyone who's spent time watching real water.
 
 ## Predator and prey
 
-![A wave washing through the scene as the school navigates around reef rocks](/images/the-shallows/predator-hunt.webp)
+![A school of fish near the reef as a wave washes through the scene](/images/the-shallows/scene-action.webp)
 
 The predator (a tuna-like shape) exists to create drama in an otherwise meditative scene. It cruises slowly - gentle course corrections, in no hurry - until it spots a straggler. Then a burst of speed, bubbles trailing behind, and the school explodes into panic mode.
 
@@ -52,6 +54,8 @@ Seagulls were added for visual variety - they cast dynamic shadows on the water 
 ## The waves
 
 We tried two approaches. The first attempt used particle-based wave fronts - thousands of individual particles forming a wave shape. It looked interesting in screenshots but never hit the right balance of performance and aesthetics in motion. The particles either looked sparse and unconvincing or tanked the framerate. We reverted it.
+
+![Reef rocks up close - textured crowns, wave lines wrapping around obstacles, a fish school at the edge](/images/the-shallows/wave-closeup.webp)
 
 The line-based approach that stuck uses fewer elements but pays more attention to how they interact with the environment. The waves deflect and wrap around reef rocks, leaving wake patterns behind obstacles. Getting that wrap behavior right was satisfying - water flowing around geometry rather than through it.
 
