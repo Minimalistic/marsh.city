@@ -12,16 +12,16 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="6" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="12" cy="18" r="1"/></svg>
     Feed
   </button>
-  <button id="advanced-toggle" class="pool-tool" title="Advanced controls" aria-label="Advanced controls" aria-pressed="false" role="switch">
-    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15 1.65 1.65 0 003 14.08V14a2 2 0 014 0v.09c0 .67.44 1.27 1.09 1.49"/></svg>
-    Advanced
-  </button>
   <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound" aria-label="Toggle ocean sound" aria-pressed="false" role="switch">
     <svg id="sound-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
     Sound
   </button>
   <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume" aria-label="Volume">
 </div>
+<button id="advanced-toggle" class="pool-tool pool-adv-btn" title="Advanced controls" aria-label="Advanced controls" aria-pressed="false" role="switch">
+  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15 1.65 1.65 0 003 14.08V14a2 2 0 014 0v.09c0 .67.44 1.27 1.09 1.49"/></svg>
+  Advanced
+</button>
 <div id="advanced-panel" class="pool-advanced-panel" hidden>
   <button id="debug-toggle" class="pool-tool" title="Toggle debug stats" aria-label="Toggle debug stats" aria-pressed="false" role="switch">
     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V10"/><path d="M6 20V4"/><path d="M18 20v-6"/></svg>
@@ -132,12 +132,13 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
   font: 16px/1.5 monospace; color: rgba(255,255,255,0.7);
   pointer-events: none; white-space: pre;
 }
+.pool-adv-btn { position: absolute; bottom: 8px; left: 8px; z-index: 10; }
 .pool-advanced-panel {
-  position: absolute; top: 8px; right: 140px; z-index: 10;
+  position: absolute; bottom: 42px; left: 8px; z-index: 10;
   background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
   padding: 8px 10px; flex-direction: column; gap: 6px;
-  max-height: 80%; overflow-y: auto; display: none;
+  max-height: 60%; overflow-y: auto; display: none;
 }
 .pool-advanced-panel.open { display: flex; }
 .pool-slider-label {
@@ -158,11 +159,17 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
   -webkit-appearance: none; width: 12px; height: 12px;
   border-radius: 50%; background: rgba(150,200,220,0.9); cursor: pointer;
 }
+.fake-fullscreen .pool-adv-btn,
+#pool-container:fullscreen .pool-adv-btn,
+#pool-container:-webkit-full-screen .pool-adv-btn {
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  left: calc(max(20px, env(safe-area-inset-left, 0px)) + 8px) !important;
+}
 .fake-fullscreen .pool-advanced-panel,
 #pool-container:fullscreen .pool-advanced-panel,
 #pool-container:-webkit-full-screen .pool-advanced-panel {
-  top: calc(12px + env(safe-area-inset-top, 0px)) !important;
-  right: calc(max(20px, env(safe-area-inset-right, 0px)) + 140px) !important;
+  bottom: calc(46px + env(safe-area-inset-bottom, 0px)) !important;
+  left: calc(max(20px, env(safe-area-inset-left, 0px)) + 8px) !important;
 }
 </style>
 
@@ -6375,6 +6382,14 @@ function draw(time) {
   if (predators.length < effectivePredMax && predAbsentTimer <= 0 && predDepartTimer <= 0) {
     while (predators.length < effectivePredMax) {
       const pred = new Predator();
+      // Override spawn to enter from edge at speed
+      const edge = Math.floor(Math.random() * 4);
+      if (edge === 0) { pred.x = -40; pred.y = h * (0.2 + Math.random() * 0.6); pred.angle = (Math.random() - 0.5) * 0.3; }
+      else if (edge === 1) { pred.x = w + 40; pred.y = h * (0.2 + Math.random() * 0.6); pred.angle = Math.PI + (Math.random() - 0.5) * 0.3; }
+      else if (edge === 2) { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = -40; pred.angle = Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
+      else { pred.x = w * (0.2 + Math.random() * 0.6); pred.y = h + 40; pred.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.3; }
+      pred.vx = Math.cos(pred.angle) * pred.baseSpeed * 2 * viewScale;
+      pred.vy = Math.sin(pred.angle) * pred.baseSpeed * 2 * viewScale;
       predators.push(pred);
     }
   }
@@ -6499,18 +6514,24 @@ function draw(time) {
   }
 
   // Gentle trickle respawn if well below target (predator ate too many)
-  if (fish.length < popTarget * 0.6) {
+  // Faster rate when slider is actively pushing population up
+  const respawnThreshold = advParams.fishCount != null ? 0.9 : 0.6;
+  const respawnRate = advParams.fishCount != null && fish.length < popTarget * 0.8 ? 0.15 : 1.5;
+  const respawnBatch = advParams.fishCount != null && fish.length < popTarget * 0.7 ? 4 : 1;
+  if (fish.length < popTarget * respawnThreshold) {
     fishRespawnTimer += dt;
-    if (fishRespawnTimer > 1.5) {
+    if (fishRespawnTimer > respawnRate) {
       fishRespawnTimer = 0;
-      const school = Math.floor(Math.random() * schoolColors.length);
-      const entry = schoolEntries[school];
-      const f = new Fish(entry);
-      f.school = school;
-      f.colorType = school;
-      f.color = jitterTunaColor(schoolColors[school].color);
-      f.bellyColor = jitterTunaColor(schoolColors[school].belly);
-      fish.push(f);
+      for (let _ri = 0; _ri < respawnBatch; _ri++) {
+        const school = Math.floor(Math.random() * schoolColors.length);
+        const entry = schoolEntries[school];
+        const f = new Fish(entry);
+        f.school = school;
+        f.colorType = school;
+        f.color = jitterTunaColor(schoolColors[school].color);
+        f.bellyColor = jitterTunaColor(schoolColors[school].belly);
+        fish.push(f);
+      }
     }
   } else {
     fishRespawnTimer = 0;
