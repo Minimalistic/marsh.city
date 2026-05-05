@@ -5168,16 +5168,18 @@ function draw(time) {
   }
 
   // Spawn wash waves occasionally
+  const waveBaseInterval = advParams.waveInterval != null ? advParams.waveInterval : 35;
+  // If slider changed, clamp current timer so we don't wait forever
+  if (washTimer > waveBaseInterval * 1.5) washTimer = waveBaseInterval * (0.5 + Math.random() * 0.5);
   washTimer -= dt;
   if (washTimer <= 0) {
-    // Sometimes skip a wave entirely
-    if (Math.random() < 0.15) {
-      washTimer = 8 + Math.random() * 10; // short gap, try again soon
+    // Sometimes skip a wave entirely (less likely at fast intervals)
+    const skipChance = advParams.waveInterval != null ? 0.05 : 0.15;
+    if (Math.random() < skipChance) {
+      washTimer = waveBaseInterval * 0.3;
     } else {
       spawnWash();
-      // Very irregular timing - sometimes rapid sets, sometimes long lulls
-      const baseInterval = advParams.waveInterval != null ? advParams.waveInterval : 35;
-      washTimer = baseInterval * (0.6 + Math.random() * 0.8) + (Math.random() < 0.2 ? 12 : 0);
+      washTimer = waveBaseInterval * (0.7 + Math.random() * 0.6);
     }
   }
 
