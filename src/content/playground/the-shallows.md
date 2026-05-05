@@ -97,8 +97,8 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 .fake-fullscreen .pool-fs-btn,
 #pool-container:fullscreen .pool-fs-btn,
 #pool-container:-webkit-full-screen .pool-fs-btn { bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; right: calc(max(20px, env(safe-area-inset-right, 0px)) + 8px) !important; }
-#toolbar.hidden, .pool-fs-btn.hidden, .pool-fs-close.hidden { opacity: 0; pointer-events: none; }
-#toolbar, .pool-fs-btn, .pool-fs-close { transition: opacity 0.5s; }
+#toolbar.hidden, .pool-fs-btn.hidden, .pool-fs-close.hidden, .pool-adv-btn.hidden, .pool-advanced-panel.hidden { opacity: 0; pointer-events: none; }
+#toolbar, .pool-fs-btn, .pool-fs-close, .pool-adv-btn, .pool-advanced-panel { transition: opacity 0.5s; }
 #pool-container:fullscreen,
 #pool-container:-webkit-full-screen,
 #pool-container.fake-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; aspect-ratio: auto !important; border-radius: 0 !important; max-width: none !important; z-index: 99999 !important; background: #1a6b7a !important; overflow: hidden !important; }
@@ -488,17 +488,21 @@ function showUI() {
   toolbar.classList.remove('hidden');
   if (!fsCloseBtn.hidden) fsCloseBtn.classList.remove('hidden');
   if (!fsBtn.hidden) fsBtn.classList.remove('hidden');
+  advancedBtn.classList.remove('hidden');
+  if (advancedOpen) advancedPanel.classList.remove('hidden');
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
     toolbar.classList.add('hidden');
     fsBtn.classList.add('hidden');
     fsCloseBtn.classList.add('hidden');
+    advancedBtn.classList.add('hidden');
+    advancedPanel.classList.add('hidden');
   }, 3000);
 }
 poolContainer.addEventListener('mousemove', showUI);
 poolContainer.addEventListener('touchstart', showUI);
 // Start the auto-hide timer
-hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); }, 3000);
+hideTimer = setTimeout(() => { toolbar.classList.add('hidden'); fsBtn.classList.add('hidden'); advancedBtn.classList.add('hidden'); }, 3000);
 // Auto-fullscreen via URL hash (e.g. #fullscreen or #zen)
 // #fullscreen — fullscreen only
 // #zen — fullscreen + sound (shows tap-to-start overlay for audio gesture)
@@ -6432,14 +6436,26 @@ function draw(time) {
     popTarget = Math.max(effectiveBasePop * 0.35, Math.min(effectiveBasePop * 1.3, popTarget + drift));
     popDriftTimer = 12 + Math.random() * 40;
   }
-  // Aggressively shed fish when well over target (slider reduced)
-  if (fish.length > popTarget * 1.2) {
-    const excess = fish.length - Math.floor(popTarget);
-    const toShed = Math.min(3, excess); // shed up to 3 per frame
+  // Aggressively shed fish when over target (slider reduced)
+  const activeFish = fish.filter(f => !f.leaving);
+  if (activeFish.length > popTarget) {
+    const excess = activeFish.length - Math.floor(popTarget);
+    const toShed = Math.min(Math.max(5, Math.ceil(excess * 0.15)), excess);
     let shed = 0;
-    for (const f of fish) {
+    for (const f of activeFish) {
       if (shed >= toShed) break;
-      if (!f.leaving && !f.eating) { f.leaving = true; f.distracted = true; shed++; }
+      if (!f.eating) {
+        f.leaving = true;
+        f.distracted = true;
+        // Point toward nearest edge for faster exit
+        const toLeft = f.x, toRight = w - f.x, toTop = f.y, toBottom = h - f.y;
+        const minEdge = Math.min(toLeft, toRight, toTop, toBottom);
+        if (minEdge === toLeft) f.vx -= 1;
+        else if (minEdge === toRight) f.vx += 1;
+        else if (minEdge === toTop) f.vy -= 1;
+        else f.vy += 1;
+        shed++;
+      }
     }
   }
 
