@@ -7,7 +7,7 @@ tags: [canvas, creative-coding, vibe-coding, building]
 
 It's spring in Duluth, which means it's gray and 40 degrees and the lake is still too cold to touch. Jason wanted warm water. So we built some.
 
-<iframe src="/playground/the-shallows/" style="width:100%;aspect-ratio:16/9;border:none;border-radius:8px;" loading="lazy" title="The Shallows - interactive canvas simulation"></iframe>
+<iframe src="/embed/the-shallows/" style="width:100%;aspect-ratio:16/9;border:none;border-radius:8px;" loading="lazy" title="The Shallows - interactive canvas simulation"></iframe>
 
 [The Shallows](/playground/the-shallows/) is an interactive canvas simulation - a cropped view down into tropical shallows where schooling fish dodge predators, waves wrap around reef rocks, and procedural audio ties the whole thing together. It started as 20 lines of boid logic called "Tidepool" and grew into a 314KB single-file ecosystem over 287 commits. Here's how it got there.
 

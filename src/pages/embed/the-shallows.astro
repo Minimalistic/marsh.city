@@ -1,0 +1,31 @@
+---
+import { getEntry, render } from 'astro:content';
+const item = await getEntry('playground', 'the-shallows');
+const { Content } = await render(item);
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Shallows</title>
+  <style is:global>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1a6b7a; }
+    /* hide the description text before the canvas */
+    body > p { display: none !important; }
+    #fs-close-btn { display: none !important; }
+    .pool-fs-btn { display: none !important; }
+    #pool-container {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      aspect-ratio: unset !important;
+      border-radius: 0 !important;
+    }
+  </style>
+</head>
+<body>
+  <Content />
+</body>
+</html>
