@@ -5148,8 +5148,8 @@ function draw(time) {
 
   // Depth gradient: darker most of the view, only gets shallower in last 30%
   const depthGrad = ctx.createLinearGradient(0, 0, w, h);
-  depthGrad.addColorStop(0, 'rgba(0, 15, 25, 0.25)');
-  depthGrad.addColorStop(0.7, 'rgba(0, 12, 20, 0.2)');
+  depthGrad.addColorStop(0, 'rgba(0, 15, 25, 0.15)');
+  depthGrad.addColorStop(0.7, 'rgba(0, 12, 20, 0.12)');
   depthGrad.addColorStop(1, 'rgba(40, 70, 60, 0.0)');
   ctx.fillStyle = depthGrad;
   ctx.fillRect(0, 0, w, h);
@@ -5773,9 +5773,10 @@ function draw(time) {
           // Emit contact splashes where the primary wave line touches rock
           // More splash when wave hits head-on, less when parallel/grazing
           if (isFirstLine && cl.hit && contactSplashes.length < 600) {
-            const headOn = Math.abs(cl.nx * (-cosA) + cl.ny * (-sinA)); // 1=head-on, 0=parallel
-            const spawnChance = 0.75 * (0.3 + headOn * 0.7); // head-on: 75%, parallel: ~22%
+            const headOn = Math.abs(cl.nx * (-cosA) + cl.ny * (-sinA));
+            const spawnChance = 0.75 * (0.3 + headOn * 0.7);
             if (Math.random() < spawnChance) {
+              // Side spray — flies outward along surface normal
               const sprayAngle = Math.atan2(cl.ny, cl.nx) + (Math.random() - 0.5) * 1.6;
               const spd = (2.5 + Math.random() * 5.5) * viewScale * ww.strength * (0.5 + headOn * 0.5);
               contactSplashes.push({
@@ -5787,6 +5788,20 @@ function draw(time) {
                 maxLife: 0.5 + Math.random() * 1.0,
                 drag: 0.90 + Math.random() * 0.05,
               });
+              // Overspray — launches forward in wave direction, flies over the rock
+              if (headOn > 0.4 && Math.random() < headOn * 0.5) {
+                const overSpd = (3 + Math.random() * 6) * viewScale * ww.strength;
+                const spread = (Math.random() - 0.5) * 0.8;
+                contactSplashes.push({
+                  x: cl.x, y: cl.y,
+                  vx: cosA * overSpd + Math.cos(ww.angle + spread) * overSpd * 0.3,
+                  vy: sinA * overSpd + Math.sin(ww.angle + spread) * overSpd * 0.3,
+                  size: (0.4 + Math.random() * 1.8) * viewScale,
+                  life: 1,
+                  maxLife: 0.6 + Math.random() * 0.8,
+                  drag: 0.93 + Math.random() * 0.04,
+                });
+              }
             }
           }
         }
