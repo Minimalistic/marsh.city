@@ -1024,7 +1024,7 @@ function spawnWash() {
   washWaves.push({
     x: startX, y: startY,
     angle,
-    speed: Math.min((0.96 + intensity * 2.4 * powerMult) * (w / initialW), 2.14 * powerMult * (w / initialW)),
+    speed: Math.min((0.96 + intensity * 2.4) * (w / initialW), 2.14 * (w / initialW)),
     width: (15 + intensity * 40 * powerMult) * viewScale,
     strength: (0.1 + intensity * 0.6) * powerMult,
     life: 1,
@@ -6305,7 +6305,23 @@ function draw(time) {
         else if (minEdge === toRight) pred.angle = 0;
         else if (minEdge === toTop) pred.angle = -Math.PI / 2;
         else pred.angle = Math.PI / 2;
+        pred.vx = Math.cos(pred.angle) * 3;
+        pred.vy = Math.sin(pred.angle) * 3;
       }
+    }
+  }
+  // Keep pushing departing predators toward their exit edge
+  for (const pred of predators) {
+    if (pred._departing) {
+      pred.vx += Math.cos(pred.angle) * 0.15;
+      pred.vy += Math.sin(pred.angle) * 0.15;
+    }
+  }
+  // Remove predators that made it offscreen
+  for (let i = predators.length - 1; i >= 0; i--) {
+    const p = predators[i];
+    if (p._departing && (p.x < -60 || p.x > w + 60 || p.y < -60 || p.y > h + 60)) {
+      predators.splice(i, 1);
     }
   }
   // Predator lifecycle — departure, absence (bonus fish), dramatic return
@@ -6423,10 +6439,15 @@ function draw(time) {
   // Spawn new seagulls
   const effectiveBirdMax = advParams.birdMax != null ? advParams.birdMax : seagullMax;
   if (seagulls.length < effectiveBirdMax) {
-    seagullSpawnTimer -= dt;
-    if (seagullSpawnTimer <= 0) {
+    // Immediate spawn when slider demands more birds (one per frame until caught up)
+    if (advParams.birdMax != null && seagulls.length < effectiveBirdMax) {
       seagulls.push(new Seagull());
-      seagullSpawnTimer = 20 + Math.random() * 50;
+    } else {
+      seagullSpawnTimer -= dt;
+      if (seagullSpawnTimer <= 0) {
+        seagulls.push(new Seagull());
+        seagullSpawnTimer = 20 + Math.random() * 50;
+      }
     }
   }
   // If over limit, mark extras as leaving
