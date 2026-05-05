@@ -4850,15 +4850,19 @@ function rebuildSandCanvas() {
     sandCtx.fill();
     sandCtx.restore();
   }
-  // Submerged edge rocks — baked into sand layer for zero per-frame cost
+  // Submerged edge rocks — baked into sand layer with surface texture
+  const lightAngle = waveBaseAngle + Math.PI; // light from shallow side
+  const lightX = Math.cos(lightAngle), lightY = Math.sin(lightAngle);
   for (const rf of reefs) {
     for (const er of rf.edgeRocks) {
       if (er.aboveWater) continue;
+      const rcx = rf.x + er.ox, rcy = rf.y + er.oy;
+      // Base fill
       sandCtx.beginPath();
       for (let vi = 0; vi <= er.verts.length; vi++) {
         const v = er.verts[vi % er.verts.length];
-        const px = rf.x + er.ox + Math.cos(v.a) * v.r * er.r;
-        const py = rf.y + er.oy + Math.sin(v.a) * v.r * er.r;
+        const px = rcx + Math.cos(v.a) * v.r * er.r;
+        const py = rcy + Math.sin(v.a) * v.r * er.r;
         if (vi === 0) sandCtx.moveTo(px, py);
         else sandCtx.lineTo(px, py);
       }
@@ -4866,10 +4870,30 @@ function rebuildSandCanvas() {
       sandCtx.fillStyle = er.color;
       sandCtx.globalAlpha = 0.3;
       sandCtx.fill();
+      // Highlight edge — lighter on the light-facing side
+      const hlG = sandCtx.createRadialGradient(
+        rcx + lightX * er.r * 0.4, rcy + lightY * er.r * 0.4, 0,
+        rcx, rcy, er.r);
+      hlG.addColorStop(0, 'rgba(255, 250, 240, 0.12)');
+      hlG.addColorStop(0.5, 'rgba(255, 250, 240, 0.03)');
+      hlG.addColorStop(1, 'rgba(0, 0, 0, 0.06)');
+      sandCtx.fillStyle = hlG;
+      sandCtx.fill();
+      // Surface speckle — tiny noise dots for texture
+      sandCtx.globalAlpha = 0.15;
+      for (let si = 0; si < 3 + er.r; si++) {
+        const sa = (si * 2.39996 + er.ox) % (Math.PI * 2); // golden angle spread
+        const sr2 = Math.random() * er.r * 0.7;
+        const sx = rcx + Math.cos(sa) * sr2, sy = rcy + Math.sin(sa) * sr2;
+        sandCtx.beginPath();
+        sandCtx.arc(sx, sy, 0.5 + Math.random() * 1, 0, Math.PI * 2);
+        sandCtx.fillStyle = Math.random() < 0.5 ? 'rgba(255,250,240,1)' : 'rgba(0,0,0,1)';
+        sandCtx.fill();
+      }
       sandCtx.globalAlpha = 1;
     }
   }
-  // Seabed pebbles — small irregular gray rocks baked into the sand layer
+  // Seabed pebbles — small irregular rocks with surface texture
   for (const sr of seabedRocks) {
     sandCtx.beginPath();
     for (let vi = 0; vi <= sr.verts.length; vi++) {
@@ -4882,6 +4906,15 @@ function rebuildSandCanvas() {
     sandCtx.closePath();
     sandCtx.fillStyle = sr.color;
     sandCtx.globalAlpha = 0.18;
+    sandCtx.fill();
+    // Light/shadow gradient
+    const phlG = sandCtx.createRadialGradient(
+      sr.x + lightX * sr.size * 0.3, sr.y + lightY * sr.size * 0.3, 0,
+      sr.x, sr.y, sr.size);
+    phlG.addColorStop(0, 'rgba(255, 250, 240, 0.08)');
+    phlG.addColorStop(0.6, 'rgba(255, 250, 240, 0)');
+    phlG.addColorStop(1, 'rgba(0, 0, 0, 0.04)');
+    sandCtx.fillStyle = phlG;
     sandCtx.fill();
     sandCtx.globalAlpha = 1;
   }
