@@ -4885,7 +4885,7 @@ function rebuildSandCanvas() {
       }
       sandCtx.closePath();
       sandCtx.fillStyle = er.color;
-      sandCtx.globalAlpha = 0.3;
+      sandCtx.globalAlpha = 0.2;
       sandCtx.fill();
       // Highlight edge — lighter on the light-facing side
       const hlG = sandCtx.createRadialGradient(
@@ -4922,7 +4922,7 @@ function rebuildSandCanvas() {
     }
     sandCtx.closePath();
     sandCtx.fillStyle = sr.color;
-    sandCtx.globalAlpha = 0.18;
+    sandCtx.globalAlpha = 0.12;
     sandCtx.fill();
     // Light/shadow gradient
     const phlG = sandCtx.createRadialGradient(
@@ -6828,6 +6828,28 @@ function draw(time) {
       ctx.closePath();
       ctx.fillStyle = er.color;
       ctx.fill();
+      // Texture: highlight on light side, shadow on dark side, speckle
+      const erCx = er.ox, erCy = er.oy;
+      const lx = Math.cos(waveBaseAngle + Math.PI), ly = Math.sin(waveBaseAngle + Math.PI);
+      const hlG = ctx.createRadialGradient(
+        erCx + lx * er.r * 0.35, erCy + ly * er.r * 0.35, 0,
+        erCx, erCy, er.r);
+      hlG.addColorStop(0, 'rgba(255, 248, 235, 0.2)');
+      hlG.addColorStop(0.5, 'rgba(255, 248, 235, 0.05)');
+      hlG.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+      ctx.fillStyle = hlG;
+      ctx.fill();
+      // Surface speckle
+      ctx.globalAlpha = 0.2;
+      for (let si = 0; si < 2 + er.r * 0.8; si++) {
+        const sa = (si * 2.39996 + er.ox * 0.5) % (Math.PI * 2);
+        const sd = Math.random() * er.r * 0.6;
+        ctx.beginPath();
+        ctx.arc(erCx + Math.cos(sa) * sd, erCy + Math.sin(sa) * sd, 0.4 + Math.random() * 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = Math.random() < 0.5 ? 'rgba(255,248,235,1)' : 'rgba(40,30,20,1)';
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
       // Waterline ripples around edge rocks that straddle the water
       const erDist = Math.sqrt(er.ox * er.ox + er.oy * er.oy);
       const crAngle = Math.atan2(er.oy - rf.crownOffY, er.ox - rf.crownOffX);
