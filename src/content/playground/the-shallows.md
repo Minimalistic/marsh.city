@@ -3941,15 +3941,32 @@ function generateSeabedRocks() {
     }
     // Skip if on top of a reef crown (will be added near-reef after reefs exist)
     const rockSize = (1.5 + Math.random() * 3.5) * viewScale;
-    const gray = 60 + Math.floor(Math.random() * 35);
-    const warm = Math.floor(Math.random() * 6);
+    // Check if near a reef — derive color from it
+    let nearReef = null;
+    let nearReefDist = Infinity;
+    for (const rf of reefs) {
+      const dx = rf.x - px, dy = rf.y - py;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < rf.baseR * 3 && d < nearReefDist) { nearReef = rf; nearReefDist = d; }
+    }
     // Check if touching previous rock — share color
     const neighbor = seabedRocks.find(sr => {
       const dx = sr.x - px, dy = sr.y - py;
       return Math.sqrt(dx * dx + dy * dy) < sr.size + rockSize + 1;
     });
-    const g = neighbor ? neighbor._gray : gray;
-    const wm = neighbor ? neighbor._warm : warm;
+    let g, wm;
+    if (neighbor) {
+      g = neighbor._gray + Math.floor(Math.random() * 4 - 2);
+      wm = neighbor._warm;
+    } else if (nearReef) {
+      // Match reef tone — extract base gray from reef's baseColor
+      const rfG = parseInt(nearReef.baseColor.match(/\d+/g)[0]) - 5;
+      g = rfG + 15 + Math.floor(Math.random() * 15);
+      wm = Math.floor(Math.random() * 4);
+    } else {
+      g = 85 + Math.floor(Math.random() * 20);
+      wm = Math.floor(Math.random() * 4);
+    }
     const vertCount = 5 + Math.floor(Math.random() * 3);
     seabedRocks.push({
       x: px, y: py, size: rockSize,
