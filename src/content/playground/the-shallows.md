@@ -5659,6 +5659,19 @@ function draw(time) {
         trPts[i].x += perpX * swirl + cosA * stretch;
         trPts[i].y += perpY * swirl + sinA * stretch;
       }
+      // Smooth out extreme kinks
+      for (let _p = 0; _p < 2; _p++) {
+        for (let i = 1; i < trPts.length - 1; i++) {
+          const ax = trPts[i].x - trPts[i - 1].x, ay = trPts[i].y - trPts[i - 1].y;
+          const bx = trPts[i + 1].x - trPts[i].x, by = trPts[i + 1].y - trPts[i].y;
+          const bend = Math.atan2(ax * by - ay * bx, ax * bx + ay * by);
+          if (Math.abs(bend) > 0.4) {
+            const s = (1 - 0.4 / Math.abs(bend)) * 0.5;
+            trPts[i].x += ((trPts[i - 1].x + trPts[i + 1].x) * 0.5 - trPts[i].x) * s;
+            trPts[i].y += ((trPts[i - 1].y + trPts[i + 1].y) * 0.5 - trPts[i].y) * s;
+          }
+        }
+      }
 
       waveTrailCtx.globalAlpha = trAlpha * 0.7;
       waveTrailCtx.lineWidth = tr.thick * tr.life;
@@ -5880,13 +5893,31 @@ function draw(time) {
           pts[i].y -= sinA * pull;
         }
 
+        // Smooth out extreme kinks — clamp bend angle at each vertex
+        const maxBend = 0.4; // ~23 degrees max bend per joint
+        for (let pass = 0; pass < 2; pass++) {
+          for (let i = 1; i < pts.length - 1; i++) {
+            const ax = pts[i].x - pts[i - 1].x, ay = pts[i].y - pts[i - 1].y;
+            const bx = pts[i + 1].x - pts[i].x, by = pts[i + 1].y - pts[i].y;
+            const cross = ax * by - ay * bx;
+            const dot = ax * bx + ay * by;
+            const bend = Math.atan2(cross, dot);
+            if (Math.abs(bend) > maxBend) {
+              // Nudge middle point toward the midpoint of its neighbors
+              const mx = (pts[i - 1].x + pts[i + 1].x) * 0.5;
+              const my = (pts[i - 1].y + pts[i + 1].y) * 0.5;
+              const strength = 1 - maxBend / Math.abs(bend);
+              pts[i].x += (mx - pts[i].x) * strength * 0.5;
+              pts[i].y += (my - pts[i].y) * strength * 0.5;
+            }
+          }
+        }
+
         isFirstLine = false;
-        // Fade in over first 10% of travel so waves don't pop in at full brightness
         const waveProgress = 1 - ww.life;
         const lineFadeIn = Math.min(waveProgress / 0.1, 1);
         const baseAlpha = lineFadeIn * ww.life * ln.alpha;
 
-        // Draw wave lines to trail canvas (frame-persistence creates ghost effect)
         waveTrailCtx.globalAlpha = baseAlpha * 0.5;
         waveTrailCtx.lineWidth = ln.thick;
         waveTrailCtx.lineCap = 'butt';
@@ -6595,6 +6626,19 @@ function draw(time) {
         const stretch = Math.cos(t3 * 1.7 + i * 0.2) * 4 * viewScale * ww.strength;
         trPts[i].x += perpX * swirl + cosA * stretch;
         trPts[i].y += perpY * swirl + sinA * stretch;
+      }
+      // Smooth out extreme kinks
+      for (let _p = 0; _p < 2; _p++) {
+        for (let i = 1; i < trPts.length - 1; i++) {
+          const ax = trPts[i].x - trPts[i - 1].x, ay = trPts[i].y - trPts[i - 1].y;
+          const bx = trPts[i + 1].x - trPts[i].x, by = trPts[i + 1].y - trPts[i].y;
+          const bend = Math.atan2(ax * by - ay * bx, ax * bx + ay * by);
+          if (Math.abs(bend) > 0.4) {
+            const s = (1 - 0.4 / Math.abs(bend)) * 0.5;
+            trPts[i].x += ((trPts[i - 1].x + trPts[i + 1].x) * 0.5 - trPts[i].x) * s;
+            trPts[i].y += ((trPts[i - 1].y + trPts[i + 1].y) * 0.5 - trPts[i].y) * s;
+          }
+        }
       }
 
       waveTrailCtx.globalAlpha = trAlpha * 0.7;
