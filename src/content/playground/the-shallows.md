@@ -12,15 +12,36 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="6" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="12" cy="18" r="1"/></svg>
     Feed
   </button>
-  <button id="debug-toggle" class="pool-tool" title="Toggle debug stats" aria-label="Toggle debug stats" aria-pressed="false" role="switch">
-    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V10"/><path d="M6 20V4"/><path d="M18 20v-6"/></svg>
-    Stats
+  <button id="advanced-toggle" class="pool-tool" title="Advanced controls" aria-label="Advanced controls" aria-pressed="false" role="switch">
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15 1.65 1.65 0 003 14.08V14a2 2 0 014 0v.09c0 .67.44 1.27 1.09 1.49"/></svg>
+    Advanced
   </button>
   <button id="sound-toggle" class="pool-tool" title="Toggle ocean sound" aria-label="Toggle ocean sound" aria-pressed="false" role="switch">
     <svg id="sound-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
     Sound
   </button>
   <input id="volume-slider" type="range" min="0" max="100" value="50" class="pool-volume" title="Volume" aria-label="Volume">
+</div>
+<div id="advanced-panel" class="pool-advanced-panel" hidden>
+  <button id="debug-toggle" class="pool-tool" title="Toggle debug stats" aria-label="Toggle debug stats" aria-pressed="false" role="switch">
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V10"/><path d="M6 20V4"/><path d="M18 20v-6"/></svg>
+    Stats
+  </button>
+  <label class="pool-slider-label">Fish <span id="fish-val">auto</span>
+    <input id="fish-slider" type="range" min="20" max="400" value="200" class="pool-adv-slider">
+  </label>
+  <label class="pool-slider-label">Wave Freq <span id="wave-freq-val">mid</span>
+    <input id="wave-freq-slider" type="range" min="5" max="80" value="35" class="pool-adv-slider">
+  </label>
+  <label class="pool-slider-label">Wave Power <span id="wave-power-val">mid</span>
+    <input id="wave-power-slider" type="range" min="10" max="100" value="50" class="pool-adv-slider">
+  </label>
+  <label class="pool-slider-label">Birds <span id="birds-val">auto</span>
+    <input id="birds-slider" type="range" min="0" max="5" value="2" class="pool-adv-slider">
+  </label>
+  <label class="pool-slider-label">Predators <span id="pred-val">auto</span>
+    <input id="pred-slider" type="range" min="0" max="3" value="1" class="pool-adv-slider">
+  </label>
 </div>
 <button id="fullscreen-btn" class="pool-tool icon-only pool-fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
@@ -111,13 +132,61 @@ body:has(.fake-fullscreen) { background: #1a6b7a !important; overflow: hidden !i
   font: 16px/1.5 monospace; color: rgba(255,255,255,0.7);
   pointer-events: none; white-space: pre;
 }
+.pool-advanced-panel {
+  position: absolute; top: 8px; right: 140px; z-index: 10;
+  background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+  padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;
+  max-height: 80%; overflow-y: auto;
+}
+.pool-slider-label {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  font: 10px/1 system-ui, sans-serif; color: rgba(255,255,255,0.7);
+  white-space: nowrap; cursor: default;
+}
+.pool-slider-label span {
+  min-width: 28px; text-align: right; font-variant-numeric: tabular-nums;
+}
+.pool-adv-slider {
+  width: 80px; height: 4px;
+  accent-color: rgba(150,200,220,0.8); cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background: rgba(255,255,255,0.15); border-radius: 2px; margin: 0;
+}
+.pool-adv-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px;
+  border-radius: 50%; background: rgba(150,200,220,0.9); cursor: pointer;
+}
+.fake-fullscreen .pool-advanced-panel,
+#pool-container:fullscreen .pool-advanced-panel,
+#pool-container:-webkit-full-screen .pool-advanced-panel {
+  top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+  right: calc(max(20px, env(safe-area-inset-right, 0px)) + 140px) !important;
+}
+.pool-advanced-panel.hidden { opacity: 0; pointer-events: none; }
 </style>
 
 <script type="module">
 const canvas = document.getElementById('pool');
 const ctx = canvas.getContext('2d');
 
-// Debug stats toggle
+// Advanced panel toggle
+let advancedOpen = false;
+const advancedBtn = document.getElementById('advanced-toggle');
+const advancedPanel = document.getElementById('advanced-panel');
+advancedBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  advancedOpen = !advancedOpen;
+  advancedBtn.classList.toggle('active', advancedOpen);
+  advancedBtn.setAttribute('aria-pressed', advancedOpen);
+  advancedPanel.hidden = !advancedOpen;
+});
+// Prevent panel interactions from bubbling to canvas
+advancedPanel.addEventListener('click', e => e.stopPropagation());
+advancedPanel.addEventListener('touchstart', e => e.stopPropagation());
+advancedPanel.addEventListener('touchmove', e => e.stopPropagation());
+
+// Debug stats toggle (inside advanced panel)
 let debugVisible = false;
 const debugBtn = document.getElementById('debug-toggle');
 debugBtn.addEventListener('click', e => {
@@ -126,6 +195,52 @@ debugBtn.addEventListener('click', e => {
   debugBtn.classList.toggle('active', debugVisible);
   debugBtn.setAttribute('aria-pressed', debugVisible);
 });
+
+// Advanced simulation parameters — override defaults when adjusted
+const advParams = {
+  fishCount: null,       // null = use auto (area-based)
+  waveInterval: null,    // null = default timing
+  wavePower: null,       // null = default intensity multiplier
+  birdMax: null,         // null = use area-based default
+  predMax: null,         // null = use area-based default
+};
+
+const fishSlider = document.getElementById('fish-slider');
+const waveFreqSlider = document.getElementById('wave-freq-slider');
+const wavePowerSlider = document.getElementById('wave-power-slider');
+const birdsSlider = document.getElementById('birds-slider');
+const predSlider = document.getElementById('pred-slider');
+
+fishSlider.addEventListener('input', e => {
+  e.stopPropagation();
+  advParams.fishCount = parseInt(e.target.value);
+  document.getElementById('fish-val').textContent = advParams.fishCount;
+});
+waveFreqSlider.addEventListener('input', e => {
+  e.stopPropagation();
+  advParams.waveInterval = parseInt(e.target.value);
+  document.getElementById('wave-freq-val').textContent = advParams.waveInterval + 's';
+});
+wavePowerSlider.addEventListener('input', e => {
+  e.stopPropagation();
+  advParams.wavePower = parseInt(e.target.value) / 50; // 0.2 to 2.0
+  document.getElementById('wave-power-val').textContent = Math.round(advParams.wavePower * 100) + '%';
+});
+birdsSlider.addEventListener('input', e => {
+  e.stopPropagation();
+  advParams.birdMax = parseInt(e.target.value);
+  document.getElementById('birds-val').textContent = advParams.birdMax;
+});
+predSlider.addEventListener('input', e => {
+  e.stopPropagation();
+  advParams.predMax = parseInt(e.target.value);
+  document.getElementById('pred-val').textContent = advParams.predMax;
+});
+// Prevent slider touch from propagating
+for (const sl of [fishSlider, waveFreqSlider, wavePowerSlider, birdsSlider, predSlider]) {
+  sl.addEventListener('touchstart', e => e.stopPropagation());
+  sl.addEventListener('touchmove', e => e.stopPropagation());
+}
 
 // Food toggle
 let activeTool = 'observe';
@@ -365,11 +480,13 @@ function showUI() {
   toolbar.classList.remove('hidden');
   if (!fsCloseBtn.hidden) fsCloseBtn.classList.remove('hidden');
   if (!fsBtn.hidden) fsBtn.classList.remove('hidden');
+  if (advancedOpen) advancedPanel.classList.remove('hidden');
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
     toolbar.classList.add('hidden');
     fsBtn.classList.add('hidden');
     fsCloseBtn.classList.add('hidden');
+    advancedPanel.classList.add('hidden');
   }, 3000);
 }
 poolContainer.addEventListener('mousemove', showUI);
@@ -893,12 +1010,13 @@ function spawnWash() {
   const startY = h / 2 - Math.sin(angle) * h * 0.7;
   // Highly varied intensity - some are strong and fast, some barely there
   const intensity = Math.pow(Math.random(), 0.7); // skewed toward weaker
+  const powerMult = advParams.wavePower != null ? advParams.wavePower : 1;
   washWaves.push({
     x: startX, y: startY,
     angle,
-    speed: Math.min((0.96 + intensity * 2.4) * (w / initialW), 2.14 * (w / initialW)),
-    width: (15 + intensity * 40) * viewScale,
-    strength: 0.1 + intensity * 0.6,
+    speed: Math.min((0.96 + intensity * 2.4 * powerMult) * (w / initialW), 2.14 * powerMult * (w / initialW)),
+    width: (15 + intensity * 40 * powerMult) * viewScale,
+    strength: (0.1 + intensity * 0.6) * powerMult,
     life: 1,
     traveled: 0,
     maxTravel: Math.max(w, h) * 1.4,
@@ -5039,7 +5157,8 @@ function draw(time) {
     } else {
       spawnWash();
       // Very irregular timing - sometimes rapid sets, sometimes long lulls
-      washTimer = 25 + Math.random() * 18 + (Math.random() < 0.2 ? 12 : 0);
+      const baseInterval = advParams.waveInterval != null ? advParams.waveInterval : 35;
+      washTimer = baseInterval * (0.6 + Math.random() * 0.8) + (Math.random() < 0.2 ? 12 : 0);
     }
   }
 
@@ -6149,6 +6268,25 @@ function draw(time) {
   }
 
   // Organic population — target wanders, fish come and go naturally
+  // Predator count override — if slider reduced, signal extras to leave
+  const effectivePredMax = advParams.predMax != null ? advParams.predMax : predatorMax;
+  if (predators.length > effectivePredMax) {
+    for (let i = predators.length - 1; i >= effectivePredMax; i--) {
+      const pred = predators[i];
+      if (!pred._departing) {
+        pred._departing = true;
+        pred.target = null;
+        pred.hunting = false;
+        const toLeft = pred.x, toRight = w - pred.x;
+        const toTop = pred.y, toBottom = h - pred.y;
+        const minEdge = Math.min(toLeft, toRight, toTop, toBottom);
+        if (minEdge === toLeft) pred.angle = Math.PI;
+        else if (minEdge === toRight) pred.angle = 0;
+        else if (minEdge === toTop) pred.angle = -Math.PI / 2;
+        else pred.angle = Math.PI / 2;
+      }
+    }
+  }
   // Predator lifecycle — departure, absence (bonus fish), dramatic return
   if (predators.length > 0 && predAbsentTimer <= 0) {
     predReturnTimer -= dt;
@@ -6206,8 +6344,8 @@ function draw(time) {
       fish.push(f);
       predBonusFish++;
     }
-    // Predator returns
-    if (predAbsentTimer <= 0) {
+    // Predator returns (only if under the max)
+    if (predAbsentTimer <= 0 && predators.length < effectivePredMax) {
       // Dramatic entrance — fast, from an edge, targeting a fish
       const pred = new Predator();
       // Override spawn to come from edge at speed
@@ -6234,6 +6372,15 @@ function draw(time) {
       predReturnTimer = 60 + Math.random() * 90; // next departure in 60-150s
     }
   }
+  // Spawn additional predators if slider wants more than currently present
+  if (predators.length < effectivePredMax && predAbsentTimer <= 0 && predDepartTimer <= 0) {
+    while (predators.length < effectivePredMax) {
+      const pred = new Predator();
+      predators.push(pred);
+    }
+  }
+  // If slider is 0, skip the absence/return cycle
+  if (effectivePredMax === 0) { predAbsentTimer = 0; predDepartTimer = 0; }
 
   // Seagull lifecycle — spawn, fly, leave, respawn
   for (const g of seagulls) g.update(dt);
@@ -6245,20 +6392,32 @@ function draw(time) {
     }
   }
   // Spawn new seagulls
-  if (seagulls.length < seagullMax) {
+  const effectiveBirdMax = advParams.birdMax != null ? advParams.birdMax : seagullMax;
+  if (seagulls.length < effectiveBirdMax) {
     seagullSpawnTimer -= dt;
     if (seagullSpawnTimer <= 0) {
       seagulls.push(new Seagull());
       seagullSpawnTimer = 20 + Math.random() * 50;
     }
   }
+  // If over limit, mark extras as leaving
+  while (seagulls.length > effectiveBirdMax) {
+    const g = seagulls.find(s => !s.leaving);
+    if (g) g.leaving = true; else break;
+  }
 
+  // Override population target when fish slider is set
+  const effectiveBasePop = advParams.fishCount != null ? advParams.fishCount : basePop;
   popDriftTimer -= dt;
   if (popDriftTimer <= 0) {
     // Shift the target: sometimes sparser, sometimes denser
-    const drift = (Math.random() - 0.5) * basePop * 0.4;
-    popTarget = Math.max(basePop * 0.35, Math.min(basePop * 1.3, popTarget + drift));
+    const drift = (Math.random() - 0.5) * effectiveBasePop * 0.4;
+    popTarget = Math.max(effectiveBasePop * 0.35, Math.min(effectiveBasePop * 1.3, popTarget + drift));
     popDriftTimer = 12 + Math.random() * 40;
+  }
+  // Nudge popTarget toward slider value when fish count is overridden
+  if (advParams.fishCount != null) {
+    popTarget = popTarget * 0.95 + advParams.fishCount * 0.05;
   }
 
   // Subgroup split — occasionally a cluster of nearby fish all break off together
