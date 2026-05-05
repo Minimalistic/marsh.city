@@ -5936,7 +5936,7 @@ function draw(time) {
     if (!rf._splashEmit || rf._splashEmit <= 0) continue;
     rf._splashTimer += dt;
     if (rf._splashTimer < 0) continue; // still in delay period
-    const emitDuration = 2.75; // total emission window after delay
+    const emitDuration = 5; // longer emission window for more ripples
     if (rf._splashTimer > emitDuration) { rf._splashEmit = 0; continue; }
     const decay = 1 - rf._splashTimer / emitDuration;
     rf._splashNext -= dt;
@@ -5945,39 +5945,39 @@ function draw(time) {
       // First burst after delay: thick, fast, multiple lines
       if (rf._splashFirst) {
         rf._splashFirst = false;
-        rf._splashNext = 0.15;
+        rf._splashNext = 0.12;
         // Trigger splash rumble sound
         rf._splashRumble = rf._splashEmit;
         rf._splashRumbleTime = performance.now();
-        const burstCount = 2 + Math.floor(rf._splashEmit * 2);
+        const burstCount = 3 + Math.floor(rf._splashEmit * 3);
         for (let si = 0; si < burstCount; si++) {
           splashRipples.push({
             cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
-            radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 2,
-            maxRadius: (rf.crownR * 1.95 + si * 12) * viewScale,
-            speed: (0.4 + Math.random() * 0.25) * viewScale,
+            radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2 + si * 3,
+            maxRadius: (rf.crownR * 4 + si * 20) * viewScale,
+            speed: (0.3 + Math.random() * 0.2) * viewScale,
             hitAngle,
-            strength: rf._splashEmit * (1.4 + Math.random() * 0.4), // very pronounced initial
+            strength: rf._splashEmit * (1.2 + Math.random() * 0.4),
             life: 1,
-            maxLife: 4 + Math.random() * 3,
+            maxLife: 5 + Math.random() * 4,
             seed: Math.random() * 100,
-            thick: (3.0 + Math.random() * 1.5) * viewScale, // thick initial ripple
+            thick: (2.5 + Math.random() * 1.5) * viewScale,
           });
         }
       } else {
-        // Subsequent ripples — progressively thinner, dimmer
-        rf._splashNext = 0.2 + (1 - decay) * 0.6;
+        // Ongoing ripples — radiate outward slowly, progressively fainter
+        rf._splashNext = 0.3 + (1 - decay) * 0.5;
         splashRipples.push({
           cx: rf.x + rf.crownOffX, cy: rf.y + rf.crownOffY,
           radius: rf.radiusAt(hitAngle, rf.crownRadii) + 2,
-          maxRadius: (rf.crownR * 1.43 + decay * 8) * viewScale,
-          speed: (0.25 + decay * 0.2) * viewScale,
+          maxRadius: (rf.crownR * 3.5 + decay * 15) * viewScale,
+          speed: (0.15 + decay * 0.2) * viewScale,
           hitAngle,
-          strength: rf._splashEmit * decay * decay * (0.4 + Math.random() * 0.2), // fades faster
+          strength: rf._splashEmit * decay * decay * (0.35 + Math.random() * 0.15),
           life: 1,
-          maxLife: 3 + decay * 2,
+          maxLife: 4 + decay * 3,
           seed: Math.random() * 100,
-          thick: (0.5 + decay * decay * 1.5) * viewScale, // thins quickly with decay²
+          thick: (0.4 + decay * decay * 1.2) * viewScale,
         });
       }
     }
