@@ -6839,14 +6839,16 @@ function draw(time) {
       hlG.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
       ctx.fillStyle = hlG;
       ctx.fill();
-      // Surface speckle
+      // Surface speckle — deterministic positions so they don't move
       ctx.globalAlpha = 0.2;
-      for (let si = 0; si < 2 + er.r * 0.8; si++) {
+      const speckCount = Math.floor(2 + er.r * 0.8);
+      for (let si = 0; si < speckCount; si++) {
         const sa = (si * 2.39996 + er.ox * 0.5) % (Math.PI * 2);
-        const sd = Math.random() * er.r * 0.6;
+        const sd = ((si * 0.618 + er.oy * 0.1) % 1) * er.r * 0.6;
+        const sz = 0.4 + ((si * 0.381 + er.ox * 0.07) % 1) * 0.8;
         ctx.beginPath();
-        ctx.arc(erCx + Math.cos(sa) * sd, erCy + Math.sin(sa) * sd, 0.4 + Math.random() * 0.8, 0, Math.PI * 2);
-        ctx.fillStyle = Math.random() < 0.5 ? 'rgba(255,248,235,1)' : 'rgba(40,30,20,1)';
+        ctx.arc(erCx + Math.cos(sa) * sd, erCy + Math.sin(sa) * sd, sz, 0, Math.PI * 2);
+        ctx.fillStyle = si % 2 === 0 ? 'rgba(255,248,235,1)' : 'rgba(40,30,20,1)';
         ctx.fill();
       }
       ctx.globalAlpha = 1;
