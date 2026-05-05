@@ -25,8 +25,6 @@ Some specific problems that took more iterations than expected:
 
 **The white flash.** When a fish turns sharply enough while panicking, it briefly flashes white - simulating the side of its body catching light. This was the moment the fish stopped looking like animations and started looking like fish. Before that, tight turns just looked like geometry pivoting. After it, the school's panic response became visually legible from a distance.
 
-![A tight cluster of fish mid-school, close enough to see individual body shapes and the spacing between them](/images/the-shallows/closeup-school-tight.webp)
-
 **Avoidance gradients.** Early collision avoidance was binary - fish either ignored rocks or bounced off them like pinballs. Neither looked natural. The fix was multiple gradient envelopes: a wide outer zone where fish gently steer away (like they can see the rock coming), a tighter zone where they turn more aggressively, and a hard boundary they truly can't cross. Three simple zones, but the result is fish that look like they're *anticipating* obstacles rather than reacting to them.
 
 ## Building a world around them
@@ -35,11 +33,7 @@ The environment grew organically. Fish needed something to swim around, so we ad
 
 ![Close-up of reef rocks, seaweed, and the subtle sand ripple texture between two reef formations](/images/the-shallows/reef-detail.webp)
 
-![A single reef rock up close - textured crown, surrounding sand, the interaction zone where fish navigate around it](/images/the-shallows/closeup-reef.webp)
-
 The sand ripples alone took about ten commits. Too prominent and they competed with the fish. Wrong color temperature and they looked like a texture from a different scene. Too sharp and they read as drawn lines rather than light refracting through moving water. The final version uses thick blurred strokes at very low opacity, built up in layers. They're barely there - which is the point.
-
-![A starfish resting on the sand floor - one of the small environmental details that make the scene feel inhabited](/images/the-shallows/closeup-starfish.webp)
 
 Jason has a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - not because anyone would consciously notice if they didn't, but because the *absence* of that interaction reads as fake to anyone who's spent time watching real water.
 
@@ -49,8 +43,6 @@ Jason has a side hobby of testing water in video games. Loading up a new game an
 
 The predator (a tuna-like shape) exists to create drama in an otherwise meditative scene. It cruises slowly - gentle course corrections, in no hurry - until it spots a straggler. Then a burst of speed, bubbles trailing behind, and the school explodes into panic mode.
 
-![The predator up close - tuna-like body, larger than the schooling fish, cruising through open water](/images/the-shallows/closeup-predator.webp)
-
 Getting the predator's temperament right mattered more than getting its movement physics right. Too aggressive and it dominates the scene - the fish are permanently terrified, the calm never returns. Too passive and it's just a big shape drifting through. The sweet spot is a predator that's mostly lazy but occasionally *decides* to hunt, creating these punctuated moments of chaos in an otherwise flowing scene.
 
 The kill animation went through revisions. We tried blood first - red particles dispersing from the bite. It looked fine technically but completely broke the vibe. This is supposed to be something you leave running in the background, something pleasant to glance at. Blood made it feel violent rather than natural.
@@ -58,8 +50,6 @@ The kill animation went through revisions. We tried blood first - red particles 
 The solution: sparkly scales spray out from the impact, glinting as they slowly spread and sink. And then - the part that really tied it together - those drifting scales become food that the other fish want to eat. So after the moment of panic, the school cautiously returns to pick at the remnants. Tension, release, return to calm. The full cycle of a nature scene in maybe fifteen seconds.
 
 Seagulls were added for visual variety - they cast dynamic shadows on the water as they circle. Their wing animation still needs work (canvas-drawn bird wings are surprisingly hard to make look right), but the shadows moving across the school create nice moments of the fish briefly scattering from what's probably just a shape overhead.
-
-![A seagull overhead - its shadow cast on the water surface below](/images/the-shallows/closeup-seagull.webp)
 
 ## The waves
 
