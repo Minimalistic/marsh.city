@@ -3673,19 +3673,19 @@ class Seagull {
     ctx.fillStyle = 'rgba(240, 242, 245, 0.9)';
     ctx.fill();
 
-    // Beak — yellow, pointed
+    // Beak — yellow, pointed, centered on head
     ctx.beginPath();
-    ctx.moveTo(bl * 0.5, 0);
-    ctx.lineTo(bl * 0.65, 0);
-    ctx.lineTo(bl * 0.5, bl * 0.025);
+    ctx.moveTo(bl * 0.42, -bl * 0.012);
+    ctx.lineTo(bl * 0.58, -bl * 0.012);
+    ctx.lineTo(bl * 0.42, bl * 0.013);
     ctx.closePath();
     ctx.fillStyle = 'rgba(230, 190, 50, 0.95)';
     ctx.fill();
     // Beak upper ridge
     ctx.beginPath();
-    ctx.moveTo(bl * 0.5, -bl * 0.02);
-    ctx.lineTo(bl * 0.65, 0);
-    ctx.lineTo(bl * 0.5, 0);
+    ctx.moveTo(bl * 0.42, -bl * 0.032);
+    ctx.lineTo(bl * 0.58, -bl * 0.012);
+    ctx.lineTo(bl * 0.42, -bl * 0.012);
     ctx.closePath();
     ctx.fillStyle = 'rgba(210, 170, 40, 0.9)';
     ctx.fill();
