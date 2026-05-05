@@ -6844,8 +6844,8 @@ function draw(time) {
       const speckCount = Math.floor(2 + er.r * 0.8);
       for (let si = 0; si < speckCount; si++) {
         const sa = (si * 2.39996 + er.ox * 0.5) % (Math.PI * 2);
-        const sd = ((si * 0.618 + er.oy * 0.1) % 1) * er.r * 0.6;
-        const sz = 0.4 + ((si * 0.381 + er.ox * 0.07) % 1) * 0.8;
+        const sd = Math.abs((si * 0.618 + er.oy * 0.1) % 1) * er.r * 0.6;
+        const sz = 0.4 + Math.abs((si * 0.381 + er.ox * 0.07) % 1) * 0.8;
         ctx.beginPath();
         ctx.arc(erCx + Math.cos(sa) * sd, erCy + Math.sin(sa) * sd, sz, 0, Math.PI * 2);
         ctx.fillStyle = si % 2 === 0 ? 'rgba(255,248,235,1)' : 'rgba(40,30,20,1)';
