@@ -1151,6 +1151,8 @@ const paletteItems = [
       (() => {
         let overlay = null;
         let lbImg = null;
+        // element that pinch/pan transforms apply to (image or svg wrapper)
+        let lbTarget = null;
         // transform state
         let scale = 1, tx = 0, ty = 0;
         // natural center of the image (captured once on open, never changes)
@@ -1164,13 +1166,13 @@ const paletteItems = [
         let touchMoved = false;
 
         function applyTransform() {
-          if (!lbImg) return;
-          lbImg.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
+          if (!lbTarget) return;
+          lbTarget.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
         }
 
         function resetTransform() {
           scale = 1; tx = 0; ty = 0;
-          if (lbImg) lbImg.style.transform = '';
+          if (lbTarget) lbTarget.style.transform = '';
         }
 
         function dist(a, b) {
@@ -1262,6 +1264,7 @@ const paletteItems = [
           var el = overlay;
           overlay = null;
           lbImg = null;
+          lbTarget = null;
           setTimeout(function() { el.remove(); }, 250);
         }
 
@@ -1284,6 +1287,7 @@ const paletteItems = [
           lbImg.src = src;
           lbImg.alt = alt || '';
           lbImg.draggable = false;
+          lbTarget = lbImg;
 
           // capture the image's natural center once it's laid out
           lbImg.addEventListener('load', function() {
@@ -1361,48 +1365,88 @@ const paletteItems = [
           });
         }
 
+        // mermaid diagrams: render the cloned SVG inline (not as <img src=blob>) so
+        // foreignObject HTML labels survive — browsers refuse to render them inside
+        // an image-context SVG, which is why the old blob path showed broken/empty.
+        function openSvgLightbox(srcSvg) {
+          if (overlay) closeLightbox();
+          overlay = document.createElement('div');
+          overlay.className = 'lightbox';
+          overlay.setAttribute('role', 'dialog');
+          overlay.setAttribute('aria-modal', 'true');
+          overlay.setAttribute('aria-label', 'Diagram preview');
+
+          var closeBtn = document.createElement('button');
+          closeBtn.className = 'lightbox-close';
+          closeBtn.setAttribute('aria-label', 'Close diagram preview');
+          closeBtn.textContent = '✕';
+          closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
+          closeBtn.addEventListener('touchend', function(e) { e.stopPropagation(); e.preventDefault(); closeLightbox(); });
+
+          var wrap = document.createElement('div');
+          wrap.className = 'lightbox-svg';
+
+          var clone = srcSvg.cloneNode(true);
+          // strip animation state so mid-animation clicks show the complete diagram
+          clone.querySelectorAll('.node, .cluster').forEach(function(n) {
+            n.style.opacity = '';
+            n.style.transition = '';
+            n.style.transform = '';
+          });
+          clone.querySelectorAll('.node rect, .node circle').forEach(function(s) {
+            s.style.transform = '';
+            s.style.transition = '';
+            s.style.transformOrigin = '';
+            s.style.transformBox = '';
+          });
+          clone.querySelectorAll('.edgePaths > path').forEach(function(p) {
+            p.style.strokeDasharray = '';
+            p.style.strokeDashoffset = '';
+            p.style.transition = '';
+          });
+          clone.querySelectorAll('.edgeLabels > .edgeLabel').forEach(function(l) {
+            l.style.opacity = '';
+            l.style.transition = '';
+          });
+          // let the SVG fill the wrapper rather than its inline max-width
+          clone.removeAttribute('style');
+          clone.removeAttribute('width');
+          clone.removeAttribute('height');
+          clone.style.width = '100%';
+          clone.style.height = '100%';
+          clone.style.maxWidth = '100%';
+          clone.style.maxHeight = '100%';
+
+          wrap.appendChild(clone);
+          overlay.appendChild(closeBtn);
+          overlay.appendChild(wrap);
+          document.body.appendChild(overlay);
+          document.body.style.overflow = 'hidden';
+
+          lbTarget = wrap;
+          resetTransform();
+          requestAnimationFrame(function() { if (overlay) overlay.classList.add('open'); });
+
+          overlay.addEventListener('touchstart', onTouchStart, { passive: false });
+          overlay.addEventListener('touchmove', onTouchMove, { passive: false });
+          overlay.addEventListener('touchend', onTouchEnd);
+          overlay.addEventListener('gesturestart', onGestureStart);
+          overlay.addEventListener('gesturechange', onGestureChange);
+          overlay.addEventListener('gestureend', onGestureEnd);
+
+          overlay.addEventListener('click', function(e) {
+            if (touchMoved) return;
+            if (e.target === overlay && scale < 1.05) closeLightbox();
+          });
+        }
+
         document.addEventListener('click', function(e) {
           var vid = e.target.closest('.prose video');
           if (vid) { openVideoLightbox(vid.src, vid.getAttribute('alt') || ''); return; }
           var merm = e.target.closest('.prose .mermaid');
           if (merm) {
             var svg = merm.querySelector('svg');
-            if (svg) {
-              var clone = svg.cloneNode(true);
-              clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-              // strip animation inline styles so mid-animation clicks show the complete diagram
-              // (the blob SVG won't have page CSS, so just clearing JS-set styles is enough)
-              clone.querySelectorAll('.node').forEach(function(n) {
-                n.style.animationDelay = '';
-              });
-              clone.querySelectorAll('.edgePaths > path[data-id]').forEach(function(e) {
-                e.style.strokeDasharray = '';
-                e.style.strokeDashoffset = '';
-                e.style.animationDelay = '';
-              });
-              clone.querySelectorAll('.edgeLabels > .edgeLabel').forEach(function(l) {
-                l.style.animationDelay = '';
-              });
-              // ensure the SVG renders at its full intrinsic size
-              clone.removeAttribute('style');
-              clone.removeAttribute('width');
-              clone.removeAttribute('height');
-              // get the viewBox to calculate proper dimensions
-              var vb = clone.getAttribute('viewBox');
-              if (vb) {
-                var parts = vb.split(/[\s,]+/);
-                var vbW = parseFloat(parts[2]) || 800;
-                var vbH = parseFloat(parts[3]) || 600;
-                // add padding inside the viewBox
-                var pad = 32;
-                clone.setAttribute('viewBox', (parseFloat(parts[0]) - pad) + ' ' + (parseFloat(parts[1]) - pad) + ' ' + (vbW + pad * 2) + ' ' + (vbH + pad * 2));
-              }
-              clone.style.background = '#fff';
-              clone.style.borderRadius = '12px';
-              var blob = new Blob([clone.outerHTML], { type: 'image/svg+xml' });
-              var url = URL.createObjectURL(blob);
-              openLightbox(url, 'Diagram');
-            }
+            if (svg) openSvgLightbox(svg);
             return;
           }
           var img = e.target.closest('.prose img');
