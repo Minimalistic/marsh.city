@@ -28,21 +28,20 @@ block-beta
 
 ```mermaid
 block-beta
-  columns 15
-  space:3 SP("spout"):3 space:9
-  space:1 HD["          "]:3 BD["                                  "]:9 FK1>" "]:2
-  space:1 EY(("O")):1 MW["<"]:2 BL["                                  "]:9 FK2>" "]:2
-  space:4 UB["                    "]:9 space:2
+  columns 14
+  space:11 SP(("~")):1 space:2
+  space:1 BT("                                                          "):13
+  FK1>" "]:3 BD["                                                "]:10 EY(("O")):1
+  FK2>" "]:3 UB("                                                "):10 MO["<"]:1
 
   style SP fill:#B3E5FC,stroke:#4FC3F7,color:#01579B
-  style HD fill:#546E7A,stroke:#37474F,color:#546E7A
+  style BT fill:#546E7A,stroke:#37474F,color:#546E7A
   style BD fill:#607D8B,stroke:#455A64,color:#607D8B
-  style BL fill:#78909C,stroke:#546E7A,color:#78909C
-  style UB fill:#90A4AE,stroke:#607D8B,color:#90A4AE
+  style UB fill:#78909C,stroke:#546E7A,color:#78909C
   style FK1 fill:#455A64,stroke:#37474F,color:#455A64
-  style FK2 fill:#546E7A,stroke:#37474F,color:#546E7A
+  style FK2 fill:#455A64,stroke:#37474F,color:#455A64
   style EY fill:#111,stroke:#fff,color:#fff
-  style MW fill:#E53935,stroke:#C62828,color:#fff
+  style MO fill:#E53935,stroke:#C62828,color:#fff
 ```
 
 ## The Fish (system architecture)
