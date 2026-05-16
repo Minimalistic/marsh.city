@@ -1,11 +1,15 @@
 ---
 title: Mermaid Zoo
-description: Animals built from flowchart nodes. Charming? Unhinged? You decide.
+description: Animals drawn in a diagramming tool that absolutely was not built for this.
 ---
 
-What happens when you try to draw animals using a diagramming tool designed for software architecture? These are built entirely from [Mermaid](https://mermaid.js.org/) block diagrams - the same tool meant for flowcharts and sequence diagrams. No SVG, no images, just nodes on a grid.
+[Mermaid](https://mermaid.js.org/) block diagrams are for flowcharts. Boxes, arrows, the occasional rhombus. We tried to draw animals with them anyway. The results range from "okay, sure" to "what is happening."
+
+No SVG, no images. Just nodes on a grid and a bad attitude.
 
 ## The Fish
+
+The fish works. Two-tone body, a flag-shaped tail, a red wedge for the mouth, a tiny black circle for the eye. If you squint, it is recognizable as a fish. This is the high water mark.
 
 ```mermaid
 block-beta
@@ -25,6 +29,10 @@ block-beta
 ```
 
 ## The Whale
+
+This was meant to be a whale. We rewrote it four times. Each version was worse in a new and interesting way. What you see below is the version we stopped at, not because it is correct but because we ran out of ideas. The spout floats above the body like a thought bubble. The tail flukes have wandered off to the left to consider their life choices. The eye and mouth have been deputized to represent "head" by sheer force of will.
+
+It is, technically, a whale.
 
 ```mermaid
 block-beta
@@ -46,38 +54,25 @@ block-beta
 
 ## The Fish (system architecture)
 
-Same fish, documented like enterprise software.
+Same fish. This time each labeled component sits where it would anatomically — mouth at the front, eye up top, tail behind, fins where fins go. The labels keep the deadpan systems-engineering tone.
 
-<div class="mermaid-animated" data-animate-order="Propulsion,TF,PF,CoreSystems,SC,SB,GL,Sensors,EY,LL,IO,MO">
+We tried doing this with a flowchart first. Dagre kept routing the arrows through the swim bladder.
 
 ```mermaid
-flowchart LR
-    subgraph Propulsion
-        TF["Tail Fin\noscillation engine"]
-        PF["Pectoral Fins\nsteering array"]
-    end
-    subgraph CoreSystems["Core Systems"]
-        SC["Scales\narmor layer"]
-        SB["Swim Bladder\nbuoyancy ctrl"]
-        GL["Gills\nO2 extraction"]
-    end
-    subgraph Sensors
-        EY(("Eye\ntarget acq"))
-        LL["Lateral Line\nsonar"]
-    end
-    subgraph IO
-        MO>"Mouth\nintake port"]
-    end
+block-beta
+  columns 12
+  space:1 DF["Dorsal Fin\nstabilizer"]:5 space:4 EY(("Eye\ntarget acq")):2
+  TF>"Tail Fin\nengine"]:2 SC["Scales\narmor"]:2 SB["Swim Bladder\nbuoyancy"]:2 LL["Lateral Line\nsonar"]:2 GL["Gills\nO2"]:2 MO>"Mouth\nintake"]:2
+  space:1 VF["Ventral Fin\nstabilizer"]:5 PF["Pectoral Fins\nsteering"]:4 space:2
 
-    TF -->|thrust| SC
-    PF -->|vector| SC
-    SC -->|water flow| GL
-    GL -->|oxygen| SB
-    SB -->|depth signal| TF
-    EY -->|visual data| PF
-    LL -->|vibration| PF
-    MO -->|food| GL
-    EY -.->|threat detect| TF
+  style DF fill:#FFE0B2,stroke:#E65100
+  style VF fill:#FFE0B2,stroke:#E65100
+  style PF fill:#FFE0B2,stroke:#E65100
+  style TF fill:#BBDEFB,stroke:#1565C0
+  style SC fill:#E1BEE7,stroke:#6A1B9A
+  style SB fill:#C5CAE9,stroke:#283593
+  style LL fill:#B2DFDB,stroke:#00695C
+  style GL fill:#C8E6C9,stroke:#1B5E20
+  style MO fill:#FFCDD2,stroke:#B71C1C
+  style EY fill:#FFF9C4,stroke:#F57F17
 ```
-
-</div>
