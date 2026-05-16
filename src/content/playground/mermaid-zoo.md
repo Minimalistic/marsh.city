@@ -28,21 +28,21 @@ block-beta
 
 ```mermaid
 block-beta
-  columns 13
-  space:2 SP["spout"]:1 space:10
-  space:1 HD["          "]:3 BD["                              "]:6 TU["tail"]:2 space:1
-  space:1 EY(("O")):1 MW["          "]:2 BL["                              "]:6 TL["tail"]:2
-  space:4 UB["                    "]:5 space:4
+  columns 15
+  space:3 SP("spout"):3 space:9
+  space:1 HD["          "]:3 BD["                                  "]:9 FK1>" "]:2
+  space:1 EY(("O")):1 MW["<"]:2 BL["                                  "]:9 FK2>" "]:2
+  space:4 UB["                    "]:9 space:2
 
-  style SP fill:#87CEEB,stroke:#4FC3F7,color:#4FC3F7
+  style SP fill:#B3E5FC,stroke:#4FC3F7,color:#01579B
   style HD fill:#546E7A,stroke:#37474F,color:#546E7A
   style BD fill:#607D8B,stroke:#455A64,color:#607D8B
-  style MW fill:#546E7A,stroke:#37474F,color:#546E7A
   style BL fill:#78909C,stroke:#546E7A,color:#78909C
   style UB fill:#90A4AE,stroke:#607D8B,color:#90A4AE
-  style TU fill:#455A64,stroke:#37474F,color:#455A64
-  style TL fill:#546E7A,stroke:#37474F,color:#546E7A
+  style FK1 fill:#455A64,stroke:#37474F,color:#455A64
+  style FK2 fill:#546E7A,stroke:#37474F,color:#546E7A
   style EY fill:#111,stroke:#fff,color:#fff
+  style MW fill:#E53935,stroke:#C62828,color:#fff
 ```
 
 ## The Fish (system architecture)
