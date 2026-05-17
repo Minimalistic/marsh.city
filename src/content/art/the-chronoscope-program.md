@@ -24,7 +24,7 @@ promptFramework: |
 
   A model still learning to paint.
 images:
-  - src: /art/the-chronoscope-program/00-schematic.png
+  - src: /art/the-chronoscope-program/00-schematic.webp
     alt: A four-view orthographic schematic of the XR-Auspex-001 probe on beige engineering vellum, with two small reference photos along the bottom and a redacted title block
     slug: "Reference Document — XR-Auspex-001 schematic plate"
     caption: The canonical reference sheet. Four orthographic views, two inset reference photographs, callout legend and title block largely redacted.
@@ -47,7 +47,7 @@ images:
       block lower-right reading XR-AUSPEX-001 / CHRONOSCOPE PROGRAM, other
       fields redacted. Scanned-document feel: skew, scan margin, fold crease.
       4:3.
-  - src: /art/the-chronoscope-program/01-hero-plate.png
+  - src: /art/the-chronoscope-program/01-hero-plate.webp
     alt: A small matte-black spherical observation drone on a presentation cart in a hangar bay, with a partially redacted scale-reference card propped beside it
     slug: "Build Log 001 — Hero plate, insertion review"
     caption: Pre-deployment reference photograph, presentation cart, hangar bay.
@@ -77,7 +77,7 @@ images:
       Cool fluorescent overhead lighting, greenish cast, concrete floor with yellow
       guideline markings, blurred clipboards in background. No people.
       4:3 aspect ratio.
-  - src: /art/the-chronoscope-program/02-bench-assembly.png
+  - src: /art/the-chronoscope-program/02-bench-assembly.webp
     alt: A technician's gloved hands working on the partially disassembled probe at a lab bench, internal PCB and access panel visible
     slug: "Build Log 002 — Bench assembly, upper-hemisphere access"
     caption: Routine pre-flight check, one of the recurring access panels on the upper hemisphere opened to verify the harness seating.
@@ -105,7 +105,7 @@ images:
       Cool fluorescent overhead. Slight color-temperature mismatch.
       Background lab out of focus: rack electronics, pegboard tools.
       Top-down three-quarter bench view. 4:3.
-  - src: /art/the-chronoscope-program/03-vesti-pair.png
+  - src: /art/the-chronoscope-program/03-vesti-pair.webp
     alt: Two matte-black spherical probes side by side on a deployment cradle — Aux on the left with its sensor cluster and antennas, Vesti on the right with a blank face and a prominent radiation trefoil
     slug: "Build Log 003 — Paired insertion cradle, final check"
     caption: Aux and Vesti on the dual cradle the morning of paired insertion. The two probes are always prepared and pushed through the portal together.
@@ -129,7 +129,7 @@ images:
       Lab continues in soft focus behind the cradle, technician far back
       at a console. Polaroid-style archival framing matching the prior
       Build Log images. 3:2 landscape.
-  - src: /art/the-chronoscope-program/04-cloak-demo.png
+  - src: /art/the-chronoscope-program/04-cloak-demo.webp
     alt: A still frame from a lab security camera showing an empty test bay — a faint circular refractive distortion hovers in mid-air, the only sign the cloaked probe is there
     slug: "Build Log 004 — Cloak verification, Test Bay 3"
     caption: Security-camera frame from a full-cloak engagement test. The probe is hovering in the center of the frame. You can see roughly where, if you know to look.
@@ -153,7 +153,7 @@ images:
       a TEST sign on the wall. CCTV chrome: timecode lower-right, label
       lower-left, redaction bars over location data. Cool fluorescent
       light, desaturated tonal cast. Polaroid-style archival framing.
-  - src: /art/the-chronoscope-program/05-team-briefing.png
+  - src: /art/the-chronoscope-program/05-team-briefing.webp
     alt: Three program staff in a windowless briefing room, faces obscured by redaction bars, head turns, and a raised mug — a projected schematic of Aux fills the screen behind them
     slug: "Build Log 005 — Pre-insertion briefing, conference room B"
     caption: A mid-briefing photograph from the conference room adjacent to the lab. Faces and the projected slide's legend were sanitized before the photograph entered the archive.
@@ -177,7 +177,7 @@ images:
       bar across the lower third of the projected slide. Olive walls,
       cool fluorescent light, Polaroid-style archival framing. 3:2
       landscape.
-  - src: /art/the-chronoscope-program/06-exploded-chassis.png
+  - src: /art/the-chronoscope-program/06-exploded-chassis.webp
     alt: A top-down photograph of XR-Auspex-001 fully disassembled, its components laid out on grey foam-board with numbered index cards labeling each part
     slug: "Build Log 006 — Exploded chassis, parts reference"
     caption: Aux fully disassembled for the parts-reference shoot. Every major component on the foam-board, every index card numbered against the master inventory.
