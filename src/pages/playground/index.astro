@@ -2,6 +2,8 @@
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 const items = await getCollection('playground');
+const artSeries = (await getCollection('art'))
+  .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf());
 ---
 <Base title="Playground" description="Experiments, toys, and things that don't fit anywhere else.">
   <div class="page-head">
@@ -14,4 +16,33 @@ const items = await getCollection('playground');
       <p class="meta">{item.data.description}</p>
     </a>
   ))}
+
+  {artSeries.length > 0 && (
+    <>
+      <h2 class="playground-subhead">Art series</h2>
+      <p class="meta playground-subhead-meta">AI-generated image series. Each one frames the work with its own conceit.</p>
+      {artSeries.map((s) => (
+        <a class="card" href={`/art/${s.id}/`}>
+          <h3>{s.data.title}<span class="meta art-piece-count">{s.data.images.length} {s.data.images.length === 1 ? 'piece' : 'pieces'}</span></h3>
+          <p class="meta">{s.data.description}</p>
+        </a>
+      ))}
+    </>
+  )}
 </Base>
+
+<style>
+  .playground-subhead {
+    margin: 2.5rem 0 0.25rem;
+    font-size: 1.1rem;
+  }
+  .playground-subhead-meta {
+    margin: 0 0 1rem;
+  }
+  .art-piece-count {
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+    margin-left: 0.5rem;
+    font-weight: 400;
+  }
+</style>
