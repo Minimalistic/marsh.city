@@ -1,0 +1,200 @@
+---
+import Post from '../../layouts/Post.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const series = await getCollection('art');
+  return series.map((s) => ({ params: { slug: s.id }, props: { series: s } }));
+}
+
+const { series } = Astro.props;
+const { Content } = await render(series);
+
+function fillFramework(fw: string | undefined, img: any): string | null {
+  if (!fw) return null;
+  const subs: Record<string, string> = {
+    SUBJECT: img.subject,
+    ENVIRONMENT: img.environment,
+    'ENVIRONMENT/ERA': img.environment,
+    COMPOSITION: img.composition,
+    LIGHTING: img.lighting,
+    PALETTE: img.palette,
+    'COLOR PALETTE': img.palette,
+    ASPECT: img.aspect,
+    'ASPECT RATIO': img.aspect,
+    MOOD: img.mood,
+  };
+  return fw.replace(/\[([^\]]+)\]/g, (_, key) => subs[key] ?? `[${key}]`);
+}
+---
+<Post title={series.data.title} description={series.data.description} wide>
+  <div class="series-head">
+    {series.data.codename && (
+      <p class="codename">
+        <span class="codename-id">{series.data.codename}</span>
+        {series.data.nickname && <span class="codename-nick">&ldquo;{series.data.nickname}&rdquo;</span>}
+      </p>
+    )}
+    {series.data.updated && (
+      <p class="meta dispatch-meta">
+        Last transmission received {series.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+      </p>
+    )}
+  </div>
+  <p class="tagline">{series.data.description}</p>
+
+  <Content />
+
+  {series.data.images.length > 0 && (
+    <div class="art-gallery">
+      {series.data.images.map((img, i) => {
+        const composed = img.prompt ?? fillFramework(series.data.promptFramework, img);
+        const slug = img.slug ?? `Dispatch ${String(i + 1).padStart(3, '0')}`;
+        return (
+          <figure class="art-piece">
+            <div class="art-frame">
+              <img src={img.src} alt={img.alt} loading="lazy" />
+            </div>
+            <figcaption>
+              <div class="art-slug">{slug}</div>
+              {img.caption && <p class="art-caption">{img.caption}</p>}
+              {img.narrative && <p class="art-narrative">{img.narrative}</p>}
+              {composed && (
+                <details class="art-prompt">
+                  <summary>{series.data.promptLabel}</summary>
+                  <pre>{composed}</pre>
+                </details>
+              )}
+            </figcaption>
+          </figure>
+        );
+      })}
+    </div>
+  )}
+</Post>
+
+<style>
+  .series-head {
+    margin: -0.5rem 0 1rem;
+  }
+  .codename {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    color: var(--fg-muted);
+    margin: 0 0 0.25rem;
+    text-transform: uppercase;
+  }
+  .codename-id { color: var(--fg-soft); }
+  .codename-nick {
+    margin-left: 0.6rem;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .dispatch-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .art-gallery {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    margin: 2.5rem 0 2rem;
+  }
+
+  .art-piece {
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+  @media (min-width: 720px) {
+    .art-piece {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 1.75rem;
+      align-items: start;
+    }
+  }
+
+  /* archival "plate" framing — soft paper feel, subtle inset, no hard border */
+  .art-frame {
+    position: relative;
+    padding: 0.6rem;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.04), transparent 60%),
+      var(--bg-soft, rgba(0, 0, 0, 0.03));
+    border-radius: 4px;
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.04),
+      0 14px 30px -18px rgba(0, 0, 0, 0.35),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+  .art-frame::after {
+    /* faint paper grain — barely visible, gives the "transmitted" feel */
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 4px;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  .art-frame img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 2px;
+    cursor: zoom-in;
+    transition: filter 280ms ease;
+  }
+  .art-frame:hover img {
+    filter: saturate(1.05) contrast(1.02);
+  }
+
+  figcaption { font-size: 0.95rem; }
+
+  .art-slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border, rgba(127, 127, 127, 0.18));
+    margin-bottom: 0.75rem;
+  }
+  .art-caption {
+    margin: 0 0 0.6rem;
+    color: var(--fg-soft);
+  }
+  .art-narrative {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    line-height: 1.55;
+    margin: 0 0 0.75rem;
+    color: var(--fg);
+  }
+  .art-prompt { margin-top: 0.4rem; }
+  .art-prompt summary {
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  .art-prompt pre {
+    white-space: pre-wrap;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: 0.5rem 0 0;
+    color: var(--fg-soft);
+  }
+</style>

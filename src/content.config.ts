@@ -35,4 +35,35 @@ const playground = defineCollection({
   }),
 });
 
-export const collections = { projects, posts, playground };
+const art = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/art' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    codename: z.string().optional(),
+    nickname: z.string().optional(),
+    tool: z.string().optional(),
+    started: z.coerce.date().optional(),
+    updated: z.coerce.date().optional(),
+    cover: z.string().optional(),
+    promptLabel: z.string().default('prompt'),
+    promptFramework: z.string().optional(),
+    images: z.array(z.object({
+      src: z.string(),
+      alt: z.string(),
+      slug: z.string().optional(),
+      caption: z.string().optional(),
+      narrative: z.string().optional(),
+      subject: z.string().optional(),
+      environment: z.string().optional(),
+      composition: z.string().optional(),
+      lighting: z.string().optional(),
+      palette: z.string().optional(),
+      aspect: z.string().optional(),
+      mood: z.string().optional(),
+      prompt: z.string().optional(),
+    })).default([]),
+  }),
+});
+
+export const collections = { projects, posts, playground, art };

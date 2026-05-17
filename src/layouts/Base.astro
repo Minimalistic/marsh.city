@@ -15,10 +15,12 @@ const isActive = (href: string) => path.startsWith(href) ? 'page' as const : und
 const projects = await getCollection('projects');
 const posts = await getCollection('posts', ({ data }) => !data.draft);
 const playgroundItems = await getCollection('playground');
+const artSeries = await getCollection('art');
 const paletteItems = [
   { type: 'page',    title: 'Home',     url: '/',          hint: 'landing' },
   { type: 'page',    title: 'Projects', url: '/projects/', hint: 'all projects' },
   { type: 'page',    title: 'Posts',    url: '/posts/',    hint: 'writing' },
+  { type: 'page',    title: 'Art',      url: '/art/',      hint: 'AI-generated image series' },
   { type: 'page',    title: 'Playground', url: '/playground/', hint: 'experiments' },
   { type: 'page',    title: 'About',    url: '/about/',    hint: 'who I am' },
   { type: 'page',    title: 'Resume',   url: '/resume/',   hint: 'work history' },
@@ -41,6 +43,12 @@ const paletteItems = [
     title: p.data.title,
     url: `/playground/${p.id}/`,
     hint: p.data.description,
+  })),
+  ...artSeries.map((s) => ({
+    type: 'art',
+    title: s.data.title,
+    url: `/art/${s.id}/`,
+    hint: s.data.description,
   })),
 ];
 ---
@@ -162,6 +170,7 @@ const paletteItems = [
         <div class="links">
           <a href="/projects/" aria-current={isActive('/projects/')}>projects</a>
           <a href="/posts/" aria-current={isActive('/posts/')}>posts</a>
+          <a href="/art/" class="nav-hide-mobile" aria-current={isActive('/art/')}>art</a>
           <a href="/playground/" class="nav-hide-mobile" aria-current={isActive('/playground/')}>playground</a>
           <a href="/resume/" aria-current={isActive('/resume/')}>resume</a>
           <a href="/about/" class="nav-hide-mobile" aria-current={isActive('/about/')}>about</a>
@@ -180,6 +189,18 @@ const paletteItems = [
               </svg>
             </button>
             <div class="nav-menu-panel" id="nav-menu-panel" role="menu" hidden>
+              <a href="/art/" class="nav-menu-link nav-show-mobile" role="menuitem" aria-current={isActive('/art/')}>
+                <span class="nav-menu-item-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="13.5" cy="6.5" r="1.5"/>
+                    <circle cx="17.5" cy="10.5" r="1.5"/>
+                    <circle cx="8.5" cy="7.5" r="1.5"/>
+                    <circle cx="6.5" cy="12.5" r="1.5"/>
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1.7 0 3-1.3 3-3 0-.8-.3-1.5-.8-2-.5-.5-.8-1.2-.8-2 0-1.7 1.3-3 3-3h1.8c2.1 0 3.8-1.7 3.8-3.8C22 5.6 17.5 2 12 2z"/>
+                  </svg>
+                </span>
+                <span class="nav-menu-item-label">Art</span>
+              </a>
               <a href="/playground/" class="nav-menu-link nav-show-mobile" role="menuitem" aria-current={isActive('/playground/')}>
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

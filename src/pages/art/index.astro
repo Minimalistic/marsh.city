@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+const series = (await getCollection('art'))
+  .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf());
+---
+<Base title="Art">
+  <div class="page-head">
+    <h1>Art</h1>
+    <p class="tagline">AI-generated images, grouped by series. An experiment in collaborating with the machine on visuals instead of code.</p>
+  </div>
+  <div class="art-series-grid">
+    {series.map((s) => (
+      <a class="card art-series-card" href={`/art/${s.id}/`}>
+        {s.data.cover && (
+          <div class="art-series-cover" style={`background-image: url(${s.data.cover})`} aria-hidden="true"></div>
+        )}
+        <h3>{s.data.title}<span class="meta art-count">{s.data.images.length} {s.data.images.length === 1 ? 'piece' : 'pieces'}</span></h3>
+        <p class="meta">{s.data.description}</p>
+      </a>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .art-series-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+  .art-series-card { display: block; }
+  .art-series-cover {
+    aspect-ratio: 16 / 10;
+    background-size: cover;
+    background-position: center;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+  }
+  .art-count {
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+    margin-left: 0.5rem;
+    font-weight: 400;
+  }
+</style>
