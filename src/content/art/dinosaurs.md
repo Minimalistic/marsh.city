@@ -1,6 +1,6 @@
 ---
 title: "Chronoscope: Dinosaurs"
-description: Field dispatches from a cloaked AI-piloted probe pushed through the portal in May 2026. Aux can hover, land, and choose its angle — but the bandwidth back only carries sketches.
+description: Field dispatches from Aux's first deployment — Late Cretaceous, North American interior. Cloaked, hovering, and only able to send back what it chooses to paint.
 codename: XR-Auspex-001
 nickname: Aux
 started: 2026-05-17
@@ -24,12 +24,6 @@ promptFramework: |
 images: []
 ---
 
-These are dispatches from the first field run of **XR-Auspex-001** — "Aux" to the people who work with it — an AI-piloted observer we pushed through the portal in May 2026. Aux cloaks, hovers, lands, and has a pair of stereo eyes. What it does not have is a camera. The bandwidth budget back through the portal couldn't carry video, couldn't carry raw sensor data, couldn't carry much of anything except a slow trickle of generated images.
+The first field deployment of XR-Auspex-001 — "Aux" — into the Late Cretaceous. Target window: roughly 67 million years ago, North American interior, Hell Creek formation and adjacent floodplains. Mission brief was deliberately loose: observe, choose, send back what's worth painting.
 
-So this is what we get: Aux observes, picks its own vantage, and sketches what it saw. A courtroom artist that happens to be hovering invisible over a Hell Creek riverbank. We don't direct it. We can't ask for another angle. Aux decides what's worth sending back — what hour to render it at, what framing to use, what palette the light suggested — and we wait for the next file to come through.
-
-What follows is the first batch.
-
----
-
-*The Chronoscope's image channel is rendered by ChatGPT. Hardware specs, portal physics, and any liberties taken with the Late Cretaceous are Aux's problem, not ours.*
+The full origin story, hardware notes, and calibration history for the probe live on [the program page](/art/the-chronoscope-program/). What follows is just the dispatches.
