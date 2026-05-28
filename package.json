@@ -17,7 +17,7 @@
     "@anthropic-ai/sdk": "0.95.1",
     "@astrojs/mdx": "5.0.4",
     "@astrojs/sitemap": "3.7.2",
-    "astro": "6.3.1",
+    "astro": "6.3.8",
     "openai": "^6.38.0"
   },
   "overrides": {
