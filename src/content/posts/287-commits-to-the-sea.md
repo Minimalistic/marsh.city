@@ -1,8 +1,8 @@
 ---
 title: 287 commits to the sea
-description: Building a living canvas ecosystem through iterative vibe coding - schooling fish, procedural waves, and emergent behavior one commit at a time.
+description: Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.
 date: 2026-05-04
-tags: [canvas, creative-coding, vibe-coding, building]
+tags: [canvas, creative-coding, building]
 ---
 
 It's spring in Duluth, which means it's gray and 40 degrees and the lake is still too cold to touch. I wanted warm water. So I built some.
@@ -69,11 +69,11 @@ The reason: I can't listen to looping ambient audio without my brain pattern-mat
 
 Procedural audio isn't immune to repetition, but tying the sound generation to the visual wave state means the audio shifts when the visuals shift. Change the wave frequency and the sound follows. It's not a deep simulation of ocean acoustics - it's shaped noise - but the connection to what's on screen breaks up the patterns enough that your brain doesn't lock onto a loop.
 
-## How vibe coding actually works
+## How the back-and-forth actually works
 
 This project was built entirely through conversation - I orchestrated, Claude Code implemented. 287 commits over many sessions, each one typically scoped to a single system - "today I'm working on fish schooling" or "today I'm fixing how sand looks."
 
-The workflow in practice: open the simulation, look at it, identify what feels wrong, describe it, iterate. Classic vibe coding. Some sessions start with a specific goal ("make the predator less aggressive") and others start with just staring at the canvas until something catches your eye ("why do the fish bunch up in that corner?").
+The workflow in practice: open the simulation, look at it, identify what feels wrong, describe it, iterate. The whole loop runs through conversation. Some sessions start with a specific goal ("make the predator less aggressive") and others start with just staring at the canvas until something catches your eye ("why do the fish bunch up in that corner?").
 
 A few lessons from doing this 287 times:
 
@@ -83,7 +83,7 @@ A few lessons from doing this 287 times:
 
 **End sessions on a good note.** If the last thing that happened was something breaking and not getting fixed, the curiosity to return fades. Ending on a small win - even just one tweak that makes the scene noticeably better - keeps the momentum alive for next time.
 
-**Know when to throw things away.** The particle waves. Some visual effects that tanked performance. A blood system that worked fine but felt wrong. Sunk cost doesn't apply to vibes - if it doesn't serve the thing you're making, revert it and move on.
+**Know when to throw things away.** The particle waves. Some visual effects that tanked performance. A blood system that worked fine but felt wrong. Sunk cost doesn't apply here - if it doesn't serve the thing you're making, revert it and move on.
 
 ## What this means
 
