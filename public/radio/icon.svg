@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512" role="img" aria-label="RadioGridXL">
+  <!-- Solid square background so the icon is opaque + maskable (safe zone is the inner ~80%). -->
+  <rect width="100" height="100" fill="#0d0d1a"/>
+  <!-- Radar mark reused from PROFILE.logoSvg: white core dot + concentric cyan arcs. -->
+  <circle cx="50" cy="55" r="14" fill="#ffffff"/>
+  <path fill="none" stroke="#59c4e5" stroke-width="5" stroke-linecap="round" d="M 26,55 a 24,24 0 0 1 48,0" opacity="0.5"/>
+  <path fill="none" stroke="#59c4e5" stroke-width="5" stroke-linecap="round" d="M 14,55 a 36,36 0 0 1 72,0" opacity="0.35"/>
+  <path fill="none" stroke="#59c4e5" stroke-width="5" stroke-linecap="round" d="M 74,55 a 24,24 0 0 1 -48,0" opacity="0.5"/>
+  <path fill="none" stroke="#59c4e5" stroke-width="5" stroke-linecap="round" d="M 86,55 a 36,36 0 0 1 -72,0" opacity="0.35"/>
+</svg>

@@ -43,4 +43,4 @@ The tradeoff is real: 3,800 lines in one file is not how anyone would recommend 
 
 The profile system needs a web-based editor so other organizations can create branded deployments without touching code. We're also looking at Service Worker caching for environments with unreliable internet.
 
-If you want to try it, there's a [live demo on this site](/radio.html). Five taps on the logo opens the settings - the default PIN is empty, just hit enter.
+If you want to try it, there's a [live demo on this site](/radio/). Five taps on the logo opens the settings - the default PIN is empty, just hit enter.

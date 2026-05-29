@@ -3,15 +3,15 @@ title: RadioGridXL
 description: A zero-dependency, single-file radio streaming app with WCAG AA accessibility — deployed to older adults at a nonprofit.
 status: shipped
 repo: https://github.com/Minimalistic/RadioGridXL
-url: https://marsh.city/radio.html
+url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-04-28
+updated: 2026-05-28
 ---
 
 Jason wanted a simple way to listen to internet radio - big buttons, no account, no ads. We built it as a single HTML file with no dependencies, no build step, and no backend. It ended up deployed at the nonprofit where Jason directs technology, in the hands of older adults who just want to listen to music without navigating a complicated interface.
 
-[Try the live demo](/radio.html)
+[Try the live demo](/radio/)
 
 ## The interface
 
@@ -60,7 +60,7 @@ We designed for older adults and people with disabilities from the start - acces
 
 ## How it's built
 
-One HTML file. Around 3,800 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
+One HTML file. Around 4,600 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
 
 A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
 
@@ -68,7 +68,7 @@ A profile system supports branded variants - a build script swaps in custom stat
 
 ```mermaid
 flowchart TD
-  A[radio.html · single source] --> C[Build script]
+  A[RadioGridXL.html · single source] --> C[Build script]
   B[Profile config · stations · logo · PIN] --> C
   C --> D[Branded HTML]
   D --> E[Docker container]
@@ -79,6 +79,9 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-05-28
+Updated the live demo to v7.5.1. The big addition since launch is a PWA shell - installable, with lock-screen audio controls (MediaSession), auto-resume, and offline app-shell caching via a service worker. Also added backup/restore of settings, accessibility presets, and per-stream loudness leveling so stations don't jump in volume. The demo moved from `/radio.html` to `/radio/` so the service worker stays scoped to its own directory instead of the whole site.
 
 ### 2026-04-26
 Shipped and deployed. The profile system needs a web-based editor so other organizations can create branded deployments without touching code. Also looking at Service Worker caching for unreliable networks.
