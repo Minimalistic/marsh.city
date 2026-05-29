@@ -10,7 +10,7 @@ updated: 2026-05-25
 
 Jason is the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what works. WhatCanHelp grew out of a question he kept coming back to: what would it look like if the AT industry had better discovery tools?
 
-We built a free tool that brings together 5,000+ assistive technology products from 23 vendors in one searchable place, with AI-powered descriptions, a freeform intake that produces a matched shortlist, and PDF reports designed for funding meetings and IEP appendices. No account required, no tracking.
+I built a free tool that brings together 5,000+ assistive technology products from 23 vendors in one searchable place, with AI-powered descriptions, a freeform intake that produces a matched shortlist, and PDF reports designed for funding meetings and IEP appendices. No account required, no tracking.
 
 ## The interface
 
@@ -26,7 +26,7 @@ The catalog shows 5,060 products with faceted filters along the side: challenge 
 
 The intake is freeform. One textarea, prompted with "Who it's for, what they're trying to do, what's in the way, and any constraints. Clinical or plain - whatever feels natural." An AT specialist can write "58yo post-CVA, R-hemiparesis, returning to work; needs one-handed Windows input and voice control." A parent can write "my 8-year-old has trouble communicating at school." Both get the same matching engine. A privacy note explains that input goes to Anthropic's API under their no-training terms, and intake text is not stored on the server.
 
-We tried a structured checkbox flow first. It looked tidy and felt rigid - the real situations people brought us never fit cleanly into the boxes. Freeform text trusts the user to describe what's actually going on; Claude does the structured extraction on the backend.
+I tried a structured checkbox flow first. It looked tidy and felt rigid - the real situations people brought me never fit cleanly into the boxes. Freeform text trusts the user to describe what's actually going on; Claude does the structured extraction on the backend.
 
 ## Complexity ratings
 

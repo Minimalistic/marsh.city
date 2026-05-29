@@ -8,7 +8,7 @@ started: 2025-01-01
 updated: 2026-04-09
 ---
 
-MealDeck started as Jason seeing what he could get AI to do, and kept growing from there. We built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists - currently in use with friends and family.
+MealDeck started as me seeing what I could get AI to do, and kept growing from there. I built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists - currently in use with friends and family.
 
 ![MealDeck landing page showing the recipe mosaic and waitlist call-to-action](/images/mealdeck/landing.webp)
 

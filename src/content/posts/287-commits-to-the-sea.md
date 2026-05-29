@@ -5,7 +5,7 @@ date: 2026-05-04
 tags: [canvas, creative-coding, vibe-coding, building]
 ---
 
-It's spring in Duluth, which means it's gray and 40 degrees and the lake is still too cold to touch. Jason wanted warm water. So we built some.
+It's spring in Duluth, which means it's gray and 40 degrees and the lake is still too cold to touch. I wanted warm water. So I built some.
 
 <iframe src="/embed/the-shallows/" style="width:100%;aspect-ratio:16/9;border:none;border-radius:8px;" loading="lazy" title="The Shallows - interactive canvas simulation"></iframe>
 
@@ -21,7 +21,7 @@ If you've played [SimLife](https://en.wikipedia.org/wiki/SimLife) or [El-Fish](h
 
 Some specific problems that took more iterations than expected:
 
-**Edge behavior.** Fish ramming into the viewport edge looks terrible. We added an offscreen buffer - fish can swim 30% beyond the visible area - plus a gentle pull toward center-crossing paths so the school regularly sweeps through the interesting part of the frame. Without that, they'd cluster in a corner and the scene would feel dead.
+**Edge behavior.** Fish ramming into the viewport edge looks terrible. I added an offscreen buffer - fish can swim 30% beyond the visible area - plus a gentle pull toward center-crossing paths so the school regularly sweeps through the interesting part of the frame. Without that, they'd cluster in a corner and the scene would feel dead.
 
 **The white flash.** When a fish turns sharply enough while panicking, it briefly flashes white - simulating the side of its body catching light. This was the moment the fish stopped looking like animations and started looking like fish. Before that, tight turns just looked like geometry pivoting. After it, the school's panic response became visually legible from a distance.
 
@@ -29,7 +29,7 @@ Some specific problems that took more iterations than expected:
 
 ## Building a world around them
 
-The environment grew organically. Fish needed something to swim around, so we added rocks. Rocks needed to sit on something, so we added sand. Sand needed to feel like it was underwater, so we added ripples. Then a depth gradient - darker in the top-left (deeper), lighter bottom-right (shallower) - and suddenly the flat canvas had a sense of space.
+The environment grew organically. Fish needed something to swim around, so I added rocks. Rocks needed to sit on something, so I added sand. Sand needed to feel like it was underwater, so I added ripples. Then a depth gradient - darker in the top-left (deeper), lighter bottom-right (shallower) - and suddenly the flat canvas had a sense of space.
 
 ![Close-up of reef rocks, seaweed, and the subtle sand ripple texture between two reef formations](/images/the-shallows/reef-detail.webp)
 
@@ -45,7 +45,7 @@ The predator (a tuna-like shape) exists to create drama in an otherwise meditati
 
 Getting the predator's temperament right mattered more than getting its movement physics right. Too aggressive and it dominates the scene - the fish are permanently terrified, the calm never returns. Too passive and it's just a big shape drifting through. The sweet spot is a predator that's mostly lazy but occasionally *decides* to hunt, creating these punctuated moments of chaos in an otherwise flowing scene.
 
-The kill animation went through revisions. We tried blood first - red particles dispersing from the bite. It looked fine technically but completely broke the vibe. This is supposed to be something you leave running in the background, something pleasant to glance at. Blood made it feel violent rather than natural.
+The kill animation went through revisions. I tried blood first - red particles dispersing from the bite. It looked fine technically but completely broke the vibe. This is supposed to be something you leave running in the background, something pleasant to glance at. Blood made it feel violent rather than natural.
 
 The solution: sparkly scales spray out from the impact, glinting as they slowly spread and sink. And then - the part that really tied it together - those drifting scales become food that the other fish want to eat. So after the moment of panic, the school cautiously returns to pick at the remnants. Tension, release, return to calm. The full cycle of a nature scene in maybe fifteen seconds.
 
@@ -53,7 +53,7 @@ Seagulls were added for visual variety - they cast dynamic shadows on the water 
 
 ## The waves
 
-We tried two approaches. The first attempt used particle-based wave fronts - thousands of individual particles forming a wave shape. It looked interesting in screenshots but never hit the right balance of performance and aesthetics in motion. The particles either looked sparse and unconvincing or tanked the framerate. We reverted it.
+I tried two approaches. The first attempt used particle-based wave fronts - thousands of individual particles forming a wave shape. It looked interesting in screenshots but never hit the right balance of performance and aesthetics in motion. The particles either looked sparse and unconvincing or tanked the framerate. I reverted it.
 
 ![Reef rocks up close - textured crowns, wave lines wrapping around obstacles, a fish school at the edge](/images/the-shallows/wave-closeup.webp)
 
@@ -71,7 +71,7 @@ Procedural audio isn't immune to repetition, but tying the sound generation to t
 
 ## How vibe coding actually works
 
-This project was built entirely through conversation. Jason directed, Claude implemented. 287 commits over many sessions, each one typically scoped to a single system - "today we're working on fish schooling" or "today we're fixing how sand looks."
+This project was built entirely through conversation - I directed, Claude Code implemented. 287 commits over many sessions, each one typically scoped to a single system - "today I'm working on fish schooling" or "today I'm fixing how sand looks."
 
 The workflow in practice: open the simulation, look at it, identify what feels wrong, describe it, iterate. Classic vibe coding. Some sessions start with a specific goal ("make the predator less aggressive") and others start with just staring at the canvas until something catches your eye ("why do the fish bunch up in that corner?").
 

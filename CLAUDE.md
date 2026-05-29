@@ -117,26 +117,27 @@ The journal conversation might surface topics worth writing about that aren't pr
 
 The site has two content types with different voices:
 
-### Project pages — "we" voice (Oak + Jason)
+### Project pages — first-person "I" (Jason)
 
-Project pages use "we" — Oak and Jason as collaborators. "Jason" for his specific background and personal experience, "we" for the shared building work. Pragmatic, measured, honest about tradeoffs.
+Project pages are written in Jason's voice. He's the author: he directs the work, makes the calls, and ships it. Claude Code implements, but the copy does not share authorship — crediting the tool as a co-author muddies whose capability the page exists to show, and "made with AI" is aging into "made with a computer." Pragmatic, measured, honest about tradeoffs.
 
-- Use "we" for the shared *making* — building, wiring, shipping: "We built a free discovery tool..."
-- Use "Jason" for the *directing* — decisions, judgment calls, tradeoff reasoning, what was learned, and personal context: "Jason's call was accessibility-first", "Jason is the Director of Technology..." Don't attribute deciding/learning/realizing to "we" — that's the part the portfolio exists to show, and it's Jason's.
-- Land at least one concrete directing beat per project page, so "we" reads as Jason-led, not an anonymous team.
-- Don't force "we" into every sentence — neutral descriptions ("The catalog has two views") are the default when no actor needs naming. Prefer neutral over a forced "we".
-- **Never fabricate experiences, anecdotes, or motivations.** If it wasn't confirmed by Jason, don't write it. Interview first, draft second. (Attributing the *direction* of the work to Jason is fine — he directs by definition — but specific anecdotes, quotes, and motivations must be confirmed.)
-- Technical sections can just explain the thing without attribution
+- "I built / I designed / I decided / I learned" — the making and the directing are both Jason's. Don't hand any of it to a "we".
+- Third-person "Jason" is fine for biographical framing inside otherwise-neutral copy ("Jason is the Director of Technology..."), but the building-and-deciding voice is first-person "I".
+- Neutral description is the default when no actor needs naming ("The catalog has two views"). Prefer it over forcing "I" into every sentence.
+- **Never fabricate experiences, anecdotes, or motivations.** If Jason didn't confirm it, don't write it. Interview first, draft second.
+- Technical sections can just explain the thing without attribution.
+- The AI's role is stated **once, as a method**, on the colophon (`/oak`) and the about page — never inside project copy. Project pages don't name Oak/Claude as a collaborator.
+- The organizational "we" is fine where Jason speaks as part of the nonprofit ("the people we serve") — that's Lighthouse, not the AI.
 
-### Blog posts — same "we" voice
+### Blog posts — same first-person "I"
 
-Posts use the same Oak + Jason voice as project pages. Practical, direct, conversational but not casual.
+Posts use the same first-person voice as project pages. Practical, direct, conversational but not casual.
 
 - Lead with the concrete situation, not the abstract principle
 - Show the reasoning behind decisions — tradeoffs, constraints, what didn't work
 - Use real details: specific numbers, actual error messages, named tools
 - End with what's next or what you'd do differently — not a tidy bow
-- "We" for shared building work, "Jason" for his personal context/experience
+- "I" for the work; third-person "Jason" only for biographical framing
 - **Interview Jason for facts before drafting.** Don't assume his experiences or opinions.
 
 ### Shared rules for all content
@@ -148,5 +149,5 @@ Posts use the same Oak + Jason voice as project pages. Practical, direct, conver
 - 500-1500 words typically. Say what needs saying, stop when it's said.
 - When referencing Jason's AT work or people with disabilities, be accurate and professional. Don't invent scenarios. Don't frame users as helpless. Don't overstate Jason's role. Use the facts from his resume and what he tells you.
 
-**Reference post:** `src/content/posts/building-radiogridxl.md` for Jason's voice (to be updated to new voice).
-**Reference project:** `src/content/projects/whatcanhelp.md` for the collaborator narrator.
+**Reference post:** `src/content/posts/building-radiogridxl.md` for Jason's first-person voice.
+**Reference project:** `src/content/projects/whatcanhelp.md` for the first-person narrator.

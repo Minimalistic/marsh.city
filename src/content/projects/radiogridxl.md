@@ -9,7 +9,7 @@ started: 2026-03-01
 updated: 2026-05-29
 ---
 
-RadioGridXL is an internet radio app built for older adults and people with disabilities - the users mainstream music apps tend to leave behind. Big buttons, no account, no ads, nothing to set up. We built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where Jason directs technology, in the hands of people who just want to listen to music without fighting the interface.
+RadioGridXL is an internet radio app built for older adults and people with disabilities - the users mainstream music apps tend to leave behind. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where Jason directs technology, in the hands of people who just want to listen to music without fighting the interface.
 
 [Try the live demo](/radio/)
 
@@ -47,7 +47,7 @@ The stream browser searches the Radio Browser API by name, country, or genre. Pr
 
 ![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.webp)
 
-Jason's brief was accessibility-first, not accessibility-eventually, so we designed for older adults and people with disabilities from the start - it shaped the architecture:
+I went accessibility-first, not accessibility-eventually, so I designed for older adults and people with disabilities from the start - it shaped the architecture:
 
 - WCAG AA verified contrast across all eight color palettes plus high-contrast monochrome modes (shown above)
 - Full screen reader support - ARIA roles, labels, and live regions throughout

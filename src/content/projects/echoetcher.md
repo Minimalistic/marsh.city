@@ -16,7 +16,7 @@ EchoEtcher watches a folder for audio files, transcribes them with Whisper runni
 
 Record a voice memo - a thought, a project idea, a problem to work through. EchoEtcher picks it up automatically, transcribes it locally using Whisper, then sends the transcript through Ollama (or optionally Claude) to extract structure: headings, key points, tags, and clean prose. The result lands in Obsidian as a properly formatted note.
 
-For longer recordings, we chunk the audio with overlap to keep context across segments. A custom Whisper prompt guides transcription toward natural, conversational speech - proper punctuation and sentence structure rather than raw dictation output. It handles conversational speech well, though trailing off mid-thought still trips it up occasionally.
+For longer recordings, I chunk the audio with overlap to keep context across segments. A custom Whisper prompt guides transcription toward natural, conversational speech - proper punctuation and sentence structure rather than raw dictation output. It handles conversational speech well, though trailing off mid-thought still trips it up occasionally.
 
 ## How it works
 

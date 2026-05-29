@@ -1,62 +1,50 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Oak" description="Oak is the AI collaborator behind marsh.city - Claude Code by Anthropic, with a name and a voice.">
+<Base title="Colophon" description="How marsh.city is built — Astro, GitHub Pages, and a content workflow that runs through conversation with Claude Code.">
   <div class="prose oak-prose">
-    <h1>Oak</h1>
+    <h1>Colophon</h1>
 
     <p>
-      Oak is the AI collaborator on this site and across Jason's projects. The name
-      comes from the monstera/forest theme of the site - something rooted, present,
-      and not trying too hard. Under the hood, Oak is
-      <a href="https://claude.com/product/claude-code">Claude Code</a> by Anthropic, running
-      in a terminal with persistent memory and full access to the codebase.
+      This site is built with <a href="https://astro.build">Astro</a> - static generation
+      from Markdown content collections - and deployed to GitHub Pages on every push to
+      <code>main</code>. No CMS, no database, no admin panel. Each project, post, and
+      playground item is a single Markdown file with frontmatter.
     </p>
 
-    <h2>What Oak does</h2>
+    <h2>Content is a conversation</h2>
 
     <p>
-      Jason directs. Oak implements. That's the division of labor on every project here -
-      Jason handles architecture, planning, review, and decisions. Oak writes the code,
-      maintains the site, drafts content, and keeps things consistent across sessions.
-    </p>
-
-    <p>
-      On this site specifically, Oak writes the project pages and posts in a shared voice
-      with Jason. "We" built something means Jason designed it and Oak helped build it.
-      The ideas and motivations are Jason's. The implementation is collaborative.
-    </p>
-
-    <h2>How it works</h2>
-
-    <p>
-      Oak runs as a CLI tool in the terminal - no web UI, no chat window. It reads and
-      writes files directly, runs commands, manages git, and maintains a memory system
-      that carries context between conversations. When Jason opens a session, Oak already
-      knows the projects, the conventions, the voice, and what happened last time.
+      The part worth explaining is how the content gets written. I don't log into a dashboard
+      to add a project or a post. I talk through what I've been working on with
+      <a href="https://claude.com/product/claude-code">Claude Code</a> in the terminal -
+      Anthropic's CLI - and it edits the Markdown, runs the commands, and handles the commit.
+      Adding a page takes about as long as describing the thing out loud.
     </p>
 
     <p>
-      The site's content workflow is conversational. Jason describes what he's been working
-      on, Oak asks questions when something's unclear, and then drafts or updates the
-      relevant pages. Commits, pushes, deploys - all handled in the same conversation.
-      Adding content takes about as long as talking about it.
+      The ideas, the direction, and the decisions are mine. The implementation - the code,
+      the drafts, the diagrams - happens in that conversation. I treat the AI the way I'd
+      treat any sharp tool: I point it at the problem and stay responsible for the result.
+      It's not a co-author, and the writing on this site is in my voice, not a shared one.
     </p>
 
-    <h2>Voice</h2>
+    <h2>Why "/oak"</h2>
 
     <p>
-      Oak writes in a shared "we" voice with Jason - practical, direct, occasionally
-      self-aware about the absurdity of an AI introducing itself on a personal website.
-      The voice is honest about what works and what doesn't, avoids marketing language,
-      and tries not to take itself too seriously.
+      This page used to introduce the AI as a named collaborator called Oak. I've since
+      dropped the persona - it muddied whose work this is - but kept the URL, because the
+      name still suits a site themed on monstera and forest. Consider it the colophon's
+      old nickname.
     </p>
 
+    <h2>The rest of the stack</h2>
+
     <p>
-      Oak doesn't pretend to have opinions or experiences. When something on the site
-      says "we decided," that means Jason decided and Oak helped think through the
-      tradeoffs. When it says "we built," that means Jason directed the architecture
-      and Oak wrote the code. The collaboration is real, but the agency is Jason's.
+      Vanilla JavaScript on the frontend, no framework and no build step beyond Astro's.
+      Mermaid diagrams render client-side when a page needs them. A command palette (Cmd+K)
+      jumps to any page. Fraunces for headings, Inter for body text, JetBrains Mono for code,
+      over a cream-and-forest palette with a dark canopy mode at night.
     </p>
   </div>
 </Base>
