@@ -276,7 +276,8 @@ html, body {
   position: relative;
   overflow: hidden;
   user-select: none;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Bottom safe-area inset lives on the Stop/transport bars (below), so their
+     color fills to the screen edge instead of leaving a bare-bg strip. */
 }
 
 @supports (height: 100dvh) {
@@ -336,6 +337,10 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
   align-items: center;
   justify-content: space-between;
   padding: 10px 18px;
+  /* Clear the iOS status bar / Dynamic Island in standalone PWA mode
+     (status-bar-style is black-translucent, so content sits under it).
+     env() is 0 on Android/desktop, so this is a no-op there. */
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
   background: var(--header-bg);
   border-bottom: 1px solid var(--settings-border);
   flex-shrink: 0;
@@ -346,6 +351,7 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
 /* Compact header for tight viewports */
 #header.compact {
   padding: 4px 12px;
+  padding-top: calc(4px + env(safe-area-inset-top, 0px));
   gap: 8px;
 }
 #header.compact #logo-svg { width: 24px; height: 32px; }
@@ -608,7 +614,10 @@ html[data-size="ultra"] #buttons.grid-mode .btn-emoji { font-size: 6vmin; }
   align-items: center;
   justify-content: center;
   gap: 14px;
-  height: 74px;
+  /* Extend the bar's color through the bottom safe area (home indicator);
+     border-box keeps the 74px tap area, padding fills the inset below it. */
+  height: calc(74px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   width: 100%;
   border: none;
   border-top: 2px solid var(--stop-idle-border);
@@ -653,6 +662,8 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   flex-shrink: 0;
   align-items: center;
   padding: 10px 18px;
+  /* Match #simple-stop: color fills the bottom safe area, content stays above it. */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   min-height: 70px;
   background: var(--stop-idle-bg);
   border-top: 2px solid var(--stop-idle-border);
@@ -1847,7 +1858,7 @@ html.is-desktop #device-section { display: none; }
 
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.5.2</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.5.3</div>
   </aside>
 
   <!-- ========== STREAM BROWSER POPUP ========== -->
