@@ -19,7 +19,7 @@ That's the problem RadioGridXL was built to solve. A profile system brands and p
 
 It's in use with older adults there now. The feedback has been simple and telling: people use it. They don't ask for help with it.
 
-## What we learned about accessibility-first design
+## Designing accessibility-first
 
 The accessibility features weren't added after the fact. They shaped the architecture.
 

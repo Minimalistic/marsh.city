@@ -121,10 +121,11 @@ The site has two content types with different voices:
 
 Project pages use "we" — Oak and Jason as collaborators. "Jason" for his specific background and personal experience, "we" for the shared building work. Pragmatic, measured, honest about tradeoffs.
 
-- Use "we" for building, designing, deciding: "We built a free discovery tool..."
-- Use "Jason" for his personal context: "Jason is the Director of Technology..."
-- Don't force "we" into every sentence — neutral descriptions ("The catalog has two views") are fine
-- **Never fabricate experiences, anecdotes, or motivations.** If it wasn't confirmed by Jason, don't write it. Interview first, draft second.
+- Use "we" for the shared *making* — building, wiring, shipping: "We built a free discovery tool..."
+- Use "Jason" for the *directing* — decisions, judgment calls, tradeoff reasoning, what was learned, and personal context: "Jason's call was accessibility-first", "Jason is the Director of Technology..." Don't attribute deciding/learning/realizing to "we" — that's the part the portfolio exists to show, and it's Jason's.
+- Land at least one concrete directing beat per project page, so "we" reads as Jason-led, not an anonymous team.
+- Don't force "we" into every sentence — neutral descriptions ("The catalog has two views") are the default when no actor needs naming. Prefer neutral over a forced "we".
+- **Never fabricate experiences, anecdotes, or motivations.** If it wasn't confirmed by Jason, don't write it. Interview first, draft second. (Attributing the *direction* of the work to Jason is fine — he directs by definition — but specific anecdotes, quotes, and motivations must be confirmed.)
 - Technical sections can just explain the thing without attribution
 
 ### Blog posts — same "we" voice

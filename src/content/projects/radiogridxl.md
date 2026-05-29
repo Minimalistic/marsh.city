@@ -47,7 +47,7 @@ The stream browser searches the Radio Browser API by name, country, or genre. Pr
 
 ![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.webp)
 
-We designed for older adults and people with disabilities from the start - accessibility shaped the architecture:
+Jason's brief was accessibility-first, not accessibility-eventually, so we designed for older adults and people with disabilities from the start - it shaped the architecture:
 
 - WCAG AA verified contrast across all eight color palettes plus high-contrast monochrome modes (shown above)
 - Full screen reader support - ARIA roles, labels, and live regions throughout
