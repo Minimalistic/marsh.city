@@ -245,7 +245,7 @@ html.theme-mono-light {
 }
 
 /* Shared reset for chrome-less buttons */
-.adv-btn, .adv-stop, .adv-sleep-btn, #settings-close,
+.adv-btn, .adv-stop, .adv-pause, .adv-sleep-btn, #settings-close,
 .stream-action-btn, .emoji-tab, .emoji-cell {
   background: none;
   border: none;
@@ -709,6 +709,19 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
 }
 .adv-stop:active { transform: scale(0.92); }
 
+/* Pause/resume — same footprint as the stop button; SVG inherits currentColor. */
+.adv-pause {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--stop-idle-text);
+  transition: color 0.3s, transform 0.1s;
+  margin: 0 12px;
+}
+.adv-pause:active { transform: scale(0.92); }
+
 .adv-stop-square {
   width: 26px;
   height: 26px;
@@ -717,7 +730,16 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   transition: background 0.3s;
 }
 #adv-transport.has-playing .adv-stop-square { background: var(--stop-active-text); }
-#adv-transport.has-playing .adv-btn { color: var(--stop-active-text); }
+#adv-transport.has-playing .adv-btn,
+#adv-transport.has-playing .adv-pause { color: var(--stop-active-text); }
+
+/* Paused state — mirrors #simple-stop.paused (amber-ish), wins over has-playing
+   by source order since both are single-class specificity. */
+#adv-transport.paused { background: var(--stop-paused-bg); border-top-color: var(--stop-paused-border); }
+#adv-transport.paused .adv-stop-square { background: var(--stop-paused-text); }
+#adv-transport.paused .adv-pause,
+#adv-transport.paused .adv-btn,
+#adv-transport.paused .adv-sleep-btn { color: var(--stop-paused-text); }
 
 /* Sleep timer button */
 .adv-sleep-btn {
@@ -1629,10 +1651,14 @@ html.is-desktop #device-section { display: none; }
     <div id="adv-left">
       <button class="adv-btn" id="adv-skip-back" onclick="skipBack()" aria-label="Skip back 15 seconds">&#9664;&#9664;</button>
     </div>
-    <button class="adv-stop" onclick="softStop()" aria-label="Stop playback"><div class="adv-stop-square" aria-hidden="true"></div></button>
+    <!-- Advanced mode gets distinct Pause (soft, resumable) and Stop (full) controls;
+         simple mode keeps its single resume-labelled button. Icons are inline SVG so
+         iOS can't substitute emoji glyphs (the old &#9202; rendered skeuomorphic). -->
+    <button class="adv-pause" id="adv-pause" onclick="softStop()" aria-label="Pause" style="display:none"></button>
+    <button class="adv-stop" onclick="stopPlayback()" aria-label="Stop playback"><div class="adv-stop-square" aria-hidden="true"></div></button>
     <div id="adv-right">
       <button class="adv-btn" id="adv-skip-fwd" onclick="skipFwd()" aria-label="Skip forward 30 seconds">&#9654;&#9654;</button>
-      <button class="adv-sleep-btn" onclick="showSleepOverlay()" aria-label="Sleep timer">&#9202;</button>
+      <button class="adv-sleep-btn" onclick="showSleepOverlay()" aria-label="Sleep timer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><line x1="12" y1="13" x2="12" y2="9.5"/><line x1="9.5" y1="2" x2="14.5" y2="2"/><line x1="18.5" y1="5.5" x2="19.5" y2="4.5"/></svg></button>
       <span id="adv-live-badge" role="status" aria-live="polite">● Live</span>
     </div>
   </nav>
@@ -1858,7 +1884,7 @@ html.is-desktop #device-section { display: none; }
 
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.5.3</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.5.5</div>
   </aside>
 
   <!-- ========== STREAM BROWSER POPUP ========== -->
@@ -2629,9 +2655,25 @@ function updateSimpleStop() {
   }
 }
 
-/** Update advanced transport bar appearance based on playback state. */
+// Inline transport icons (SVG, not unicode, so iOS can't substitute emoji glyphs).
+const ADV_PAUSE_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg>';
+const ADV_PLAY_SVG  = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
+
+/** Update advanced transport bar appearance based on playback state.
+    Pause button shows only while something is loaded, and flips pause<->play
+    with the paused state. Stop (the square) is wired to stopPlayback separately. */
 function updateAdvTransport() {
-  advTransport.classList.toggle('has-playing', !!playing);
+  const isPlaying = !!playing;
+  const isPaused = isPlaying && paused;
+  advTransport.classList.toggle('has-playing', isPlaying && !isPaused);
+  advTransport.classList.toggle('paused', isPaused);
+
+  const pauseBtn = document.getElementById('adv-pause');
+  if (pauseBtn) {
+    pauseBtn.style.display = isPlaying ? '' : 'none';
+    pauseBtn.innerHTML = isPaused ? ADV_PLAY_SVG : ADV_PAUSE_SVG;
+    pauseBtn.setAttribute('aria-label', isPaused ? 'Resume' : 'Pause');
+  }
   updateSkipButtons();
 }
 
