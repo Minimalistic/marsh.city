@@ -124,6 +124,7 @@ Project pages are written in Jason's voice. He's the author: he directs the work
 - "I built / I designed / I decided / I learned" — the making and the directing are both Jason's. Don't hand any of it to a "we".
 - First person *throughout* the body, including bio and motivation ("I'm the Director of Technology...", "I do my best thinking while driving"). Don't switch to third-person "Jason" mid-page — it clashes with the "I" voice. The name "Jason" belongs in the byline and the about/colophon, not in the narrative.
 - "I orchestrate, AI implements" is the preferred framing for the working relationship — Jason prefers "orchestrate" over "direct".
+- Describe the process with its real discipline: directing, reviewing what the AI produces, confirming it does what was intended, deciding what ships. It's still programming — judgment and responsibility stay with Jason. Avoid cowboy framing ("point it at the problem," "vibe and ship") that implies blind acceptance.
 - Neutral description is the default when no actor needs naming ("The catalog has two views"). Prefer it over forcing "I" into every sentence.
 - **Never fabricate experiences, anecdotes, or motivations.** If Jason didn't confirm it, don't write it. Interview first, draft second.
 - Technical sections can just explain the thing without attribution.

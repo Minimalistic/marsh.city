@@ -73,7 +73,7 @@ Procedural audio isn't immune to repetition, but tying the sound generation to t
 
 This project was built entirely through conversation - I orchestrated, Claude Code implemented. 287 commits over many sessions, each one typically scoped to a single system - "today I'm working on fish schooling" or "today I'm fixing how sand looks."
 
-The workflow in practice: open the simulation, look at it, identify what feels wrong, describe it, iterate. The whole loop runs through conversation. Some sessions start with a specific goal ("make the predator less aggressive") and others start with just staring at the canvas until something catches your eye ("why do the fish bunch up in that corner?").
+The workflow in practice: open the simulation, look at it, identify what feels wrong, describe it, iterate, and check the change actually did what I wanted before moving on. The whole loop runs through conversation. Some sessions start with a specific goal ("make the predator less aggressive") and others start with just staring at the canvas until something catches your eye ("why do the fish bunch up in that corner?").
 
 A few lessons from doing this 287 times:
 
@@ -87,7 +87,7 @@ A few lessons from doing this 287 times:
 
 ## What this means
 
-My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would've meant hiring someone. The code is in the "AI slapped together" state and it knows it - 314KB in a single file, definitely needing refactor passes. But 314KB and you've got a reasonable cartoony ocean section to stare at. That's a fun trade.
+My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would've meant hiring someone. The result is one 314KB file - built for momentum, not maintainability. For a decorative canvas you leave running in the background, that's the right call: it's not a system I need to extend, it's something to glance at. 314KB, and you've got a cartoony ocean to stare at. Fair trade.
 
 The broader implication is still playing out. If someone with curiosity and taste but limited programming experience can produce something like this in a few weeks of evening sessions - and if it would've been a respectable side project from a solo developer even three or four years ago - then the next six months are going to be interesting as people with deep programming expertise finish getting through their more ambitious projects.
 
