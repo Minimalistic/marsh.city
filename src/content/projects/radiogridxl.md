@@ -1,15 +1,15 @@
 ---
 title: RadioGridXL
-description: A zero-dependency, single-file radio streaming app with WCAG AA accessibility — deployed to older adults at a nonprofit.
+description: Internet radio designed for older adults and people with disabilities — zero-dependency, single-file, WCAG AA accessible, deployed at a nonprofit.
 status: shipped
 repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-05-28
+updated: 2026-05-29
 ---
 
-Jason wanted a simple way to listen to internet radio - big buttons, no account, no ads. We built it as a single HTML file with no dependencies, no build step, and no backend. It ended up deployed at the nonprofit where Jason directs technology, in the hands of older adults who just want to listen to music without navigating a complicated interface.
+RadioGridXL is an internet radio app built for older adults and people with disabilities - the users mainstream music apps tend to leave behind. Big buttons, no account, no ads, nothing to set up. We built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where Jason directs technology, in the hands of people who just want to listen to music without fighting the interface.
 
 [Try the live demo](/radio/)
 
@@ -29,7 +29,7 @@ Add more stations and the layout shifts to a responsive grid - two columns here 
 
 ![Active playback state with advanced transport controls, connection indicator, and sleep timer](/images/radiogridxl/now-playing.webp)
 
-When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. There are two control modes: Simple (just a stop button) and Advanced, which adds skip controls and a sleep timer. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
+When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. There are two control modes. Simple gives you a single stop button. Advanced adds station skip and a sleep timer, and splits stopping into two actions - a soft Pause that holds the stream so you can resume where you left off, and a full Stop. The transport icons are inline SVG rather than unicode glyphs, so iOS can't swap in its own skeuomorphic emoji versions. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
 
 ## Technician settings
 
@@ -79,6 +79,9 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-05-29
+Synced the live demo to v7.5.5. Advanced mode now separates Pause - a soft, resumable hold on the stream - from Stop, which tears the connection down fully. The transport icons moved from unicode characters to inline SVG so iOS stops substituting its skeuomorphic emoji glyphs. v7.5.2 re-centered the logo and regenerated the maskable PWA icons, since the home-screen mark was getting cropped off-center on add-to-home-screen.
 
 ### 2026-05-28
 Updated the live demo to v7.5.1. The big addition since launch is a PWA shell - installable, with lock-screen audio controls (MediaSession), auto-resume, and offline app-shell caching via a service worker. Also added backup/restore of settings, accessibility presets, and per-stream loudness leveling so stations don't jump in volume. The demo moved from `/radio.html` to `/radio/` so the service worker stays scoped to its own directory instead of the whole site.
