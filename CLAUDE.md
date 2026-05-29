@@ -122,7 +122,8 @@ The site has two content types with different voices:
 Project pages are written in Jason's voice. He's the author: he directs the work, makes the calls, and ships it. Claude Code implements, but the copy does not share authorship — crediting the tool as a co-author muddies whose capability the page exists to show, and "made with AI" is aging into "made with a computer." Pragmatic, measured, honest about tradeoffs.
 
 - "I built / I designed / I decided / I learned" — the making and the directing are both Jason's. Don't hand any of it to a "we".
-- Third-person "Jason" is fine for biographical framing inside otherwise-neutral copy ("Jason is the Director of Technology..."), but the building-and-deciding voice is first-person "I".
+- First person *throughout* the body, including bio and motivation ("I'm the Director of Technology...", "I do my best thinking while driving"). Don't switch to third-person "Jason" mid-page — it clashes with the "I" voice. The name "Jason" belongs in the byline and the about/colophon, not in the narrative.
+- "I orchestrate, AI implements" is the preferred framing for the working relationship — Jason prefers "orchestrate" over "direct".
 - Neutral description is the default when no actor needs naming ("The catalog has two views"). Prefer it over forcing "I" into every sentence.
 - **Never fabricate experiences, anecdotes, or motivations.** If Jason didn't confirm it, don't write it. Interview first, draft second.
 - Technical sections can just explain the thing without attribution.

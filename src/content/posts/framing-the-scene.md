@@ -50,6 +50,6 @@ Constraining the visual layer to 1200px actually improved the resize behavior. P
 
 ## The tradeoff
 
-The frame adds one DOM element and about 60 lines of CSS. It's invisible to anyone on a viewport under 1200px, which is most visitors. A fair amount of thought for a narrow use case, but Jason stares at this site on an ultrawide daily, so it earned the effort.
+The frame adds one DOM element and about 60 lines of CSS. It's invisible to anyone on a viewport under 1200px, which is most visitors. A fair amount of thought for a narrow use case, but I stare at this site on an ultrawide daily, so it earned the effort.
 
-For Jason it was - he's one of those people, and staring at his own site on a wide monitor was bothering him. Decorative fixed backgrounds have a natural scale they work at, and pretending otherwise makes them look worse as screens get bigger. The frame gives the scene permission to stop growing and still look intentional.
+For me it was - I'm one of those people, and staring at my own site on a wide monitor was bothering me. Decorative fixed backgrounds have a natural scale they work at, and pretending otherwise makes them look worse as screens get bigger. The frame gives the scene permission to stop growing and still look intentional.

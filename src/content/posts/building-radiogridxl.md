@@ -13,7 +13,7 @@ It's a single HTML file. No dependencies, no build step, no backend. Open the fi
 
 ## Who it's for
 
-Jason is the Director of Technology at a nonprofit that serves older adults and people with disabilities, so the problem was right in front of him from the start: mainstream apps assume a level of technical comfort many clients don't have. Spotify is overwhelming if you just want to hear jazz. Even a basic podcast app has too many screens, too many options, too much text.
+I'm the Director of Technology at a nonprofit that serves older adults and people with disabilities, so the problem was right in front of me from the start: mainstream apps assume a level of technical comfort many clients don't have. Spotify is overwhelming if you just want to hear jazz. Even a basic podcast app has too many screens, too many options, too much text.
 
 That's the problem RadioGridXL was built to solve. A profile system brands and pre-configures the app for each deployment - the version running at Lighthouse Center has curated stations, a locked-down settings panel behind a technician PIN, and large touch targets sized for users who may have limited dexterity or vision.
 
@@ -27,7 +27,7 @@ The accessibility features weren't added after the fact. They shaped the archite
 
 **Screen readers drove the HTML structure.** Every interactive element has an ARIA role and label. Live regions announce playback changes. Focus management traps keyboard navigation inside overlays. For some users, this is the only way they experience the app.
 
-**Voice feedback changed the interaction model.** Optional text-to-speech announces "Now playing Jazz FM" or "Paused" through the Web Speech API. Audio chimes give non-visual confirmation of actions. These features exist because Jason watched someone try to use a music app without being able to see the screen.
+**Voice feedback changed the interaction model.** Optional text-to-speech announces "Now playing Jazz FM" or "Paused" through the Web Speech API. Audio chimes give non-visual confirmation of actions. These features exist because I watched someone try to use a music app without being able to see the screen.
 
 **The sizing algorithm came from real constraints.** The app measures the viewport and calculates button sizes dynamically - no breakpoints. One station fills the screen. Eight stations arrange into a grid. This matters because the deployment targets range from old Android tablets to modern iPads, and the interface needs to work across all of them without configuration.
 

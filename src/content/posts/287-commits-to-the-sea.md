@@ -35,7 +35,7 @@ The environment grew organically. Fish needed something to swim around, so I add
 
 The sand ripples alone took about ten commits. Too prominent and they competed with the fish. Wrong color temperature and they looked like a texture from a different scene. Too sharp and they read as drawn lines rather than light refracting through moving water. The final version uses thick blurred strokes at very low opacity, built up in layers. They're barely there - which is the point.
 
-Jason has a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - not because anyone would consciously notice if they didn't, but because the *absence* of that interaction reads as fake to anyone who's spent time watching real water.
+I have a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - not because anyone would consciously notice if they didn't, but because the *absence* of that interaction reads as fake to anyone who's spent time watching real water.
 
 ## Predator and prey
 
@@ -65,13 +65,13 @@ Wave frequency and power became tunable parameters later, but the core visual go
 
 The audio is entirely procedural - white noise shaped through bandpass filters, modulated by LFOs, with stereo panning that follows the wave's position across the screen. No audio files, no loops.
 
-The reason: Jason can't listen to looping ambient audio without his brain pattern-matching the loop point. Once you hear where the clip repeats, you can't unhear it - and then the relaxation is gone, replaced by anticipation of the seam. Noise machines, ambient YouTube videos, sleep apps - they all have this problem if the loop is short enough.
+The reason: I can't listen to looping ambient audio without my brain pattern-matching the loop point. Once you hear where the clip repeats, you can't unhear it - and then the relaxation is gone, replaced by anticipation of the seam. Noise machines, ambient YouTube videos, sleep apps - they all have this problem if the loop is short enough.
 
 Procedural audio isn't immune to repetition, but tying the sound generation to the visual wave state means the audio shifts when the visuals shift. Change the wave frequency and the sound follows. It's not a deep simulation of ocean acoustics - it's shaped noise - but the connection to what's on screen breaks up the patterns enough that your brain doesn't lock onto a loop.
 
 ## How vibe coding actually works
 
-This project was built entirely through conversation - I directed, Claude Code implemented. 287 commits over many sessions, each one typically scoped to a single system - "today I'm working on fish schooling" or "today I'm fixing how sand looks."
+This project was built entirely through conversation - I orchestrated, Claude Code implemented. 287 commits over many sessions, each one typically scoped to a single system - "today I'm working on fish schooling" or "today I'm fixing how sand looks."
 
 The workflow in practice: open the simulation, look at it, identify what feels wrong, describe it, iterate. Classic vibe coding. Some sessions start with a specific goal ("make the predator less aggressive") and others start with just staring at the canvas until something catches your eye ("why do the fish bunch up in that corner?").
 
@@ -87,7 +87,7 @@ A few lessons from doing this 287 times:
 
 ## What this means
 
-Jason isn't a production programmer. He's built Python scripts, HTML apps, various tools over the years - but always in the MVP category, always as a means to an end rather than software engineering as a craft. AI lets him explore pent-up curiosity about development that previously would've meant hiring someone. The code is in the "AI slapped together" state and it knows it - 314KB in a single file, definitely needing refactor passes. But 314KB and you've got a reasonable cartoony ocean section to stare at. That's a fun trade.
+My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would've meant hiring someone. The code is in the "AI slapped together" state and it knows it - 314KB in a single file, definitely needing refactor passes. But 314KB and you've got a reasonable cartoony ocean section to stare at. That's a fun trade.
 
 The broader implication is still playing out. If someone with curiosity and taste but limited programming experience can produce something like this in a few weeks of evening sessions - and if it would've been a respectable side project from a solo developer even three or four years ago - then the next six months are going to be interesting as people with deep programming expertise finish getting through their more ambitious projects.
 

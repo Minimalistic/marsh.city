@@ -8,7 +8,7 @@ started: 2026-03-01
 updated: 2026-05-25
 ---
 
-Jason is the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what works. WhatCanHelp grew out of a question he kept coming back to: what would it look like if the AT industry had better discovery tools?
+I'm the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what works. WhatCanHelp grew out of a question I kept coming back to: what would it look like if the AT industry had better discovery tools?
 
 I built a free tool that brings together 5,000+ assistive technology products from 23 vendors in one searchable place, with AI-powered descriptions, a freeform intake that produces a matched shortlist, and PDF reports designed for funding meetings and IEP appendices. No account required, no tracking.
 

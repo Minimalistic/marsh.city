@@ -8,7 +8,7 @@ started: 2025-06-01
 updated: 2026-04-30
 ---
 
-Jason has two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn't cutting it.
+I have two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn't cutting it.
 
 | | Store-bought | PetFeedr |
 |---|---|---|
@@ -60,4 +60,4 @@ A simulation mode auto-detects missing GPIO and mocks it, so the web interface w
 ## Updates
 
 ### 2026-04-26
-V1 has been running reliably for about two years. Jason is exploring a v2 focused on simplifying the design, reducing cost, and improving the aesthetics.
+V1 has been running reliably for about two years. I'm exploring a v2 focused on simplifying the design, reducing cost, and improving the aesthetics.

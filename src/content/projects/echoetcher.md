@@ -8,7 +8,7 @@ started: 2025-09-01
 updated: 2026-03-15
 ---
 
-Jason does most of his thinking while driving - working through problems, coming up with project ideas, planning next steps. The ideas are there, but capturing them in a usable form is hard, and scrubbing through a raw voice recording later isn't much better.
+I do most of my thinking while driving - working through problems, coming up with project ideas, planning next steps. The ideas are there, but capturing them in a usable form is hard, and scrubbing through a raw voice recording later isn't much better.
 
 EchoEtcher watches a folder for audio files, transcribes them with Whisper running locally, processes the transcript through an LLM, and drops a clean, tagged Markdown note into Obsidian.
 
@@ -35,4 +35,4 @@ It runs as a background agent with configurable polling intervals, designed to r
 ## Updates
 
 ### 2026-04-26
-Currently offline while Jason works on some convenience improvements to the workflow. Was in regular use before that.
+Currently offline while I work on some convenience improvements to the workflow. Was in regular use before that.
