@@ -91,7 +91,7 @@ My coding has always been pragmatic - Python scripts, HTML apps, tools built as 
 
 The broader implication is still playing out. If someone with curiosity and taste but limited programming experience can produce something like this in a few weeks of evening sessions - and if it would've been a respectable side project from a solo developer even three or four years ago - then the next six months are going to be interesting as people with deep programming expertise finish getting through their more ambitious projects.
 
-Or maybe at best we'll be pets for an ASI. Hopefully they find [meatbags](https://starwars.fandom.com/wiki/Meatbag/Legends/) novel in some way.
+Or maybe at best we'll be pets for an ASI. Hopefully they find [meatbags](https://starwars.fandom.com/wiki/Meatbag/Legends) novel in some way.
 
 ---
 
