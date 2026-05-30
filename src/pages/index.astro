@@ -7,6 +7,11 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
 const projects = (await getCollection('projects'))
   .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf())
   .slice(0, 6);
+// art series surfaced on the home page as a visual strip — newest first,
+// only series that actually have images
+const artSeries = (await getCollection('art'))
+  .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf())
+  .filter((s) => s.data.images.length > 0);
 ---
 <Base description="Jason Marsh — Director of Technology, assistive technology, AI engineering.">
   <script type="application/ld+json" set:html={JSON.stringify({
@@ -30,6 +35,29 @@ const projects = (await getCollection('projects'))
       and <strong>AI-integrated tools</strong> I design and build end to end.
     </p>
   </div>
+
+  {artSeries.length > 0 && (
+    <>
+      <div class="section-header">
+        <h2>Art</h2>
+        <a href="/art/">View all</a>
+      </div>
+      <div class="art-strip">
+        {artSeries.map((s) => {
+          const srcs = s.data.images.slice(0, 6).map((im) => im.src);
+          return (
+            <a class="art-strip-card" href={`/art/${s.id}/`}>
+              <div class="art-strip-cover" data-srcs={JSON.stringify(srcs)}>
+                <img class="layer is-front" src={srcs[0]} alt="" loading="lazy" decoding="async" />
+                <img class="layer" alt="" loading="lazy" decoding="async" />
+              </div>
+              <span class="art-strip-title">{s.data.title}</span>
+            </a>
+          );
+        })}
+      </div>
+    </>
+  )}
 
   <div class="section-header">
     <h2>Projects</h2>
@@ -72,4 +100,91 @@ const projects = (await getCollection('projects'))
       ))}
     </>
   )}
+
+  <style>
+    .art-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 0 0 0.5rem;
+    }
+    .art-strip-card { display: block; width: 200px; max-width: 100%; }
+    @media (max-width: 520px) {
+      .art-strip-card { width: calc(50% - 0.5rem); }
+    }
+    .art-strip-cover {
+      position: relative;
+      aspect-ratio: 3 / 2;
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--bg-soft, rgba(0, 0, 0, 0.04));
+    }
+    .art-strip-cover .layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .art-strip-cover .layer.is-front { opacity: 1; }
+    .art-strip-card:hover .art-strip-cover .layer.is-front {
+      filter: saturate(1.05) contrast(1.02);
+    }
+    .art-strip-title {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      margin-top: 0.45rem;
+      color: var(--fg-soft);
+      line-height: 1.3;
+    }
+  </style>
+
+  <script is:inline>
+    // art strip: each tile slow-cross-fades through its series' images.
+    // two <img> layers per tile ping-pong so only ever two images are in
+    // memory; cycling pauses when the tile is off-screen, and the whole
+    // thing is disabled under prefers-reduced-motion.
+    (() => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const covers = document.querySelectorAll('.art-strip-cover');
+      if (!covers.length || reduce) return;
+
+      covers.forEach((cover, ci) => {
+        let srcs;
+        try { srcs = JSON.parse(cover.dataset.srcs || '[]'); } catch { srcs = []; }
+        if (srcs.length < 2) return;
+
+        const layers = cover.querySelectorAll('.layer');
+        let idx = 0;       // src index currently shown
+        let front = 0;     // which layer element is in front (0 | 1)
+        let inView = false;
+
+        new IntersectionObserver((entries) => {
+          entries.forEach((e) => { inView = e.isIntersecting; });
+        }, { threshold: 0.2 }).observe(cover);
+
+        function advance() {
+          if (!inView) return;
+          const next = (idx + 1) % srcs.length;
+          const back = layers[front ^ 1];
+          const cur = layers[front];
+          function swap() {
+            back.classList.add('is-front');
+            cur.classList.remove('is-front');
+            front ^= 1;
+            idx = next;
+          }
+          back.onload = swap;
+          back.src = srcs[next];
+          if (back.complete && back.naturalWidth) swap();
+        }
+
+        // stagger so tiles don't all flip in unison
+        setTimeout(() => setInterval(advance, 6000), ci * 1500);
+      });
+    })();
+  </script>
 </Base>
