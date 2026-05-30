@@ -160,7 +160,7 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
     (() => {
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const cards = [...document.querySelectorAll('.art-strip-card')];
-      if (!cards.length || reduce || artPool.length < 2) return;
+      if (!cards.length || artPool.length < 2) return;
 
       function shuffled(arr) {
         const a = arr.slice();
@@ -171,9 +171,23 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
         return a;
       }
 
+      // random per-visit first image for each tile (distinct across tiles),
+      // so the strip doesn't open on the same set every load
+      const firstPicks = shuffled(artPool);
       cards.forEach((card, ci) => {
         const layers = card.querySelectorAll('.layer');
         const titleEl = card.querySelector('.art-strip-title');
+        const first = firstPicks[ci % firstPicks.length];
+
+        // reduced motion: still randomize the first image per visit, but apply
+        // it instantly — no fade, no cycling
+        if (reduce) {
+          layers[0].src = first.src;
+          card.setAttribute('href', first.url);
+          titleEl.textContent = first.title;
+          return;
+        }
+
         const queue = shuffled(artPool);
         let qi = 0;
         let front = 0;
@@ -183,10 +197,8 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
           entries.forEach((e) => { inView = e.isIntersecting; });
         }, { threshold: 0.2 }).observe(card);
 
-        function advance() {
-          if (!inView) return;
-          const item = queue[qi % queue.length];
-          qi++;
+        // cross-fade the back layer in to the given image, then make it front
+        function show(item) {
           const back = layers[front ^ 1];
           const cur = layers[front];
           function swap() {
@@ -200,6 +212,15 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
           back.src = item.src;
           if (back.complete && back.naturalWidth) swap();
         }
+
+        function advance() {
+          if (!inView) return;
+          show(queue[qi % queue.length]);
+          qi++;
+        }
+
+        // fade the random first pick in over the server-rendered image
+        show(first);
 
         // stagger so tiles don't all flip in unison
         setTimeout(() => setInterval(advance, 6000), ci * 1500 + Math.floor(Math.random() * 1000));
