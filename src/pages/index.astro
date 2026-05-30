@@ -60,7 +60,7 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
           return (
             <a class="art-strip-card" href={it.url}>
               <div class="art-strip-cover">
-                <img class="layer is-front" src={it.src} alt="" loading="lazy" decoding="async" />
+                <img class="layer" alt="" loading="lazy" decoding="async" />
                 <img class="layer" alt="" loading="lazy" decoding="async" />
               </div>
               <span class="art-strip-title">{it.title}</span>
@@ -135,7 +135,9 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
       height: 100%;
       object-fit: cover;
       opacity: 0;
-      transition: opacity 1s ease;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .art-strip-cover .layer { transition: opacity 1s ease; }
     }
     .art-strip-cover .layer.is-front { opacity: 1; }
     .art-strip-card:hover .art-strip-cover .layer.is-front {
@@ -183,6 +185,7 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
         // it instantly — no fade, no cycling
         if (reduce) {
           layers[0].src = first.src;
+          layers[0].classList.add('is-front');
           card.setAttribute('href', first.url);
           titleEl.textContent = first.title;
           return;
