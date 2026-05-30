@@ -43,6 +43,7 @@ const art = defineCollection({
     codename: z.string().optional(),
     nickname: z.string().optional(),
     tool: z.string().optional(),
+    target: z.string().optional(),
     started: z.coerce.date().optional(),
     updated: z.coerce.date().optional(),
     cover: z.string().optional(),

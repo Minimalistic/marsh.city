@@ -3,6 +3,7 @@ title: Mission 01 — The Mammoth Steppe
 description: Aux's first live deployment after calibration — late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
 codename: XR-Auspex-001
 nickname: Aux
+target: Late Pleistocene · ~28,000 years ago
 started: 2026-05-20
 updated: 2026-05-30
 promptLabel: composition brief
@@ -22,7 +23,8 @@ images:
       the frame. A vast frost-covered grassland steppe rolling away to
       distant low hills under a pale pre-sunrise sky. A thin braided river
       winds through the middle distance, catching the first light. No
-      animals anywhere. Centered, symmetrical, still. --ar 3:2
+      animals anywhere. Centered, symmetrical, still. --ar 3:2 --no people,
+      modern equipment, text
   - src: /art/mission-01-mammoth-steppe/02-herd-ranged.webp
     alt: A loose line of about eight woolly mammoths crossing open steppe in the middle distance, kept small in the frame, long shadows from a low sun
     slug: "Dispatch 002 — First herd, ranged"
@@ -38,7 +40,8 @@ images:
       leading, two calves walking between the adults. Snow and dust kicked
       up behind their feet. Low morning sun behind the herd throwing long
       shadows toward the viewer. High horizon, large foreground of open
-      steppe, the herd kept small within the frame. --ar 3:2
+      steppe, the herd kept small within the frame. --ar 3:2 --no people,
+      modern equipment, text
   - src: /art/mission-01-mammoth-steppe/03-bull-close.webp
     alt: A close three-quarter view of a single old bull woolly mammoth facing left, huge curved tusks and shaggy head filling the frame, breath steaming
     slug: "Dispatch 003 — The bull, close"
@@ -54,7 +57,7 @@ images:
       frame. Breath steaming in the cold air, ice crusted in the long fur.
       Low camera angle looking slightly up so he reads as monumental. Behind
       him, the rest of the herd and the pale sky thrown soft and out of
-      focus. --ar 3:2
+      focus. --ar 3:2 --no people, modern equipment, text
   - src: /art/mission-01-mammoth-steppe/04-wolves-dusk.webp
     alt: A dusk scene — a line of wolves silhouetted on a low foreground rise watching a defensive cluster of mammoths in the mid-distance, snow beginning to fall
     slug: "Dispatch 004 — Wolves on the rise, dusk"
@@ -71,7 +74,7 @@ images:
       the mid-distance, a herd of mammoths bunched into a defensive cluster,
       adults turned outward around the calves. Snow just beginning to fall.
       Cold blue dusk with a last band of orange at the horizon in the gap
-      between the two groups. --ar 3:2
+      between the two groups. --ar 3:2 --no people, modern equipment, text
   - src: /art/mission-01-mammoth-steppe/05-night-aurora.webp
     alt: A night scene with green aurora filling the upper two-thirds, a herd of mammoths bedded down as dark masses below with one standing watch, very low horizon
     slug: "Dispatch 005 — Night watch, aurora"
@@ -90,7 +93,7 @@ images:
       a herd of mammoths bedded down as large dark masses, one adult
       standing upright keeping watch. Snow on the ground catching faint
       aurora light. Very low horizon, the land a thin dark band, the animals
-      small beneath the sky. --ar 3:2
+      small beneath the sky. --ar 3:2 --no people, modern equipment, text
 ---
 
 *Mission 01. The first live deployment after Aux cleared calibration. Target window: late Pleistocene mammoth steppe, roughly 28,000 years before present. What follows are the dispatches in the order they came back through the channel.*

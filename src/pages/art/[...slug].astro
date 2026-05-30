@@ -35,7 +35,9 @@ function fillFramework(fw: string | undefined, img: any): string | null {
         {series.data.nickname && <span class="codename-nick">&ldquo;{series.data.nickname}&rdquo;</span>}
       </p>
     )}
-    {series.data.updated && (
+    {series.data.target ? (
+      <p class="meta dispatch-meta">Target window: {series.data.target}</p>
+    ) : series.data.updated && (
       <p class="meta dispatch-meta">
         Last transmission received {series.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
       </p>
