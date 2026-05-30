@@ -12,6 +12,19 @@ const projects = (await getCollection('projects'))
 const artSeries = (await getCollection('art'))
   .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf())
   .filter((s) => s.data.images.length > 0);
+// flat pool of every art image across all series — the strip tiles cycle
+// through this shuffled, so the strip isn't bound to one mission per tile
+const artPool = artSeries
+  .flatMap((s) => s.data.images.map((im) => ({ src: im.src, url: `/art/${s.id}/`, title: s.data.title })))
+  .slice(0, 30);
+const STRIP_TILES = Math.min(4, artPool.length);
+// seed each tile's first paint from a different series (round-robin) so the
+// strip looks varied on load, before the client shuffle takes over
+const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
+  const s = artSeries[i % artSeries.length];
+  const img = s.data.images[Math.floor(i / artSeries.length) % s.data.images.length];
+  return { src: img.src, url: `/art/${s.id}/`, title: s.data.title };
+});
 ---
 <Base description="Jason Marsh — Director of Technology, assistive technology, AI engineering.">
   <script type="application/ld+json" set:html={JSON.stringify({
@@ -43,15 +56,14 @@ const artSeries = (await getCollection('art'))
         <a href="/art/">View all</a>
       </div>
       <div class="art-strip">
-        {artSeries.map((s) => {
-          const srcs = s.data.images.slice(0, 6).map((im) => im.src);
+        {stripInitial.map((it) => {
           return (
-            <a class="art-strip-card" href={`/art/${s.id}/`}>
-              <div class="art-strip-cover" data-srcs={JSON.stringify(srcs)}>
-                <img class="layer is-front" src={srcs[0]} alt="" loading="lazy" decoding="async" />
+            <a class="art-strip-card" href={it.url}>
+              <div class="art-strip-cover">
+                <img class="layer is-front" src={it.src} alt="" loading="lazy" decoding="async" />
                 <img class="layer" alt="" loading="lazy" decoding="async" />
               </div>
-              <span class="art-strip-title">{s.data.title}</span>
+              <span class="art-strip-title">{it.title}</span>
             </a>
           );
         })}
@@ -103,15 +115,12 @@ const artSeries = (await getCollection('art'))
 
   <style>
     .art-strip {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 1rem;
       margin: 0 0 0.5rem;
     }
-    .art-strip-card { display: block; width: 200px; max-width: 100%; }
-    @media (max-width: 520px) {
-      .art-strip-card { width: calc(50% - 0.5rem); }
-    }
+    .art-strip-card { display: block; min-width: 0; }
     .art-strip-cover {
       position: relative;
       aspect-ratio: 3 / 2;
@@ -142,48 +151,58 @@ const artSeries = (await getCollection('art'))
     }
   </style>
 
-  <script is:inline>
-    // art strip: each tile slow-cross-fades through its series' images.
-    // two <img> layers per tile ping-pong so only ever two images are in
-    // memory; cycling pauses when the tile is off-screen, and the whole
-    // thing is disabled under prefers-reduced-motion.
+  <script is:inline define:vars={{ artPool }}>
+    // art strip: every tile cross-fades through a shuffled pool of ALL art
+    // images across all series — not bound to one mission per tile. Each tile
+    // walks its own shuffled queue (de-synced), updates its link + label to
+    // match whatever it's currently showing, holds only two images in memory,
+    // pauses off-screen, and is disabled under prefers-reduced-motion.
     (() => {
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const covers = document.querySelectorAll('.art-strip-cover');
-      if (!covers.length || reduce) return;
+      const cards = [...document.querySelectorAll('.art-strip-card')];
+      if (!cards.length || reduce || artPool.length < 2) return;
 
-      covers.forEach((cover, ci) => {
-        let srcs;
-        try { srcs = JSON.parse(cover.dataset.srcs || '[]'); } catch { srcs = []; }
-        if (srcs.length < 2) return;
+      function shuffled(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
 
-        const layers = cover.querySelectorAll('.layer');
-        let idx = 0;       // src index currently shown
-        let front = 0;     // which layer element is in front (0 | 1)
+      cards.forEach((card, ci) => {
+        const layers = card.querySelectorAll('.layer');
+        const titleEl = card.querySelector('.art-strip-title');
+        const queue = shuffled(artPool);
+        let qi = 0;
+        let front = 0;
         let inView = false;
 
         new IntersectionObserver((entries) => {
           entries.forEach((e) => { inView = e.isIntersecting; });
-        }, { threshold: 0.2 }).observe(cover);
+        }, { threshold: 0.2 }).observe(card);
 
         function advance() {
           if (!inView) return;
-          const next = (idx + 1) % srcs.length;
+          const item = queue[qi % queue.length];
+          qi++;
           const back = layers[front ^ 1];
           const cur = layers[front];
           function swap() {
             back.classList.add('is-front');
             cur.classList.remove('is-front');
             front ^= 1;
-            idx = next;
+            card.setAttribute('href', item.url);
+            titleEl.textContent = item.title;
           }
           back.onload = swap;
-          back.src = srcs[next];
+          back.src = item.src;
           if (back.complete && back.naturalWidth) swap();
         }
 
         // stagger so tiles don't all flip in unison
-        setTimeout(() => setInterval(advance, 6000), ci * 1500);
+        setTimeout(() => setInterval(advance, 6000), ci * 1500 + Math.floor(Math.random() * 1000));
       });
     })();
   </script>
