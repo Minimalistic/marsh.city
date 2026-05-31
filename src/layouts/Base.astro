@@ -138,21 +138,19 @@ const paletteItems = [
       })();
     </script>
     <script is:inline>
-      // block pinch-to-zoom on iOS Safari (ignores viewport meta tag).
-      // gesture events cover Safari; touchmove with 2+ fingers covers
-      // edge cases where gesture events slip through.
-      // allow zoom when lightbox is open so users can pinch-to-zoom images.
-      function _lbOpen() { return !!document.querySelector('.lightbox.open'); }
-      document.addEventListener('gesturestart', e => { if (!_lbOpen()) e.preventDefault(); });
-      document.addEventListener('gesturechange', e => { if (!_lbOpen()) e.preventDefault(); });
-      document.addEventListener('gestureend', e => { if (!_lbOpen()) e.preventDefault(); });
+      // block iOS Safari's native page pinch-zoom (it ignores the viewport meta).
+      // the lightbox runs its own pointer-based zoom, so we suppress the native
+      // gesture everywhere — including over an open lightbox.
+      document.addEventListener('gesturestart', e => e.preventDefault());
+      document.addEventListener('gesturechange', e => e.preventDefault());
+      document.addEventListener('gestureend', e => e.preventDefault());
       document.addEventListener('touchmove', e => {
-        if (e.touches.length > 1 && !_lbOpen()) e.preventDefault();
+        if (e.touches.length > 1) e.preventDefault();
       }, { passive: false });
-      // if zoom somehow sneaks through (outside lightbox), snap back to 1x
+      // failsafe: if the page ever zooms anyway, snap it back to 1x
       if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
-          if (Math.abs(window.visualViewport.scale - 1) > 0.05 && !_lbOpen()) {
+          if (Math.abs(window.visualViewport.scale - 1) > 0.05) {
             document.body.style.transform = 'scale(1)';
             document.body.style.transformOrigin = '0 0';
             window.scrollTo(0, window.scrollY);
@@ -1157,123 +1155,178 @@ const paletteItems = [
       // lightbox — click any .prose img to view fullscreen; JS-driven
       // pinch-to-zoom + pan since the viewport meta blocks native zoom.
       (() => {
-        let overlay = null;
-        let lbImg = null;
-        // element that pinch/pan transforms apply to (image or svg wrapper)
-        let lbTarget = null;
-        // transform state
-        let scale = 1, tx = 0, ty = 0;
-        // natural center of the image (captured once on open, never changes)
-        let imgCx = 0, imgCy = 0;
-        // pinch tracking
-        let startDist = 0, startScale = 1;
-        let startMidX = 0, startMidY = 0, startTx = 0, startTy = 0;
-        // single-finger pan (when zoomed)
-        let panStartX = 0, panStartY = 0, panTx = 0, panTy = 0;
-        let isPinching = false;
-        let touchMoved = false;
-
-        function applyTransform() {
-          if (!lbTarget) return;
-          lbTarget.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
-        }
-
-        function resetTransform() {
-          scale = 1; tx = 0; ty = 0;
-          if (lbTarget) lbTarget.style.transform = '';
-        }
-
-        function dist(a, b) {
-          return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-        }
-
-        function onTouchStart(e) {
-          touchMoved = false;
-          if (e.touches.length === 2) {
-            e.preventDefault();
-            isPinching = true;
-            startDist = dist(e.touches[0], e.touches[1]);
-            startScale = scale;
-            startMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-            startMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            startTx = tx;
-            startTy = ty;
-          } else if (e.touches.length === 1 && scale > 1.05) {
-            e.preventDefault();
-            panStartX = e.touches[0].clientX;
-            panStartY = e.touches[0].clientY;
-            panTx = tx;
-            panTy = ty;
-          }
-        }
-
-        function onTouchMove(e) {
-          touchMoved = true;
-          if (e.touches.length === 2 && isPinching) {
-            e.preventDefault();
-            var d = dist(e.touches[0], e.touches[1]);
-            var newScale = Math.min(5, Math.max(1, startScale * (d / startDist)));
-            var midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-            var midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            // find the image-space point under the initial pinch midpoint:
-            // viewport = imgCenter + tx + pointOffset * scale
-            // so pointOffset = (viewportPoint - imgCenter - tx) / scale
-            var px = (startMidX - imgCx - startTx) / startScale;
-            var py = (startMidY - imgCy - startTy) / startScale;
-            // solve for tx/ty so that same image point lands under current midpoint:
-            // midX = imgCx + tx + px * newScale
-            tx = midX - imgCx - px * newScale;
-            ty = midY - imgCy - py * newScale;
-            scale = newScale;
-            applyTransform();
-          } else if (e.touches.length === 1 && scale > 1.05 && !isPinching) {
-            e.preventDefault();
-            tx = panTx + (e.touches[0].clientX - panStartX);
-            ty = panTy + (e.touches[0].clientY - panStartY);
-            applyTransform();
-          }
-        }
-
-        function onTouchEnd(e) {
-          if (e.touches.length < 2) isPinching = false;
-          if (scale < 1.05) resetTransform();
-        }
-
-        // Safari gesture events — zoom anchored to image center
-        function onGestureStart(e) {
-          e.preventDefault();
-          startScale = scale;
-          startTx = tx;
-          startTy = ty;
-        }
-        function onGestureChange(e) {
-          e.preventDefault();
-          var newScale = Math.min(5, Math.max(1, startScale * e.scale));
-          // scale tx/ty proportionally so zoom anchors to image center
-          var ratio = newScale / startScale;
-          tx = startTx * ratio;
-          ty = startTy * ratio;
-          scale = newScale;
-          applyTransform();
-        }
-        function onGestureEnd(e) { e.preventDefault(); if (scale < 1.05) resetTransform(); }
+        let overlay = null;   // active overlay element, or null
+        let detach = null;    // teardown for the active viewer's window listeners
 
         function closeLightbox() {
           if (!overlay) return;
-          overlay.classList.remove('open');
-          document.body.style.overflow = '';
-          // remove touch listeners
-          overlay.removeEventListener('touchstart', onTouchStart);
-          overlay.removeEventListener('touchmove', onTouchMove);
-          overlay.removeEventListener('touchend', onTouchEnd);
-          overlay.removeEventListener('gesturestart', onGestureStart);
-          overlay.removeEventListener('gesturechange', onGestureChange);
-          overlay.removeEventListener('gestureend', onGestureEnd);
-          var el = overlay;
+          const el = overlay;
           overlay = null;
-          lbImg = null;
-          lbTarget = null;
-          setTimeout(function() { el.remove(); }, 250);
+          if (detach) { detach(); detach = null; }
+          el.classList.remove('open');
+          document.body.style.overflow = '';
+          setTimeout(() => el.remove(), 250);
+        }
+
+        function makeCloseBtn(label) {
+          const btn = document.createElement('button');
+          btn.className = 'lightbox-close';
+          btn.setAttribute('aria-label', label);
+          btn.textContent = '✕';
+          btn.addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
+          return btn;
+        }
+
+        // one pointer-based engine per overlay: pinch + wheel zoom, drag-pan,
+        // double-tap/dblclick zoom, swipe-down-to-close. Pointer Events unify
+        // touch + mouse + trackpad, replacing the old touch/Safari-gesture split
+        // that ran two zoom handlers at once. zoomable=false (video) keeps only
+        // swipe-close + backdrop-tap-close. Returns a teardown function.
+        function attachViewer(ov, target, zoomable) {
+          const MIN = 1, MAX = 5;
+          let scale = 1, tx = 0, ty = 0;
+          const pointers = new Map();          // pointerId -> { x, y }
+          let downTarget = null, moved = false;
+          // pinch snapshot
+          let startDist = 0, startScale = 1, startMidX = 0, startMidY = 0, startTx = 0, startTy = 0;
+          // single-pointer pan + swipe-to-close
+          let panX = 0, panY = 0, swiping = false, swipeStartY = 0, swipeDy = 0;
+          // double-tap (touch only; mouse uses dblclick)
+          let lastTap = 0, lastTapX = 0, lastTapY = 0;
+
+          const ctrX = () => window.innerWidth / 2;
+          const ctrY = () => window.innerHeight / 2;
+          const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+          // keep the scaled image from being panned past its own edges
+          function clamp() {
+            const maxX = Math.max(0, (target.offsetWidth * scale - window.innerWidth) / 2);
+            const maxY = Math.max(0, (target.offsetHeight * scale - window.innerHeight) / 2);
+            tx = Math.max(-maxX, Math.min(maxX, tx));
+            ty = Math.max(-maxY, Math.min(maxY, ty));
+          }
+          const apply = () => { target.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')'; };
+          function animated(fn) {
+            target.style.transition = 'transform 0.2s ease';
+            fn();
+            setTimeout(() => { target.style.transition = ''; }, 200);
+          }
+          function reset(animate) {
+            scale = 1; tx = 0; ty = 0;
+            if (animate) animated(apply); else apply();
+          }
+          // zoom toward a screen anchor, keeping that point fixed under finger/cursor.
+          // the target is centered (flex) with transform-origin center, so the
+          // viewport center is its origin when tx/ty are 0.
+          function zoomToward(next, ax, ay) {
+            next = Math.max(MIN, Math.min(MAX, next));
+            const ratio = next / scale;
+            tx = ax - ctrX() - (ax - ctrX() - tx) * ratio;
+            ty = ay - ctrY() - (ay - ctrY() - ty) * ratio;
+            scale = next;
+            clamp(); apply();
+          }
+
+          function onDown(e) {
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (pointers.size === 1) { downTarget = e.target; moved = false; }
+            if (zoomable && pointers.size === 2) {
+              const p = [...pointers.values()];
+              startDist = dist(p[0], p[1]);
+              startScale = scale;
+              startMidX = (p[0].x + p[1].x) / 2; startMidY = (p[0].y + p[1].y) / 2;
+              startTx = tx; startTy = ty;
+              swiping = false;
+            } else if (pointers.size === 1) {
+              panX = e.clientX; panY = e.clientY;
+              if (scale <= 1.01) { swiping = true; swipeStartY = e.clientY; swipeDy = 0; }
+            }
+          }
+
+          function onMove(e) {
+            if (!pointers.has(e.pointerId)) return;
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            const p = [...pointers.values()];
+            if (zoomable && p.length >= 2) {
+              moved = true;
+              const d = dist(p[0], p[1]);
+              const mx = (p[0].x + p[1].x) / 2, my = (p[0].y + p[1].y) / 2;
+              const next = Math.max(MIN, Math.min(MAX, startScale * (d / startDist)));
+              const ratio = next / startScale;
+              tx = mx - ctrX() - (startMidX - ctrX() - startTx) * ratio;
+              ty = my - ctrY() - (startMidY - ctrY() - startTy) * ratio;
+              scale = next;
+              clamp(); apply();
+            } else if (p.length === 1) {
+              const dx = e.clientX - panX, dy = e.clientY - panY;
+              if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+              panX = e.clientX; panY = e.clientY;
+              if (scale > 1.01) {
+                tx += dx; ty += dy; clamp(); apply();
+              } else if (swiping) {
+                swipeDy = e.clientY - swipeStartY;
+                const prog = Math.min(1, Math.abs(swipeDy) / 300);
+                target.style.transform = 'translateY(' + swipeDy + 'px)';
+                ov.style.background = 'rgba(0,0,0,' + (0.92 * (1 - prog * 0.7)) + ')';
+              }
+            }
+          }
+
+          function onUp(e) {
+            pointers.delete(e.pointerId);
+            if (pointers.size === 1) {
+              const r = [...pointers.values()][0];
+              panX = r.x; panY = r.y;          // reanchor pan after a pinch finger lifts
+            }
+            if (pointers.size > 0) return;
+
+            if (swiping && moved) {
+              swiping = false;
+              ov.style.background = '';
+              if (Math.abs(swipeDy) > 90) { closeLightbox(); return; }
+              animated(apply);                 // not far enough — snap back into place
+              return;
+            }
+            swiping = false;
+
+            if (scale < 1.01 && scale !== 1) reset(true);
+            if (moved) return;
+
+            if (downTarget === ov) { closeLightbox(); return; }   // tap the dark backdrop
+            // double-tap the image toggles zoom (touch only; mouse uses dblclick)
+            if (zoomable && e.pointerType === 'touch' && target.contains(downTarget)) {
+              const now = e.timeStamp;
+              if (now - lastTap < 300 && Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 30) {
+                lastTap = 0;
+                if (scale > 1.01) reset(true);
+                else animated(() => zoomToward(2.5, e.clientX, e.clientY));
+              } else {
+                lastTap = now; lastTapX = e.clientX; lastTapY = e.clientY;
+              }
+            }
+          }
+
+          function onWheel(e) {
+            if (!zoomable) return;
+            e.preventDefault();
+            zoomToward(scale * Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY);
+          }
+          function onDblClick(e) {
+            if (!zoomable) return;
+            if (scale > 1.01) animated(() => reset(false));
+            else animated(() => zoomToward(2.5, e.clientX, e.clientY));
+          }
+          const onResize = () => { clamp(); apply(); };
+
+          ov.addEventListener('pointerdown', onDown);
+          ov.addEventListener('pointermove', onMove);
+          ov.addEventListener('pointerup', onUp);
+          ov.addEventListener('pointercancel', onUp);
+          ov.addEventListener('wheel', onWheel, { passive: false });
+          ov.addEventListener('dblclick', onDblClick);
+          window.addEventListener('resize', onResize);
+
+          return () => window.removeEventListener('resize', onResize);
         }
 
         function openLightbox(src, alt) {
@@ -1284,57 +1337,18 @@ const paletteItems = [
           overlay.setAttribute('aria-modal', 'true');
           overlay.setAttribute('aria-label', alt || 'Image preview');
 
-          var closeBtn = document.createElement('button');
-          closeBtn.className = 'lightbox-close';
-          closeBtn.setAttribute('aria-label', 'Close image preview');
-          closeBtn.innerHTML = '&#x2715;';
-          closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
-          closeBtn.addEventListener('touchend', function(e) { e.stopPropagation(); e.preventDefault(); closeLightbox(); });
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = alt || '';
+          img.draggable = false;
 
-          lbImg = document.createElement('img');
-          lbImg.src = src;
-          lbImg.alt = alt || '';
-          lbImg.draggable = false;
-          lbTarget = lbImg;
-
-          // capture the image's natural center once it's laid out
-          lbImg.addEventListener('load', function() {
-            var r = lbImg.getBoundingClientRect();
-            imgCx = r.left + r.width / 2;
-            imgCy = r.top + r.height / 2;
-          });
-
-          overlay.appendChild(closeBtn);
-          overlay.appendChild(lbImg);
+          overlay.appendChild(makeCloseBtn('Close image preview'));
+          overlay.appendChild(img);
           document.body.appendChild(overlay);
           document.body.style.overflow = 'hidden';
 
-          resetTransform();
-
-          // fallback: capture center on next frame in case image is cached and load already fired
-          requestAnimationFrame(function() {
-            if (lbImg && imgCx === 0) {
-              var r = lbImg.getBoundingClientRect();
-              imgCx = r.left + r.width / 2;
-              imgCy = r.top + r.height / 2;
-            }
-          });
-
-          // touch handlers for pinch-to-zoom + pan
-          overlay.addEventListener('touchstart', onTouchStart, { passive: false });
-          overlay.addEventListener('touchmove', onTouchMove, { passive: false });
-          overlay.addEventListener('touchend', onTouchEnd);
-          overlay.addEventListener('gesturestart', onGestureStart);
-          overlay.addEventListener('gesturechange', onGestureChange);
-          overlay.addEventListener('gestureend', onGestureEnd);
-
-          requestAnimationFrame(function() { if (overlay) overlay.classList.add('open'); });
-
-          // close on background tap (not if pinching/panning, not on the image when zoomed)
-          overlay.addEventListener('click', function(e) {
-            if (touchMoved) return;
-            if (e.target === overlay || (e.target === lbImg && scale < 1.05)) closeLightbox();
-          });
+          detach = attachViewer(overlay, img, true);
+          requestAnimationFrame(() => { if (overlay) overlay.classList.add('open'); });
         }
 
         function openVideoLightbox(src, alt) {
@@ -1345,14 +1359,7 @@ const paletteItems = [
           overlay.setAttribute('aria-modal', 'true');
           overlay.setAttribute('aria-label', alt || 'Video preview');
 
-          var closeBtn = document.createElement('button');
-          closeBtn.className = 'lightbox-close';
-          closeBtn.setAttribute('aria-label', 'Close video preview');
-          closeBtn.innerHTML = '&#x2715;';
-          closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
-          closeBtn.addEventListener('touchend', function(e) { e.stopPropagation(); e.preventDefault(); closeLightbox(); });
-
-          var vid = document.createElement('video');
+          const vid = document.createElement('video');
           vid.src = src;
           vid.autoplay = true;
           vid.loop = true;
@@ -1360,17 +1367,13 @@ const paletteItems = [
           vid.playsInline = true;
           vid.draggable = false;
 
-          overlay.appendChild(closeBtn);
+          overlay.appendChild(makeCloseBtn('Close video preview'));
           overlay.appendChild(vid);
           document.body.appendChild(overlay);
           document.body.style.overflow = 'hidden';
 
-          resetTransform();
-          requestAnimationFrame(function() { if (overlay) overlay.classList.add('open'); });
-
-          overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) closeLightbox();
-          });
+          detach = attachViewer(overlay, vid, false);
+          requestAnimationFrame(() => { if (overlay) overlay.classList.add('open'); });
         }
 
         // mermaid diagrams: render the cloned SVG inline (not as <img src=blob>) so
@@ -1383,13 +1386,6 @@ const paletteItems = [
           overlay.setAttribute('role', 'dialog');
           overlay.setAttribute('aria-modal', 'true');
           overlay.setAttribute('aria-label', 'Diagram preview');
-
-          var closeBtn = document.createElement('button');
-          closeBtn.className = 'lightbox-close';
-          closeBtn.setAttribute('aria-label', 'Close diagram preview');
-          closeBtn.textContent = '✕';
-          closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
-          closeBtn.addEventListener('touchend', function(e) { e.stopPropagation(); e.preventDefault(); closeLightbox(); });
 
           var wrap = document.createElement('div');
           wrap.className = 'lightbox-svg';
@@ -1426,26 +1422,13 @@ const paletteItems = [
           clone.style.maxHeight = '100%';
 
           wrap.appendChild(clone);
-          overlay.appendChild(closeBtn);
+          overlay.appendChild(makeCloseBtn('Close diagram preview'));
           overlay.appendChild(wrap);
           document.body.appendChild(overlay);
           document.body.style.overflow = 'hidden';
 
-          lbTarget = wrap;
-          resetTransform();
-          requestAnimationFrame(function() { if (overlay) overlay.classList.add('open'); });
-
-          overlay.addEventListener('touchstart', onTouchStart, { passive: false });
-          overlay.addEventListener('touchmove', onTouchMove, { passive: false });
-          overlay.addEventListener('touchend', onTouchEnd);
-          overlay.addEventListener('gesturestart', onGestureStart);
-          overlay.addEventListener('gesturechange', onGestureChange);
-          overlay.addEventListener('gestureend', onGestureEnd);
-
-          overlay.addEventListener('click', function(e) {
-            if (touchMoved) return;
-            if (e.target === overlay && scale < 1.05) closeLightbox();
-          });
+          detach = attachViewer(overlay, wrap, true);
+          requestAnimationFrame(() => { if (overlay) overlay.classList.add('open'); });
         }
 
         document.addEventListener('click', function(e) {
