@@ -173,6 +173,11 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
         return a;
       }
 
+      // shared across all tiles: srcs that are currently on screen OR mid-fade.
+      // A tile reserves into this set synchronously before loading, so no two
+      // tiles ever display the same image at the same time.
+      const shown = new Set();
+
       // random per-visit first image for each tile (distinct across tiles),
       // so the strip doesn't open on the same set every load
       const firstPicks = shuffled(artPool);
@@ -180,6 +185,7 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
         const layers = card.querySelectorAll('.layer');
         const titleEl = card.querySelector('.art-strip-title');
         const first = firstPicks[ci % firstPicks.length];
+        shown.add(first.src);
 
         // reduced motion: still randomize the first image per visit, but apply
         // it instantly — no fade, no cycling
@@ -195,12 +201,15 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
         let qi = 0;
         let front = 0;
         let inView = false;
+        let currentSrc = null;
 
         new IntersectionObserver((entries) => {
           entries.forEach((e) => { inView = e.isIntersecting; });
         }, { threshold: 0.2 }).observe(card);
 
-        // cross-fade the back layer in to the given image, then make it front
+        // cross-fade the back layer in to the given image, then make it front.
+        // releases the outgoing src back to the pool only once the swap lands,
+        // so the fading-out image stays "claimed" for the whole transition.
         function show(item) {
           const back = layers[front ^ 1];
           const cur = layers[front];
@@ -210,6 +219,8 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
             front ^= 1;
             card.setAttribute('href', item.url);
             titleEl.textContent = item.title;
+            if (currentSrc && currentSrc !== item.src) shown.delete(currentSrc);
+            currentSrc = item.src;
           }
           back.onload = swap;
           back.src = item.src;
@@ -218,8 +229,16 @@ const stripInitial = Array.from({ length: STRIP_TILES }, (_, i) => {
 
         function advance() {
           if (!inView) return;
-          show(queue[qi % queue.length]);
-          qi++;
+          // walk the queue to the next image no other tile is showing
+          let next = null;
+          for (let k = 0; k < queue.length; k++) {
+            const cand = queue[qi % queue.length];
+            qi++;
+            if (!shown.has(cand.src)) { next = cand; break; }
+          }
+          if (!next) return; // whole pool on screen — nothing free to flip to
+          shown.add(next.src); // reserve before the async load
+          show(next);
         }
 
         // fade the random first pick in over the server-rendered image
