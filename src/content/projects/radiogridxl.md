@@ -7,6 +7,8 @@ url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
 updated: 2026-05-29
+image: /images/radiogridxl/grid-dark.webp
+imageAlt: RadioGridXL — two large station buttons filling a dark screen
 ---
 
 RadioGridXL is an internet radio app built for older adults and people with disabilities - the users mainstream music apps tend to leave behind. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where I'm the Director of Technology, in the hands of people who just want to listen to music without fighting the interface.

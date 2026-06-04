@@ -6,6 +6,8 @@ repo: https://github.com/Minimalistic/PetFeedr
 tags: [python, raspberry-pi, iot, flask, pwa]
 started: 2025-06-01
 updated: 2026-04-30
+image: /images/petfeedr/dashboard-dark.webp
+imageAlt: PetFeedr dashboard in dark mode
 ---
 
 I have two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn't cutting it.

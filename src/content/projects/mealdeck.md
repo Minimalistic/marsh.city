@@ -6,6 +6,8 @@ url: https://mealdeck.net
 tags: [node, sqlite, express, vanilla-js, claude-api]
 started: 2025-01-01
 updated: 2026-04-09
+image: /images/mealdeck/landing.webp
+imageAlt: MealDeck landing page — recipe mosaic and waitlist call-to-action
 ---
 
 MealDeck started as me seeing what I could get AI to do, and kept growing from there. I built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists - currently in use with friends and family.

@@ -12,6 +12,8 @@ const projects = defineCollection({
     tags: z.array(z.string()).default([]),
     started: z.coerce.date().optional(),
     updated: z.coerce.date().optional(),
+    image: z.string().optional(),     // root-relative path used as the social-share card
+    imageAlt: z.string().optional(),
   }),
 });
 
@@ -23,6 +25,8 @@ const posts = defineCollection({
     date: z.coerce.date(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
+    image: z.string().optional(),     // root-relative path used as the social-share card
+    imageAlt: z.string().optional(),
   }),
 });
 

@@ -10,6 +10,10 @@ export async function getStaticPaths() {
 const { series } = Astro.props;
 const { Content } = await render(series);
 
+// social card = the series cover, falling back to the first dispatch image
+const cardImage = series.data.cover ?? series.data.images[0]?.src;
+const cardAlt = series.data.images[0]?.alt ?? series.data.title;
+
 function fillFramework(fw: string | undefined, img: any): string | null {
   if (!fw) return null;
   const subs: Record<string, string> = {
@@ -27,7 +31,7 @@ function fillFramework(fw: string | undefined, img: any): string | null {
   return fw.replace(/\[([^\]]+)\]/g, (_, key) => subs[key] ?? `[${key}]`);
 }
 ---
-<Post title={series.data.title} description={series.data.description} wide>
+<Post title={series.data.title} description={series.data.description} image={cardImage} imageAlt={cardAlt} wide>
   <div class="series-head">
     {series.data.codename && (
       <p class="codename">

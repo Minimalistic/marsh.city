@@ -3,6 +3,8 @@ title: 287 commits to the sea
 description: Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.
 date: 2026-05-04
 tags: [canvas, creative-coding, building]
+image: /images/the-shallows/scene-action.webp
+imageAlt: The Shallows — schooling fish over a reef in a cropped tropical canvas scene
 ---
 
 It's spring in Duluth, which means it's gray and 40 degrees and the lake is still too cold to touch. I wanted warm water. So I built some.

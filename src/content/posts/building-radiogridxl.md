@@ -3,6 +3,8 @@ title: Building a radio app for people who don't want an app
 description: Internet radio built for older adults and people with disabilities — accessibility-first, single-file, deployed at a nonprofit.
 date: 2026-04-09
 tags: [accessibility, vanilla-js, building]
+image: /images/radiogridxl/grid-dark.webp
+imageAlt: RadioGridXL — two large station buttons filling a dark screen
 ---
 
 I built RadioGridXL for the people mainstream music apps tend to leave behind - older adults and people with disabilities. Big buttons, no account, no ads. Pick a station and listen.

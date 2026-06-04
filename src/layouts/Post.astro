@@ -5,10 +5,12 @@ interface Props {
   description?: string;
   date?: Date;
   wide?: boolean;
+  image?: string;
+  imageAlt?: string;
 }
-const { title, description, date, wide } = Astro.props;
+const { title, description, date, wide, image, imageAlt } = Astro.props;
 ---
-<Base title={title} description={description}>
+<Base title={title} description={description} image={image} imageAlt={imageAlt}>
   {date && <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BlogPosting",

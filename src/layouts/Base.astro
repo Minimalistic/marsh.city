@@ -4,10 +4,18 @@ import { getCollection } from 'astro:content';
 interface Props {
   title?: string;
   description?: string;
+  image?: string;      // root-relative path to a social-card image (1.91:1 reads best)
+  imageAlt?: string;
 }
-const { title = 'marsh.city', description = "Jason Marsh — Director of Technology, assistive technology, AI engineering" } = Astro.props;
+const {
+  title = 'marsh.city',
+  description = "Jason Marsh — Director of Technology, assistive technology, AI engineering",
+  image = '/footer-foliage.webp',  // sitewide default card when a page doesn't supply its own
+  imageAlt = 'marsh.city — Jason Marsh',
+} = Astro.props;
 const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(image, Astro.site).href;  // social cards require an absolute URL
 const path = Astro.url.pathname;
 const isActive = (href: string) => path.startsWith(href) ? 'page' as const : undefined;
 
@@ -68,10 +76,15 @@ const paletteItems = [
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content="marsh.city" />
     <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={imageAlt} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title="marsh.city — posts" href="/rss.xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

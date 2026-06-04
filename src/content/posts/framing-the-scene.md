@@ -3,6 +3,8 @@ title: Framing the scene - what happens past 1200px
 description: How I solved the ultrawide viewport problem by treating a decorative background as a literal framed diorama.
 date: 2026-04-15
 tags: [css, design, building]
+image: /images/posts/frame-normal.webp
+imageAlt: marsh.city at a standard viewport — foliage scene filling the screen
 ---
 
 This site has a fixed background scene - foliage, animated stars, fireflies drifting through a forest palette. It looks good on a laptop. On a 3440px ultrawide monitor, it fell apart.
