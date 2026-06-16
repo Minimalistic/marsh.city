@@ -18,7 +18,7 @@
     "@astrojs/mdx": "5.0.4",
     "@astrojs/rss": "4.0.18",
     "@astrojs/sitemap": "3.7.2",
-    "astro": "6.3.1",
+    "astro": "6.4.7",
     "openai": "^6.38.0"
   },
   "overrides": {
