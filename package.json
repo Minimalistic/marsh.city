@@ -23,6 +23,7 @@
   },
   "overrides": {
     "postcss": ">=8.5.10",
-    "devalue": ">=5.8.1"
+    "devalue": ">=5.8.1",
+    "esbuild": ">=0.28.1"
   }
 }
