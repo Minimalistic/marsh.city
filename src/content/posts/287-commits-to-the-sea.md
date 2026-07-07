@@ -17,7 +17,7 @@ It's spring in Duluth, which means it's gray and 40 degrees and the lake is stil
 
 The very first version had fish and a tidal current. That's it. They moved, but they didn't *behave*. Getting from "animated dots" to "things that feel alive" meant giving each fish something like needs - borrowing from The Sims more than from physics.
 
-If you've played [SimLife](https://en.wikipedia.org/wiki/SimLife) or [El-Fish](https://en.wikipedia.org/wiki/El-Fish) - Maxis-era sims where simple creature rules produced complex behavior - that's the lineage here. A fish with no food around and no predator nearby wants to stick with its school and roam. A fish near food wants to eat, but not if the big fish is between it and the pellet. A curious fish wanders off. A lazy one trails behind. Stack enough of these simple drives and you get emergent behavior that's genuinely fun to watch - not because any single rule is clever, but because they interact in ways you didn't explicitly program.
+If you've played [SimLife](https://en.wikipedia.org/wiki/SimLife) or [El-Fish](https://en.wikipedia.org/wiki/El-Fish) - Maxis-era sims where simple creature rules produced complex behavior - that's the lineage here. A fish with no food around and no predator nearby wants to stick with its school and roam. A fish near food wants to eat, but not if the big fish is between it and the pellet. A curious fish wanders off. A lazy one trails behind. Stack enough of these simple drives and you get emergent behavior that's genuinely fun to watch - the rules interact in ways you never explicitly programmed.
 
 ![Two schools of fish sweep through the scene, navigating around reef rocks and seaweed](/images/the-shallows/scene-late.webp)
 
@@ -37,7 +37,7 @@ The environment grew organically. Fish needed something to swim around, so I add
 
 The sand ripples alone took about ten commits. Too prominent and they competed with the fish. Wrong color temperature and they looked like a texture from a different scene. Too sharp and they read as drawn lines rather than light refracting through moving water. The final version uses thick blurred strokes at very low opacity, built up in layers. They're barely there - which is the point.
 
-I have a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - not because anyone would consciously notice if they didn't, but because the *absence* of that interaction reads as fake to anyone who's spent time watching real water.
+I have a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - the *absence* of that interaction reads as fake to anyone who's spent time watching real water, even if nobody could name what's missing.
 
 ## Predator and prey
 
@@ -69,7 +69,7 @@ The audio is entirely procedural - white noise shaped through bandpass filters, 
 
 The reason: I can't listen to looping ambient audio without my brain pattern-matching the loop point. Once you hear where the clip repeats, you can't unhear it - and then the relaxation is gone, replaced by anticipation of the seam. Noise machines, ambient YouTube videos, sleep apps - they all have this problem if the loop is short enough.
 
-Procedural audio isn't immune to repetition, but tying the sound generation to the visual wave state means the audio shifts when the visuals shift. Change the wave frequency and the sound follows. It's not a deep simulation of ocean acoustics - it's shaped noise - but the connection to what's on screen breaks up the patterns enough that your brain doesn't lock onto a loop.
+Procedural audio isn't immune to repetition, but tying the sound generation to the visual wave state means the audio shifts when the visuals shift. Change the wave frequency and the sound follows. It's shaped noise rather than any deep simulation of ocean acoustics, but the connection to what's on screen breaks up the patterns enough that your brain doesn't lock onto a loop.
 
 ## How the back-and-forth actually works
 
@@ -89,7 +89,7 @@ A few lessons from doing this 287 times:
 
 ## What this means
 
-My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would've meant hiring someone. The result is one 314KB file - built for momentum, not maintainability. For a decorative canvas you leave running in the background, that's the right call: it's not a system I need to extend, it's something to glance at. 314KB, and you've got a cartoony ocean to stare at. Fair trade.
+My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would've meant hiring someone. The result is one 314KB file - built for momentum over maintainability. For a decorative canvas you leave running in the background, that's the right call: I'll never need to extend it, just glance at it. 314KB, and you've got a cartoony ocean to stare at. Fair trade.
 
 The broader implication is still playing out. If someone with curiosity and taste but limited programming experience can produce something like this in a few weeks of evening sessions - and if it would've been a respectable side project from a solo developer even three or four years ago - then the next six months are going to be interesting as people with deep programming expertise finish getting through their more ambitious projects.
 

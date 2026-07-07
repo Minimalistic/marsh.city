@@ -42,7 +42,7 @@ Capping the frame was the easy part. The harder work was making every other fixe
 
 The foliage container got `left: var(--stage-inset)` and `width: var(--stage-width)` instead of spanning the full viewport. The star canvas got the same treatment. These were straightforward swaps.
 
-Fireflies were trickier. They're DOM elements with JavaScript-driven animation - they spawn at random positions and drift on sine curves. On an ultrawide viewport, they'd wander right off into the frame like they owned the place. I added a soft wall in the render loop - if a firefly's computed position drifts past the stage boundary, its flee velocity gets clamped and dampened inward. It's a gentle bounce, not a hard clip, so you don't notice them hitting an invisible wall.
+Fireflies were trickier. They're DOM elements with JavaScript-driven animation - they spawn at random positions and drift on sine curves. On an ultrawide viewport, they'd wander right off into the frame like they owned the place. I added a soft wall in the render loop - if a firefly's computed position drifts past the stage boundary, its flee velocity gets clamped and dampened inward. The bounce is soft enough that you never notice them hitting an invisible wall.
 
 The spawn function got the same awareness - new fireflies only appear within the stage width, offset by `--stage-inset` converted to a pixel value in JS.
 
@@ -54,4 +54,4 @@ Constraining the visual layer to 1200px actually improved the resize behavior. P
 
 The frame adds one DOM element and about 60 lines of CSS. It's invisible to anyone on a viewport under 1200px, which is most visitors. A fair amount of thought for a narrow use case, but I stare at this site on an ultrawide daily, so it earned the effort.
 
-For me it was - I'm one of those people, and staring at my own site on a wide monitor was bothering me. Decorative fixed backgrounds have a natural scale they work at, and pretending otherwise makes them look worse as screens get bigger. The frame gives the scene permission to stop growing and still look intentional.
+Decorative fixed backgrounds have a natural scale they work at, and pretending otherwise makes them look worse as screens get bigger. The frame gives the scene permission to stop growing and still look intentional.

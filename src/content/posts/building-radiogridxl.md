@@ -23,7 +23,7 @@ It's in use with older adults there now. The feedback has been simple and tellin
 
 ## Designing accessibility-first
 
-The accessibility features weren't added after the fact. They shaped the architecture.
+The accessibility features shaped the architecture from the start.
 
 ![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.webp)
 
