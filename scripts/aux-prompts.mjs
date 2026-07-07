@@ -133,5 +133,8 @@ export const PRESETS = {
   // images and first used for Missions 03/04. Mission frontmatter prompts
   // carry Midjourney-style `--ar`/`--no` suffixes — gpt-image-1 reads them
   // as plain text, harmlessly.
+  // A/B tested 2026-07-06: gpt-image-2 at high quality renders tighter,
+  // more realist frames that break the loose painterly canon (and cost
+  // ~3.5x the image tokens). Decision: stay on gpt-image-1 at medium.
   field: [FIELD_STYLE],
 }
