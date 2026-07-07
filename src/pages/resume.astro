@@ -3,18 +3,21 @@ import Base from '../layouts/Base.astro';
 ---
 <Base title="Resume" description="Jason Marsh - Director of Technology, 13+ years in IT, assistive technology, infrastructure, and AI engineering.">
   <div class="resume-print-header" aria-hidden="true">
-    <div class="resume-print-name">Jason Marsh</div>
-    <p class="resume-print-contact">
-      Duluth,&nbsp;MN
-      <span class="sep">•</span>
-      <a href="mailto:regularlyjason@icloud.com">regularlyjason@icloud.com</a>
-      <span class="sep">•</span>
-      <a href="https://marsh.city/">marsh.city</a>
-      <span class="sep">•</span>
-      <a href="https://www.linkedin.com/in/jason-marsh">linkedin.com/in/jason-marsh</a>
-      <span class="sep">•</span>
-      <a href="https://github.com/Minimalistic">github.com/Minimalistic</a>
-    </p>
+    <div class="resume-print-id">
+      <div class="resume-print-name">Jason Marsh</div>
+      <p class="resume-print-contact">
+        Duluth,&nbsp;MN
+        <span class="sep">•</span>
+        <a href="mailto:jason@marsh.city">jason@marsh.city</a>
+        <span class="sep">•</span>
+        <a href="https://marsh.city/">marsh.city</a>
+        <span class="sep">•</span>
+        <a href="https://www.linkedin.com/in/jason-marsh">linkedin.com/in/jason-marsh</a>
+        <span class="sep">•</span>
+        <a href="https://github.com/Minimalistic">github.com/Minimalistic</a>
+      </p>
+    </div>
+    <img class="resume-print-qr" src="/qr.svg" alt="" width="56" height="56" />
   </div>
 
   <div class="prose">
@@ -27,19 +30,18 @@ import Base from '../layouts/Base.astro';
     </div>
 
     <p class="resume-intro">
-      Ships production AI systems end-to-end - conversational intake, agentic
-      tool-calling, retrieval, and batch classification on the Anthropic API - for
-      users mainstream software overlooks: people with disabilities and aging-related
-      needs. Director of Technology with 13+ years across IT, assistive-technology
-      services, and team leadership; translates messy real-world needs into
-      accessible, working software. ATACP-certified in assistive-technology
-      assessment.
+      Ships production AI systems on the Anthropic API - conversational intake,
+      agentic tool-calling, retrieval, and batch classification across a
+      5,500-product catalog - for the users mainstream software overlooks:
+      people with disabilities and older adults. Director of Technology with
+      13+ years across IT, assistive technology services, and team leadership.
+      ATACP-certified in assistive technology assessment.
     </p>
 
     <div class="resume-projects">
     <h2>Independent Projects</h2>
     <ul class="projects-compact">
-      <li class="featured"><a class="project-name" href="https://whatcanhelp.com">WhatCanHelp<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> (whatcanhelp.com) - Assistive-technology product discovery platform, designed and built end-to-end: ~5,500 AI-classified products with conversational intake, shortlist/compare tools, and auto-generated funding-justification PDFs. Node/Express + SQLite (better-sqlite3), self-hosted behind Caddy/PM2; batch classification pipeline using prompt caching and the Batch API for cost efficiency, with schema-level guardrails against hallucinated product data.</span></li>
+      <li class="featured"><a class="project-name" href="https://whatcanhelp.com">WhatCanHelp<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> (whatcanhelp.com) - assistive-technology product discovery platform, designed and built end-to-end: ~5,500 AI-classified products with conversational intake, shortlist/compare tools, and auto-generated funding-justification PDFs. Node/Express + SQLite (better-sqlite3), self-hosted behind Caddy/PM2; batch classification pipeline using prompt caching and the Batch API for cost efficiency, with schema-level guardrails against hallucinated product data.</span></li>
       <li><a class="project-name" href="https://mealdeck.net">MealDeck<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - meal planning with AI recipe adaptation, voice-controlled cook mode, smart grocery grouping</span></li>
       <li><a class="project-name" href="/projects/radiogridxl/">RadioGridXL<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - zero-dependency accessible radio streaming app, WCAG AA, deployed to older adults at my organization</span></li>
       <li><a class="project-name" href="/projects/petfeedr/">PetFeedr<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - Raspberry Pi automated pet feeder with web interface, scheduling, and feed-time randomization</span></li>
@@ -58,10 +60,10 @@ import Base from '../layouts/Base.astro';
       <div class="resume-org">Lighthouse Center for Vital Living - Duluth, MN</div>
       <ul>
         <li>Lead IT and Assistive Technology divisions for a nonprofit serving people with disabilities and aging populations, overseeing infrastructure, AT services, and an AT lending library partnered with the Minnesota STAR Program</li>
+        <li>Restructured AT billing operations and coached staff on proposals and invoicing, growing annual AT service revenue from $17K to over $200K within a year</li>
         <li>One of four organizational leaders reporting to the Executive Director; contribute to strategic planning, budgeting, and cross-department decision-making</li>
         <li>Manage a team of four including an IT support specialist, an ATP, and two AT specialists</li>
-        <li>Restructured AT billing operations and coached staff on proposals and invoicing, growing annual AT service revenue from $17K to over $200K</li>
-        <li>Embed with clients to assess needs and recommend assistive-technology solutions, and act as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use.</li>
+        <li>Embed with clients to assess needs and recommend assistive-technology solutions, and act as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use</li>
       </ul>
     </div>
 
@@ -72,7 +74,7 @@ import Base from '../layouts/Base.astro';
       </div>
       <div class="resume-org">Lighthouse Center for Vital Living - Duluth, MN</div>
       <ul>
-        <li>Conducted full systems audit; established documentation and standardized processes organization-wide</li>
+        <li>Conducted full systems audit; established documentation and standardized processes across the ~20-staff organization</li>
         <li>Led cloud migration to Microsoft 365 and Azure AD during a building relocation, reducing annual IT costs by $15,000+</li>
         <li>Established disaster recovery procedures, security protocols, and a technology replacement plan</li>
         <li>Managed endpoints via Microsoft Intune (Windows) and IBM MaaS360 (iOS/Android) for MDM, app deployment, and compliance</li>
@@ -99,14 +101,14 @@ import Base from '../layouts/Base.astro';
       </div>
       <div class="resume-org">Westside Pet Clinic - Duluth, MN</div>
       <ul>
-        <li>Sole IT administrator for eight years, managing all hardware, networking, and software</li>
-        <li>Led transition from paper records to electronic medical systems; developed custom internal workflows</li>
+        <li>Sole IT administrator for a small family-owned veterinary practice - eight years covering all hardware, networking, and software</li>
+        <li>Led the clinic's transition from paper records to an electronic medical records system</li>
       </ul>
     </div>
 
     <h2>Technical Skills</h2>
     <dl class="resume-skills-compact">
-      <div><dt>AI & ML</dt><dd>Claude API (Anthropic SDK), OpenAI Whisper, Ollama, RAG & Embeddings, Prompt Engineering, Structured LLM Output, Batch Content Pipelines, Local Model Inference, Computer Vision</dd></div>
+      <div><dt>AI & ML</dt><dd>Claude API (Anthropic SDK - tool use, Batch API, prompt caching, structured outputs), OpenAI Whisper, Ollama, RAG & Embeddings</dd></div>
       <div><dt>Development</dt><dd>Python, JavaScript, Node.js, Express, SQLite, PowerShell, HTML/CSS, Git, Docker, GitHub Actions, Arduino/ESP-8266</dd></div>
       <div><dt>Infrastructure</dt><dd>Microsoft 365, Azure AD, Active Directory, Windows Server, Hyper-V, VMware/ESXi, Proxmox VE, DNS/DHCP, VPN, Firewall Management</dd></div>
       <div><dt>Endpoint & Security</dt><dd>Microsoft Intune, IBM MaaS360, Linux Administration, Disaster Recovery, Incident Response, Cloud Security</dd></div>
@@ -121,10 +123,10 @@ import Base from '../layouts/Base.astro';
       <tr><td><strong>B.S. Video Game Art & Design</strong></td><td>Art Institute of Pittsburgh</td><td class="meta">2010</td></tr>
     </table>
 
-    <h2>Get in touch</h2>
+    <h2 class="resume-contact-h">Get in touch</h2>
     <div class="resume-contact">
       <ul>
-        <li>Email: <a href="mailto:regularlyjason@icloud.com">regularlyjason@icloud.com</a></li>
+        <li>Email: <a href="mailto:jason@marsh.city">jason@marsh.city</a></li>
         <li>LinkedIn: <a href="https://www.linkedin.com/in/jason-marsh">jason-marsh</a></li>
         <li>GitHub: <a href="https://github.com/Minimalistic">Minimalistic</a></li>
       </ul>
@@ -403,10 +405,19 @@ import Base from '../layouts/Base.astro';
     .resume-top { display: none !important; }
 
     .resume-print-header {
-      display: block !important;
+      display: flex !important;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
       border-bottom: 1px solid #ccc;
       padding-bottom: 0.4rem;
       margin-bottom: 0.5rem;
+    }
+    /* pin the header QR to plain black-on-white regardless of the screen
+       theme it was printed from (dark mode inverts the on-screen QR) */
+    .resume-print-qr {
+      flex-shrink: 0;
+      filter: none !important;
     }
     .resume-print-name {
       font-family: var(--font-serif);
@@ -456,15 +467,10 @@ import Base from '../layouts/Base.astro';
     /* match the featured accent bar to print's narrower 1rem list padding */
     .projects-compact li.featured { margin-left: -1rem !important; padding-left: 0.9rem !important; }
 
-    .resume-contact {
-      margin-top: 0.5rem !important;
-    }
-    .resume-contact ul { font-size: 9pt !important; }
-    .resume-qr {
-      border: none !important;
-      padding: 0 !important;
-    }
-    .resume-qr span { font-size: 7.5pt !important; }
+    /* contact info already lives in the print header (with the QR) —
+       printing the Get in touch section would duplicate it on a one-pager */
+    .resume-contact-h,
+    .resume-contact { display: none !important; }
 
     a { color: #1a1a1a !important; text-decoration: none !important; }
     a::after { display: none !important; }
