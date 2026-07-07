@@ -1,8 +1,13 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
+// story order: program origin first, then missions in sequence. `started`
+// carries the chronology; slug breaks ties (missions 02/03 share a date —
+// sorting on `updated` alone left the order to chance).
 const series = (await getCollection('art'))
-  .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf());
+  .sort((a, b) =>
+    (a.data.started ?? new Date(0)).valueOf() - (b.data.started ?? new Date(0)).valueOf()
+    || a.id.localeCompare(b.id));
 ---
 <Base title="Art">
   <div class="page-head">
