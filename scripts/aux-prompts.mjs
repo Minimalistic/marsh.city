@@ -115,6 +115,23 @@ NO press-photography composition, NO crisp studio lighting, NO clean
 product shot.
 `.trim()
 
+export const FIELD_STYLE = `
+STYLE — Chronoscope field dispatch:
+Painterly digital oil, impressionistic natural-history field painting.
+Loose, confident, visible brushwork; thick strokes dissolving toward
+abstraction at the edges; forms suggested rather than outlined, no hard
+linework. Cool atmospheric shadow fields — blues, teals, deep greens —
+broken by warm golden light, with pink and violet accents. Strong single
+light source, soft edges, deep aerial perspective. No text, no signature,
+no watermark, no border.
+`.trim()
+
 export const PRESETS = {
   lab: [AUX_DESIGN, LAB_SCENE, DOCUMENT_AESTHETIC],
+  // Missions 01/02 were generated in Midjourney by Jason; `field` is the
+  // gpt-image-1 approximation of that canon, reverse-engineered from those
+  // images and first used for Missions 03/04. Mission frontmatter prompts
+  // carry Midjourney-style `--ar`/`--no` suffixes — gpt-image-1 reads them
+  // as plain text, harmlessly.
+  field: [FIELD_STYLE],
 }
