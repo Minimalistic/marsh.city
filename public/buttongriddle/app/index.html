@@ -21,8 +21,9 @@
     </div>
   </header>
 
-  <!-- Only rendered visible with 2+ boards (or in edit mode) — single-board
-       setups keep the whole screen for the board itself. -->
+  <!-- Always visible once the app renders: houses the title and gives the
+       corner ⌗ a row of its own. The Boards button hides when there's only
+       one board and no edit mode. -->
   <div id="nav-bar" hidden>
     <button id="nav-home" type="button" aria-label="All boards">‹ Boards</button>
     <span id="nav-title"></span>

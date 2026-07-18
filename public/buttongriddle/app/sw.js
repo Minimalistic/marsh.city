@@ -6,7 +6,7 @@
 // backup-first update flow in edit.js), or on the next cold launch after all
 // pages close (browser lifecycle — a waiting worker can't be held past that).
 // Either way it never swaps out from under a running session.
-const CACHE = 'buttongriddle-v12';
+const CACHE = 'buttongriddle-v13';
 
 const SHELL = [
   '.',
@@ -29,7 +29,10 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
+  // no-cache: install must fetch fresh from the network — plain addAll goes
+  // through the HTTP cache and can seal stale assets into a new version.
+  event.waitUntil(caches.open(CACHE).then((cache) =>
+    cache.addAll(SHELL.map((url) => new Request(url, { cache: 'no-cache' })))));
 });
 
 self.addEventListener('message', (event) => {

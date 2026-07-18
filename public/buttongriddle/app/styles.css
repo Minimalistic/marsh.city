@@ -95,6 +95,10 @@ body {
   align-items: center;
   gap: 12px;
   padding: 6px 56px 6px 8px; /* right gutter keeps the corner logo clear */
+  /* Tall enough to contain the fixed corner ⌗ (top 6px + 50px) even when
+     the Boards button is hidden and only the title holds the row open. */
+  min-height: 56px;
+  box-sizing: border-box;
   background: var(--surface);
 }
 

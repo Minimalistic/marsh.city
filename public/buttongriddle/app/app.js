@@ -11,6 +11,7 @@ import { initEdit } from './js/edit.js';
 
 const boardEl = document.getElementById('board');
 const navBar = document.getElementById('nav-bar');
+const navHome = document.getElementById('nav-home');
 const navTitle = document.getElementById('nav-title');
 const checkBtn = document.getElementById('check-btn');
 
@@ -103,10 +104,12 @@ function render() {
   const { settings } = state.config;
   const multiBoard = state.config.boards.length > 1;
 
-  // Nav shows when there's somewhere to go: any multi-board view, or edit
-  // mode (caregivers need Home to reach board management even with one board).
-  navBar.hidden = !(board && (multiBoard || state.editing));
-  navTitle.textContent = board?.name ?? '';
+  // The bar is always present: it gives the corner ⌗ a home so it never
+  // overlaps tiles, and keeps the layout identical whether a setup has one
+  // board or five. ‹ Boards shows only when there's somewhere to go.
+  navBar.hidden = false;
+  navHome.hidden = !(board && (multiBoard || state.editing));
+  navTitle.textContent = board ? board.name : 'Boards';
   checkBtn.hidden = state.editing || !settings.checkScreen;
 
   if (board) {
@@ -211,7 +214,7 @@ async function boot() {
     speakOption: (text) => speak(text, state.config.settings),
   });
   checkBtn.addEventListener('click', () => check.open());
-  document.getElementById('nav-home').addEventListener('click', () => app.goHome());
+  navHome.addEventListener('click', () => app.goHome());
   edit = initEdit(app);
 
   await preloadImages();
