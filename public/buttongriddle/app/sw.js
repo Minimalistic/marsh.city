@@ -6,7 +6,7 @@
 // backup-first update flow in edit.js), or on the next cold launch after all
 // pages close (browser lifecycle — a waiting worker can't be held past that).
 // Either way it never swaps out from under a running session.
-const CACHE = 'buttongriddle-v11';
+const CACHE = 'buttongriddle-v12';
 
 const SHELL = [
   '.',

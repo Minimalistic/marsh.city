@@ -219,8 +219,17 @@ async function boot() {
   acquireWakeLock();
 
   // Fill-mode column math depends on viewport size — re-render on
-  // orientation flips and window resizes.
-  window.addEventListener('resize', () => render());
+  // orientation flips and window resizes. Coalesced through rAF so a
+  // desktop window drag paints once per frame, not once per pixel.
+  let resizePending = false;
+  window.addEventListener('resize', () => {
+    if (resizePending) return;
+    resizePending = true;
+    requestAnimationFrame(() => {
+      resizePending = false;
+      render();
+    });
+  });
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then((reg) => {

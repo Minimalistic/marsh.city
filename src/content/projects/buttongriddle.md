@@ -24,6 +24,6 @@ Boards are organized by context, so the tablet opens to a simple list - staff pi
 
 ## How it's built
 
-Vanilla JavaScript PWA - no framework, no build step, no server, no dependencies. All storage is IndexedDB on the device, including photos; nothing is collected and there's no account. Works fully offline after install. Currently in hands-on field testing with real clients.
+Vanilla JavaScript PWA - no framework, no build step, no server, no dependencies. All storage is IndexedDB on the device, including photos; nothing is collected and there's no account. Works fully offline after install.
 
 [Product page and install instructions →](/buttongriddle/)
