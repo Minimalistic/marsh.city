@@ -12,6 +12,7 @@ import { initEdit } from './js/edit.js';
 const boardEl = document.getElementById('board');
 const navBar = document.getElementById('nav-bar');
 const navHome = document.getElementById('nav-home');
+const navLabel = document.getElementById('nav-label');
 const navTitle = document.getElementById('nav-title');
 const checkBtn = document.getElementById('check-btn');
 
@@ -109,6 +110,7 @@ function render() {
   // board or five. ‹ Boards shows only when there's somewhere to go.
   navBar.hidden = false;
   navHome.hidden = !(board && (multiBoard || state.editing));
+  navLabel.hidden = !board;
   navTitle.textContent = board ? board.name : 'Boards';
   checkBtn.hidden = state.editing || !settings.checkScreen;
 
