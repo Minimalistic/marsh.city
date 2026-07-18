@@ -8,7 +8,11 @@ export function renderHome(ctx) {
   container.oncontextmenu = (e) => e.preventDefault();
   container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(min(220px, 44vw), 1fr))';
   container.style.gridTemplateRows = '';
-  container.style.gridAutoRows = '1fr';
+  // Bounded rows + top-packed: with one board, a 1fr tile filled the screen
+  // and read as a giant speak button instead of a list entry.
+  container.style.gridAutoRows = 'minmax(96px, 20vh)';
+  container.style.alignContent = 'start';
+  container.classList.add('picker');
 
   for (const board of config.boards) {
     const tile = document.createElement('button');
@@ -16,6 +20,12 @@ export function renderHome(ctx) {
     tile.className = 'tile text-only board-tile';
     if (board.color) tile.style.background = board.color;
     tile.setAttribute('aria-label', editing ? `Open ${board.name} to edit` : `Open ${board.name}`);
+
+    const kicker = document.createElement('span');
+    kicker.className = 'board-kicker';
+    const count = board.buttons.length;
+    kicker.textContent = `Board · ${count} button${count === 1 ? '' : 's'}`;
+    tile.appendChild(kicker);
 
     const label = document.createElement('span');
     label.className = 'tile-label';

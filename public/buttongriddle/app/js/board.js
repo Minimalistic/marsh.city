@@ -16,6 +16,10 @@ export function renderBoard(ctx) {
   const visible = sorted.filter((b) => b.visible);
   const shown = editing ? sorted : visible;
 
+  // Undo the picker's list layout (home.js sets these).
+  container.classList.remove('picker');
+  container.style.alignContent = '';
+
   if (board.fillMode) {
     // Column count is computed, not auto-fit: packing minmax(160px) columns
     // made wide screens sprout 7 skinny tiles plus an orphan row. Editing

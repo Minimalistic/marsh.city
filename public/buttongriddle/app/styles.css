@@ -268,6 +268,23 @@ body {
   font-size: clamp(1.2rem, 6vmin, 2.6rem);
 }
 
+/* Picker (board list) tiles are folders, not speak buttons — the kicker
+   names the layer so a lone board can't pass for one giant button. */
+.board-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  opacity: 0.6;
+  padding-top: 4px;
+  pointer-events: none;
+}
+
+#board.picker .tile.text-only .tile-label {
+  font-size: clamp(1.1rem, 4.5vmin, 1.8rem);
+}
+
 .tile:active { filter: brightness(0.92); }
 
 /* Hold-to-activate progress: a fill that rises for --hold-ms while pressed. */
