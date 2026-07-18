@@ -1,53 +1,25 @@
-// Cache-first app shell. Bump CACHE on every deployed change — activate
-// deletes old caches, so the version string is the whole update mechanism.
-//
-// Deliberate updates: no skipWaiting() at install — a new version downloads,
-// then WAITS. It takes over only when Settings posts SKIP_WAITING (the
-// backup-first update flow in edit.js), or on the next cold launch after all
-// pages close (browser lifecycle — a waiting worker can't be held past that).
-// Either way it never swaps out from under a running session.
-const CACHE = 'buttongriddle-v10';
-
-const SHELL = [
-  '.',
-  'index.html',
-  'help.html',
-  'styles.css',
-  'app.js',
-  'js/schema.js',
-  'js/db.js',
-  'js/speech.js',
-  'js/board.js',
-  'js/home.js',
-  'js/check.js',
-  'js/strip.js',
-  'js/edit.js',
-  'js/backup.js',
-  'manifest.json',
-  'icons/icon-192.png',
-  'icons/icon-512.png',
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
-});
-
-self.addEventListener('message', (event) => {
-  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
-});
+// Kill switch for the retired service worker scoped to /buttongriddle/ —
+// the app moved to /buttongriddle/app/ and this path is now the landing
+// page. Early testers' browsers still hold the old worker, which serves
+// the old app from cache-first and would shadow the landing page forever.
+// The update check fetches this file, which activates, evicts only the
+// old-path cache entries (caches are origin-shared — the relocated app's
+// entries under /app/ must survive), unregisters, and reloads open tabs.
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim()),
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  if (request.method !== 'GET' || new URL(request.url).origin !== location.origin) return;
-  event.respondWith(
-    caches.match(request, { ignoreSearch: true }).then((cached) => cached ?? fetch(request)),
-  );
+  event.waitUntil((async () => {
+    for (const key of await caches.keys()) {
+      const cache = await caches.open(key);
+      for (const request of await cache.keys()) {
+        const { pathname } = new URL(request.url);
+        if (pathname.startsWith('/buttongriddle/') && !pathname.startsWith('/buttongriddle/app/')) {
+          await cache.delete(request);
+        }
+      }
+    }
+    await self.registration.unregister();
+    const clients = await self.clients.matchAll({ type: 'window' });
+    clients.forEach((client) => client.navigate(client.url));
+  })());
 });
