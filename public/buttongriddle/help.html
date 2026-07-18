@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- GENERATED FILE — edit FIELD-TEST.md, then run: node tools/make-help.mjs -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+  <meta name="theme-color" content="#1f2430">
+  <title>ButtonGriddle Field Test Guide</title>
+  <style>
+    /* Mirrors the app palette in styles.css — standalone on purpose, so the
+       guide renders even if app CSS changes underneath it. */
+    :root {
+      --bg: #1f2430; --surface: #2b3245; --text: #f2f4f8;
+      --text-dim: #b8bfce; --accent: #6aa9ff; --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0 auto; padding: 24px 20px 48px; max-width: 42em;
+      background: var(--bg); color: var(--text);
+      font: 17px/1.55 system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    h1 { font-size: 1.5em; line-height: 1.25; }
+    h2 { font-size: 1.2em; margin-top: 1.6em; color: var(--accent); }
+    li { margin: 0.45em 0; }
+    code {
+      background: var(--surface); border-radius: 6px; padding: 1px 6px;
+      font-size: 0.9em;
+    }
+    blockquote {
+      margin: 2em 0 0; padding: 12px 16px; border-radius: var(--radius);
+      background: var(--surface); color: var(--text-dim); font-size: 0.95em;
+    }
+  </style>
+</head>
+<body>
+<h1>ButtonGriddle Field Test Guide</h1>
+<p>One page for trying ButtonGriddle with a real client. "Professional" below means whoever builds the boards (OT/SLP/ATP/teacher); "staff" means whoever presents choices day to day (DSP, caregiver, family).</p>
+<p><strong>What we're testing:</strong> can a professional build context boards for a real client, hand the tablet to staff, and can staff present choices and confirm understanding — without ever needing edit mode?</p>
+<p>Everything stays on the tablet. No account, no cloud, works fully offline. Photos leave the device only inside backup files you export yourself.</p>
+<h2>1. Setup (professional, ~15 minutes)</h2>
+<ol>
+  <li><strong>Install:</strong> open the app URL in Chrome on the tablet → menu (⋮) → <strong>Add to Home screen</strong> / <strong>Install app</strong>. Launch it once from the new icon — after that it works with no internet.</li>
+  <li><strong>Enter edit mode:</strong> tap the faint <strong>⌗</strong> in the top-right corner <strong>7 times quickly</strong>. The first time, you'll set a 4-digit passcode — this is the only thing separating staff view from edit mode.</li>
+  <li><strong>Optional head start:</strong> Settings → <strong>Import backup</strong> → choose <code>demo-boards.json</code> (get it from the project repo, <code>demo/</code> folder). This replaces the starter board with four example context boards: Meals, Drinks &amp; Snacks, Activities, Comfort.</li>
+  <li><strong>Make it real.</strong> Demo boards are text-only on purpose — real boards work best with photos of the client's <em>actual</em> items (their cup, their puzzle, the actual van). In edit mode: tap a button to edit it (photo, label, spoken phrase, color), tap an empty cell to add one, hold and drag to rearrange. <strong>‹ Boards</strong> (top left) goes to the board list to add, rename, or delete boards.</li>
+  <li><strong>Voice check:</strong> Settings → pick a voice and speed the client responds to. The 🔊 Test button in any button editor previews it.</li>
+  <li><strong>Lock it in:</strong> Settings → <strong>Save current board as original setup</strong>. This is the known-good state that Reset returns to if edits go sideways. Then tap <strong>Done</strong> to leave edit mode, and hand over the tablet.</li>
+</ol>
+<h2>2. Daily use (staff — no passcode needed)</h2>
+<ul>
+  <li><strong>Tap a picture</strong> — the tablet speaks it.</li>
+  <li><strong>‹ Boards</strong> (top left) switches context: meals at lunch, activities in the afternoon. (Only appears when there's more than one board.)</li>
+  <li><strong>✓ Check</strong> (bottom right) opens a full-screen <strong>Yes / No / Not sure</strong> to confirm you understood: "You want the sandwich?" → they answer on screen.</li>
+  <li><strong>Offering just 2–3 choices:</strong> enter edit mode (⌗ ×7 + passcode), tap <strong>Hide</strong> on the buttons to set aside, tap <strong>Done</strong>. Hidden buttons come back the same way. <em>We know this round-trip is clunky — see feedback question 2.</em></li>
+</ul>
+<h2>3. If something goes wrong</h2>
+<ul>
+  <li><strong>Bad edit / accidental delete:</strong> edit mode → Settings → <strong>Restore previous version</strong>.</li>
+  <li><strong>Board is a mess:</strong> Settings → <strong>Reset to original setup</strong> — returns to the saved known-good state.</li>
+  <li><strong>Forgot the passcode:</strong> after 5 wrong tries, a "Forgot passcode?" option appears. It resets the board to the original setup and lets you set a new passcode; the current board is kept as a restorable snapshot.</li>
+  <li><strong>Habit:</strong> export a backup (Settings → <strong>Export backup</strong>) after any big board-building session and keep the file somewhere safe — it contains the photos.</li>
+</ul>
+<h2>4. What to observe</h2>
+<ul>
+  <li>How long from "offer a choice" to the client indicating one?</li>
+  <li>Does staff actually use the ✓ Check screen, or confirm verbally?</li>
+  <li>Accidental taps? (Settings has <strong>Hold to activate</strong> and <strong>Ignore repeat taps</strong> if touch control is an issue.)</li>
+  <li>Are buttons big enough? Too many per screen? (Grid size is per-board in Settings.)</li>
+  <li>Is the voice intelligible and acceptable to the client?</li>
+  <li>Does staff ever get stuck needing something behind the passcode?</li>
+</ul>
+<h2>5. Feedback we need</h2>
+<ol>
+  <li><strong>Whose tablet should this live on</strong> — the client's own device, or a staff device shared across clients?</li>
+  <li><strong>Presenting 2–3 options in the moment:</strong> is hide/show + separate boards workable, or does this need a dedicated quick-present mode?</li>
+  <li><strong>The check screen:</strong> are "Yes / No / Not sure" the right three words? Should they be symbols? Configurable per client?</li>
+  <li><strong>What's missing most:</strong> first/then supports, visual timers, visual schedules, checklists, comfort/pain check-ins — what would you reach for next?</li>
+</ol>
+<blockquote>ButtonGriddle is a general participation support tool, not a medical device.</blockquote>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' blob:; style-src 'self'; media-src blob:; connect-src 'self'">
+  <meta name="theme-color" content="#1f2430">
+  <title>ButtonGriddle</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+</head>
+<body>
+  <header id="strip-bar" hidden>
+    <div id="strip-chips" role="list" aria-label="Sentence"></div>
+    <div class="strip-controls">
+      <button id="strip-speak" class="strip-btn" aria-label="Speak sentence">Speak</button>
+      <button id="strip-back" class="strip-btn" aria-label="Remove last word">⌫</button>
+      <button id="strip-clear" class="strip-btn" aria-label="Clear sentence">✕</button>
+    </div>
+  </header>
+
+  <!-- Only rendered visible with 2+ boards (or in edit mode) — single-board
+       setups keep the whole screen for the board itself. -->
+  <div id="nav-bar" hidden>
+    <button id="nav-home" type="button" aria-label="All boards">‹ Boards</button>
+    <span id="nav-title"></span>
+  </div>
+
+  <main id="board" aria-label="Choice board"></main>
+
+  <button id="check-btn" type="button" aria-label="Open Yes / No / Not sure check">✓ Check</button>
+
+  <div id="check-screen" hidden role="group" aria-label="Yes, No, or Not sure">
+    <button id="check-close" type="button" aria-label="Close">✕</button>
+    <div class="check-options">
+      <button class="check-opt check-yes" type="button" data-speak="Yes">Yes</button>
+      <button class="check-opt check-notsure" type="button" data-speak="I'm not sure">Not sure</button>
+      <button class="check-opt check-no" type="button" data-speak="No">No</button>
+    </div>
+  </div>
+
+  <div id="edit-toolbar" hidden>
+    <span class="edit-badge">Editing</span>
+    <button id="edit-settings" type="button">Settings</button>
+    <button id="edit-done" type="button">Done</button>
+  </div>
+
+  <!-- Corner affordance: 7 taps within a few seconds opens caregiver mode. -->
+  <button id="corner-logo" type="button" aria-label="Caregiver access">⌗</button>
+
+  <dialog id="dlg-pin">
+    <form method="dialog" id="pin-form">
+      <h2 id="pin-title">Enter passcode</h2>
+      <p id="pin-hint" class="dlg-hint"></p>
+      <input id="pin-input" inputmode="numeric" autocomplete="off" pattern="\d{4}"
+             maxlength="4" aria-label="4-digit passcode">
+      <p id="pin-error" class="dlg-error" role="alert" hidden></p>
+      <div class="dlg-actions">
+        <button type="button" id="pin-forgot" class="link-btn" hidden>Forgot passcode?</button>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="ok" id="pin-ok" class="primary">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-editor">
+    <form method="dialog" id="editor-form">
+      <h2 id="editor-title">Edit button</h2>
+      <div id="editor-preview" class="tile preview-tile"></div>
+      <div class="editor-photo-row">
+        <label class="file-btn">Take photo
+          <input id="editor-camera" type="file" accept="image/*" capture="environment" hidden>
+        </label>
+        <label class="file-btn">Choose photo
+          <input id="editor-gallery" type="file" accept="image/*" hidden>
+        </label>
+        <button type="button" id="editor-remove-photo" hidden>Remove photo</button>
+      </div>
+      <label class="field">Label
+        <input id="editor-label" type="text" maxlength="40" required>
+      </label>
+      <label class="field">Spoken text
+        <input id="editor-spoken" type="text" maxlength="200">
+      </label>
+      <fieldset class="field">
+        <legend>Color</legend>
+        <div id="editor-swatches"></div>
+      </fieldset>
+      <div class="dlg-actions">
+        <button type="button" id="editor-library" class="link-btn" hidden>Library</button>
+        <button type="button" id="editor-test">🔊 Test</button>
+        <button type="button" id="editor-delete" class="danger" hidden>Delete</button>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="ok" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-library">
+    <form method="dialog">
+      <h2>Add from library</h2>
+      <p class="dlg-hint">Tap a button to add a copy to this board. Copies are
+        independent — editing one never changes the others.</p>
+      <div id="library-list"></div>
+      <div class="dlg-actions">
+        <button value="cancel" formnovalidate>Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-settings">
+    <form method="dialog">
+      <h2>Settings</h2>
+      <div id="set-grid-wrap">
+        <p class="section-label">This board</p>
+        <label class="row"><input type="checkbox" id="set-fill"> Fill screen with visible buttons</label>
+        <div id="set-grid-size" class="row indent">
+          <label>Columns <input type="number" id="set-cols" min="1" max="8"></label>
+          <label>Rows <input type="number" id="set-rows" min="1" max="8"></label>
+        </div>
+        <hr>
+      </div>
+      <label class="row"><input type="checkbox" id="set-check"> Yes / No / Not sure check button</label>
+      <label class="row"><input type="checkbox" id="set-strip"> Sentence strip</label>
+      <label class="row">Voice
+        <select id="set-voice"><option value="">Device default</option></select>
+      </label>
+      <label class="row">Speech speed <span id="set-rate-value"></span>
+        <input type="range" id="set-rate" min="0.5" max="2" step="0.1">
+      </label>
+      <label class="row">Hold to activate <span id="set-hold-value"></span>
+        <input type="range" id="set-hold" min="0" max="2000" step="100">
+      </label>
+      <label class="row">Ignore repeat taps for <span id="set-debounce-value"></span>
+        <input type="range" id="set-debounce" min="0" max="3000" step="100">
+      </label>
+      <hr>
+      <div class="row btn-col">
+        <button type="button" id="set-change-pin">Change passcode</button>
+        <button type="button" id="set-export">Export backup</button>
+        <label class="file-btn">Import backup
+          <input id="set-import" type="file" accept=".json,application/json" hidden>
+        </label>
+      </div>
+      <hr>
+      <div class="row btn-col">
+        <button type="button" id="set-save-baseline">Save current board as original setup</button>
+        <button type="button" id="set-reset-baseline">Reset to original setup</button>
+        <button type="button" id="set-restore-snapshot">Restore previous version</button>
+      </div>
+      <div id="update-section" hidden>
+        <hr>
+        <p class="section-label">Update available</p>
+        <p class="about-note">A new version of ButtonGriddle is ready. Export a
+          backup first — it saves every board and photo to a file, so nothing
+          can be lost. Then Update now restarts the app on the new version.
+          Boards, photos, and settings all carry over.</p>
+        <div class="row btn-col">
+          <button type="button" id="update-backup">1. Export backup</button>
+          <button type="button" id="update-apply" disabled>2. Update now</button>
+        </div>
+      </div>
+      <p class="about-note" id="storage-note" hidden></p>
+      <p class="about-note"><a href="help.html" target="_blank" rel="noopener">Help &amp; field guide</a> — setup, daily use, and fixing mistakes. Works offline.</p>
+      <p class="about-note">ButtonGriddle <span id="app-version"></span> is a general participation support tool, not a medical device.</p>
+      <div class="dlg-actions">
+        <button value="ok" class="primary">Done</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-board">
+    <form method="dialog" id="board-form">
+      <h2 id="board-title">Board settings</h2>
+      <label class="field">Board name
+        <input id="board-name" type="text" maxlength="40" required>
+      </label>
+      <fieldset class="field">
+        <legend>Color</legend>
+        <div id="board-swatches"></div>
+      </fieldset>
+      <div class="dlg-actions">
+        <button type="button" id="board-delete" class="danger" hidden>Delete board</button>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="ok" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-confirm">
+    <form method="dialog" id="confirm-form">
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-message"></p>
+      <input id="confirm-word" autocomplete="off" hidden>
+      <p id="confirm-error" class="dlg-error" role="alert" hidden></p>
+      <div class="dlg-actions">
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="ok" id="confirm-ok" class="primary"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
