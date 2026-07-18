@@ -11,7 +11,14 @@
   --radius: 14px;
 }
 
-* { box-sizing: border-box; }
+/* touch-action isn't reliably honored from ancestors on iOS Safari — it must
+   sit on the tapped element itself, so the double-tap-zoom kill goes on every
+   element (nav-bar text was still zooming with it only on html/body).
+   Pinch zoom still works. */
+* {
+  box-sizing: border-box;
+  touch-action: manipulation;
+}
 
 /* CSS display rules must never defeat the hidden attribute. */
 [hidden] { display: none !important; }
@@ -19,9 +26,11 @@
 html, body {
   margin: 0;
   height: 100%;
-  /* Kills iOS double-tap-to-zoom app-wide (rapid taps on the corner logo
-     were zooming instead of counting). Pinch zoom still works. */
-  touch-action: manipulation;
+  /* The document never scrolls — #board is the only scroll container. This
+     is what actually disables Safari's pull-to-refresh; overscroll-behavior
+     alone doesn't stop it when the page itself can rubber-band. */
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
@@ -112,9 +121,19 @@ body {
   font-size: 1.05rem;
 }
 
+/* Stacks the small "Board" eyebrow above the board name. On the picker
+   view the eyebrow is hidden and the lone title centers itself. */
+#nav-board-group {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
 #nav-title {
   font-size: 1.1rem;
   font-weight: 600;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -124,10 +143,10 @@ body {
 
 #nav-label {
   color: var(--text-dim);
-  font-size: 0.85rem;
+  font-size: 0.7rem;
+  line-height: 1.2;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-right: -6px; /* tighten toward the name it labels */
+  letter-spacing: 0.06em;
 }
 
 #check-btn {
@@ -196,6 +215,11 @@ body {
   gap: 10px;
   padding: 10px;
   min-height: 0;
+  /* Sole scroll container (see html/body) — matters when the board picker
+     has more boards than fit on screen. contain stops scroll chaining to
+     the document, which would re-trigger pull-to-refresh. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
