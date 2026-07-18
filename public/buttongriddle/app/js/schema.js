@@ -7,9 +7,10 @@ export const SCHEMA_VERSION = 2;
 // version is the tablet on?" in field-test bug reports. Semver, bumped
 // deliberately; unrelated to SCHEMA_VERSION (data shape) or the service
 // worker CACHE string (cache-bust counter).
-export const APP_VERSION = '0.9.5';
+export const APP_VERSION = '0.9.6';
 
-// Soft, high-contrast-with-dark-text swatches. Visual aid only — no semantics.
+// Soft, high-contrast-with-dark-text swatches. No enforced semantics, but
+// starter content follows AAC convention where one exists (yes=green, no=red).
 export const PALETTE = [
   '#f28b82', '#fbbc04', '#fff475', '#ccff90',
   '#a7ffeb', '#aecbfa', '#d7aefb', '#fdcfe8',

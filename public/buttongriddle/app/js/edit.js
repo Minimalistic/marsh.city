@@ -194,6 +194,17 @@ export function initEdit(app) {
   }
   buildSwatches();
 
+  // New buttons pre-select the board's least-used palette color: variety for
+  // free while a caregiver builds a board fast, still one tap to change/clear.
+  function suggestColor(board) {
+    if (!board) return null;
+    const counts = new Map(PALETTE.map((color) => [color, 0]));
+    for (const b of board.buttons) {
+      if (counts.has(b.color)) counts.set(b.color, counts.get(b.color) + 1);
+    }
+    return PALETTE.reduce((best, color) => (counts.get(color) < counts.get(best) ? color : best));
+  }
+
   function selectColor(color) {
     editorState.color = color;
     for (const swatch of swatchesEl.children) {
@@ -282,7 +293,7 @@ export function initEdit(app) {
     $('editor-camera').value = '';
     $('editor-gallery').value = '';
     $('editor-delete').hidden = !button;
-    selectColor(button?.color ?? null);
+    selectColor(button ? (button.color ?? null) : suggestColor(app.getActiveBoard()));
 
     const result = await showDialog($('dlg-editor'));
     const pendingImage = editorState.image;
