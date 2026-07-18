@@ -56,6 +56,24 @@ function reqToPromise(request) {
   });
 }
 
+// Dev-only full wipe. Closes the live connection first — deleteDatabase
+// blocks while any connection is open.
+export async function destroyDb() {
+  if (dbPromise) {
+    const db = await dbPromise;
+    db.close();
+    dbPromise = null;
+  }
+  await new Promise((resolve, reject) => {
+    const req = indexedDB.deleteDatabase(DB_NAME);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+    // Another tab still holds a connection; deletion finishes when it closes.
+    // The reset flow reloads anyway, so don't hang on it.
+    req.onblocked = () => resolve();
+  });
+}
+
 export async function getBoard(name) {
   const db = await openDb();
   return reqToPromise(db.transaction('boards').objectStore('boards').get(name));

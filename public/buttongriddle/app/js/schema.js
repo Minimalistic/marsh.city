@@ -7,7 +7,7 @@ export const SCHEMA_VERSION = 2;
 // version is the tablet on?" in field-test bug reports. Semver, bumped
 // deliberately; unrelated to SCHEMA_VERSION (data shape) or the service
 // worker CACHE string (cache-bust counter).
-export const APP_VERSION = '0.9.2';
+export const APP_VERSION = '0.9.3';
 
 // Soft, high-contrast-with-dark-text swatches. Visual aid only — no semantics.
 export const PALETTE = [

@@ -563,6 +563,37 @@ export function initEdit(app) {
     await app.save();
   });
 
+  // Dev-only while field testing: wipe IndexedDB, localStorage, caches, and
+  // the service worker so this device matches a first visit to the website.
+  $('set-reset-app').addEventListener('click', async () => {
+    const confirmed = await confirmAction({
+      title: 'Reset app (development only)',
+      message: 'This erases every board, photo, snapshot, and setting on this device — '
+        + 'including the passcode — and reloads the app fresh from the website.',
+      okLabel: 'Erase everything',
+      word: 'ERASE',
+    });
+    if (!confirmed) return;
+    try {
+      await db.destroyDb();
+      localStorage.clear();
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((reg) => reg.unregister()));
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      }
+    } catch (err) {
+      console.error('[ButtonGriddle] app reset failed', err);
+      await infoDialog('Reset problem',
+        'Something on this device refused to be erased. Reloading anyway — '
+        + 'if the app is in a bad state, clear site data in Chrome settings.');
+    }
+    location.reload();
+  });
+
   $('set-export').addEventListener('click', () => exportBackupWithFeedback());
 
   // Export must never fail silently — it's the safety net for updates and

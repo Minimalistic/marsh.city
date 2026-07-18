@@ -12,8 +12,17 @@ export function renderBoard(ctx) {
   container.textContent = '';
   container.oncontextmenu = (e) => e.preventDefault();
 
+  const sorted = [...board.buttons].sort((a, b) => a.slot - b.slot);
+  const visible = sorted.filter((b) => b.visible);
+  const shown = editing ? sorted : visible;
+
   if (board.fillMode) {
-    container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(min(160px, 40vw), 1fr))';
+    // Column count is computed, not auto-fit: packing minmax(160px) columns
+    // made wide screens sprout 7 skinny tiles plus an orphan row. Editing
+    // adds one add-tile to the count.
+    const cols = bestFillCols(shown.length + (editing ? 1 : 0),
+      container.clientWidth, container.clientHeight);
+    container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
     container.style.gridTemplateRows = '';
     container.style.gridAutoRows = '1fr';
   } else {
@@ -21,10 +30,6 @@ export function renderBoard(ctx) {
     container.style.gridTemplateRows = `repeat(${board.gridRows}, 1fr)`;
     container.style.gridAutoRows = '';
   }
-
-  const sorted = [...board.buttons].sort((a, b) => a.slot - b.slot);
-  const visible = sorted.filter((b) => b.visible);
-  const shown = editing ? sorted : visible;
 
   for (const button of shown) {
     const tile = buildTile(button, ctx);
@@ -49,6 +54,24 @@ export function renderBoard(ctx) {
       }
     }
   }
+}
+
+// Pick the column count that maximizes tile size for the container's
+// aspect ratio. Pure so tests can pin the layout choices.
+export function bestFillCols(count, width, height) {
+  if (count < 1) return 1;
+  if (width <= 0 || height <= 0) return Math.ceil(Math.sqrt(count));
+  let best = 1;
+  let bestSize = 0;
+  for (let cols = 1; cols <= count; cols++) {
+    const rows = Math.ceil(count / cols);
+    const size = Math.min(width / cols, height / rows);
+    if (size > bestSize) {
+      best = cols;
+      bestSize = size;
+    }
+  }
+  return best;
 }
 
 export function nextSlot(board) {

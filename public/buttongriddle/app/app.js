@@ -218,6 +218,10 @@ async function boot() {
   render();
   acquireWakeLock();
 
+  // Fill-mode column math depends on viewport size — re-render on
+  // orientation flips and window resizes.
+  window.addEventListener('resize', () => render());
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then((reg) => {
       if (reg.waiting) updateReady(reg.waiting);

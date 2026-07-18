@@ -257,14 +257,16 @@ body {
   position: fixed;
   top: 6px;
   right: 6px;
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border: none;
   border-radius: 50%;
   background: transparent;
   color: var(--text-dim);
-  opacity: 0.45;
-  font-size: 1.3rem;
+  /* Deliberately prominent while field testing so testers can find edit
+     mode; dial back toward 0.45 / 40px for release. */
+  opacity: 0.72;
+  font-size: 1.65rem;
 }
 
 #edit-toolbar {
