@@ -18,10 +18,12 @@
     "@astrojs/mdx": "5.0.4",
     "@astrojs/rss": "4.0.19",
     "@astrojs/sitemap": "3.7.2",
-    "astro": "6.4.7",
-    "openai": "^6.38.0"
+    "astro": "6.4.8",
+    "openai": "^6.38.0",
+    "sharp": "0.35.3"
   },
   "overrides": {
+    "sharp": "$sharp",
     "postcss": ">=8.5.10",
     "devalue": ">=5.8.1",
     "esbuild": ">=0.28.1"
