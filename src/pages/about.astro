@@ -1,72 +1,22 @@
 ---
 import Base from '../layouts/Base.astro';
+import { getEntry, render } from 'astro:content';
+
+// prose lives in src/content/pages/about.md so the llms.txt endpoints share the same source
+const entry = await getEntry('pages', 'about');
+const { Content } = await render(entry);
 ---
-<Base title="About" description="About Jason Marsh - Director of Technology specializing in assistive technology and AI engineering.">
+<Base title={entry.data.title} description={entry.data.description}>
   <div class="prose about-prose">
     <h1>About</h1>
     <img src="/jason.jpg" alt="Jason Marsh, headshot portrait" class="about-photo" width="240" height="240" />
-    <p>
-      I'm Jason - Director of Technology at an assistive technology & older adult services nonprofit in
-      Duluth, Minnesota, with 13+ years in IT. I manage infrastructure, lead assistive
-      technology services, and run an AT lending library. The people we serve are older
-      adults, people with disabilities, and anyone who needs help navigating technology.
-      I hold an Assistive Technology Applications Certificate from CSUN.
-    </p>
-
-    <p>
-      I also build and maintain production software outside of that role.
-      <a href="/projects/mealdeck/">A meal planning app</a> with AI-powered
-      recipe adaptation. <a href="/projects/whatcanhelp/">An AT discovery tool</a>
-      that matches people with assistive technology.
-      <a href="/projects/petfeedr/">An automated pet feeder</a>
-      on a Raspberry Pi. <a href="/projects/radiogridxl/">A radio streaming app</a>
-      built for accessibility and deployed to older adults at my organization.
-      <a href="/projects/echoetcher/">A voice-to-notes pipeline</a> that turns
-      spoken memos into structured Markdown. Node.js, SQLite, and vanilla JavaScript
-      for most of it, Python for machine learning and automation.
-    </p>
-
-    <p>
-      I've been fascinated with computers since I was a kid - learned to fix them
-      because I broke them. Art and design started in my teens, which led to a
-      B.S. in Game Art & Design, then time as a concept artist doing noir-style
-      western illustrations. Software came through years of self-teaching after
-      that. The whole path still shapes how I work: I think visually, I design
-      for the person using the thing, and I see projects through from architecture
-      to interface.
-    </p>
-
-    <p>
-      For a more detailed look at my experience and skills, check out my <a href="/resume/">resume</a>.
-    </p>
-
-    <h2>How I build</h2>
-
-    <p>
-      I orchestrate, AI implements. Most of what's here - the production apps, this site, the
-      project pages - I build by working through <a href="https://claude.com/product/claude-code">Claude Code</a> in
-      the terminal. I make the calls on architecture, design, and tradeoffs; I read what comes
-      back, test it, and send it back when it's wrong. It's still programming - the leverage
-      changed, the judgment and the responsibility didn't. <a href="/oak/">More on how the site is built.</a>
-    </p>
-
-    <h2>Get in touch</h2>
-
-    <p>
-      I'm interested in AI engineering, assistive technology, and the places they
-      overlap. If something here catches your attention, reach out.
-    </p>
-
-    <ul>
-      <li>Email: <a href="mailto:jason@marsh.city">jason@marsh.city</a></li>
-      <li>LinkedIn: <a href="https://www.linkedin.com/in/jason-marsh">jason-marsh</a></li>
-      <li>GitHub: <a href="https://github.com/Minimalistic">Minimalistic</a></li>
-      <li>Art: <a href="https://jasonhmarsh.artstation.com">ArtStation</a></li>
-    </ul>
+    <Content />
   </div>
 </Base>
 
-<style>
+<!-- is:global because <Content /> output doesn't carry Astro's scoped-style attribute;
+     every selector stays prefixed with .about-prose, which only this page uses -->
+<style is:global>
   /* magazine-style wrap: text flows to the right of the photo and continues
      below it with the same visual gap on all sides */
   .about-prose .about-photo {

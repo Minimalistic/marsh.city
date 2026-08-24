@@ -1,36 +1,20 @@
 ---
 import Base from '../layouts/Base.astro';
+import { getEntry, render } from 'astro:content';
+
+// prose lives in src/content/pages/now.md so the llms.txt endpoints share the same source
+const entry = await getEntry('pages', 'now');
+const { Content } = await render(entry);
 ---
-<Base title="Now" description="What I'm working on right now.">
+<Base title={entry.data.title} description={entry.data.description}>
   <h1>Now</h1>
   <p class="tagline">What I'm focused on right now. Inspired by <a href="https://nownownow.com/about">nownownow.com</a>.</p>
 
   <div class="prose">
-    <h2>Building</h2>
-    <p>
-      <strong>WhatCanHelp</strong> — a free assistive technology discovery tool. 5,500+
-      products from 350+ manufacturers, freeform AI intake, plain-language guidance,
-      state-by-state borrow and funding directories, and exportable PDF reports for
-      funding meetings and IEP appendices. It's the main thing I'm building right now.
-    </p>
-    <p>
-      <strong>marsh.city</strong> — this site, still growing into a living portfolio.
-      Astro, GitHub Pages, content as conversation.
-    </p>
-
-    <h2>Working</h2>
-    <p>
-      Director of Technology at an assistive technology & older adult services nonprofit in Duluth, MN.
-      Assistive technology evaluation, infrastructure, and keeping everything running.
-    </p>
-
-    <h2>Exploring</h2>
-    <p>
-      AI engineering roles. Looking for teams building real products with LLMs.
-    </p>
+    <Content />
   </div>
 
   <p style="color: var(--fg-soft); font-size: 0.85rem; font-family: var(--font-mono); margin-top: 3rem;">
-    Updated July 2026
+    Updated {entry.data.updated}
   </p>
 </Base>
