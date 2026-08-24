@@ -39,6 +39,17 @@ const playground = defineCollection({
   }),
 });
 
+// standalone-page prose (about, now) — lives as markdown so the llms.txt
+// endpoints can reuse the same source the .astro templates render
+const pages = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    updated: z.string().optional(),   // freeform note, e.g. "July 2026" on /now
+  }),
+});
+
 const art = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/art' }),
   schema: z.object({
@@ -71,4 +82,4 @@ const art = defineCollection({
   }),
 });
 
-export const collections = { projects, posts, playground, art };
+export const collections = { projects, posts, playground, pages, art };
