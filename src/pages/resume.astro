@@ -400,6 +400,13 @@ import Base from '../layouts/Base.astro';
       font-size: 10.5pt !important;
       line-height: 1.45 !important;
     }
+    /* the screen frost caps prose at 65ch for readability; on paper that
+       strands a dead column down the right side — let it fill the page */
+    .prose {
+      max-width: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
 
     /* Headings, labels, and meta set their own color via var(--fg*).
        In dark mode that resolves to cream, which prints as off-white on
