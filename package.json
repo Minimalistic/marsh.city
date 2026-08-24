@@ -11,7 +11,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "oak": "node scripts/oak-write.mjs"
+    "oak": "node scripts/oak-write.mjs",
+    "resume:pdf": "node scripts/render-resume-pdf.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.95.1",
@@ -27,5 +28,8 @@
     "postcss": ">=8.5.10",
     "devalue": ">=5.8.1",
     "esbuild": ">=0.28.1"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.62.1"
   }
 }

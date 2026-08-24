@@ -29,21 +29,36 @@ import Base from '../layouts/Base.astro';
       <button class="resume-download" onclick="window.print()" aria-label="Print resume or save as PDF">Save as PDF</button>
     </div>
 
-    <p class="resume-intro">
+    <p class="resume-intro" data-summary="default">
+      Director of Technology who ships production AI systems (Anthropic API:
+      agentic tool-calling, retrieval, batch classification across 7,000+
+      products) and turns operational messes into revenue: rebuilt AT billing
+      and grew service revenue from $17K to $200K+ in one year. 13+ years
+      across IT, assistive technology, and team leadership; ATACP-certified.
+    </p>
+    <p class="resume-intro" data-summary="eng" hidden>
       Director of Technology with 13+ years across IT, assistive technology
       services, and team leadership. Builds production AI systems on the
       Anthropic API - conversational intake, agentic tool-calling, retrieval,
-      and batch classification across a 5,500-product catalog - with a focus
+      and batch classification across a 7,000+ product catalog - with a focus
       on accessibility for people with disabilities and older adults.
       ATACP-certified in assistive technology assessment.
     </p>
+    <script is:inline>
+      // ?variant=eng swaps in the engineering-focused summary
+      // (works in print/PDF too - render script passes the query through)
+      if (new URLSearchParams(location.search).get('variant') === 'eng') {
+        document.querySelector('[data-summary="default"]').hidden = true;
+        document.querySelector('[data-summary="eng"]').hidden = false;
+      }
+    </script>
 
     <div class="resume-projects">
     <h2>Independent Projects</h2>
     <ul class="projects-compact">
-      <li class="featured"><a class="project-name" href="https://whatcanhelp.com">WhatCanHelp<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> (whatcanhelp.com) - assistive-technology product discovery platform, designed and built end-to-end: ~5,500 AI-classified products with conversational intake, shortlist/compare tools, and auto-generated funding-justification PDFs. Node/Express + SQLite (better-sqlite3), self-hosted behind Caddy/PM2; batch classification pipeline using prompt caching and the Batch API for cost efficiency, with schema-level guardrails against hallucinated product data.</span></li>
-      <li><a class="project-name" href="https://mealdeck.net">MealDeck<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - meal planning with AI recipe adaptation, voice-controlled cook mode, smart grocery grouping</span></li>
-      <li><a class="project-name" href="/projects/radiogridxl/">RadioGridXL<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - zero-dependency accessible radio streaming app, WCAG AA, deployed to older adults at my organization</span></li>
+      <li class="featured"><a class="project-name" href="https://whatcanhelp.com">WhatCanHelp<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> (whatcanhelp.com) - assistive-technology product discovery platform, designed and built end-to-end: 7,000+ AI-classified products with conversational intake, shortlist/compare tools, and auto-generated funding-justification PDFs. Node/Express + SQLite (better-sqlite3), self-hosted behind Caddy/PM2; batch classification pipeline using prompt caching and the Batch API for cost efficiency, with schema-level guardrails against hallucinated product data.</span></li>
+      <li><a class="project-name" href="https://mealdeck.net">MealDeck<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - built and launched a meal-planning app with Stripe billing, AI recipe adaptation, voice-controlled cook mode</span></li>
+      <li><a class="project-name" href="/projects/radiogridxl/">RadioGridXL<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - zero-dependency accessible radio streaming app, WCAG AA, piloted with older adults at my organization</span></li>
       <li><a class="project-name" href="/projects/petfeedr/">PetFeedr<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - Raspberry Pi automated pet feeder with web interface, scheduling, and feed-time randomization</span></li>
       <li><a class="project-name" href="/projects/echoetcher/">EchoEtcher<span class="open-icon" aria-hidden="true">↗</span></a><span class="project-desc"> - voice-to-structured-notes pipeline using local Whisper and LLM processing</span></li>
       <li><span class="project-name">InfoVault (in development)</span><span class="project-desc"> - handheld device using camera-based LLM identification to read text aloud and describe objects for users with vision loss</span></li>
@@ -108,7 +123,7 @@ import Base from '../layouts/Base.astro';
 
     <h2>Technical Skills</h2>
     <dl class="resume-skills-compact">
-      <div><dt>AI & ML</dt><dd>Claude API (Anthropic SDK - tool use, Batch API, prompt caching, structured outputs), OpenAI Whisper, Ollama, RAG & Embeddings</dd></div>
+      <div><dt>AI & ML</dt><dd>Claude API (Anthropic SDK - tool use, Batch API, prompt caching, structured outputs), Claude Code, OpenAI Whisper, Ollama, RAG & Embeddings</dd></div>
       <div><dt>Development</dt><dd>Python, JavaScript, Node.js, Express, SQLite, PowerShell, HTML/CSS, Git, Docker, GitHub Actions, Arduino/ESP-8266</dd></div>
       <div><dt>Infrastructure</dt><dd>Microsoft 365, Azure AD, Active Directory, Windows Server, Hyper-V, VMware/ESXi, Proxmox VE, DNS/DHCP, VPN, Firewall Management</dd></div>
       <div><dt>Endpoint & Security</dt><dd>Microsoft Intune, IBM MaaS360, Linux Administration, Disaster Recovery, Incident Response, Cloud Security</dd></div>
@@ -363,7 +378,7 @@ import Base from '../layouts/Base.astro';
 <style is:global>
   @page {
     size: letter;
-    margin: 0.55in 0.6in;
+    margin: 0.6in;
   }
 
   @media print {
@@ -438,12 +453,14 @@ import Base from '../layouts/Base.astro';
     }
     h1 { display: none; }
 
+    /* never leave a section header orphaned at the bottom of a page */
     h2 {
       font-size: 11pt !important;
       margin-top: 0.9rem !important;
       margin-bottom: 0.4rem !important;
       border-color: #ccc !important;
       padding-bottom: 0.2rem !important;
+      break-after: avoid;
     }
     .resume-intro {
       font-size: 9.5pt !important;
