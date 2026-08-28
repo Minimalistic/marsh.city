@@ -73,6 +73,14 @@
           "text": "Manage a team of four including an IT support specialist, an ATP, and two AT specialists"
         },
         {
+          "id": "m365-tenant",
+          "text": "Administer the full Microsoft 365 tenant - identity (Entra ID/Azure AD), conditional access, licensing, and endpoint management via Intune and MaaS360"
+        },
+        {
+          "id": "copilot",
+          "text": "Evaluated and deployed Microsoft 365 Copilot licenses; onboarded and supported initial staff cohort"
+        },
+        {
           "id": "embed-clients",
           "text": "Embed with clients to assess needs and recommend assistive-technology solutions, and act as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use"
         }
