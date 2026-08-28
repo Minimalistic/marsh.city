@@ -1292,6 +1292,15 @@ nav.site-nav .links a[aria-current="page"]::after {
     transition: none;
   }
 }
+/* Print must never depend on scroll position: sections the reader hasn't
+   scrolled past are still .fade-in (opacity 0) and would print invisible. */
+@media print {
+  .fade-in {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
 
 /* --- screen-reader-only utility --- */
 

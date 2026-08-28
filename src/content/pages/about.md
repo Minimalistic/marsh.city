@@ -15,7 +15,7 @@ recipe adaptation. [An AT discovery tool](/projects/whatcanhelp/)
 that matches people with assistive technology.
 [An automated pet feeder](/projects/petfeedr/)
 on a Raspberry Pi. [A radio streaming app](/projects/radiogridxl/)
-built for accessibility and deployed to older adults at my organization.
+built for accessibility and piloted with older adults at my organization.
 [A voice-to-notes pipeline](/projects/echoetcher/) that turns
 spoken memos into structured Markdown. Node.js, SQLite, and vanilla JavaScript
 for most of it, Python for machine learning and automation.

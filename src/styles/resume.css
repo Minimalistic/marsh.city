@@ -224,7 +224,7 @@
 
 @page {
   size: letter;
-  margin: 0.55in 0.6in;
+  margin: 0.6in;
 }
 
 @media print {
@@ -246,9 +246,13 @@
     font-size: 10.5pt !important;
     line-height: 1.45 !important;
   }
-  /* the screen 65ch readability cap leaves a dead right quarter on a
-     printed page — let text run to the page margins */
-  .prose { max-width: none !important; }
+  /* the screen 65ch readability cap (and frost padding) leaves a dead right
+     quarter on a printed page — let text run to the page margins */
+  .prose {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 
   /* Headings, labels, and meta set their own color via var(--fg*).
      In dark mode that resolves to cream, which prints as off-white on
@@ -308,6 +312,8 @@
     margin-bottom: 0.4rem !important;
     border-color: #ccc !important;
     padding-bottom: 0.2rem !important;
+    /* never leave a section header orphaned at the bottom of a page */
+    break-after: avoid;
   }
   .resume-intro {
     font-size: 9.5pt !important;

@@ -23,13 +23,13 @@
       "id": "mealdeck",
       "name": "MealDeck",
       "href": "https://mealdeck.net",
-      "desc": " - meal planning with AI recipe adaptation, voice-controlled cook mode, smart grocery grouping"
+      "desc": " - built and launched a meal-planning app with Stripe billing, AI recipe adaptation, voice-controlled cook mode"
     },
     {
       "id": "radiogridxl",
       "name": "RadioGridXL",
       "href": "/projects/radiogridxl/",
-      "desc": " - zero-dependency accessible radio streaming app, WCAG AA, deployed to older adults at my organization"
+      "desc": " - zero-dependency accessible radio streaming app, WCAG AA, piloted with older adults at my organization"
     },
     {
       "id": "petfeedr",
@@ -150,7 +150,7 @@
   "skills": [
     {
       "label": "AI & ML",
-      "items": "Claude API (Anthropic SDK - tool use, Batch API, prompt caching, structured outputs), OpenAI Whisper, Ollama, RAG & Embeddings"
+      "items": "Claude API (Anthropic SDK - tool use, Batch API, prompt caching, structured outputs), Claude Code, OpenAI Whisper, Ollama, Hermes, RAG & Embeddings"
     },
     {
       "label": "Development",
