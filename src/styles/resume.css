@@ -315,8 +315,10 @@
     margin-bottom: 0.5rem !important;
     line-height: 1.5 !important;
   }
-  /* keep an entry's heading with its bullets across a page break */
-  .resume-entry { margin-bottom: 0.5rem !important; break-inside: avoid; }
+  /* entries may split across the page break so page 1 fills to the bottom,
+     but a heading/org line never strands alone — it stays with the bullets */
+  .resume-entry { margin-bottom: 0.5rem !important; }
+  .resume-header, .resume-org { break-inside: avoid; break-after: avoid; }
   .resume-entry li { margin-bottom: 0 !important; font-size: 9.5pt; }
   .resume-org { font-size: 8.5pt !important; }
   .resume-skills-compact dt { font-size: 9pt !important; }
