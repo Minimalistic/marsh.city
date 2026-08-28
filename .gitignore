@@ -34,7 +34,9 @@ pnpm-debug.log*
 *.sqlite
 *.sqlite3
 
-data/
+# root-level runtime data only — src/data/ (site content, e.g. resume.json)
+# must stay tracked or the CI build breaks
+/data/
 
 # Playwright MCP session artifacts
 .playwright-mcp/

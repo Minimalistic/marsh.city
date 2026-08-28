@@ -1,0 +1,187 @@
+{
+  "name": "Jason Marsh",
+  "location": "Duluth, MN",
+  "contact": {
+    "email": "jason@marsh.city",
+    "site": "https://marsh.city/",
+    "siteLabel": "marsh.city",
+    "linkedin": "https://www.linkedin.com/in/jason-marsh",
+    "linkedinLabel": "linkedin.com/in/jason-marsh",
+    "github": "https://github.com/Minimalistic",
+    "githubLabel": "github.com/Minimalistic"
+  },
+  "summary": "Director of Technology with 13+ years across IT, assistive technology services, and team leadership. Builds production AI systems on the Anthropic API - conversational intake, agentic tool-calling, retrieval, and batch classification across a 7,500-product catalog - with a focus on accessibility for people with disabilities and older adults. ATACP-certified in assistive technology assessment.",
+  "projects": [
+    {
+      "id": "whatcanhelp",
+      "name": "WhatCanHelp",
+      "href": "https://whatcanhelp.com",
+      "featured": true,
+      "desc": " (whatcanhelp.com) - assistive-technology product discovery platform, designed and built end-to-end: 7,500+ AI-classified products with conversational intake, shortlist/compare tools, and auto-generated funding-justification PDFs. Node/Express + SQLite (better-sqlite3), self-hosted behind Caddy/PM2; batch classification pipeline using prompt caching and the Batch API for cost efficiency, with schema-level guardrails against hallucinated product data."
+    },
+    {
+      "id": "mealdeck",
+      "name": "MealDeck",
+      "href": "https://mealdeck.net",
+      "desc": " - meal planning with AI recipe adaptation, voice-controlled cook mode, smart grocery grouping"
+    },
+    {
+      "id": "radiogridxl",
+      "name": "RadioGridXL",
+      "href": "/projects/radiogridxl/",
+      "desc": " - zero-dependency accessible radio streaming app, WCAG AA, deployed to older adults at my organization"
+    },
+    {
+      "id": "petfeedr",
+      "name": "PetFeedr",
+      "href": "/projects/petfeedr/",
+      "desc": " - Raspberry Pi automated pet feeder with web interface, scheduling, and feed-time randomization"
+    },
+    {
+      "id": "echoetcher",
+      "name": "EchoEtcher",
+      "href": "/projects/echoetcher/",
+      "desc": " - voice-to-structured-notes pipeline using local Whisper and LLM processing"
+    },
+    {
+      "id": "infovault",
+      "name": "InfoVault (in development)",
+      "desc": " - handheld device using camera-based LLM identification to read text aloud and describe objects for users with vision loss"
+    }
+  ],
+  "experience": [
+    {
+      "id": "director",
+      "title": "Director of Technology",
+      "dates": "May 2025 – Present",
+      "org": "Lighthouse Center for Vital Living - Duluth, MN",
+      "bullets": [
+        {
+          "id": "lead-divisions",
+          "text": "Lead IT and Assistive Technology divisions for a nonprofit serving people with disabilities and aging populations, overseeing infrastructure, AT services, and an AT lending library partnered with the Minnesota STAR Program"
+        },
+        {
+          "id": "at-billing",
+          "text": "Restructured AT billing operations and coached staff on proposals and invoicing, growing annual AT service revenue from $17K to over $200K within a year"
+        },
+        {
+          "id": "org-leadership",
+          "text": "One of three organizational leaders reporting to the Executive Director; contribute to strategic planning, budgeting, and cross-department decision-making"
+        },
+        {
+          "id": "team",
+          "text": "Manage a team of four including an IT support specialist, an ATP, and two AT specialists"
+        },
+        {
+          "id": "embed-clients",
+          "text": "Embed with clients to assess needs and recommend assistive-technology solutions, and act as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use"
+        }
+      ]
+    },
+    {
+      "id": "it-manager",
+      "title": "IT Manager & Accessibility Specialist",
+      "dates": "Mar 2021 – May 2025",
+      "org": "Lighthouse Center for Vital Living - Duluth, MN",
+      "bullets": [
+        {
+          "id": "systems-audit",
+          "text": "Conducted full systems audit; established documentation and standardized processes across the ~20-staff organization"
+        },
+        {
+          "id": "m365-migration",
+          "text": "Led cloud migration to Microsoft 365 and Azure AD during a building relocation, reducing annual IT costs by $15,000+"
+        },
+        {
+          "id": "disaster-recovery",
+          "text": "Established disaster recovery procedures, security protocols, and a technology replacement plan"
+        },
+        {
+          "id": "endpoint-mdm",
+          "text": "Managed endpoints via Microsoft Intune (Windows) and IBM MaaS360 (iOS/Android) for MDM, app deployment, and compliance"
+        },
+        {
+          "id": "request-tracking",
+          "text": "Built centralized request tracking system to streamline IT and AT workflows"
+        }
+      ]
+    },
+    {
+      "id": "at-specialist",
+      "title": "Accessible Technology Specialist",
+      "dates": "Oct 2020 – Mar 2021",
+      "org": "Lighthouse Center for Vital Living - Duluth, MN",
+      "bullets": [
+        {
+          "id": "at-eval",
+          "text": "Evaluated and configured assistive technology - screen readers, magnification tools, wearable devices - for clients with disabilities and aging-related needs"
+        },
+        {
+          "id": "training-conferences",
+          "text": "Trained staff and clients on AT usage; attended ATIA and Closing The Gap conferences"
+        }
+      ]
+    },
+    {
+      "id": "westside",
+      "title": "Technical Administrator",
+      "dates": "Nov 2012 – Nov 2020",
+      "org": "Westside Pet Clinic - Duluth, MN",
+      "bullets": [
+        {
+          "id": "sole-admin",
+          "text": "Sole IT administrator for a small family-owned veterinary practice - eight years covering all hardware, networking, and software"
+        },
+        {
+          "id": "emr-transition",
+          "text": "Led the clinic's transition from paper records to an electronic medical records system"
+        }
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "label": "AI & ML",
+      "items": "Claude API (Anthropic SDK - tool use, Batch API, prompt caching, structured outputs), OpenAI Whisper, Ollama, RAG & Embeddings"
+    },
+    {
+      "label": "Development",
+      "items": "Python, JavaScript, Node.js, Express, SQLite, PowerShell, HTML/CSS, Git, Docker, GitHub Actions, Arduino/ESP-8266"
+    },
+    {
+      "label": "Infrastructure",
+      "items": "Microsoft 365, Azure AD, Active Directory, Windows Server, Hyper-V, VMware/ESXi, Proxmox VE, DNS/DHCP, VPN, Firewall Management"
+    },
+    {
+      "label": "Endpoint & Security",
+      "items": "Microsoft Intune, IBM MaaS360, Linux Administration, Disaster Recovery, Incident Response, Cloud Security"
+    },
+    {
+      "label": "Platforms",
+      "items": "SharePoint, Microsoft Teams, ServiceNow, FreshDesk, Tailscale"
+    }
+  ],
+  "education": [
+    {
+      "degree": "Assistive Technology Applications Certificate (ATACP)",
+      "org": "CSUN",
+      "year": "2025"
+    },
+    {
+      "degree": "Network Admin & Cybersecurity",
+      "note": "(coursework)",
+      "org": "Lake Superior College",
+      "year": "2022"
+    },
+    {
+      "degree": "Full Stack Web Developer Nanodegree",
+      "org": "Udacity",
+      "year": "2018"
+    },
+    {
+      "degree": "B.S. Video Game Art & Design",
+      "org": "Art Institute of Pittsburgh",
+      "year": "2010"
+    }
+  ]
+}
