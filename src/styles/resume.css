@@ -237,6 +237,11 @@
   *, *::before, *::after {
     background: white !important;
     box-shadow: none !important;
+    /* kerned/ligated glyph pairs become separate text runs in Chrome's PDF
+       output, which garbles copy-paste and ATS text extraction (Preview
+       especially) - plain runs extract cleanly */
+    font-kerning: none !important;
+    font-variant-ligatures: none !important;
   }
   body, .layout {
     color: #1a1a1a !important;
