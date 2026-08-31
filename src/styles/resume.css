@@ -237,11 +237,19 @@
   *, *::before, *::after {
     background: white !important;
     box-shadow: none !important;
-    /* kerned/ligated glyph pairs become separate text runs in Chrome's PDF
-       output, which garbles copy-paste and ATS text extraction (Preview
-       especially) - plain runs extract cleanly */
-    font-kerning: none !important;
-    font-variant-ligatures: none !important;
+  }
+
+  /* Inter's glyphs come out of Chrome's PDF writer as fragmented text runs
+     that PDFKit/Preview and ATS parsers reassemble scrambled (verified
+     empirically - Helvetica and Lora extract cleanly, Inter never does,
+     with or without kerning/ligatures). Print body text in Helvetica;
+     headings and the name stay Lora, which extracts fine. */
+  * {
+    font-family: Helvetica, Arial, sans-serif !important;
+  }
+  h1, h2, h3,
+  .resume-print-name {
+    font-family: var(--font-serif) !important;
   }
   body, .layout {
     color: #1a1a1a !important;
