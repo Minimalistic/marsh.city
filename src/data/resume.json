@@ -77,6 +77,10 @@
           "text": "Administer the full Microsoft 365 tenant - identity (Entra ID/Azure AD), conditional access, licensing, and endpoint management via Intune and MaaS360"
         },
         {
+          "id": "vendors",
+          "text": "Own vendor relationships across the technology stack - Microsoft 365 licensing, IBM MaaS360 for MDM, ticketing, and connectivity - from evaluation and initial setup through ongoing licensing"
+        },
+        {
           "id": "copilot",
           "text": "Evaluated and deployed Microsoft 365 Copilot licenses; onboarded and supported initial staff cohort"
         },
