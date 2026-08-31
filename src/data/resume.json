@@ -81,6 +81,10 @@
           "text": "Own vendor relationships across the technology stack - Microsoft 365 licensing, IBM MaaS360 for MDM, ticketing, and connectivity - from evaluation and initial setup through ongoing licensing"
         },
         {
+          "id": "power-automate",
+          "text": "Automated internal operations with Power Automate - built an expense and donation tracking system and staff-facing forms that feed directly into Excel"
+        },
+        {
           "id": "copilot",
           "text": "Evaluated and deployed Microsoft 365 Copilot licenses; onboarded and supported initial staff cohort"
         },
@@ -174,7 +178,7 @@
     },
     {
       "label": "Platforms",
-      "items": "Microsoft 365 Copilot, SharePoint, Microsoft Teams, ServiceNow, FreshDesk, Tailscale"
+      "items": "Microsoft 365 Copilot, Power Automate, SharePoint, Microsoft Teams, ServiceNow, FreshDesk, Tailscale"
     }
   ],
   "education": [
