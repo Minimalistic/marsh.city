@@ -14,7 +14,8 @@
 //     "sectionOrder": ["projects", "experience", "skills", "education"],
 //     "projects":   { "order": [ids...], "exclude": [ids...] },
 //     "experience": { "order": [role ids...], "exclude": [role ids...],
-//                     "roles": { "<roleId>": { "order": [...], "exclude": [...] } } }
+//                     "roles": { "<roleId>": { "order": [...], "exclude": [...] } } },
+//     "skills":     { "relabel": { "<canonical label>": "<variant label>" } }
 //   }
 // Ids live in src/data/resume.json. Keep job configs out of this public repo
 // (they live in the private JobSearch repo).

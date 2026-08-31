@@ -70,7 +70,7 @@
         },
         {
           "id": "team",
-          "text": "Manage a team of four including an IT support specialist, an ATP, and two AT specialists"
+          "text": "Manage a team of three (previously four) spanning IT support and assistive technology services"
         },
         {
           "id": "m365-tenant",
@@ -99,6 +99,10 @@
         {
           "id": "m365-migration",
           "text": "Led cloud migration to Microsoft 365 and Azure AD during a building relocation, reducing annual IT costs by $15,000+"
+        },
+        {
+          "id": "supervision",
+          "text": "Supervised two direct reports alongside hands-on IT management responsibilities"
         },
         {
           "id": "disaster-recovery",
@@ -166,7 +170,7 @@
     },
     {
       "label": "Platforms",
-      "items": "SharePoint, Microsoft Teams, ServiceNow, FreshDesk, Tailscale"
+      "items": "Microsoft 365 Copilot, SharePoint, Microsoft Teams, ServiceNow, FreshDesk, Tailscale"
     }
   ],
   "education": [

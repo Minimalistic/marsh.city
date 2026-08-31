@@ -16,11 +16,17 @@ function reorder(items, { order = [], exclude = [] } = {}) {
 }
 
 /** Apply a per-job variant config to the canonical data. Presentation only:
- * the config can override the summary, reorder sections, and reorder or
- * exclude projects, roles, and bullets — it can never add or edit facts. */
+ * the config can override the summary, reorder sections, reorder or exclude
+ * projects, roles, and bullets, and relabel skills rows — it can never add
+ * or edit facts. */
 export function applyVariant(data, config = {}) {
   const out = structuredClone(data);
   if (config.summary) out.summary = config.summary;
+  if (config.skills?.relabel) {
+    for (const row of out.skills) {
+      if (config.skills.relabel[row.label]) row.label = config.skills.relabel[row.label];
+    }
+  }
   if (config.sectionOrder) out.sectionOrder = config.sectionOrder;
   if (config.projects) out.projects = reorder(out.projects, config.projects);
   if (config.experience) {
