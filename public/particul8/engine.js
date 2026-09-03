@@ -6,11 +6,11 @@
 export const DEFAULTS = {
   text: 'Hello 🌿 World',
   font: 'Lora',
-  weight: 700,
+  weight: 400,
   granularity: 'word',     // char | word | sentence | all
-  hold: 1.6,               // seconds a shape sits before morphing on
+  hold: 1.2,               // seconds a shape sits before morphing on
   particles: 5000,
-  size: 2.2,
+  size: 1.4,
   shape: 'circle',         // circle | square
   colorMode: 'sampled',    // sampled | solid | palette
   color: '#8db860',
@@ -22,9 +22,9 @@ export const DEFAULTS = {
   scatter: 0,              // jitter around targets
   transition: 'flow',      // flow | radial | nearest | scatter
   flowAngle: 0,            // degrees, flow transition only
-  stiffness: 0.5,          // spring strength - "speed" in the UI
+  stiffness: 0.7,          // spring strength - "speed" in the UI
   damping: 0.5,            // 0 bouncy, 1 syrupy
-  stagger: 0.4,            // how spread out particle release times are
+  stagger: 0.3,            // how spread out particle release times are
   turbulence: 0.4,         // curl-noise drift while in flight
   wobble: 0.15,            // idle breathing once settled
   background: '#0c150f',   // hex or 'transparent'
