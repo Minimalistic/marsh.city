@@ -43,7 +43,7 @@ const GROUPS = [
   ] },
   { title: 'Particles', controls: [
     { key: 'particles', label: 'Count', type: 'range', min: 500, max: 20000, step: 100 },
-    { key: 'size', label: 'Size', type: 'range', min: 0.5, max: 6, step: 0.1 },
+    { key: 'size', label: 'Size', type: 'range', min: 0.2, max: 8, step: 0.1 },
     { key: 'shape', label: 'Shape', type: 'select', options: [['circle', 'Circle'], ['square', 'Square']] },
     { key: 'colorMode', label: 'Color mode', type: 'select', options: [['sampled', 'Sampled from text'], ['solid', 'Solid'], ['palette', 'Palette']] },
     { key: 'color', label: 'Text color', type: 'color' },
@@ -55,7 +55,7 @@ const GROUPS = [
   { title: 'Motion', controls: [
     { key: 'transition', label: 'Transition', type: 'select', options: [['flow', 'Flow'], ['radial', 'Radial'], ['nearest', 'Nearest'], ['scatter', 'Scatter']] },
     { key: 'flowAngle', label: 'Flow angle', type: 'range', min: -180, max: 180, step: 1, unit: '°' },
-    { key: 'stiffness', label: 'Speed', type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'stiffness', label: 'Speed', type: 'range', min: 0, max: 2, step: 0.01 },
     { key: 'damping', label: 'Damping', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'stagger', label: 'Sweep', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'turbulence', label: 'Turbulence', type: 'range', min: 0, max: 1, step: 0.01 },
