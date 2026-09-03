@@ -1,0 +1,73 @@
+/* Particul8 - playground UI. Uses site tokens so it sits inside the monstera
+   palette; only the stage itself is deliberately dark. */
+.p8 { display: grid; gap: 1rem; }
+.p8-stage {
+  position: relative; width: 100%; aspect-ratio: 16 / 9;
+  border-radius: var(--radius); overflow: hidden; background: #000;
+}
+.p8-stage:fullscreen, .p8-stage:-webkit-full-screen { border-radius: 0; aspect-ratio: auto; }
+.p8-stage canvas { display: block; width: 100%; height: 100%; }
+.p8-stagebar {
+  position: absolute; bottom: 8px; right: 8px; display: flex; gap: 6px;
+  opacity: 0.85; transition: opacity 0.2s;
+}
+.p8-stage:hover .p8-stagebar, .p8-stagebar:focus-within { opacity: 1; }
+.p8-frame {
+  position: absolute; bottom: 12px; left: 12px;
+  font: 11px/1 var(--font-mono); color: rgba(255,255,255,0.55);
+  background: rgba(0,0,0,0.35); padding: 6px 8px; border-radius: 6px;
+  pointer-events: none;
+}
+.p8-tool {
+  height: 28px; min-width: 28px; padding: 0 8px; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.45);
+  color: rgba(255,255,255,0.7); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  font: 11px/1 var(--font-sans); white-space: nowrap; transition: all 0.2s;
+}
+.p8-tool:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
+.p8-tool svg { width: 12px; height: 12px; }
+
+.p8-panel {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.1rem 1.5rem;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.1rem 1.25rem;
+}
+.p8-full { grid-column: 1 / -1; }
+.p8-group h3 {
+  font: 600 0.68rem/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--fg-muted); margin: 0 0 0.7rem;
+}
+.p8-row {
+  display: grid; grid-template-columns: 1fr auto; align-items: center;
+  gap: 0.25rem 0.6rem; font-size: 0.8rem; margin-bottom: 0.5rem;
+}
+.p8-row label { color: var(--fg-soft); }
+.p8-row output { font: 0.7rem var(--font-mono); color: var(--fg-muted); min-width: 3.5ch; text-align: right; }
+.p8-row input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); margin: 0; }
+.p8-row select, .p8-row input[type="text"], .p8-row input[type="number"] {
+  font: 0.8rem var(--font-sans); color: var(--fg); background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.3rem 0.5rem; max-width: 160px;
+}
+.p8-row input[type="color"] {
+  width: 36px; height: 24px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: none; cursor: pointer;
+}
+.p8-swatches { display: flex; gap: 4px; }
+.p8-textarea {
+  width: 100%; min-height: 3.2em; resize: vertical; box-sizing: border-box;
+  font: 0.95rem var(--font-sans); color: var(--fg); background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem 0.65rem;
+}
+.p8-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.p8-btn {
+  font: 0.78rem var(--font-sans); color: var(--fg); background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.4rem 0.7rem; cursor: pointer;
+}
+.p8-btn:hover:not(:disabled) { border-color: var(--border-leaf); color: var(--accent); }
+.p8-btn:disabled { opacity: 0.4; cursor: default; }
+.p8-btn.primary { background: var(--accent); color: var(--bg); border-color: transparent; }
+.p8-presets { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.p8-status { font: 0.72rem var(--font-mono); color: var(--fg-muted); margin-left: auto; }
+
+.p8-row[hidden] { display: none; }
