@@ -71,3 +71,13 @@
 .p8-status { font: 0.72rem var(--font-mono); color: var(--fg-muted); margin-left: auto; }
 
 .p8-row[hidden] { display: none; }
+
+/* Phones: pin the stage under the floating nav so the preview stays visible
+   while the controls scroll beneath it (nav is fixed at top:1rem, ~52px tall). */
+@media (max-width: 767px) {
+  .p8-stage {
+    position: sticky; top: 5.75rem; z-index: 50;
+    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5);
+  }
+  .p8-panel { grid-template-columns: 1fr; }
+}
