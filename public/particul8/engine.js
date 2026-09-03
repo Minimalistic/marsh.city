@@ -96,9 +96,28 @@ function hexToRgb(hex) {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 }
 
+// A blank line in the text is an empty keyframe: the particles disperse into
+// a cloud, then reform on the next shape. "blank, word, blank" loops in and
+// out. Runs of blank lines collapse to one, and a blank at both ends counts
+// once so the loop doesn't hold empty twice.
 export function tokenize(text, granularity) {
-  const t = String(text ?? '').trim();
-  if (!t) return [''];
+  const lines = String(text ?? '').split(/\r?\n/).map((l) => l.trim());
+  const frames = [];
+  let run = [];
+  const flush = () => { if (run.length) { frames.push(...tokenizeRun(run.join(' '), granularity)); run = []; } };
+  for (const line of lines) {
+    if (line) { run.push(line); continue; }
+    flush();
+    if (frames[frames.length - 1] !== '') frames.push('');
+  }
+  flush();
+  if (frames.length > 1 && frames[0] === '' && frames[frames.length - 1] === '') frames.pop();
+  return frames.length ? frames : [''];
+}
+
+function tokenizeRun(text, granularity) {
+  const t = text.trim();
+  if (!t) return [];
   if (granularity === 'all') return [t.replace(/\s+/g, ' ')];
   if (granularity === 'word') return t.split(/\s+/);
   const hasSegmenter = typeof Intl !== 'undefined' && 'Segmenter' in Intl;
