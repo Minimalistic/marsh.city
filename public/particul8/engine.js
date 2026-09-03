@@ -213,6 +213,13 @@ export function burnDistances(xs, ys, count, stride, w, h, origin, rand) {
   return { dist: out, max: (max - min) || 1 };
 }
 
+// How many seconds particle release times are spread over for a morph.
+const spreadFor = (s) => (s.transition === 'wick' ? s.stagger * 5.0 : s.stagger * 2.0);
+
+// Seconds one shape occupies: morph sweep + settle + hold. Deterministic from
+// settings alone, so an exporter can size a clip before rendering a frame.
+export const frameSecondsFor = (s) => spreadFor(s) + SETTLE_SECONDS + s.hold;
+
 function argsort(values) {
   const idx = new Int32Array(values.length);
   for (let i = 0; i < idx.length; i++) idx[i] = i;
@@ -244,6 +251,7 @@ export class Particul8 {
     this.loop = true;
     this.onFrame = null;
     this._curl = [0, 0];
+    this.stepsSinceRender = 0;
 
     this.reseed();
     this.allocate();
@@ -287,15 +295,20 @@ export class Particul8 {
     }
   }
 
-  resize(w, h, dpr = window.devicePixelRatio || 1) {
+  // w/h are the logical (CSS px) size the sim runs in; dpr scales the backing
+  // store. `exact` pins the backing store to precise pixel dims - exporters need
+  // even, exact frame sizes and a rounded w*dpr can land one pixel off.
+  resize(w, h, dpr = window.devicePixelRatio || 1, exact = null) {
     w = Math.max(1, Math.round(w)); h = Math.max(1, Math.round(h));
-    if (w === this.width && h === this.height && dpr === this.dpr) return;
+    if (w === this.width && h === this.height && dpr === this.dpr && !exact) return;
     const sx = this.width ? w / this.width : 1;
     const sy = this.height ? h / this.height : 1;
     this.width = w; this.height = h; this.dpr = dpr;
+    const pw = exact ? exact.width : Math.round(w * dpr);
+    const ph = exact ? exact.height : Math.round(h * dpr);
     for (const [c, ctx] of [[this.canvas, this.ctx], [this.layer, this.lctx]]) {
-      c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c.width = pw; c.height = ph;
+      ctx.setTransform(pw / w, 0, 0, ph / h, 0, 0);
     }
     this.glowA.width = Math.max(1, w >> 2); this.glowA.height = Math.max(1, h >> 2);
     this.glowB.width = Math.max(1, w >> 3); this.glowB.height = Math.max(1, h >> 3);
@@ -427,7 +440,7 @@ export class Particul8 {
     }
 
     const wick = s.transition === 'wick';
-    const spread = wick ? s.stagger * 5.0 : s.stagger * 2.0;
+    const spread = spreadFor(s);
     this.spread = spread;
     this.released.fill(0);
     this.transitStart = this.time;
@@ -690,8 +703,12 @@ export class Particul8 {
       l.fill(p);
     }
 
-    // trails: fade the previous frame instead of clearing it
-    const fadeAlpha = 1 - s.trails * 0.95;
+    // trails: fade the previous frame instead of clearing it. Retention is per
+    // sim step, not per drawn frame, so a 30 fps export and a 120 Hz display
+    // both decay at the same rate as the 60 Hz preview.
+    const steps = Math.max(1, this.stepsSinceRender);
+    this.stepsSinceRender = 0;
+    const fadeAlpha = 1 - Math.pow(s.trails * 0.95, steps);
     ctx.globalAlpha = 1;
     if (s.background === 'transparent') {
       ctx.globalCompositeOperation = 'destination-out';
@@ -766,16 +783,24 @@ export class Particul8 {
     this.lastNow = now;
     if (this.playing) {
       this.acc += elapsed;
-      while (this.acc >= DT) {
-        this.step(DT);
-        this.acc -= DT;
-        if (this.loop && this.frames.length > 1 && this.time >= this.holdUntil) {
-          this.retarget((this.frameIndex + 1) % this.frames.length);
-        }
-      }
+      while (this.acc >= DT) { this.advance(); this.acc -= DT; }
     }
     this.render();
   };
+
+  // One fixed sim step plus the frame-to-frame handoff. The rAF loop and the
+  // offline exporter both drive the engine through here, so they can't drift.
+  advance() {
+    this.step(DT);
+    this.stepsSinceRender++;
+    if (this.loop && this.frames.length > 1 && this.time >= this.holdUntil) {
+      this.retarget((this.frameIndex + 1) % this.frames.length);
+    }
+  }
+
+  frameSeconds() { return frameSecondsFor(this.settings); }
+  cycleSeconds() { return this.frameSeconds() * Math.max(1, this.frames.length); }
+  static get DT() { return DT; }
 
   start() {
     if (this.running) return;
