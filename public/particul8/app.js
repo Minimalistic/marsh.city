@@ -2,7 +2,7 @@
 // stack of settings snapshots, and packs settings into the URL hash for sharing.
 import { Particul8, DEFAULTS } from './engine.js';
 import { GOOGLE_FONTS, LIMITS, encodeSettings, decodeSettings, ensureFont } from './common.js';
-import { SIZES, FORMATS, GIF_MAX_WIDTH, canEncodeVideo, estimate, exportClip, embedSnippet } from './export.js';
+import { SIZES, FORMATS, GIF_MAX_WIDTH, GIF_FPS_OPTIONS, VIDEO_FPS_OPTIONS, QUALITY_DEFAULT, qualityLabel, canEncodeVideo, estimate, estimateSize, exportClip, embedSnippet } from './export.js';
 
 const FONTS = ['Lora', 'Inter', 'JetBrains Mono', ...Object.keys(GOOGLE_FONTS),
   'Georgia', 'Impact', 'Arial Black', 'Courier New', 'Comic Sans MS', 'system-ui'];
@@ -278,7 +278,12 @@ export function mount(root) {
   for (const s of SIZES) sizeSel.append(el('option', { value: s.id }, [s.label]));
   sizeSel.value = '1080p';
   const fpsSel = el('select', {});
-  for (const f of [30, 60]) fpsSel.append(el('option', { value: f }, [`${f} fps`]));
+  const fillFps = (options) => {
+    const keep = Number(fpsSel.value);
+    fpsSel.replaceChildren(...options.map((f) => el('option', { value: f }, [`${f} fps`])));
+    fpsSel.value = options.includes(keep) ? keep : options[0];
+  };
+  fillFps(VIDEO_FPS_OPTIONS);
   const transparentBox = el('input', { type: 'checkbox', checked: '' });
   if (!canEncodeVideo()) {
     formatSel.querySelector('[value="video"]').disabled = true;   // Firefox < 130, older Safari
@@ -288,6 +293,10 @@ export function mount(root) {
   const sizeField = field('Size', sizeSel);
   const fpsField = field('Frame rate', fpsSel);
   const transparentField = el('label', { class: 'p8-field p8-check' }, [transparentBox, 'Transparent background']);
+  const qualityInput = el('input', { type: 'range', min: 0.2, max: 1, step: 0.05 });
+  qualityInput.value = QUALITY_DEFAULT;
+  const qualityOut = el('output', {});
+  const qualityField = el('label', { class: 'p8-field p8-quality' }, [el('span', {}, ['Quality ', qualityOut]), qualityInput]);
   const exportBtn = el('button', { class: 'p8-btn primary', type: 'button' }, ['Export']);
   const cancelBtn = el('button', { class: 'p8-btn', type: 'button', hidden: '' }, ['Cancel']);
   const progress = el('progress', { max: 1, value: 0, hidden: '' });
@@ -296,18 +305,43 @@ export function mount(root) {
   const snippet = el('textarea', { class: 'p8-snippet', readonly: '', hidden: '', rows: 3, 'aria-label': 'Embed code' });
   snippet.addEventListener('focus', () => snippet.select());
 
+  const exportOptions = () => ({
+    settings: engine.settings, format: formatSel.value, sizeId: sizeSel.value, fps: Number(fpsSel.value),
+    transparent: transparentBox.checked, quality: Number(qualityInput.value), logicalWidth: engine.width || 960,
+  });
+  // Size preview: debounced, and stale answers are dropped by token so a slow
+  // 4K sample can't overwrite a newer one.
+  let sizeTimer, sizeToken = 0, baseEstimate = '';
+  function scheduleSize() {
+    clearTimeout(sizeTimer);
+    const token = ++sizeToken;
+    sizeTimer = setTimeout(async () => {
+      try {
+        const bytes = await estimateSize(exportOptions());
+        if (token === sizeToken) estimateLabel.textContent = `${baseEstimate} · ≈ ${formatBytes(bytes)}`;
+      } catch (e) { console.warn('[particul8] size estimate', e); }
+    }, 500);
+  }
+
   function refreshExport() {
     const f = formatSel.value;
     sizeField.hidden = f === 'html';
-    fpsField.hidden = f !== 'video';
+    fpsField.hidden = f !== 'video' && f !== 'gif';
+    if (f === 'video') fillFps(VIDEO_FPS_OPTIONS);
+    if (f === 'gif') fillFps(GIF_FPS_OPTIONS);
     transparentField.hidden = f !== 'png';
+    qualityField.hidden = f !== 'video' && f !== 'gif';
+    qualityOut.value = qualityLabel(f, sizeSel.value, Number(fpsSel.value), Number(qualityInput.value));
     if (f === 'html') { estimateLabel.textContent = 'One self-contained file, plays at any size'; return; }
     const e = estimate(engine.settings, f, Number(fpsSel.value));
     const size = SIZES.find((s) => s.id === sizeSel.value);
     const dims = f === 'gif' ? `${Math.min(GIF_MAX_WIDTH, size.w)} px wide` : `${size.w} × ${size.h}`;
-    estimateLabel.textContent = `${e.seconds.toFixed(1)} s · ${e.frames} frames · ${dims}`;
+    baseEstimate = `${e.seconds.toFixed(1)} s · ${e.frames} frames · ${dims}`;
+    estimateLabel.textContent = `${baseEstimate} · sizing…`;
+    scheduleSize();
   }
-  for (const c of [formatSel, sizeSel, fpsSel]) c.addEventListener('change', refreshExport);
+  for (const c of [formatSel, sizeSel, fpsSel, transparentBox]) c.addEventListener('change', refreshExport);
+  qualityInput.addEventListener('input', refreshExport);
   visibility.push(refreshExport);
 
   let aborter = null;
@@ -317,8 +351,7 @@ export function mount(root) {
     exportStatus.textContent = 'Rendering…';
     try {
       const { blob, filename } = await exportClip({
-        settings: engine.settings, format: formatSel.value, sizeId: sizeSel.value, fps: Number(fpsSel.value),
-        transparent: transparentBox.checked, logicalWidth: engine.width || 960, shareUrl: shareUrl(), signal: aborter.signal,
+        ...exportOptions(), shareUrl: shareUrl(), signal: aborter.signal,
         onProgress: (p, i, n) => { progress.value = p; exportStatus.textContent = `Rendering ${i} / ${n}`; },
       });
       download(blob, filename);
@@ -341,7 +374,7 @@ export function mount(root) {
   };
   panel.append(el('div', { class: 'p8-full p8-group' }, [
     el('h3', {}, ['Export']),
-    el('div', { class: 'p8-export' }, [field('Format', formatSel), sizeField, fpsField, transparentField, exportBtn, cancelBtn]),
+    el('div', { class: 'p8-export' }, [field('Format', formatSel), sizeField, fpsField, qualityField, transparentField, exportBtn, cancelBtn]),
     el('div', { class: 'p8-export-status' }, [progress, estimateLabel, exportStatus]),
     el('div', { class: 'p8-actions' }, [
       el('button', { class: 'p8-btn', type: 'button', onclick: () => showSnippet('element', 'Embed code') }, ['Copy embed code']),

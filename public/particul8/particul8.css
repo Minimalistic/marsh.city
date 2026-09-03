@@ -100,3 +100,6 @@
   border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem 0.65rem;
 }
 .p8-snippet[hidden] { display: none; }
+.p8-field.p8-quality { min-width: 150px; }
+.p8-field.p8-quality output { color: var(--fg-soft); margin-left: 0.3rem; }
+.p8-field.p8-quality input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0.35rem 0 0.25rem; }

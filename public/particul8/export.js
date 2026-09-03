@@ -3,7 +3,7 @@
 // GIF, a zipped PNG sequence, or nothing at all for the standalone HTML file.
 // The preview is never touched, and the codecs are dynamic imports so the
 // page only pays for them when someone actually clicks Export.
-import { Particul8, tokenize, frameSecondsFor } from './engine.js';
+import { Particul8, tokenize, frameSecondsFor, spreadFor } from './engine.js';
 import { encodeSettings, fontStylesheetUrl } from './common.js';
 
 export const SIZES = [
@@ -20,12 +20,45 @@ export const FORMATS = [
   ['html', 'Standalone HTML'],
 ];
 export const GIF_MAX_WIDTH = 640;
-export const GIF_FPS = 25;   // 40 ms per frame lands exactly on GIF's centisecond clock
+// GIF delays are whole centiseconds and browsers slow anything under 2 cs to
+// 10 cs, so 50 fps is the format's real ceiling; 25 halves the file size.
+export const GIF_FPS_OPTIONS = [25, 50];
+export const VIDEO_FPS_OPTIONS = [30, 60];
+export const gifFps = (fps) => (GIF_FPS_OPTIONS.includes(fps) ? fps : GIF_FPS_OPTIONS[0]);
 
 export const canEncodeVideo = () => typeof VideoEncoder !== 'undefined' && typeof VideoFrame !== 'undefined';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const even = (n) => Math.max(2, Math.round(n / 2) * 2);   // H.264 wants even dimensions
+
+// --- quality -----------------------------------------------------------------
+// One 0..1 slider, meaning per format: bitrate for video, palette depth for
+// GIF. PNG is lossless and HTML is source, so neither listens to it.
+export const QUALITY_DEFAULT = 0.7;
+export const videoBitrate = (w, h, fps, quality) => {
+  const bitsPerPixel = 0.02 + quality * quality * 0.28;   // 0.7 lands on ~9 Mbps at 1080p30
+  return Math.min(80e6, Math.round(w * h * fps * bitsPerPixel));
+};
+export const gifDepth = (quality) => Math.round(4 + quality * 4);   // 4..8 bits = 16..256 colours
+export function qualityLabel(format, sizeId, fps, quality) {
+  if (format === 'gif') return `${1 << gifDepth(quality)} colors`;
+  if (format === 'video') {
+    const t = resolveTarget(format, sizeId, fps);
+    return `${(videoBitrate(t.pixelW, t.pixelH, t.fps, quality) / 1e6).toFixed(1)} Mbps`;
+  }
+  return '';
+}
+
+export function resolveTarget(format, sizeId, fps) {
+  const size = SIZES.find((s) => s.id === sizeId) || SIZES[1];
+  let pixelW = size.w, pixelH = size.h;
+  if (format === 'gif') {
+    const scale = Math.min(1, GIF_MAX_WIDTH / pixelW);
+    pixelW = even(pixelW * scale); pixelH = even(pixelH * scale);
+    fps = gifFps(fps);
+  }
+  return { pixelW, pixelH, fps };
+}
 
 // Clip timeline. With several shapes the clip starts at shape 0 already
 // settled and runs one full cycle, so it loops cleanly; with one shape the
@@ -39,22 +72,26 @@ function timeline(settings, fps) {
 }
 
 export function estimate(settings, format, fps) {
-  const f = format === 'gif' ? GIF_FPS : fps;
+  const f = format === 'gif' ? gifFps(fps) : fps;
   const tl = timeline(settings, f);
   return { seconds: tl.seconds, frames: tl.frames, fps: f };
 }
 
-async function renderFrames({ settings, pixelW, pixelH, fps, logicalWidth, onProgress, signal, sink }) {
+// Offscreen engine at the target pixel size. The sim runs at the preview's
+// logical width so the export is what you saw; dpr carries it up to pixels.
+function makeEngine(settings, pixelW, pixelH, logicalWidth) {
   const canvas = document.createElement('canvas');
   // first getContext call wins its attributes; GIF and PNG sinks read pixels back every frame
   canvas.getContext('2d', { willReadFrequently: true });
   const engine = new Particul8(canvas, { ...settings, autoplay: true });
-  // Sim runs at the preview's logical width so the export is what you saw;
-  // dpr carries it up to the target pixel size.
   const w = Math.round(logicalWidth);
   const h = Math.round((w * pixelH) / pixelW);
   engine.resize(w, h, pixelW / w, { width: pixelW, height: pixelH });
+  return { canvas, engine };
+}
 
+async function renderFrames({ settings, pixelW, pixelH, fps, logicalWidth, onProgress, signal, sink }) {
+  const { canvas, engine } = makeEngine(settings, pixelW, pixelH, logicalWidth);
   const tl = timeline(settings, fps);
   const stepsPerSecond = Math.round(1 / Particul8.DT);
   const prerollSteps = Math.round(tl.preroll * stepsPerSecond);
@@ -84,10 +121,10 @@ function avcLevel(w, h, fps) {
   return '34';
 }
 
-async function pickVideoCodec(w, h, fps) {
+async function pickVideoCodec(w, h, fps, bitrate) {
   const level = avcLevel(w, h, fps);
   const vp9Level = w * h > 1920 * 1080 ? '51' : '41';
-  const base = { width: w, height: h, bitrate: Math.min(80e6, Math.round(w * h * fps * 0.15)), framerate: fps, latencyMode: 'quality' };
+  const base = { width: w, height: h, bitrate, framerate: fps, latencyMode: 'quality' };
   const candidates = [
     { codec: `avc1.6400${level}`, container: 'mp4', muxCodec: 'avc', mime: 'video/mp4', ext: 'mp4', extra: { avc: { format: 'avc' } } },
     { codec: `avc1.4D00${level}`, container: 'mp4', muxCodec: 'avc', mime: 'video/mp4', ext: 'mp4', extra: { avc: { format: 'avc' } } },
@@ -104,9 +141,9 @@ async function pickVideoCodec(w, h, fps) {
   return null;
 }
 
-async function videoSink(pixelW, pixelH, fps) {
+async function videoSink(pixelW, pixelH, fps, quality) {
   if (!canEncodeVideo()) throw new Error('This browser has no WebCodecs video encoder. GIF and PNG sequence still work.');
-  const pick = await pickVideoCodec(pixelW, pixelH, fps);
+  const pick = await pickVideoCodec(pixelW, pixelH, fps, videoBitrate(pixelW, pixelH, fps, quality));
   if (!pick) throw new Error('No supported video codec at this size. Try a smaller size, GIF, or PNG sequence.');
   const mod = await import(pick.container === 'mp4' ? './vendor/mp4-muxer.js' : './vendor/webm-muxer.js');
   const target = new mod.ArrayBufferTarget();
@@ -139,17 +176,23 @@ async function videoSink(pixelW, pixelH, fps) {
 }
 
 // --- gif ---------------------------------------------------------------------
-async function gifSink(pixelW, pixelH, fps) {
-  const { GIFEncoder, quantize, applyPalette } = await import('./vendor/gifenc.js');
-  const gif = GIFEncoder();
+// Quantize one canvas to `depth` bits and write it into a gifenc encoder.
+// Per-frame palettes so glow gradients keep their steps; fewer colours means
+// longer runs for LZW, which is where the quality slider buys its bytes.
+function gifFrame(lib, gif, canvas, pixelW, pixelH, depth, delay) {
+  const data = canvas.getContext('2d').getImageData(0, 0, pixelW, pixelH).data;
+  const palette = lib.quantize(data, 1 << depth, { format: 'rgb565' });
+  const index = lib.applyPalette(data, palette, 'rgb565');
+  gif.writeFrame(index, pixelW, pixelH, { palette, delay, repeat: 0, colorDepth: depth });
+}
+
+async function gifSink(pixelW, pixelH, fps, quality) {
+  const lib = await import('./vendor/gifenc.js');
+  const gif = lib.GIFEncoder();
   const delay = Math.round(1000 / fps);
+  const depth = gifDepth(quality);
   return {
-    async frame(canvas) {
-      const data = canvas.getContext('2d').getImageData(0, 0, pixelW, pixelH).data;
-      const palette = quantize(data, 256, { format: 'rgb565' });   // per-frame palette: glow gradients keep their steps
-      const index = applyPalette(data, palette, 'rgb565');
-      gif.writeFrame(index, pixelW, pixelH, { palette, delay, repeat: 0 });
-    },
+    async frame(canvas) { gifFrame(lib, gif, canvas, pixelW, pixelH, depth, delay); },
     async finish() {
       gif.finish();
       return { blob: new Blob([gif.bytes()], { type: 'image/gif' }), ext: 'gif' };
@@ -300,19 +343,56 @@ export function slug(text) {
   return s ? `particul8-${s}` : 'particul8';
 }
 
-export async function exportClip({ settings, format, sizeId, fps = 30, transparent = false, logicalWidth, onProgress, signal, shareUrl }) {
-  if (format === 'html') return exportHtml(settings, shareUrl);
-  const size = SIZES.find((s) => s.id === sizeId) || SIZES[1];
-  let pixelW = size.w, pixelH = size.h;
-  if (format === 'gif') {
-    const scale = Math.min(1, GIF_MAX_WIDTH / pixelW);
-    pixelW = even(pixelW * scale); pixelH = even(pixelH * scale);
-    fps = GIF_FPS;
-  }
+// Projected output size in bytes. Video is arithmetic from the bitrate. GIF
+// and PNG depend on what's on screen, so two frames are encoded for real at
+// the export size - one settled, one mid-morph - and weighted by how long the
+// clip spends in each state. HTML is the engine source plus settings.
+export async function estimateSize({ settings, format, sizeId, fps = 30, transparent = false, quality = QUALITY_DEFAULT, logicalWidth }) {
+  const tl = timeline(settings, format === 'gif' ? gifFps(fps) : fps);
+  if (format === 'html') return 34000 + settings.text.length * 2;
+  const { pixelW, pixelH, fps: f } = resolveTarget(format, sizeId, fps);
+  if (format === 'video') return Math.round((videoBitrate(pixelW, pixelH, f, quality) / 8) * tl.seconds * 1.02);
+
   const clear = transparent && format === 'png';
   const s = { ...settings, background: clear ? 'transparent' : settings.background };
-  const sink = format === 'video' ? await videoSink(pixelW, pixelH, fps)
-    : format === 'gif' ? await gifSink(pixelW, pixelH, fps)
+  const { canvas, engine } = makeEngine(s, pixelW, pixelH, logicalWidth);
+  let encode;
+  if (format === 'gif') {
+    const lib = await import('./vendor/gifenc.js');
+    const depth = gifDepth(quality), delay = Math.round(1000 / f);
+    encode = async () => {
+      const g = lib.GIFEncoder();
+      gifFrame(lib, g, canvas, pixelW, pixelH, depth, delay);
+      return g.bytesView().length;
+    };
+  } else {
+    encode = () => new Promise((res) => canvas.toBlob((b) => res(b ? b.size : 0), 'image/png'));
+  }
+
+  const per = frameSecondsFor(s), spread = spreadFor(s);
+  const morphSeconds = Math.min(per, spread + 1.0);   // sweep plus the colour transit tail
+  const settledAt = per - s.hold;
+  const morphAt = (tl.shapes > 1 ? per : 0) + spread * 0.5 + 0.2;
+  const steps = (sec) => Math.round(sec * 60);
+  let at = 0;
+  const runTo = (target) => { for (const t = steps(target); at < t; at++) { engine.advance(); if (at % 2) engine.render(); } engine.render(); };
+  const samples = {};
+  for (const [name, t] of [['settled', settledAt], ['morph', morphAt]].sort((a, b) => a[1] - b[1])) {
+    runTo(t);
+    samples[name] = await encode();
+  }
+  const morphFrac = morphSeconds / per;
+  return Math.round(tl.frames * (morphFrac * samples.morph + (1 - morphFrac) * samples.settled));
+}
+
+export async function exportClip({ settings, format, sizeId, fps = 30, transparent = false, quality = QUALITY_DEFAULT, logicalWidth, onProgress, signal, shareUrl }) {
+  if (format === 'html') return exportHtml(settings, shareUrl);
+  const { pixelW, pixelH, fps: f } = resolveTarget(format, sizeId, fps);
+  fps = f;
+  const clear = transparent && format === 'png';
+  const s = { ...settings, background: clear ? 'transparent' : settings.background };
+  const sink = format === 'video' ? await videoSink(pixelW, pixelH, fps, quality)
+    : format === 'gif' ? await gifSink(pixelW, pixelH, fps, quality)
     : pngSink(fps, clear, shareUrl);
   try {
     await renderFrames({ settings: s, pixelW, pixelH, fps, logicalWidth, onProgress, signal, sink: sink.frame });

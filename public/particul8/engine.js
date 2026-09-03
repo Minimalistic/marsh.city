@@ -233,7 +233,7 @@ export function burnDistances(xs, ys, count, stride, w, h, origin, rand) {
 }
 
 // How many seconds particle release times are spread over for a morph.
-const spreadFor = (s) => (s.transition === 'wick' ? s.stagger * 5.0 : s.stagger * 2.0);
+export const spreadFor = (s) => (s.transition === 'wick' ? s.stagger * 5.0 : s.stagger * 2.0);
 
 // Seconds one shape occupies: morph sweep + settle + hold. Deterministic from
 // settings alone, so an exporter can size a clip before rendering a frame.
