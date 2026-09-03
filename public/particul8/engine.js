@@ -20,8 +20,13 @@ export const DEFAULTS = {
   glow: 0.5,
   trails: 0.35,
   scatter: 0,              // jitter around targets
-  transition: 'flow',      // flow | radial | nearest | scatter
+  transition: 'flow',      // flow | radial | nearest | scatter | wick
   flowAngle: 0,            // degrees, flow transition only
+  wickOrigin: 'left',      // left | right | top | bottom | center | random
+  ember: '#ff9a3c',        // wick: ignition flash, spark and smoke tint
+  smoke: 0.5,              // wick: fraction of ignitions that shed a puff
+  sparks: 0.5,             // wick: fraction of ignitions that throw a spark
+  front: 0.3,              // wick: raggedness of the burn front
   stiffness: 0.7,          // spring strength - "speed" in the UI
   damping: 0.5,            // 0 bouncy, 1 syrupy
   stagger: 0.3,            // how spread out particle release times are
@@ -37,6 +42,9 @@ const DT = 1 / 60;
 const COLOR_TRANSIT_SECONDS = 1.0;
 const SETTLE_SECONDS = 1.2;
 const EMOJI_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"';
+const FX_POOL = 4000;
+const BURN_CELL = 6;      // px per grid cell for the burn-distance pass
+const GAP_COST = 5;       // crossing empty space costs this much more than a lit cell
 
 // mulberry32: tiny seeded PRNG - determinism matters more than quality here.
 function mulberry32(seed) {
@@ -118,6 +126,93 @@ function wrapLines(ctx, words, maxW) {
   return lines;
 }
 
+// Minimal binary heap over (key, value) pairs for the grid Dijkstra.
+class MinHeap {
+  constructor() { this.k = []; this.v = []; }
+  get size() { return this.k.length; }
+  push(key, val) {
+    const k = this.k, v = this.v;
+    k.push(key); v.push(val);
+    let i = k.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (k[p] <= k[i]) break;
+      [k[p], k[i]] = [k[i], k[p]]; [v[p], v[i]] = [v[i], v[p]];
+      i = p;
+    }
+  }
+  pop() {
+    const k = this.k, v = this.v;
+    const topK = k[0], topV = v[0];
+    const lastK = k.pop(), lastV = v.pop();
+    if (k.length) {
+      k[0] = lastK; v[0] = lastV;
+      let i = 0;
+      for (;;) {
+        const l = i * 2 + 1, r = l + 1;
+        let m = i;
+        if (l < k.length && k[l] < k[m]) m = l;
+        if (r < k.length && k[r] < k[m]) m = r;
+        if (m === i) break;
+        [k[m], k[i]] = [k[i], k[m]]; [v[m], v[i]] = [v[i], v[m]];
+        i = m;
+      }
+    }
+    this._v = topV;
+    return topK;
+  }
+}
+
+// Geodesic-ish distance from an origin through a point cloud: Dijkstra on a
+// coarse occupancy grid where lit cells are cheap and empty cells expensive,
+// so a burn front follows the strokes of the letters and crawls across gaps.
+export function burnDistances(xs, ys, count, stride, w, h, origin, rand) {
+  const cols = Math.ceil(w / BURN_CELL) + 1, rows = Math.ceil(h / BURN_CELL) + 1;
+  const occ = new Uint8Array(cols * rows);
+  const cellOf = (i) => {
+    const cx = Math.min(cols - 1, Math.max(0, (xs[i * stride] / BURN_CELL) | 0));
+    const cy = Math.min(rows - 1, Math.max(0, (ys[i * stride] / BURN_CELL) | 0));
+    return cy * cols + cx;
+  };
+  for (let i = 0; i < count; i++) occ[cellOf(i)] = 1;
+  const dist = new Float64Array(cols * rows).fill(Infinity); // 64-bit: float32 rounding made popped keys look stale
+  const heap = new MinHeap();
+  const seed = (c) => { dist[c] = 0; heap.push(0, c); };
+  if (origin === 'left') for (let r = 0; r < rows; r++) seed(r * cols);
+  else if (origin === 'right') for (let r = 0; r < rows; r++) seed(r * cols + cols - 1);
+  else if (origin === 'top') for (let c = 0; c < cols; c++) seed(c);
+  else if (origin === 'bottom') for (let c = 0; c < cols; c++) seed((rows - 1) * cols + c);
+  else if (origin === 'random' && count) seed(cellOf(Math.floor(rand() * count)));
+  else seed(((rows >> 1) * cols) + (cols >> 1));
+  while (heap.size) {
+    const d = heap.pop(), c = heap._v;
+    if (d > dist[c]) continue;
+    const cx = c % cols, cy = (c / cols) | 0;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const nx = cx + dx, ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+        const nc = ny * cols + nx;
+        const step = (dx && dy ? 1.414 : 1) * (occ[nc] ? 1 : GAP_COST);
+        const nd = d + step;
+        if (nd < dist[nc]) { dist[nc] = nd; heap.push(nd, nc); }
+      }
+    }
+  }
+  // Rebase so 0 is where the front first touches the shape, not the origin edge -
+  // otherwise half the burn time is spent crawling across empty canvas.
+  const out = new Float32Array(count);
+  let min = Infinity, max = 0;
+  for (let i = 0; i < count; i++) {
+    out[i] = dist[cellOf(i)] + rand() * 0.9;
+    if (out[i] < min) min = out[i];
+    if (out[i] > max) max = out[i];
+  }
+  for (let i = 0; i < count; i++) out[i] -= min;
+  return { dist: out, max: (max - min) || 1 };
+}
+
 function argsort(values) {
   const idx = new Int32Array(values.length);
   for (let i = 0; i < idx.length; i++) idx[i] = i;
@@ -168,6 +263,13 @@ export class Particul8 {
       this[k] = new Float32Array(n);
     }
     this.paletteIdx = new Uint16Array(n);
+    this.released = new Uint8Array(n);
+    if (!this.fx) {
+      this.fx = {};
+      for (const k of ['x', 'y', 'vx', 'vy', 'life', 'max', 'size', 'r', 'g', 'b']) this.fx[k] = new Float32Array(FX_POOL);
+      this.fx.type = new Uint8Array(FX_POOL);   // 0 smoke, 1 spark
+      this.fx.head = 0; this.fx.live = 0;
+    }
     const rand = this.rand;
     const w = this.width || 1, h = this.height || 1;
     for (let i = 0; i < n; i++) {
@@ -234,7 +336,7 @@ export class Particul8 {
     if (!this.ready) return;
     if (changed('text') || changed('granularity')) { this.rebuildFrames(); return; }
     const retargetKeys = ['font', 'weight', 'color', 'colorMode', 'palette', 'scatter',
-      'transition', 'flowAngle', 'particles', 'seed', 'stagger'];
+      'transition', 'flowAngle', 'particles', 'seed', 'stagger', 'wickOrigin', 'front'];
     if (retargetKeys.some(changed)) this.retarget(Math.max(0, this.frameIndex));
     if (changed('background')) this.clear();
   }
@@ -324,8 +426,10 @@ export class Particul8 {
       T[o + 2] = c[0]; T[o + 3] = c[1]; T[o + 4] = c[2];
     }
 
-    const spread = s.stagger * 2.0;
+    const wick = s.transition === 'wick';
+    const spread = wick ? s.stagger * 5.0 : s.stagger * 2.0;
     this.spread = spread;
+    this.released.fill(0);
     this.transitStart = this.time;
     const order = new Int32Array(n);
     const delay = this.delay;
@@ -349,6 +453,20 @@ export class Particul8 {
       for (let r = 0; r < n; r++) {
         order[sp[r]] = st[r];
         delay[sp[r]] = (r / n) * spread;
+      }
+    } else if (type === 'wick') {
+      // Burn order on the old shape, write order on the new one, paired by rank
+      // from the same origin so the text rewrites itself as it burns away.
+      const src = burnDistances(this.x, this.y, n, 1, w, h, s.wickOrigin, rand);
+      const tgtX = new Float32Array(n), tgtY = new Float32Array(n);
+      for (let i = 0; i < n; i++) { tgtX[i] = T[i * 5]; tgtY[i] = T[i * 5 + 1]; }
+      const dst = burnDistances(tgtX, tgtY, n, 1, w, h, s.wickOrigin, rand);
+      const sp = argsort(src.dist), st = argsort(dst.dist);
+      const ragged = s.front * spread * 0.25;
+      for (let r = 0; r < n; r++) {
+        const i = sp[r];
+        order[i] = st[r];
+        delay[i] = (src.dist[i] / src.max) * spread * (1 - s.front * 0.25) + rand() * ragged;
       }
     } else if (type === 'nearest') {
       this.pairNearest(T, order);
@@ -458,12 +576,18 @@ export class Particul8 {
     const wob = s.wobble * 4;
     const nscale = 0.004;
     const et = t - this.transitStart;
-    const trans = hexToRgb(s.transitColor);
-    const blend = s.transitBlend;
-    const { x, y, vx, vy, tx, ty, ptx, pty, delay, cr, cg, cb, sr, sg, sb, tr, tg, tb, phase } = this;
+    const wick = s.transition === 'wick';
+    const ember = hexToRgb(s.ember);
+    const trans = wick ? ember : hexToRgb(s.transitColor);
+    const blend = wick ? Math.max(s.transitBlend, 0.6) : s.transitBlend;
+    const { x, y, vx, vy, tx, ty, ptx, pty, delay, cr, cg, cb, sr, sg, sb, tr, tg, tb, phase, released: rel } = this;
 
     for (let i = 0; i < this.n; i++) {
       const released = et >= delay[i];
+      if (released && !rel[i]) {
+        rel[i] = 1;
+        if (wick) this.ignite(i, ember);
+      }
       let gx = released ? tx[i] : ptx[i];
       let gy = released ? ty[i] : pty[i];
       if (wob > 0) {
@@ -487,12 +611,57 @@ export class Particul8 {
       y[i] += vy[i] * dt;
 
       const p = released ? clamp01((et - delay[i]) / COLOR_TRANSIT_SECONDS) : 0;
-      const mix = Math.sin(p * Math.PI) * blend;
+      let mix = Math.sin(p * Math.PI) * blend;
+      // wick: particles heat toward ember as the front approaches
+      if (wick && !released) mix = clamp01(1 - (delay[i] - et) / 0.35) * 0.9;
       cr[i] = lerp(lerp(sr[i], tr[i], p), trans[0], mix);
       cg[i] = lerp(lerp(sg[i], tg[i], p), trans[1], mix);
       cb[i] = lerp(lerp(sb[i], tb[i], p), trans[2], mix);
     }
+    if (this.fx.live) this.stepFx(dt);
     this.time += dt;
+  }
+
+  ignite(i, ember) {
+    const s = this.settings, rand = this.rand;
+    this.vx[i] += (rand() - 0.5) * 160;
+    this.vy[i] -= 60 + rand() * 160;
+    if (rand() < s.smoke * 0.6) this.spawnFx(0, this.x[i], this.y[i], ember);
+    if (rand() < s.sparks * 0.4) this.spawnFx(1, this.x[i], this.y[i], ember);
+  }
+
+  spawnFx(type, x, y, ember) {
+    const f = this.fx, rand = this.rand;
+    const k = f.head; f.head = (f.head + 1) % FX_POOL;
+    if (f.live < FX_POOL) f.live++;
+    f.type[k] = type; f.x[k] = x; f.y[k] = y; f.life[k] = 0;
+    if (type === 0) {
+      f.vx[k] = (rand() - 0.5) * 30; f.vy[k] = -20 - rand() * 40;
+      f.max[k] = 0.8 + rand() * 1.0; f.size[k] = 2 + rand() * 2;
+      f.r[k] = lerp(ember[0], 0.4, 0.6); f.g[k] = lerp(ember[1], 0.4, 0.6); f.b[k] = lerp(ember[2], 0.42, 0.6);
+    } else {
+      const a = -Math.PI / 2 + (rand() - 0.5) * Math.PI * 1.4, v = 120 + rand() * 260;
+      f.vx[k] = Math.cos(a) * v; f.vy[k] = Math.sin(a) * v;
+      f.max[k] = 0.3 + rand() * 0.5; f.size[k] = 0.6 + rand() * 1.0;
+      f.r[k] = Math.min(1, ember[0] + 0.3); f.g[k] = Math.min(1, ember[1] + 0.3); f.b[k] = ember[2];
+    }
+  }
+
+  stepFx(dt) {
+    const f = this.fx, t = this.time, nscale = 0.006;
+    for (let k = 0; k < FX_POOL; k++) {
+      if (f.life[k] >= f.max[k]) continue;
+      f.life[k] += dt;
+      if (f.type[k] === 0) {
+        const cv = this.curl(f.x[k] * nscale, f.y[k] * nscale, t);
+        f.vx[k] = (f.vx[k] + cv[0] * 120 * dt) * 0.985;
+        f.vy[k] = (f.vy[k] + cv[1] * 120 * dt - 12 * dt) * 0.985;
+      } else {
+        f.vy[k] += 520 * dt;
+        f.vx[k] *= 0.98; f.vy[k] *= 0.98;
+      }
+      f.x[k] += f.vx[k] * dt; f.y[k] += f.vy[k] * dt;
+    }
   }
 
   render() {
@@ -500,8 +669,10 @@ export class Particul8 {
     const s = this.settings;
     const { ctx, lctx: l, width: w, height: h } = this;
 
-    // particles to the layer, batched into one Path2D per quantized color
     l.clearRect(0, 0, w, h);
+    if (this.fx.live) this.renderFx(l);
+
+    // particles to the layer, batched into one Path2D per quantized color
     const buckets = new Map();
     const base = s.size, circle = s.shape === 'circle';
     const { x, y, cr, cg, cb, sz } = this;
@@ -548,6 +719,44 @@ export class Particul8 {
       ctx.globalCompositeOperation = 'source-over';
     }
     ctx.drawImage(this.layer, 0, 0, w, h);
+  }
+
+  // Smoke as translucent circles bucketed by fade step; sparks as bright dots.
+  renderFx(l) {
+    const f = this.fx;
+    const smoke = new Map(), sparks = new Map();
+    for (let k = 0; k < FX_POOL; k++) {
+      const life = f.life[k], max = f.max[k];
+      if (life >= max) continue;
+      const t = life / max;
+      if (f.type[k] === 0) {
+        const step = Math.min(7, (t * 8) | 0);
+        let p = smoke.get(step);
+        if (!p) { p = new Path2D(); smoke.set(step, p); }
+        const r = f.size[k] + t * 12;
+        p.moveTo(f.x[k] + r, f.y[k]); p.arc(f.x[k], f.y[k], r, 0, TAU);
+      } else {
+        const fadeT = t > 0.6 ? (1 - t) / 0.4 : 1;
+        const key = (((f.r[k] * fadeT) * 31 + 0.5 | 0) << 10) | (((f.g[k] * fadeT * 0.6) * 31 + 0.5 | 0) << 5) | ((f.b[k] * fadeT * 0.3) * 31 + 0.5 | 0);
+        let p = sparks.get(key);
+        if (!p) { p = new Path2D(); sparks.set(key, p); }
+        const r = f.size[k];
+        p.moveTo(f.x[k] + r, f.y[k]); p.arc(f.x[k], f.y[k], r, 0, TAU);
+      }
+    }
+    const ember = hexToRgb(this.settings.ember);
+    for (const [step, p] of smoke) {
+      const t = (step + 0.5) / 8;
+      const g = lerp(0.45, 0.3, t);
+      const rr = lerp(ember[0], g, 0.75), gg = lerp(ember[1], g, 0.75), bb = lerp(ember[2], g + 0.03, 0.75);
+      l.fillStyle = `rgba(${(rr * 255) | 0},${(gg * 255) | 0},${(bb * 255) | 0},${(0.16 * (1 - t)).toFixed(3)})`;
+      l.fill(p);
+    }
+    for (const [key, p] of sparks) {
+      const r = (((key >> 10) & 31) * 255) / 31, g = (((key >> 5) & 31) * 255) / 31, b = ((key & 31) * 255) / 31;
+      l.fillStyle = `rgb(${r | 0},${g | 0},${b | 0})`;
+      l.fill(p);
+    }
   }
 
   tick = (now) => {

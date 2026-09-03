@@ -28,6 +28,10 @@ const PRESETS = {
     background: '#000000', colorMode: 'palette', palette: ['#ff2bd6', '#2bfff0', '#ffe62b', '#7b2bff'],
     glow: 1, trails: 0.7, transition: 'scatter', size: 1.6, stiffness: 0.6, damping: 0.4, particles: 7000,
   },
+  Wick: {
+    background: '#0a0605', color: '#e8d9b8', transition: 'wick', wickOrigin: 'left', ember: '#ff9a3c',
+    transitBlend: 0.9, glow: 0.7, trails: 0.5, stagger: 0.5, damping: 0.45, turbulence: 0.45, smoke: 0.6, sparks: 0.5,
+  },
   Ink: {
     background: '#efe9dc', color: '#1a1a1a', transitColor: '#1a1a1a', transitBlend: 0,
     glow: 0, trails: 0, transition: 'nearest', stiffness: 0.9, damping: 0.85, turbulence: 0.15, wobble: 0.05, size: 1.8,
@@ -53,8 +57,13 @@ const GROUPS = [
     { key: 'scatter', label: 'Scatter', type: 'range', min: 0, max: 1, step: 0.01 },
   ] },
   { title: 'Motion', controls: [
-    { key: 'transition', label: 'Transition', type: 'select', options: [['flow', 'Flow'], ['radial', 'Radial'], ['nearest', 'Nearest'], ['scatter', 'Scatter']] },
+    { key: 'transition', label: 'Transition', type: 'select', options: [['flow', 'Flow'], ['radial', 'Radial'], ['nearest', 'Nearest'], ['scatter', 'Scatter'], ['wick', 'Wick']] },
     { key: 'flowAngle', label: 'Flow angle', type: 'range', min: -180, max: 180, step: 1, unit: '°' },
+    { key: 'wickOrigin', label: 'Burn from', type: 'select', options: [['left', 'Left'], ['right', 'Right'], ['top', 'Top'], ['bottom', 'Bottom'], ['center', 'Center'], ['random', 'Random spot']] },
+    { key: 'ember', label: 'Ember', type: 'color' },
+    { key: 'smoke', label: 'Smoke', type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'sparks', label: 'Sparks', type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'front', label: 'Ragged front', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'stiffness', label: 'Speed', type: 'range', min: 0, max: 2, step: 0.01 },
     { key: 'damping', label: 'Damping', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'stagger', label: 'Sweep', type: 'range', min: 0, max: 1, step: 0.01 },
@@ -274,6 +283,7 @@ export function mount(root) {
       row.append(label, el('div', { class: 'p8-actions' }, [input, dice]));
     }
     if (c.key === 'flowAngle') visibility.push(() => { row.hidden = engine.settings.transition !== 'flow'; });
+    if (['wickOrigin', 'ember', 'smoke', 'sparks', 'front'].includes(c.key)) visibility.push(() => { row.hidden = engine.settings.transition !== 'wick'; });
     if (c.key === 'color') visibility.push(() => { label.textContent = engine.settings.colorMode === 'palette' ? 'Emoji tint' : 'Text color'; });
     return row;
   }
