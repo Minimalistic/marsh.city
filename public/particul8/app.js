@@ -1,16 +1,9 @@
 // Particul8 UI: builds the control panel from a schema, keeps undo/redo as a
 // stack of settings snapshots, and packs settings into the URL hash for sharing.
 import { Particul8, DEFAULTS } from './engine.js';
+import { GOOGLE_FONTS, LIMITS, encodeSettings, decodeSettings, ensureFont } from './common.js';
+import { SIZES, FORMATS, GIF_MAX_WIDTH, canEncodeVideo, estimate, exportClip, embedSnippet } from './export.js';
 
-const GOOGLE_FONTS = {
-  'Fraunces': 'Fraunces:wght@400;700;900',
-  'Playfair Display': 'Playfair+Display:wght@400;700;900',
-  'Bebas Neue': 'Bebas+Neue',
-  'Pacifico': 'Pacifico',
-  'Monoton': 'Monoton',
-  'Rubik Mono One': 'Rubik+Mono+One',
-  'Space Mono': 'Space+Mono:wght@400;700',
-};
 const FONTS = ['Lora', 'Inter', 'JetBrains Mono', ...Object.keys(GOOGLE_FONTS),
   'Georgia', 'Impact', 'Arial Black', 'Courier New', 'Comic Sans MS', 'system-ui'];
 
@@ -98,53 +91,19 @@ const el = (tag, attrs = {}, children = []) => {
   return node;
 };
 
-// --- settings <-> URL hash ---------------------------------------------------
-const LIMITS = { text: 500, font: 60 };
-function sanitize(raw) {
-  const out = {};
-  for (const [k, v] of Object.entries(raw || {})) {
-    if (!(k in DEFAULTS)) continue;
-    const d = DEFAULTS[k];
-    if (typeof d === 'number') { if (Number.isFinite(v)) out[k] = v; }
-    else if (typeof d === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
-    else if (Array.isArray(d)) { if (Array.isArray(v) && v.every((c) => /^#[0-9a-f]{6}$/i.test(c))) out[k] = v.slice(0, 8); }
-    else if (typeof v === 'string') out[k] = v.slice(0, LIMITS[k] || 40);
-  }
-  return out;
+function download(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = el('a', { href: url, download: filename });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);   // Safari needs the URL alive past the click
 }
-function encodeHash(settings) {
-  const diff = {};
-  for (const k of Object.keys(DEFAULTS)) {
-    if (k === 'autoplay') continue;
-    if (JSON.stringify(settings[k]) !== JSON.stringify(DEFAULTS[k])) diff[k] = settings[k];
-  }
-  const bytes = new TextEncoder().encode(JSON.stringify(diff));
-  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-function decodeHash(hash) {
-  const m = /p8=([A-Za-z0-9_-]+)/.exec(hash);
-  if (!m) return null;
-  try {
-    const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
-    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    return sanitize(JSON.parse(new TextDecoder().decode(bytes)));
-  } catch { return null; }
-}
-
-// --- fonts -------------------------------------------------------------------
-const loadedFonts = new Set();
-async function ensureFont(family, weight) {
-  if (GOOGLE_FONTS[family] && !loadedFonts.has(family)) {
-    loadedFonts.add(family);
-    document.head.append(el('link', { rel: 'stylesheet', href: `https://fonts.googleapis.com/css2?family=${GOOGLE_FONTS[family]}&display=swap` }));
-  }
-  try { await document.fonts.load(`${weight} 32px "${family}"`); } catch { /* fall back to whatever the browser resolves */ }
-}
+const formatBytes = (n) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.round(n / 1e3)} KB`);
 
 // --- app ---------------------------------------------------------------------
 export function mount(root) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const initial = { ...DEFAULTS, ...(decodeHash(location.hash) || {}), autoplay: !reduced };
+  const fromHash = decodeSettings(/p8=([A-Za-z0-9_-]+)/.exec(location.hash)?.[1]);
+  const initial = { ...DEFAULTS, ...(fromHash || {}), autoplay: !reduced };
 
   const canvas = el('canvas', { 'aria-label': 'Particle text animation' });
   const frameLabel = el('div', { class: 'p8-frame' });
@@ -299,8 +258,8 @@ export function mount(root) {
     } }, [name]));
   }
   const shareBtn = el('button', { class: 'p8-btn primary', type: 'button', onclick: async () => {
-    const url = `${location.origin}${location.pathname}#p8=${encodeHash(engine.settings)}`;
-    history.replaceState(null, '', `#p8=${encodeHash(engine.settings)}`);
+    const url = `${location.origin}${location.pathname}#p8=${encodeSettings(engine.settings)}`;
+    history.replaceState(null, '', `#p8=${encodeSettings(engine.settings)}`);
     try { await navigator.clipboard.writeText(url); status.textContent = 'Link copied'; }
     catch { status.textContent = 'Link is in the address bar'; }
     setTimeout(() => { status.textContent = ''; }, 2500);
@@ -310,6 +269,88 @@ export function mount(root) {
     el('div', { class: 'p8-full p8-group' }, [el('h3', {}, ['Presets']), presets]),
     el('div', { class: 'p8-full p8-actions' }, [undoBtn, redoBtn, resetBtn, shareBtn, status]),
   );
+
+  // --- export ---
+  const shareUrl = () => `${location.origin}${location.pathname}#p8=${encodeSettings(engine.settings)}`;
+  const formatSel = el('select', {});
+  for (const [v, l] of FORMATS) formatSel.append(el('option', { value: v }, [l]));
+  const sizeSel = el('select', {});
+  for (const s of SIZES) sizeSel.append(el('option', { value: s.id }, [s.label]));
+  sizeSel.value = '1080p';
+  const fpsSel = el('select', {});
+  for (const f of [30, 60]) fpsSel.append(el('option', { value: f }, [`${f} fps`]));
+  const transparentBox = el('input', { type: 'checkbox', checked: '' });
+  if (!canEncodeVideo()) {
+    formatSel.querySelector('[value="video"]').disabled = true;   // Firefox < 130, older Safari
+    formatSel.value = 'gif';
+  }
+  const field = (label, control) => el('label', { class: 'p8-field' }, [el('span', {}, [label]), control]);
+  const sizeField = field('Size', sizeSel);
+  const fpsField = field('Frame rate', fpsSel);
+  const transparentField = el('label', { class: 'p8-field p8-check' }, [transparentBox, 'Transparent background']);
+  const exportBtn = el('button', { class: 'p8-btn primary', type: 'button' }, ['Export']);
+  const cancelBtn = el('button', { class: 'p8-btn', type: 'button', hidden: '' }, ['Cancel']);
+  const progress = el('progress', { max: 1, value: 0, hidden: '' });
+  const estimateLabel = el('span', { class: 'p8-status' });
+  const exportStatus = el('span', { class: 'p8-status', 'aria-live': 'polite' });
+  const snippet = el('textarea', { class: 'p8-snippet', readonly: '', hidden: '', rows: 3, 'aria-label': 'Embed code' });
+  snippet.addEventListener('focus', () => snippet.select());
+
+  function refreshExport() {
+    const f = formatSel.value;
+    sizeField.hidden = f === 'html';
+    fpsField.hidden = f !== 'video';
+    transparentField.hidden = f !== 'png';
+    if (f === 'html') { estimateLabel.textContent = 'One self-contained file, plays at any size'; return; }
+    const e = estimate(engine.settings, f, Number(fpsSel.value));
+    const size = SIZES.find((s) => s.id === sizeSel.value);
+    const dims = f === 'gif' ? `${Math.min(GIF_MAX_WIDTH, size.w)} px wide` : `${size.w} × ${size.h}`;
+    estimateLabel.textContent = `${e.seconds.toFixed(1)} s · ${e.frames} frames · ${dims}`;
+  }
+  for (const c of [formatSel, sizeSel, fpsSel]) c.addEventListener('change', refreshExport);
+  visibility.push(refreshExport);
+
+  let aborter = null;
+  exportBtn.addEventListener('click', async () => {
+    aborter = new AbortController();
+    exportBtn.disabled = true; cancelBtn.hidden = false; progress.hidden = false; progress.value = 0;
+    exportStatus.textContent = 'Rendering…';
+    try {
+      const { blob, filename } = await exportClip({
+        settings: engine.settings, format: formatSel.value, sizeId: sizeSel.value, fps: Number(fpsSel.value),
+        transparent: transparentBox.checked, logicalWidth: engine.width || 960, shareUrl: shareUrl(), signal: aborter.signal,
+        onProgress: (p, i, n) => { progress.value = p; exportStatus.textContent = `Rendering ${i} / ${n}`; },
+      });
+      download(blob, filename);
+      exportStatus.textContent = `Saved ${filename} (${formatBytes(blob.size)})`;
+    } catch (e) {
+      exportStatus.textContent = e.name === 'AbortError' ? 'Cancelled' : `Export failed: ${e.message}`;
+      if (e.name !== 'AbortError') console.error('[particul8] export', e);
+    } finally {
+      exportBtn.disabled = false; cancelBtn.hidden = true; progress.hidden = true; aborter = null;
+    }
+  });
+  cancelBtn.addEventListener('click', () => aborter?.abort());
+
+  const showSnippet = async (kind, label) => {
+    const code = embedSnippet(engine.settings, kind);
+    snippet.value = code; snippet.hidden = false;
+    try { await navigator.clipboard.writeText(code); exportStatus.textContent = `${label} copied`; }
+    catch { exportStatus.textContent = `${label} is in the box below`; }
+    setTimeout(() => { exportStatus.textContent = ''; }, 2500);
+  };
+  panel.append(el('div', { class: 'p8-full p8-group' }, [
+    el('h3', {}, ['Export']),
+    el('div', { class: 'p8-export' }, [field('Format', formatSel), sizeField, fpsField, transparentField, exportBtn, cancelBtn]),
+    el('div', { class: 'p8-export-status' }, [progress, estimateLabel, exportStatus]),
+    el('div', { class: 'p8-actions' }, [
+      el('button', { class: 'p8-btn', type: 'button', onclick: () => showSnippet('element', 'Embed code') }, ['Copy embed code']),
+      el('button', { class: 'p8-btn', type: 'button', onclick: () => showSnippet('iframe', 'Iframe code') }, ['Copy iframe code']),
+      el('span', { class: 'p8-hint' }, ['Paste on any page. The engine loads from marsh.city, like a web font.']),
+    ]),
+    snippet,
+  ]));
+
   refreshHistory();
   updateVisibility();
 
