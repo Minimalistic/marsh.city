@@ -637,10 +637,10 @@ export class Particul8 {
     f.type[k] = type; f.x[k] = x; f.y[k] = y; f.life[k] = 0;
     if (type === 0) {
       f.vx[k] = (rand() - 0.5) * 30; f.vy[k] = -20 - rand() * 40;
-      f.max[k] = 0.8 + rand() * 1.0; f.size[k] = 2 + rand() * 2;
+      f.max[k] = 1.4 + rand() * 1.6; f.size[k] = 2 + rand() * 2;
       f.r[k] = lerp(ember[0], 0.4, 0.6); f.g[k] = lerp(ember[1], 0.4, 0.6); f.b[k] = lerp(ember[2], 0.42, 0.6);
     } else {
-      const a = -Math.PI / 2 + (rand() - 0.5) * Math.PI * 1.4, v = 120 + rand() * 260;
+      const a = -Math.PI / 2 + (rand() - 0.5) * Math.PI * 1.4, v = 150 + rand() * 325;
       f.vx[k] = Math.cos(a) * v; f.vy[k] = Math.sin(a) * v;
       f.max[k] = 0.3 + rand() * 0.5; f.size[k] = 0.6 + rand() * 1.0;
       f.r[k] = Math.min(1, ember[0] + 0.3); f.g[k] = Math.min(1, ember[1] + 0.3); f.b[k] = ember[2];
