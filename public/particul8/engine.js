@@ -431,23 +431,56 @@ export class Particul8 {
     const s = this.settings;
     const n = this.n, rand = this.rand;
     const w = this.width, h = this.height;
+    const wasEmpty = this.frameIndex >= 0 && this.frames[this.frameIndex] === '';
     this.frameIndex = index;
     const { pts, stride } = this.rasterize(this.frames[index]);
     const m = pts.length / 5;
+
+    const a = (s.flowAngle * Math.PI) / 180, ca = Math.cos(a), sa = Math.sin(a);
+    if (wasEmpty && m > 0 && s.transition === 'flow') {
+      // The cloud blew out downstream; while it's offscreen and invisible, mirror
+      // it upstream so the next shape flows in with the current, not against it.
+      const cx = w / 2, cy = h / 2, ext = (Math.abs(ca) * w + Math.abs(sa) * h) / 2;
+      for (let i = 0; i < n; i++) {
+        const proj = (this.x[i] - cx) * ca + (this.y[i] - cy) * sa;
+        if (proj > ext) { this.x[i] -= 2 * proj * ca; this.y[i] -= 2 * proj * sa; }
+      }
+    }
 
     const T = new Float32Array(n * 5);
     const solid = hexToRgb(s.color);
     const pal = (s.palette && s.palette.length ? s.palette : [s.color]).map(hexToRgb);
     const jitter = m < n ? 1.2 : stride * 0.5;
     const scatter = s.scatter * 60;
+    // Empty keyframe: disperse in the character of the transition rather than a
+    // uniform shrug. flow blows the cloud downstream, radial bursts it past the
+    // edges, nearest melts it in place, wick lifts it like ash, scatter scatters.
+    const disperse = (i, o) => {
+      const px = this.x[i], py = this.y[i];
+      const type = s.transition;
+      let x, y;
+      if (type === 'flow') {
+        const ext = Math.abs(ca) * w + Math.abs(sa) * h;
+        const d = ext * (0.6 + rand() * 0.6), side = (rand() - 0.5) * 120;
+        x = px + ca * d - sa * side; y = py + sa * d + ca * side;
+      } else if (type === 'radial') {
+        const dx = px - w / 2, dy = py - h / 2, len = Math.hypot(dx, dy) || 1;
+        const r = Math.max(w, h) * (0.6 + rand() * 0.5);
+        x = w / 2 + (dx / len) * r + (rand() - 0.5) * 80; y = h / 2 + (dy / len) * r + (rand() - 0.5) * 80;
+      } else if (type === 'nearest') {
+        const g = () => (rand() + rand() + rand() - 1.5) * 90;   // roughly gaussian
+        x = px + g(); y = py + g() + 40 + rand() * 60;             // sags as it melts
+      } else if (type === 'wick') {
+        x = px + (rand() - 0.5) * 160 + rand() * 60; y = py - h * (0.5 + rand() * 0.8);
+      } else {
+        x = rand() * w; y = rand() * h;
+      }
+      T[o] = x; T[o + 1] = y;
+      T[o + 2] = solid[0] * 0.4; T[o + 3] = solid[1] * 0.4; T[o + 4] = solid[2] * 0.4;
+    };
     for (let i = 0; i < n; i++) {
       const o = i * 5;
-      if (m === 0) {
-        // Empty frame: drift into a loose cloud rather than collapsing to a point.
-        T[o] = rand() * w; T[o + 1] = rand() * h;
-        T[o + 2] = solid[0] * 0.4; T[o + 3] = solid[1] * 0.4; T[o + 4] = solid[2] * 0.4;
-        continue;
-      }
+      if (m === 0) { disperse(i, o); continue; }
       const j = (m >= n ? Math.floor((i * m) / n) : i % m) * 5;
       T[o] = pts[j] + (rand() - 0.5) * 2 * jitter + (rand() - 0.5) * scatter;
       T[o + 1] = pts[j + 1] + (rand() - 0.5) * 2 * jitter + (rand() - 0.5) * scatter;
@@ -470,7 +503,6 @@ export class Particul8 {
     if (type === 'flow' || type === 'radial') {
       const projP = new Float32Array(n), projT = new Float32Array(n);
       const cx = w / 2, cy = h / 2;
-      const a = (s.flowAngle * Math.PI) / 180, ca = Math.cos(a), sa = Math.sin(a);
       for (let i = 0; i < n; i++) {
         const noiseP = (rand() - 0.5) * 12, noiseT = (rand() - 0.5) * 12;
         if (type === 'radial') {
