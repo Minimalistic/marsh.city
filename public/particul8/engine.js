@@ -9,8 +9,8 @@ export const DEFAULTS = {
   weight: 400,
   granularity: 'word',     // char | word | sentence | all
   hold: 1.2,               // seconds a shape sits before morphing on
-  particles: 5000,
-  size: 1.4,
+  particles: 3000,
+  size: 0.7,
   shape: 'circle',         // circle | square
   colorMode: 'sampled',    // sampled | solid | palette
   color: '#8db860',
