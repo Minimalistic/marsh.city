@@ -10,43 +10,43 @@
     "github": "https://github.com/Minimalistic",
     "githubLabel": "github.com/Minimalistic"
   },
-  "summary": "Director of Technology with 13+ years across IT, assistive technology services, and team leadership. Builds production AI systems on the Anthropic API - conversational intake, agentic tool-calling, retrieval, and batch classification across a 7,500-product catalog - with a focus on accessibility for people with disabilities and older adults. ATACP-certified in assistive technology assessment.",
+  "summary": "Director of Technology with 13+ years across IT, assistive technology services, and team leadership. Designs, ships, and operates production software by directing AI coding agents (Claude Code) - owning the product decisions, specification, testing, deployment, and users - including WhatCanHelp, a free assistive-technology discovery site covering 7,000+ products. Restructured AT billing at a nonprofit, growing annual service revenue from $17K to over $200K within a year. ATACP-certified in assistive technology assessment.",
   "projects": [
     {
       "id": "whatcanhelp",
       "name": "WhatCanHelp",
       "href": "https://whatcanhelp.com",
       "featured": true,
-      "desc": " (whatcanhelp.com) - assistive-technology product discovery platform, designed and built end-to-end: 7,500+ AI-classified products with conversational intake, shortlist/compare tools, and auto-generated funding-justification PDFs. Node/Express + SQLite (better-sqlite3), self-hosted behind Caddy/PM2; batch classification pipeline using prompt caching and the Batch API for cost efficiency, with schema-level guardrails against hallucinated product data."
+      "desc": " (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep the 7,000+-product catalog affordable to maintain, with schema checks against fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted. Operated in production."
     },
     {
       "id": "mealdeck",
       "name": "MealDeck",
-      "href": "https://mealdeck.net",
-      "desc": " - built and launched a meal-planning app with Stripe billing, AI recipe adaptation, voice-controlled cook mode"
+      "href": "/projects/mealdeck/",
+      "desc": " - meal-planning app for friends and family: grocery lists grouped by shared ingredients, hands-free voice cook mode, and AI recipe adaptation for dietary needs and serving sizes. Ran as a private beta."
     },
     {
       "id": "radiogridxl",
       "name": "RadioGridXL",
       "href": "/projects/radiogridxl/",
-      "desc": " - zero-dependency accessible radio streaming app, WCAG AA, piloted with older adults at my organization"
+      "desc": " - internet radio for older adults and people with disabilities: large buttons, no accounts or ads, screen-reader support, WCAG AA contrast. Designed a technician-only settings panel so staff can configure a device without exposing that complexity to the listener. Deployed at my organization and piloted with older adults."
     },
     {
       "id": "petfeedr",
       "name": "PetFeedr",
       "href": "/projects/petfeedr/",
-      "desc": " - Raspberry Pi automated pet feeder with web interface, scheduling, and feed-time randomization"
+      "desc": " - Raspberry Pi pet feeder built because the store-bought one tipped over and ran out of food; web interface for schedules and portions, feed-time randomization, one-command deploy. Running daily for about two years."
     },
     {
       "id": "echoetcher",
       "name": "EchoEtcher",
       "href": "/projects/echoetcher/",
-      "desc": " - voice-to-structured-notes pipeline using local Whisper and LLM processing"
+      "desc": " - turns voice memos recorded while driving into tagged, structured notes in Obsidian; local Whisper transcription and a local LLM (Ollama) keep recordings on the machine by default. In personal use; being reworked."
     },
     {
       "id": "infovault",
       "name": "InfoVault (in development)",
-      "desc": " - handheld device using camera-based LLM identification to read text aloud and describe objects for users with vision loss"
+      "desc": " - handheld device for people with vision loss that uses a camera and an LLM to read text aloud and describe objects; prototype in development."
     }
   ],
   "experience": [
@@ -70,7 +70,7 @@
         },
         {
           "id": "team",
-          "text": "Manage a team of three (previously four) spanning IT support and assistive technology services"
+          "text": "Manage a team of three direct reports spanning IT support and assistive technology services"
         },
         {
           "id": "m365-tenant",
@@ -82,11 +82,11 @@
         },
         {
           "id": "power-automate",
-          "text": "Automated internal operations with Power Automate - built an expense and donation tracking system and staff-facing forms that feed directly into Excel"
+          "text": "Automated internal operations with Power Automate - designed and built an expense and donation tracking system and staff-facing forms that feed into Excel"
         },
         {
           "id": "copilot",
-          "text": "Evaluated and deployed Microsoft 365 Copilot licenses; onboarded and supported initial staff cohort"
+          "text": "Evaluated Microsoft 365 Copilot and ran a small licensed rollout - onboarded and supported the first staff cohort"
         },
         {
           "id": "embed-clients",
@@ -122,7 +122,7 @@
         },
         {
           "id": "request-tracking",
-          "text": "Built centralized request tracking system to streamline IT and AT workflows"
+          "text": "Set up a centralized request tracking system to streamline IT and AT workflows"
         }
       ]
     },
@@ -161,24 +161,24 @@
   ],
   "skills": [
     {
-      "label": "AI & ML",
-      "items": "Claude API (Anthropic SDK - tool use, Batch API, prompt caching, structured outputs), Claude Code, OpenAI Whisper, Ollama, Hermes, RAG & Embeddings"
+      "label": "AI Delivery",
+      "items": "Claude Code and AI coding agents - specification, code review, testing, and deployment of AI-built software; Claude API features in production (tool use, Batch API, prompt caching, structured outputs); Ollama local models, OpenAI Whisper, retrieval and embeddings"
     },
     {
-      "label": "Development",
-      "items": "Python, JavaScript, Node.js, Express, SQLite, PowerShell, HTML/CSS, Git, Docker, GitHub Actions, Arduino/ESP-8266"
+      "label": "Microsoft 365 & Automation",
+      "items": "Microsoft 365 tenant administration, Entra ID / Azure AD, Microsoft 365 Copilot, Power Automate, SharePoint, Teams, Microsoft Intune, IBM MaaS360"
     },
     {
       "label": "Infrastructure",
-      "items": "Microsoft 365, Azure AD, Active Directory, Windows Server, Hyper-V, VMware/ESXi, Proxmox VE, DNS/DHCP, VPN, Firewall Management"
+      "items": "Active Directory, Windows Server, Hyper-V, VMware/ESXi, Proxmox VE, DNS/DHCP, VPN, Firewall Management, Linux Administration, Tailscale"
     },
     {
-      "label": "Endpoint & Security",
-      "items": "Microsoft Intune, IBM MaaS360, Linux Administration, Disaster Recovery, Incident Response, Cloud Security"
+      "label": "Security & Operations",
+      "items": "Disaster Recovery, Incident Response, Cloud Security, ServiceNow, FreshDesk, vendor and licensing management"
     },
     {
-      "label": "Platforms",
-      "items": "Microsoft 365 Copilot, Power Automate, SharePoint, Microsoft Teams, ServiceNow, FreshDesk, Tailscale"
+      "label": "Stack Shipped & Operated",
+      "items": "Node.js, Express, SQLite, Python, vanilla-JS PWAs, Git, GitHub Actions, Docker, Caddy/PM2 self-hosting, PowerShell, Raspberry Pi/Arduino"
     }
   ],
   "education": [
