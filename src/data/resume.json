@@ -10,14 +10,14 @@
     "github": "https://github.com/Minimalistic",
     "githubLabel": "github.com/Minimalistic"
   },
-  "summary": "Director of Technology with 13+ years across IT, assistive technology services, and team leadership. Designs, ships, and operates production software by directing AI coding agents (Claude Code) - owning the product decisions, specification, testing, deployment, and users - including WhatCanHelp, a free assistive-technology discovery site covering 7,000+ products. Restructured AT billing at a nonprofit, growing annual service revenue from $17K to over $200K within a year. ATACP-certified in assistive technology assessment.",
+  "summary": "Director of Technology with 13+ years across IT, assistive technology services, and team leadership. Designs, ships, and operates production software by directing AI coding agents (Claude Code) - owning the product decisions, specification, testing, deployment, and users - including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. Restructured AT billing at a nonprofit, growing annual service revenue from $17K to over $200K within a year. ATACP-certified in assistive technology assessment.",
   "projects": [
     {
       "id": "whatcanhelp",
       "name": "WhatCanHelp",
       "href": "https://whatcanhelp.com",
       "featured": true,
-      "desc": " (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep the 7,000+-product catalog affordable to maintain, with schema checks against fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted. Operated in production."
+      "desc": " (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep a catalog of thousands of products affordable to maintain, with schema checks against fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted. Operated in production."
     },
     {
       "id": "mealdeck",
