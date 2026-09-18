@@ -6,6 +6,11 @@
 //
 //   node scripts/resume-pdf.mjs                          # canonical resume
 //   node scripts/resume-pdf.mjs --config path/to/job.json [--out dir]
+//   node scripts/resume-pdf.mjs ... --copy-to ~/Documents/Resumes
+//
+// --copy-to also drops the finished PDF in a second directory (the synced
+// folder applications get attached from), overwriting the copy there, so
+// the two never drift apart.
 //
 // Variant config (all keys optional):
 //   {
@@ -23,7 +28,7 @@
 // Rendering: same renderer + CSS as the public /resume page, printed with
 // headless Chrome so the PDF matches the site's print output exactly.
 
-import { readFileSync, writeFileSync, rmSync, existsSync, mkdtempSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, copyFileSync, rmSync, existsSync, mkdtempSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir, homedir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
@@ -39,6 +44,14 @@ function argValue(flag) {
 }
 const configPath = argValue('--config');
 const outDir = argValue('--out') ?? (configPath ? dirname(resolve(configPath)) : process.cwd());
+// the shell expands ~ only when it's unquoted at the start of a word, so handle it here too
+const copyToArg = argValue('--copy-to');
+const copyToDir = copyToArg && resolve(copyToArg.replace(/^~(?=$|\/)/, homedir()));
+// fail before the slow Chrome step, not after it
+if (copyToDir && !existsSync(copyToDir)) {
+  console.error(`--copy-to directory does not exist: ${copyToDir}`);
+  process.exit(1);
+}
 
 const data = JSON.parse(readFileSync(join(root, 'src/data/resume.json'), 'utf8'));
 const config = configPath ? JSON.parse(readFileSync(configPath, 'utf8')) : {};
@@ -129,3 +142,9 @@ try {
 // crude page count: Chrome writes page objects uncompressed
 const pages = (readFileSync(outPdf, 'latin1').match(/\/Type \/Page\b(?!s)/g) || []).length;
 console.log(`${outPdf}${pages ? ` (${pages} page${pages === 1 ? '' : 's'})` : ''}`);
+
+if (copyToDir && copyToDir !== resolve(outDir)) {
+  const copied = join(copyToDir, `marsh-resume${suffix}.pdf`);
+  copyFileSync(outPdf, copied);
+  console.log(`copied -> ${copied}`);
+}
