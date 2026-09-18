@@ -6,8 +6,8 @@ updated: August 2026
 
 ## Building
 
-**WhatCanHelp** — a free assistive technology discovery tool. 7,300+
-products from 380+ manufacturers, freeform AI intake, plain-language guidance,
+**WhatCanHelp** — a free assistive technology discovery tool. Thousands of
+products from hundreds of manufacturers, freeform AI intake, plain-language guidance,
 state-by-state borrow and funding directories, and exportable PDF reports for
 funding meetings and IEP appendices. It's the main thing I'm building right now.
 

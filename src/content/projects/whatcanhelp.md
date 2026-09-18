@@ -1,6 +1,6 @@
 ---
 title: WhatCanHelp
-description: A free assistive technology discovery tool with 7,300+ products from 380+ manufacturers, freeform AI intake, complexity-tier guidance, plain-language descriptions, state-by-state borrow and funding directories, and exportable PDF reports for funding meetings and IEP appendices.
+description: A free assistive technology discovery tool with thousands of products from hundreds of manufacturers, freeform AI intake, complexity-tier guidance, plain-language descriptions, state-by-state borrow and funding directories, and exportable PDF reports for funding meetings and IEP appendices.
 status: shipped
 url: https://whatcanhelp.com
 tags: [node, sqlite, express, vanilla-js, claude-api, accessibility, at]
@@ -12,7 +12,7 @@ imageAlt: WhatCanHelp landing page - wordmark, Find what actually helps tagline,
 
 I'm the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what works. WhatCanHelp grew out of a question I kept coming back to: what would it look like if the AT industry had better discovery tools?
 
-I built a free tool that brings together 7,300+ assistive technology products from 380+ manufacturers in one searchable place: AI-written plain-language descriptions, a freeform intake that produces a matched shortlist, state-by-state directories for borrowing devices and finding funding, and PDF reports designed for funding meetings and IEP appendices. No account required, and no cookies or personal tracking.
+I built a free tool that brings together thousands of assistive technology products from hundreds of manufacturers in one searchable place: AI-written plain-language descriptions, a freeform intake that produces a matched shortlist, state-by-state directories for borrowing devices and finding funding, and PDF reports designed for funding meetings and IEP appendices. No account required, and no cookies or personal tracking.
 
 ## The interface
 
@@ -20,9 +20,9 @@ I built a free tool that brings together 7,300+ assistive technology products fr
 
 The landing page leads with one thing: a "Describe the situation" button under the wordmark and a "Find what actually helps" line. Below it, a short pitch (shortlist with complexity tiers and funding pathways, plus a PDF summary for funding meetings or IEP appendices) and a vendor-neutral / updated weekly / independent tagline. A "How it works" section breaks the flow into three steps: describe, review, export. Secondary links go to the full catalog and the glossary for people new to AT.
 
-![WhatCanHelp catalog with 5502 products, faceted sidebar filters, a Recently Added thumbnail row, and a dense product table with complexity badges](/images/whatcanhelp/browse.webp)
+![WhatCanHelp catalog with thousands of products, faceted sidebar filters, a Recently Added thumbnail row, and a dense product table with complexity badges](/images/whatcanhelp/browse.webp)
 
-The catalog shows 5,502 products with faceted filters along the side: challenge area, product type, device or platform, ease of setup, price range, age group, manufacturer, and funding sources. A "Recently Added" thumbnail strip surfaces new products with category badges. Below that, a dense table view with manufacturer, type, platform, complexity tier, and how recently each entry was updated. A card grid view is one toggle away, and you can share filtered views or export results as CSV.
+The catalog lists thousands of products with faceted filters along the side: challenge area, product type, device or platform, ease of setup, price range, age group, manufacturer, and funding sources. A "Recently Added" thumbnail strip surfaces new products with category badges. Below that, a dense table view with manufacturer, type, platform, complexity tier, and how recently each entry was updated. A card grid view is one toggle away, and you can share filtered views or export results as CSV.
 
 ![WhatCanHelp intake page showing a freeform Describe the situation textarea with an example placeholder mixing clinical and plain language](/images/whatcanhelp/intake.webp)
 
