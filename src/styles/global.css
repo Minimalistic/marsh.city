@@ -1411,6 +1411,8 @@ nav.site-nav .links a[aria-current="page"]::after {
 }
 .nav-menu-link::after { display: none; }
 .nav-menu-link.nav-show-mobile { display: none; }
+/* the panel sits inside .links, so `nav.site-nav .links a` would otherwise show these on desktop */
+nav.site-nav .links .nav-menu-link.nav-show-mobile { display: none; }
 .nav-menu-link:hover {
   background: color-mix(in srgb, var(--leaf) 15%, transparent);
   color: var(--fg);
@@ -1716,43 +1718,22 @@ html.theme-animating *::after {
 
 /* --- responsive --- */
 
-/* Nav stacks into rows earlier than the rest of the layout — at ≤720px
-   there isn't horizontal room for brand + 5 links + search + hamburger
-   in one row. Playground + about move into the hamburger on mobile. */
+/* At ≤720px there isn't room for brand + 5 links + search in one row, so
+   every link moves into the hamburger and the pill stays a single row. */
 @media (max-width: 720px) {
   nav.site-nav {
     top: 0.5rem;
     width: calc(100% - 1rem);
     padding: 0.15rem 0.9rem;
-    flex-direction: column;
-    gap: 0;
-  }
-  nav.site-nav .brand {
-    padding-bottom: 0;
-    border-bottom: 1px solid var(--border-leaf);
-    margin-bottom: 0;
-    line-height: 1.15;
   }
   nav.site-nav .links .nav-hide-mobile { display: none; }
   .nav-menu-link { display: inline-flex; }
-  .nav-menu-link.nav-show-mobile { display: inline-flex; }
-  nav.site-nav .links {
-    gap: 0.25rem 1rem;
-    font-size: 0.85rem;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    width: 100%;
-  }
+  nav.site-nav .links .nav-menu-link.nav-show-mobile { display: inline-flex; }
+  nav.site-nav .links { gap: 0.5rem; }
   .nav-search { display: none; }
   main, h1, h2, h3, h4, [id] {
     scroll-margin-top: 5.5rem;
   }
-}
-/* On narrow desktop (601–720px, stacked nav but mouse-driven) shrink the
-   link tap target so the stacked row is less tall, giving content below
-   more breathing room. Mobile keeps the 44px minimum for touch. */
-@media (min-width: 601px) and (max-width: 720px) {
-  nav.site-nav .links a { min-height: 34px; }
 }
 @media (min-width: 721px) {
   .nav-menu-panel .cmdk-trigger { display: none; }
