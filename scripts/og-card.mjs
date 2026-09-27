@@ -15,7 +15,7 @@ import sharp from 'sharp';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outJpg = join(root, 'public/og-default.jpg');
-const foliage = pathToFileURL(join(root, 'public/footer-foliage.webp')).href;
+const foliage = pathToFileURL(join(root, 'public/footer-foliage@2x.webp')).href;
 
 const WIDTH = 1200;
 const HEIGHT = 630;

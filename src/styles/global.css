@@ -458,6 +458,15 @@ footer.site-foot {
   transform: translate(-50%, 0);
   will-change: transform;
 }
+/* The layer is drawn ~1270–2400 device px wide on phones and retina screens,
+   so the 1400px art upscales visibly there. Only high-density screens pull the
+   2800px file (~1.1MB); everyone else keeps the 1x. The masks read the same
+   variable, so tint and darken stay pixel-aligned with the art. */
+@supports (background-image: image-set(url(x.webp) 1x)) {
+  .foliage-layer {
+    --layer-img: image-set(url(/footer-foliage.webp) 1x, url(/footer-foliage@2x.webp) 2x);
+  }
+}
 /* nighttime foliage — cool moonlit blue multiply always present; opacity
    scales up in dark mode so the ::before can crossfade between themes. */
 .foliage-layer::before,
