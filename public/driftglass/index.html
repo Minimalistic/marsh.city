@@ -588,10 +588,11 @@ void main(){
   float fres=.02+.98*pow(1.-max(dot(-V,n),0.),5.);
   float dif=max(dot(n,L),0.);
   float relief=clamp(1.+2.6*dot(n.xy,normalize(L.xy)),.25,2.2);
-  vec3 base=uDeep*(.7+.6*h0)+uScatter*pow(h0,3.)*.5*(.3+.7*dif);
-  /* fish swim under the surface: they replace the water body, seen through the refracting waves */
+  /* fish swim under the surface: they replace the deep water colour, seen through the refracting waves; the lit water
+     of a crest lies over them, brightening them the way it brightens the deep, and its scattered glow sits on top */
+  float lift=.7+.6*h0;
   vec4 fsh=texture(uFish,gl_FragCoord.xy/uRes+n.xy*.006);
-  base=base*(1.-fsh.a)+fsh.rgb;
+  vec3 base=(uDeep*(1.-fsh.a)+fsh.rgb)*lift+uScatter*pow(h0,3.)*.5*(.3+.7*dif);
   /* Cloudline's cumulus cast deep shadows; Open Water's high cloud stays soft (its original factors) */
   vec2 shK=uMode<.5?vec2(.75,.6):vec2(.5,.45);
   vec3 ocean=base*(1.-shK.x+shK.x*sh)*relief;
@@ -1452,7 +1453,13 @@ function stepShore(inst, dt, c) {
       /* smooth, purposeful motion: run ahead of incoming water, follow the backwash down, pause to peck */
       let vs = 0;
       const upTarget = E.edge + b.gapA, downTarget = E.edge + b.gapR;
+      /* each bird forages on its own clock: short walks, then a stop to feed, so the flock never moves in lockstep */
+      if (b.feedT === undefined) { b.feedT = 0; b.moveT = lerp(0.2, 1.6, Math.random()); }
+      const waveNear = b.s < E.edge + 0.26 || (E.adv && b.s < E.edge + 0.45);
+      if (waveNear) b.feedT = 0;
       if (b.s < E.edge + 0.26) vs = b.run;   /* keep well clear of the water and its froth */
+      else if (b.feedT > 0) { b.feedT -= dt; vs = 0; if (b.feedT <= 0) b.moveT = lerp(0.4, 1.6, Math.random()); }
+      else if ((b.moveT -= dt) <= 0 && !waveNear) { b.feedT = lerp(0.5, 2.2, Math.random()); vs = 0; }
       else if (E.adv) vs = Math.max(0, Math.min(b.run, (upTarget - b.s) * 7));
       else if (b.peckT > 0) { b.peckT -= dt; vs = 0; }
       else {
@@ -1460,7 +1467,8 @@ function stepShore(inst, dt, c) {
         vs = gap > 0.015 ? -Math.min(b.walk * (gap > 0.25 ? 3 : 1), gap * 2.5) : 0;
         if (gap <= 0.04 && Math.random() < dt * 1.2) b.peckT = lerp(0.4, 1.1, Math.random());
       }
-      let vx = (fl.x + b.ox - b.x) * 0.35 + fl.drift;
+      if (Math.random() < dt * 0.15) b.ox = Math.max(-0.4, Math.min(0.4, b.ox + (Math.random() - 0.5) * 0.25)); /* spacing keeps shifting */
+      let vx = b.feedT > 0 ? 0 : (fl.x + b.ox - b.x) * 0.35 + fl.drift; /* a feeding bird stays put and lets the flock drift on */
       for (const o of bs) if (o !== b) { const dx = b.x - o.x, ds = b.s - o.s, d2 = dx * dx + ds * ds; if (d2 < 0.0025 && d2 > 1e-8) vx += (dx / Math.sqrt(d2)) * 0.03 * (1 - d2 / 0.0025); }
       vx = Math.max(-0.25, Math.min(0.25, vx));
       b.vx += (vx - b.vx) * Math.min(1, dt * 2.5); b.vs += (vs - b.vs) * Math.min(1, dt * 9);
@@ -1470,7 +1478,7 @@ function stepShore(inst, dt, c) {
       let dh = want - b.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
       b.h += dh * Math.min(1, dt * (sp > 0.3 ? 9 : 2.5));
       b.bob += dt * (8 + sp * 30);
-      b.pk = b.peckT > 0 ? Math.max(0, Math.sin(b.bob * 1.6)) : b.pk * Math.max(0, 1 - dt * 8);
+      b.pk = b.peckT > 0 || b.feedT > 0 ? Math.max(0, Math.sin(b.bob * 1.6)) : b.pk * Math.max(0, 1 - dt * 8);
       b.a = Math.min(1, b.a + dt * 2);
       b.bend = E.bend;
     }
