@@ -1485,9 +1485,9 @@ function stepShore(inst, dt, c) {
          backwash retreats the flock works its way down after it in diagonal darts; an incoming wave sends them up the beach. */
       let vs = 0, vx = 0;
       const upTarget = E.edge + b.gapA;
-      if (b.feedT === undefined) { b.feedT = 0; b.tgt = null; b.dart = lerp(0.3, 0.5, Math.random()); }
+      if (b.feedT === undefined) { b.feedT = 0; b.tgt = null; b.dart = lerp(0.3, 0.5, Math.random()); b.miss = 0; b.hop = false; b.food = false; }
       const waveNear = b.s < E.edge + 0.26 || (E.adv && b.s < E.edge + 0.45);
-      if (waveNear && b.feedT > 0) { b.feedT = 0; b.tgt = null; }
+      if (waveNear && b.feedT > 0) { b.feedT = 0; b.tgt = null; b.hop = false; b.miss = 0; }
       if (b.s < E.edge + 0.26) vs = b.run;   /* keep well clear of the water and its froth */
       else if (b.feedT > 0) { b.feedT -= dt; if (b.feedT <= 0) b.tgt = null; }
       else if (E.adv && b.s < upTarget) { vs = Math.min(b.run, (upTarget - b.s) * 7); b.tgt = null; }
@@ -1495,12 +1495,24 @@ function stepShore(inst, dt, c) {
         if (!b.tgt || (b.tgtT -= dt) <= 0) {
           const home = fl.x + b.ox;
           const side = Math.abs(b.x - home) > 0.25 ? Math.sign(home - b.x) : (Math.random() < 0.5 ? -1 : 1);
-          const ts = Math.max(E.edge + Math.max(0.3, b.gapR + lerp(0, 0.14, Math.random())), E.adv ? upTarget : -1e9);
-          b.tgt = { x: b.x + side * lerp(0.03, 0.2, Math.random()), s: ts };
+          if (b.hop) {
+            /* came up empty: shuffle a short step in any direction and try again, never closer to the water than a full dart */
+            const a = Math.random() * Math.PI * 2, r = lerp(0.03, 0.08, Math.random());
+            b.tgt = { x: b.x + Math.cos(a) * r, s: Math.max(b.s + Math.sin(a) * r * 0.6, E.edge + Math.max(0.3, b.gapR), E.adv ? upTarget : -1e9) };
+          } else {
+            const ts = Math.max(E.edge + Math.max(0.3, b.gapR + lerp(0, 0.14, Math.random())), E.adv ? upTarget : -1e9);
+            b.tgt = { x: b.x + side * lerp(0.08, 0.22, Math.random()), s: ts };
+          }
           b.tgtT = 3;
         }
         const dx = b.tgt.x - b.x, ds = b.tgt.s - b.s, d = Math.hypot(dx, ds);
-        if (d < 0.012) { b.feedT = lerp(0.4, 1.8, Math.random()); b.tgt = null; }
+        if (d < 0.012) {
+          /* one quick jab to check the spot; each miss makes the next find likelier, so no bird fusses over a patch for long */
+          const found = Math.random() < 0.35 + 0.2 * b.miss;
+          b.food = found; b.hop = !found; b.miss = found ? 0 : b.miss + 1;
+          b.feedT = found ? lerp(0.8, 2.2, Math.random()) : lerp(0.25, 0.4, Math.random());
+          b.bob = 0; b.tgt = null; /* the jab starts from head-up, never mid-peck */
+        }
         else { const v = Math.min(b.dart, d * 4); vx = dx / d * v; vs = ds / d * v; }
       }
       if (Math.random() < dt * 0.15) b.ox = Math.max(-0.4, Math.min(0.4, b.ox + (Math.random() - 0.5) * 0.25)); /* spacing keeps shifting */
@@ -1522,7 +1534,7 @@ function stepShore(inst, dt, c) {
       }
       b.x += b.vx * dt; b.s += b.vs * dt;
       const sp = Math.hypot(b.vx, b.vs);
-      b.bob += dt * (8 + sp * 30);
+      b.bob += dt * (8 + sp * 30 + (b.food && b.feedT > 0 ? 6 : 0)); /* a find gets rapid stitching probes */
       b.pk = b.feedT > 0 ? Math.max(0, Math.sin(b.bob * 1.6)) : b.pk * Math.max(0, 1 - dt * 8);
       b.a = Math.min(1, b.a + dt * 2);
       b.bend = E.bend;
