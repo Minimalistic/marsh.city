@@ -26,8 +26,10 @@
   --border: rgba(27, 42, 31, 0.1);
   --border-leaf: color-mix(in srgb, var(--leaf) 25%, transparent);
   --fg: var(--ink);
-  --fg-soft: var(--ink-soft);
-  --fg-muted: var(--ink-muted);
+  /* secondary/muted text darkened from --ink-soft/--ink-muted so small text
+     holds WCAG AA over the frosted glass and the scenery behind it */
+  --fg-soft: #33453a;
+  --fg-muted: #3f4d43;
   --accent: var(--moss);
   --accent-bright: var(--leaf);
   --accent-glow: rgba(109, 154, 72, 0.1);
@@ -51,6 +53,11 @@
   --stage-max: 1200px;
   --stage-width: min(100vw, var(--stage-max));
   --stage-inset: max(0px, calc((100vw - var(--stage-max)) / 2));
+  /* frosted-glass opacity for cards, pills and title panels. 62%: the looming
+     forest shows through the glass right behind text, and thinner washes let
+     its dark crowns drop body text below WCAG AA (measured 2.7:1 at 35%;
+     72%/55% plus the text tokens passes all 408 audited text blocks). */
+  --glass-wash: 72%;
   --frame-bg: #243208;
   --frame-rim: rgba(141, 184, 96, 0.9);
   /* the frame's inward shadow over the stage edges reads as grime in
@@ -60,6 +67,7 @@
 }
 
 :root[data-theme="dark"] {
+  --glass-wash: 55%;
   --frame-bg: #06090a;
   --frame-rim: rgba(141, 184, 96, 0.3);
   --frame-shadow: rgba(0, 0, 0, 0.55);
@@ -70,8 +78,8 @@
   --border: rgba(168, 204, 133, 0.07);
   --border-leaf: rgba(141, 184, 96, 0.15);
   --fg: #ddd9ca;
-  --fg-soft: #a0a090;
-  --fg-muted: #908f85;
+  --fg-soft: #b8b8a8;
+  --fg-muted: #aeada2;
   --accent: var(--leaf-bright);
   --accent-bright: var(--leaf-pale);
   --accent-glow: rgba(109, 154, 72, 0.08);
@@ -290,9 +298,11 @@ nav.site-nav {
   justify-content: space-between;
   align-items: center;
   padding: 0.3rem 1.25rem;
-  background: color-mix(in srgb, var(--bg) 45%, transparent);
-  backdrop-filter: saturate(1.6) blur(18px);
-  -webkit-backdrop-filter: saturate(1.6) blur(18px);
+  /* 62% wash: over the blue daytime sky a thinner wash dropped the nav text
+     below WCAG AA (4.3:1) on phones; saturate eased so the blue isn't amplified */
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  backdrop-filter: saturate(1.3) blur(18px);
+  -webkit-backdrop-filter: saturate(1.3) blur(18px);
   border: 1px solid var(--border-leaf);
   border-radius: 20px;
   box-shadow: var(--shadow);
@@ -688,8 +698,8 @@ footer.site-foot {
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--bg-elev) 35%, transparent) 0%,
-      color-mix(in srgb, var(--bg-elev2) 35%, transparent) 100%
+      color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent) 0%,
+      color-mix(in srgb, var(--bg-elev2) var(--glass-wash), transparent) 100%
     );
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
@@ -723,13 +733,13 @@ footer.site-foot a:hover {
 
 .card {
   position: relative;
-  /* low-alpha wash so the sky tint and foliage behind can seep through;
-     the heavy blur keeps text legible even at ~35% bg opacity. */
+  /* translucent wash (--glass-wash) so the sky tint and foliage behind can
+     seep through; strong enough to hold text contrast over the forest. */
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--bg-elev) 35%, transparent) 0%,
-      color-mix(in srgb, var(--bg-elev2) 35%, transparent) 100%
+      color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent) 0%,
+      color-mix(in srgb, var(--bg-elev2) var(--glass-wash), transparent) 100%
     );
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
@@ -1011,7 +1021,7 @@ footer.site-foot a:hover {
   padding: 0.2em 0.7em;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--bg-elev) 35%, transparent);
+  background: color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent);
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
 }
@@ -1023,14 +1033,14 @@ main > h1 {
   padding: 0.15em 0.55em;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--bg-elev) 35%, transparent);
+  background: color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent);
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
 }
 /* Shared frosted container for page-title blocks (h1 + optional tagline).
    Matches .prose so the title reads as the top of a unified content panel. */
 .page-head {
-  background: color-mix(in srgb, var(--bg) 28%, transparent);
+  background: color-mix(in srgb, var(--bg) var(--glass-wash), transparent);
   backdrop-filter: blur(8px) saturate(115%);
   -webkit-backdrop-filter: blur(8px) saturate(115%);
   border-radius: var(--radius);
@@ -1048,7 +1058,7 @@ main > h1 {
   font-family: var(--font-mono);
   /* Frosted glass to match the cards — translucent wash + backdrop blur
      so foliage and fireflies behind get diffused through the pill. */
-  background: color-mix(in srgb, var(--bg-elev) 35%, transparent);
+  background: color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent);
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
@@ -1100,7 +1110,7 @@ nav.site-nav .links a[aria-current="page"]::after {
        over the fixed foliage. Cards/buttons already have their own frost. --- */
 
 .prose {
-  background: color-mix(in srgb, var(--bg) 28%, transparent);
+  background: color-mix(in srgb, var(--bg) var(--glass-wash), transparent);
   backdrop-filter: blur(8px) saturate(115%);
   -webkit-backdrop-filter: blur(8px) saturate(115%);
   border-radius: var(--radius);
@@ -1114,8 +1124,8 @@ nav.site-nav .links a[aria-current="page"]::after {
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--bg-elev) 35%, transparent) 0%,
-      color-mix(in srgb, var(--bg-elev2) 35%, transparent) 100%
+      color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent) 0%,
+      color-mix(in srgb, var(--bg-elev2) var(--glass-wash), transparent) 100%
     );
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
