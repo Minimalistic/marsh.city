@@ -38,7 +38,7 @@ const LAYERS = [
   ['back', BAND, 0.72, 'bottom'],
   ['mid', BAND, 1.086, 'bottom'],
   ['front', BAND, 1, 'bottom'],
-  ['ground', BAND, 1, 'bottom'],
+  ['ground', BAND, 1.05, 'bottom'],  // tucks the soil fringe off the bottom, as on the site
 ];
 const layerTags = LAYERS.map(([name, band, endBand, pin]) => {
   const b = box(name);

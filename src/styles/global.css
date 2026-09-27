@@ -526,7 +526,10 @@ footer.site-foot {
   --layer-img: image-set(url(/foliage/front.avif) 1x, url(/foliage/front@2x.avif) 2x);
 }
 .foliage-frame--ground .foliage-layer {
-  --end-band: 1;
+  /* 1.05: the strip's soil has a ragged bottom fringe; pinning it this far
+     below the band tucks the fringe off-screen instead of showing the
+     layers behind through its gaps */
+  --end-band: 1.05;
   --layer-start: 45vh;
   --layer-range-start: 60%;
   --layer-img: image-set(url(/foliage/ground.avif) 1x, url(/foliage/ground@2x.avif) 2x);
@@ -597,6 +600,7 @@ footer.site-foot {
     --layer-img: image-set(url(/foliage/front-m.avif) 1x, url(/foliage/front-m@2x.avif) 2x);
   }
   .foliage-frame--ground .foliage-layer {
+    --end-band: 1.03;  /* thinner phone strip, so a smaller tuck hides the fringe */
     --layer-img: image-set(url(/foliage/ground-m.avif) 1x, url(/foliage/ground-m@2x.avif) 2x);
   }
 }
