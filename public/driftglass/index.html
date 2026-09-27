@@ -928,9 +928,10 @@ void main(){
   float bu=u>.2?(u-.2)/.8:(u-.2)/1.;
   float hw=W*sqrt(max(1.-bu*bu,0.));
   float dBody=max(av-hw,u-1.);
-  float tw=(-.7-u)*.8;
-  float dFin=max(max(av-tw,-1.18-u),u+.7);
-  dFin=max(dFin,(-.98-u)*1.3-av); /* forked tail */
+  /* the tail fin is vertical, so from above it's seen nearly edge-on: a narrow flare that the spine bend sweeps side
+     to side. A wide fork reads as a dolphin's horizontal flukes. */
+  float tw=(-.7-u)*.16+.02;
+  float dFin=max(max(av-tw,-1.16-u),u+.7);
   float d=min(dBody,dFin*1.2);
   float m=1.-smoothstep(-aa,aa,d);
   if(m<.002)discard;
@@ -1280,9 +1281,32 @@ const FLAP = { 0: { hz: 2.6, flap: [1, 2.4], glide: [1.5, 4], dihedral: 0.14 }, 
 const rr = (a) => lerp(a[0], a[1], Math.random());
 function pickKind(kinds) { let r = Math.random(), acc = 0; for (const [t, w] of kinds) { acc += w; if (r <= acc) return t; } return kinds[0][0]; }
 const wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a));
+/* Shared steering for anything that holds a slot in a group (fish, gannets): use it for any new group mover. dv is the velocity the member wants: its
+   slot's velocity plus a pull toward the slot. Its turn rate eases toward what the heading needs, capped at o.turn, rather
+   than being set outright, so neither the heading nor anything driven by the turn rate (a body bend) ever snaps. Speed
+   eases toward |dv|, held within o.base × [o.lo, o.hi]. With o.flit set, the member also darts on its own clock: a
+   raised-cosine swell of heading offset (up to ±o.flit radians) and speed, then it settles back into its slot.
+   Moves m.h and m.v; the caller moves the position (so it can add wind or current). Returns the turn rate in rad/s. */
+const DART_LEN = 1.2; /* seconds, one dart from swing-out to settle */
+function steer(m, dvx, dvy, dt, o) {
+  if (m.w === undefined) { m.w = 0; m.dartT = Math.random() * 2; m.kick = 0; m.age = DART_LEN; }
+  let aim = Math.atan2(dvy, dvx), boost = 1;
+  if (o.flit) {
+    m.dartT -= dt; m.age += dt;
+    if (m.dartT <= 0) { m.dartT = lerp(1.6, 3.4, Math.random()); m.kick = (Math.random() - 0.5) * 2 * o.flit; m.age = 0; }
+    const env = m.age < DART_LEN ? 0.5 - 0.5 * Math.cos(m.age / DART_LEN * 6.2832) : 0;
+    aim += m.kick * env; boost = 0.9 + 0.5 * env;
+  }
+  const wWant = Math.max(-o.turn, Math.min(o.turn, wrapPi(aim - m.h) * 2.5));
+  m.w += (wWant - m.w) * Math.min(1, dt * 4);
+  m.h += m.w * dt;
+  const want = Math.min(o.base * o.hi, Math.max(o.base * o.lo, Math.hypot(dvx, dvy))) * boost;
+  m.v += (want - m.v) * Math.min(1, dt * 3);
+  return m.w;
+}
 /* A flock is one unit: a shared heading and speed, with each bird holding a loose slot. Flocks either travel
    (gentle meander) or wheel in a slow circle that drifts, the way seabirds work an area. Birds steer toward
-   their slot with a capped turn rate, so they bank in smooth arcs instead of jittering. */
+   their slot through steer(), so they bank in smooth arcs instead of jittering. */
 function spawnFlock(inst) {
   const cfg = BIRDS[inst.scene.id]; if (!cfg) return;
   const aspect = W / H;
@@ -1299,7 +1323,7 @@ function spawnFlock(inst) {
     const fl = FLAP[type];
     const b = {
       x: sx - f[0] * back + r[0] * side, y: sy - f[1] * back + r[1] * side, back, side,
-      h: h + (Math.random() - 0.5) * 0.12, hs: hs * (0.92 + Math.random() * 0.16), sp: sp * (0.95 + Math.random() * 0.1),
+      h: h + (Math.random() - 0.5) * 0.12, hs: hs * (0.92 + Math.random() * 0.16), sp: sp * (0.95 + Math.random() * 0.1), v: sp,
       alt: alt * (0.85 + Math.random() * 0.3), type, t: 0, ph: Math.random() * 6.28, th: fl.dihedral,
       flapping: Math.random() < 0.6, modeT: rr(fl.flap) * Math.random(), wob: Math.random() * 6.28,
       ringA: 0, ringR: 1, spread: (Math.random() - 0.5) * 0.3, par: cfg.par, a: 0,
@@ -1358,12 +1382,11 @@ function stepBirds(inst, dt, gv) {
         tx = fl.x - f0 * back - f1 * side; ty = fl.y - f1 * back + f0 * side;
         tvx = f0 * fl.sp; tvy = f1 * fl.sp;
       }
-      /* air velocity = the slot's velocity plus a pull toward it; the bird turns toward it at a capped rate */
+      /* air velocity = the slot's velocity plus a pull toward it; the bird steers toward it (steer: eased, capped turn rate) */
       const avx = tvx + (tx - b.x) * 1.2, avy = tvy + (ty - b.y) * 1.2;
-      const spd = Math.min(b.sp * 1.5, Math.max(b.sp * 0.6, Math.hypot(avx, avy)));
-      b.h += Math.max(-2.2 * dt, Math.min(2.2 * dt, wrapPi(Math.atan2(avy, avx) - b.h)));
-      b.x += (Math.cos(b.h) * spd + gx) * dt;
-      b.y += (Math.sin(b.h) * spd + gy) * dt;
+      steer(b, avx, avy, dt, { turn: 2.2, base: b.sp, lo: 0.6, hi: 1.5 });
+      b.x += (Math.cos(b.h) * b.v + gx) * dt;
+      b.y += (Math.sin(b.h) * b.v + gy) * dt;
       /* wing beats: circling birds glide more */
       b.modeT -= dt;
       if (b.flapping) {
@@ -1544,19 +1567,20 @@ const FISH = {
   shore: { kinds: [["mullet", 0.45], ["bait", 0.4], ["pompano", 0.15]], first: [2, 8], every: [15, 35], max: 2, K: [4.2, 1.25, 0.85], light: 1 },
 };
 const SPECIES = {
-  tuna:    { type: 0, n: [40, 90],   hs: [0.025, 0.031], sp: [0.06, 0.09],  w: 0.22, gap: 0.04,  beat: 2.2, turn: 2.5, depth: [0.3, 2.4] },
-  sardine: { type: 1, n: [150, 210], hs: [0.015, 0.018], sp: [0.035, 0.05], w: 0.19, gap: 0.024, beat: 4,   turn: 4,   depth: [0.3, 1.6], mill: true },
-  mullet:  { type: 2, n: [18, 40],   hs: [0.065, 0.08],  sp: [0.08, 0.12],  w: 0.21, gap: 0.14,  beat: 2.5, turn: 3 },
-  bait:    { type: 3, n: [50, 100],  hs: [0.028, 0.034], sp: [0.1, 0.15],   w: 0.18, gap: 0.06,  beat: 5,   turn: 5 },
-  pompano: { type: 4, n: [3, 8],     hs: [0.075, 0.09],  sp: [0.1, 0.14],   w: 0.3,  gap: 0.19,  beat: 2,   turn: 3 },
+  tuna:    { type: 0, n: [40, 90],   hs: [0.025, 0.031], sp: [0.06, 0.09],  w: 0.22, gap: 0.04,  turn: 2.5, depth: [0.3, 2.4] },
+  sardine: { type: 1, n: [150, 210], hs: [0.015, 0.018], sp: [0.035, 0.05], w: 0.19, gap: 0.024, turn: 4,   depth: [0.3, 1.6], mill: true },
+  mullet:  { type: 2, n: [18, 40],   hs: [0.046, 0.056], sp: [0.1, 0.15],   w: 0.19, gap: 0.1,   turn: 3, flit: 0.5 },
+  bait:    { type: 3, n: [50, 100],  hs: [0.02, 0.024],  sp: [0.125, 0.19], w: 0.16, gap: 0.042, turn: 5, flit: 0.7 },
+  pompano: { type: 4, n: [3, 8],     hs: [0.053, 0.063], sp: [0.125, 0.175], w: 0.27, gap: 0.13,  turn: 3, flit: 0.45 },
 };
 const MAX_FISH = 400;
+const STRIDE = 0.7; /* body lengths a fish moves per tail beat */
 /* Shoreline: shore coordinate s = y + bend(x), open water starts at s = -0.3; fish keep to a band seaward of the swash */
 const SHORE_BAND = [-2.6, -0.7];
 const shoreBend = (inst, x) => { const pnx = x + inst.off[0]; return 1.3 * fbmJS(pnx * 0.07, 3.1, 3) + 0.3 * fbmJS(pnx * 0.3, 8, 2); };
 
 /* A school is one unit, like a flock: a shared heading and speed, each fish holding a loose slot and steering
-   toward it with a capped turn rate. A bait ball mills instead: the fish circle its centre at slightly different rates. */
+   toward it through steer(). A bait ball mills instead: the fish circle its centre at slightly different rates. */
 function spawnSchool(inst, c) {
   const cfg = FISH[inst.scene.id], sp = SPECIES[pickKind(cfg.kinds)], shore = inst.scene.id === "shore";
   const speed = rr(sp.sp), n = Math.round(rr(sp.n)), hs = rr(sp.hs), R = sp.gap * Math.sqrt(n) * 0.9;
@@ -1637,15 +1661,13 @@ function stepFish(inst, dt, c0, c1) {
         if (d2 < g2 && d2 > 1e-10) { const k = (1 - d2 / g2) * sc.speed * 0.8 / Math.sqrt(d2); dvx += dx * k; dvy += dy * k; }
       }
       if (shore) { const s = f.y + sc.bend; if (s > SHORE_BAND[1]) dvy -= (s - SHORE_BAND[1]) * 4; if (s < SHORE_BAND[0]) dvy += (SHORE_BAND[0] - s) * 4; }
-      const turn = Math.max(-sp.turn * dt, Math.min(sp.turn * dt, wrapPi(Math.atan2(dvy, dvx) - f.h)));
-      f.h += turn;
-      const want = Math.min(sc.speed * 1.8, Math.max(sc.speed * 0.5, Math.hypot(dvx, dvy)));
-      f.v += (want - f.v) * Math.min(1, dt * 3);
+      /* in the shallows (sp.flit) each fish also darts off its line now and then, feeding */
+      const tr = steer(f, dvx, dvy, dt, { turn: sp.turn, base: sc.speed, lo: 0.5, hi: 1.8, flit: sp.flit });
       f.x += Math.cos(f.h) * f.v * dt; f.y += Math.sin(f.h) * f.v * dt;
-      /* tail beat speeds up with speed; a turn bends the whole body; a hard turn flashes the silver flank */
-      const tr = turn / dt;
-      f.ph += dt * sp.beat * 6.2832 * (0.5 + 0.7 * f.v / sc.speed);
-      f.bend = 0.35 * Math.sin(f.ph) + Math.max(-0.6, Math.min(0.6, tr * 0.35));
+      /* one tail beat per STRIDE body lengths travelled, as in real fish, so the body never works harder than the fish
+         moves (a slow floor keeps an idling fish alive); a turn bends the whole body; a hard turn flashes the silver flank */
+      f.ph += dt * 6.2832 * Math.max(0.8, f.v / (STRIDE * 2 * f.hs));
+      f.bend = 0.25 * Math.sin(f.ph) + Math.max(-0.6, Math.min(0.6, tr * 0.35));
       f.flash = Math.max(f.flash * Math.exp(-dt * 3), Math.min(1, Math.max(0, Math.abs(tr) - 0.8 * sp.turn) * 0.8));
       if (Math.random() < dt * 0.004) f.flash = Math.max(f.flash, 0.6);
     }
