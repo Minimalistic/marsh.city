@@ -136,10 +136,14 @@ async function groundPanorama() {
   const flank = await toH(b.data, b.info);
   const left = await toH(c.data, c.info);
   const overlap = Math.round(a.info.width * 0.12);
-  // its cut edge faces the middle: feather the right edge too
-  const leftFlank = { data: await feather(left.data, { left: overlap, right: overlap }), w: left.w };
+  // Outer ends stay unfeathered: each flank's outer edge is its source
+  // image's own edge (painted right up to it), so the strip runs cleanly
+  // behind the side panels instead of fading out just short of them. Only the
+  // inner cut edges, where pieces overlap, get feathered. The right flank is
+  // flipped so its image edge faces out and its cut edge faces the middle.
+  const leftFlank = { data: await feather(left.data, { right: overlap }), w: left.w };
   const middle = { data: await feather(a.data, { left: overlap }), w: a.info.width };
-  const rightFlank = { data: await feather(flank.data, { left: overlap, right: overlap }), w: flank.w };
+  const rightFlank = { data: await feather(await sharp(flank.data).flop().png().toBuffer(), { left: overlap }), w: flank.w };
   const pieces = [leftFlank, middle, rightFlank];
   const total = pieces.reduce((sum, p) => sum + p.w, 0) - overlap * (pieces.length - 1);
   const comps = [];
