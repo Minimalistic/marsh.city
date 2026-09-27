@@ -432,6 +432,8 @@ const paletteItems = [
           } else {
             window.__themeMix = next === 'dark' ? 1 : 0;
           }
+          // the starfield and firefly loops park in light mode; this wakes them
+          window.dispatchEvent(new Event('marsh:theme'));
         }
 
         // system preference changes only affect auto mode
@@ -455,9 +457,9 @@ const paletteItems = [
     </script>
 
     <script is:inline>
-      // starfield — rendered only in dark mode. Visibility reads the current
-      // theme via window.__isDark(); in light mode the canvas is hidden and
-      // the draw loop early-returns.
+      // starfield — rendered only in dark mode. The draw loop parks once the
+      // theme is light and the crossfade has finished, and restarts on
+      // 'marsh:theme', so light mode costs no frames at all.
       (() => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -539,6 +541,13 @@ const paletteItems = [
         }
 
         let lastTs = performance.now();
+        let running = false;
+        function start() {
+          if (running) return;
+          running = true;
+          lastTs = performance.now();
+          requestAnimationFrame(frame);
+        }
         function frame(now) {
           const dt = now - lastTs;
           lastTs = now;
@@ -548,6 +557,8 @@ const paletteItems = [
           canvas.style.opacity = mix.toFixed(3);
           if (mix < 0.01) {
             ctx.clearRect(0, 0, W, H);
+            // park only when heading to light: a fade into dark starts at 0 too
+            if (!window.__isDark()) { canvas.style.opacity = '0'; running = false; return; }
             requestAnimationFrame(frame);
             return;
           }
@@ -620,14 +631,16 @@ const paletteItems = [
         });
         resize();
         scheduleShooter();
-        requestAnimationFrame(frame);
-        // opacity is driven per-frame by the night factor now
+        canvas.style.opacity = '0';
+        if (window.__isDark()) start();
+        window.addEventListener('marsh:theme', () => { if (window.__isDark()) start(); });
       })();
     </script>
 
     <script is:inline>
-      // fireflies — always spawned, but visible only in dark mode
-      // (each fly's opacity is gated on window.__isDark()).
+      // fireflies — always spawned, but visible only in dark mode. In light
+      // mode the render loop and every fly's fade loop park (no frames, no
+      // layout reads) until 'marsh:theme' switches back to dark.
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -723,8 +736,19 @@ const paletteItems = [
           animateFirefly(flies[i], true);
         }
 
+        // parked = light mode with the crossfade finished; a fade into dark
+        // also starts at mix 0, so the theme itself decides
+        const parked = () => (window.__themeMix ?? 0) < 0.01 && !window.__isDark();
+        let rendering = false;
+        function startRender() {
+          if (rendering) return;
+          rendering = true;
+          requestAnimationFrame(renderLoop);
+        }
+
         // render loop — state machine: idle → fleeing → wandering → returning → idle
         function renderLoop() {
+          if (parked()) { rendering = false; return; }
           const now = performance.now();
           if (!cssDriven) movePlanesFallback();
           readPlaneOffsets();
@@ -812,7 +836,17 @@ const paletteItems = [
           }
           requestAnimationFrame(renderLoop);
         }
-        requestAnimationFrame(renderLoop);
+        if (!parked()) startRender();
+        window.addEventListener('marsh:theme', () => {
+          if (!window.__isDark()) return;
+          if (!cssDriven) movePlanesFallback();
+          readPlaneOffsets();
+          startRender();
+          // flies parked mid-cycle restart fresh, staggered like a first load
+          for (const fly of flies) {
+            if (fly.parked) { fly.parked = false; animateFirefly(fly, true); }
+          }
+        });
 
         function animateFirefly(fly, first) {
           const { el } = fly;
@@ -858,6 +892,7 @@ const paletteItems = [
           setTimeout(() => {
             const start = performance.now();
             function tick(now) {
+              if (parked()) { el.style.opacity = 0; fly.parked = true; return; }
               const elapsed = now - start;
               const progress = Math.min(elapsed / totalDrift, 1);
 
