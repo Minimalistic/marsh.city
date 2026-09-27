@@ -9,6 +9,7 @@
 //
 // Flags:
 //   --series        target series slug (folder under public/art/)
+//   --out-dir       write here instead of public/art/<series> (drafts, site art)
 //   --out           output filename (saved to public/art/<series>/<out>)
 //   --prompt        prompt string (or omit and pipe via stdin, or use --prompt-file)
 //   --prompt-file   read prompt from a file
@@ -18,6 +19,7 @@
 //                   design and the lab's look across generations)
 //   --size          1024x1024 (default), 1536x1024, 1024x1536, or auto
 //   --quality       low | medium | high (default: medium)
+//   --background    transparent | opaque | auto (default: model decides)
 //
 // Reads OPENAI_API_KEY from env or .env in the project root.
 
@@ -56,9 +58,11 @@ const preset = flag('--preset')
 const reference = flag('--reference')
 const size = flag('--size') || '1024x1024'
 const quality = flag('--quality') || 'medium'
+const background = flag('--background')
+const outDirFlag = flag('--out-dir')
 
-if (!series || !out) {
-  process.stderr.write('Error: --series and --out are required\n')
+if ((!series && !outDirFlag) || !out) {
+  process.stderr.write('Error: --out and one of --series / --out-dir are required\n')
   process.exit(1)
 }
 
@@ -93,14 +97,16 @@ if (preset) {
   prompt = [...blocks, 'SPECIFIC SCENE:', prompt].join('\n\n')
 }
 
-const outDir = resolve(root, 'public', 'art', series)
+const outDir = outDirFlag ? resolve(outDirFlag) : resolve(root, 'public', 'art', series)
 if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true })
 const outPath = join(outDir, out)
 
 const client = new OpenAI({ apiKey: loadKey() })
 
 const mode = reference ? 'editing from reference' : 'generating'
-process.stderr.write(`${mode} ${size} ${quality} → ${outPath.replace(root + '/', '')}\n`)
+process.stderr.write(`${mode} ${size} ${quality}${background ? ` bg=${background}` : ''} → ${outPath.replace(root + '/', '')}\n`)
+// only sent when asked for, so existing Chronoscope runs are unchanged
+const backgroundOpt = background ? { background } : {}
 
 let result
 if (reference) {
@@ -116,6 +122,7 @@ if (reference) {
     prompt,
     size,
     quality,
+    ...backgroundOpt,
     n: 1,
   })
 } else {
@@ -124,6 +131,7 @@ if (reference) {
     prompt,
     size,
     quality,
+    ...backgroundOpt,
     n: 1,
   })
 }
