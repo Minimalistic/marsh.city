@@ -439,6 +439,7 @@
   <button class="opt" id="btnSound2" type="button" aria-pressed="false"><span class="opt-t">Sound</span><span class="opt-k">M · surf, wind, ocean, drone</span><i class="sw"></i></button>
   <label class="opt vol-row" for="vol"><span class="opt-t">Volume</span><span class="speed2-wrap"><input type="range" id="vol" min="0" max="1" step="0.01" value="0.7" aria-label="Volume"><output id="volOut">70</output></span></label>
   <button class="opt" id="btnBirds" type="button" aria-pressed="true"><span class="opt-t">Birds</span><span class="opt-k">sandpipers on the beach, gannets at sea</span><i class="sw"></i></button>
+  <button class="opt" id="btnFish" type="button" aria-pressed="true"><span class="opt-t">Fish</span><span class="opt-k">schools under the surface at sea and in the shallows</span><i class="sw"></i></button>
   <button class="opt" id="btnTilt" type="button" aria-pressed="true"><span class="opt-t">Tilt-shift</span><span class="opt-k">B</span><i class="sw"></i></button>
   <label class="opt vol-row" id="tiltRow" for="tiltLevel"><span class="opt-t">Tilt-shift strength</span><span class="speed2-wrap"><input type="range" id="tiltLevel" min="0" max="2" step="0.05" value="1" aria-label="Tilt-shift strength"><output id="tiltOut">100%</output></span></label>
 </div>
@@ -524,6 +525,7 @@ void main(){
 /* Cloudline and Open Water share one ocean: stacked exponential-sine waves with drag, plus clouds or their shadows */
 const CLOUDS = COMMON + `
 uniform vec3 uSun,uSunCol,uSky,uDeep,uScatter;uniform float uCover,uMode,uWaveScale,uWindAng,uMorph;uniform vec2 uWind,uWindOff;
+uniform sampler2D uFish;
 float cloudV(vec2 p,float t,int o){
   t*=uMorph;
   vec2 q=vec2(fbm(p*.16+vec2(t*.012,0.),2),fbm(p*.16+vec2(4.3,1.9)-vec2(0.,t*.01),2));
@@ -587,6 +589,9 @@ void main(){
   float dif=max(dot(n,L),0.);
   float relief=clamp(1.+2.6*dot(n.xy,normalize(L.xy)),.25,2.2);
   vec3 base=uDeep*(.7+.6*h0)+uScatter*pow(h0,3.)*.5*(.3+.7*dif);
+  /* fish swim under the surface: they replace the water body, seen through the refracting waves */
+  vec4 fsh=texture(uFish,gl_FragCoord.xy/uRes+n.xy*.006);
+  base=base*(1.-fsh.a)+fsh.rgb;
   /* Cloudline's cumulus cast deep shadows; Open Water's high cloud stays soft (its original factors) */
   vec2 shK=uMode<.5?vec2(.75,.6):vec2(.5,.45);
   vec3 ocean=base*(1.-shK.x+shK.x*sh)*relief;
@@ -625,6 +630,7 @@ void main(){
 /* Shoreline: breaking waves, swash run-up and backwash, lace foam, wet sand, caustics */
 const SHORE = COMMON + `
 uniform vec3 uSun,uSunCol,uSky,uSand,uShallow,uDeepW;uniform float uPeriod;
+uniform sampler2D uFish;
 float worley(vec2 p,float t){vec2 i=floor(p),f=fract(p);float d1=9.,d2=9.;
  for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y));vec2 h=hash22(i+g);
   vec2 o=.5+.42*sin(t*(.7+h.yx*.9)+TAU*h);vec2 r=g+o-f;float d=dot(r,r);
@@ -698,9 +704,17 @@ void main(){
   float cz=c1+c2+.35*gn(cp*.5+vec2(-t*.1,t*.07));
   float caus=pow(max(0.,1.-abs(cz)*.9),4.);
   vec3 bottom=sand*(1.+caus*.3*exp(-depth*3.2)*smoothstep(0.,.08,depth));
+  /* fish shadows on the sand: fish swim 40% of the way down the water column, and sunlight runs steeper once it's in the water */
+  vec2 fuv=gl_FragCoord.xy/uRes;
+  vec2 so=rot(-uRot)*(L.xy/L.z*.6*depth*.6)/uZoom*vec2(uRes.y/uRes.x,1.);
+  vec2 px=1.5/uRes;
+  float fs=(texture(uFish,fuv+so+px).a+texture(uFish,fuv+so-px).a+texture(uFish,fuv+so+vec2(px.x,-px.y)).a+texture(uFish,fuv+so-vec2(px.x,-px.y)).a)*.25;
+  bottom*=1.-.62*fs;
   vec3 tr=exp(-depth*vec3(4.2,1.25,.85));
   vec3 insc=mix(uShallow,uDeepW,1.-exp(-depth*.8));
   vec3 water=bottom*tr+insc*(1.-tr);
+  vec4 fsh=texture(uFish,fuv+chop*.035); /* ripples bend the view; the big wave face would smear them away */
+  water=water*(1.-fsh.a)+fsh.rgb*(1.+.5*caus);
   water*=1.+dhds*.9;
   vec3 V=normalize(vec3(uv*.8,-1.));
   vec3 Rf=reflect(V,n);
@@ -872,6 +886,68 @@ void main(){
   o=vec4(col,m*vB.w);
 }`;
 
+/* Fish: instanced quads in world space, drawn deepest-first into their own layer. Each fish writes its radiance
+   as seen through the water above it, premultiplied, so the water shader can put it under the surface:
+   water*(1-a)+rgb, then sky reflection, glare and foam on top. */
+const FISH_VS = `#version 300 es
+precision highp float;
+layout(location=0) in vec4 iA; /* x, y, heading, half-length (world) */
+layout(location=1) in vec4 iB; /* spine bend, depth, species, alpha */
+layout(location=2) in vec4 iC; /* flash, seed, half-width */
+uniform vec2 uRes,uCam,uSunW;uniform float uRot,uZoom;
+out vec2 vL;flat out vec4 vB;flat out vec4 vC;flat out float vPx;flat out float vCov;flat out vec2 vSun;
+const vec2 Q[6]=vec2[6](vec2(-1,-1),vec2(1,-1),vec2(1,1),vec2(-1,-1),vec2(1,1),vec2(-1,1));
+void main(){
+  float px=iA.w/uZoom*uRes.y;
+  /* a fish never draws smaller than ~1.4 px long; below that it grows and fades, keeping its share of light */
+  float grow=max(1.,1.4/px);
+  vec2 f=vec2(cos(iA.z),sin(iA.z)),r=vec2(-f.y,f.x);
+  vec2 L=Q[gl_VertexID]*vec2(1.3,.62);
+  vec2 w=iA.xy+(f*L.x+r*L.y)*iA.w*grow;
+  vec2 d=(w-uCam)/uZoom;float c=cos(uRot),s=sin(uRot);
+  vec2 sc=vec2(c*d.x-s*d.y,s*d.x+c*d.y);
+  gl_Position=vec4(sc.x*2.*uRes.y/uRes.x,sc.y*2.,0.,1.);
+  vL=L;vB=iB;vC=iC;vPx=1./(px*grow);vCov=1./(grow*grow);
+  vSun=vec2(dot(uSunW,f),dot(uSunW,r));
+}`;
+
+const FISH_FS = `#version 300 es
+precision highp float;
+in vec2 vL;flat in vec4 vB;flat in vec4 vC;flat in float vPx;flat in float vCov;flat in vec2 vSun;
+uniform vec3 uK,uVeil;uniform float uLight,uSunZ;
+out vec4 o;
+/* per species: dark back seen from above, lighter flank at the edges */
+const vec3 BACK[5]=vec3[5](vec3(.025,.04,.07),vec3(.05,.1,.12),vec3(.06,.07,.065),vec3(.17,.2,.18),vec3(.16,.18,.19));
+const vec3 FLANK[5]=vec3[5](vec3(.3,.36,.44),vec3(.55,.62,.66),vec3(.36,.38,.36),vec3(.62,.68,.64),vec3(.44,.46,.43));
+void main(){
+  float u=vL.x,v=vL.y,ty=vB.z;int k=int(ty+.5);
+  float tt=max(1.-u,0.);
+  v-=vB.x*tt*tt*.1; /* the spine curves most toward the tail */
+  float av=abs(v),W=vC.z,aa=vPx*1.2;
+  float bu=u>.2?(u-.2)/.8:(u-.2)/1.;
+  float hw=W*sqrt(max(1.-bu*bu,0.));
+  float dBody=max(av-hw,u-1.);
+  float tw=(-.7-u)*.8;
+  float dFin=max(max(av-tw,-1.18-u),u+.7);
+  dFin=max(dFin,(-.98-u)*1.3-av); /* forked tail */
+  float d=min(dBody,dFin*1.2);
+  float m=1.-smoothstep(-aa,aa,d);
+  if(m<.002)discard;
+  float x=clamp(av/max(hw,1e-3),0.,1.);
+  vec3 col=mix(BACK[k],FLANK[k],smoothstep(.35,1.,x));
+  if(dBody>0.)col=BACK[k]*.85;
+  vec3 n=normalize(vec3(-.35*(u-.2),v/max(hw,.03)*.9,1.));
+  float sh=.4+.75*max(dot(n,normalize(vec3(vSun,uSunZ))),0.);
+  /* a fish rolling into a turn shows the sun its silver side: a soft sheen across that half of the body, not a rim */
+  float half_=smoothstep(-.2,.7,sign(vB.x+1e-4)*v/max(hw,.03));
+  col=mix(col*uLight*sh,vec3(.8,.82,.84)*uLight,.55*vC.x*half_*step(dBody,0.));
+  /* the fish hides whatever is behind it (sand, or deeper water); the water between it and the surface
+     dims it, red first, and lays its own colour over it */
+  vec3 T=exp(-uK*vB.y);
+  float cov=m*vB.w*vCov*(k==3?.75:1.);
+  o=vec4(cov*(T*col+(1.-T)*uVeil),cov);
+}`;
+
 const POST_COMMON = `#version 300 es
 precision highp float;
 uniform sampler2D uA,uB;uniform float uMix,uAspect;uniform vec2 uOut;
@@ -1003,17 +1079,17 @@ const SCENES = [
     },
   },
   {
-    id: "clouds", title: "Cloudline", frag: CLOUDS, timeScale: 2.8, /* at the default 0.5× slider it plays like 1.4× */
+    id: "clouds", title: "Cloudline", frag: CLOUDS, water: true, timeScale: 2.8, /* at the default 0.5× slider it plays like 1.4× */
     zoom: 6.5, drift: 0.08, rotRate: 0.002, exposure: 1.12, bloom: 0.5, thr: 1.2, glow: 1.0,
     make: rnd => oceanSky(rnd, 0),
   },
   {
-    id: "sea", title: "Open Water", frag: CLOUDS,
+    id: "sea", title: "Open Water", frag: CLOUDS, water: true,
     zoom: 6.5, drift: 0.08, rotRate: 0.002, exposure: 1.12, bloom: 0.5, thr: 1.2, glow: 1.0,
     make: rnd => oceanSky(rnd, 1),
   },
   {
-    id: "shore", title: "Shoreline", frag: SHORE,
+    id: "shore", title: "Shoreline", frag: SHORE, water: true,
     zoom: 5.25, drift: 0.06, rotRate: 0.0, exposure: 1.05, bloom: 0.45, thr: 1.3, glow: 0.9, alongX: true,
     make(rnd) {
       const period = lerp(8.5, 11.5, rnd());
@@ -1043,7 +1119,7 @@ if (!gl) {
   return;
 }
 const halfFloat = !!gl.getExtension("EXT_color_buffer_float");
-gl.bindVertexArray(gl.createVertexArray());
+const vao0 = gl.createVertexArray(); gl.bindVertexArray(vao0);
 
 function compile(src, type) {
   const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
@@ -1071,7 +1147,7 @@ function tex(p, name, unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTe
 const progs = {};
 try {
   SCENES.forEach(s => { progs[s.id] = program(s.frag); });
-  progs.bird = program(BIRD_FS, BIRD_VS); progs.pre = program(PREFILTER); progs.down = program(DOWN); progs.blur = program(BLUR); progs.post = program(POST);
+  progs.bird = program(BIRD_FS, BIRD_VS); progs.fish = program(FISH_FS, FISH_VS); progs.pre = program(PREFILTER); progs.down = program(DOWN); progs.blur = program(BLUR); progs.post = program(POST);
 } catch (e) {
   document.body.insertAdjacentHTML("beforeend", '<div class="fail">The renderer could not start on this device.</div>');
   return;
@@ -1104,6 +1180,7 @@ function allocate() {
     e1: target(Math.max(1, sw >> 3), Math.max(1, sh >> 3)), e2: target(Math.max(1, sw >> 3), Math.max(1, sh >> 3)),
     m1: target(Math.max(1, sw >> 3), Math.max(1, sh >> 3)), m2: target(Math.max(1, sw >> 3), Math.max(1, sh >> 3)),
     n1: target(Math.max(1, sw >> 4), Math.max(1, sh >> 4)), n2: target(Math.max(1, sw >> 4), Math.max(1, sh >> 4)),
+    F: target(sw, sh), /* fish layer, sampled by the water shaders */
   };
   resLabel();
 }
@@ -1121,7 +1198,8 @@ function draw(fb, w, h) { gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0,
 /* ─────────────────────────── State ─────────────────────────── */
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const state = { speed: reduced ? 0.3 : 0.5, paused: false, tour: false, tourEvery: 90, tilt: false, glow: true, birds: true };
+const state = { speed: reduced ? 0.3 : 0.5, paused: false, tour: false, tourEvery: 90, tilt: false, glow: true, birds: true, fish: true };
+try { const fv = localStorage.getItem("driftglass-fish"); if (fv !== null) state.fish = fv === "1"; } catch (e) {}
 try { const bd = localStorage.getItem("driftglass-birds"); if (bd !== null) state.birds = bd === "1"; } catch (e) {}
 try { const g = localStorage.getItem("driftglass-glow"); if (g !== null) state.glow = g === "1"; } catch (e) {}
 state.tilt = true; state.tiltLevel = 1;
@@ -1177,9 +1255,11 @@ function camera(inst) {
   };
 }
 function renderScene(inst, rt) {
+  const c = camera(inst);
+  if (inst.scene.water) drawFish(inst, c);
   const p = progs[inst.scene.id];
   gl.useProgram(p);
-  const c = camera(inst);
+  if (inst.scene.water) tex(p, "uFish", 0, T.F.t);
   setU(p, "uRes", [rt.w, rt.h]); setU(p, "uTime", inst.t); setU(p, "uCam", c.cam);
   setU(p, "uRot", c.rot); setU(p, "uZoom", c.zoom); setU(p, "uOff", inst.off);
   for (const k in inst.uniforms) setU(p, k, inst.uniforms[k]);
@@ -1335,7 +1415,7 @@ function swashAt(inst, px) {
   const k = (ph - up) / (1 - up), sm = k * k * (3 - 2 * k);
   const e = ph < up ? 1 - Math.pow(1 - ph / up, 2.4) : 1 - sm;
   const lobe = 0.15 * gnJS(pnx * 1.1, cyc * 3.1) + 0.05 * gnJS(pnx * 3.7, cyc * 5.3);
-  return { bend, edge: -0.3 + e * (amp * 1.25 + lobe), adv: ph < up, ph };
+  return { bend, edge: -0.3 + e * (amp * 1.25 + lobe), adv: ph < up, ph, warp };
 }
 function spawnShoreFlock(inst, x0) {
   const n = 6 + Math.floor(Math.random() * 9), hs = lerp(0.0041, 0.0053, Math.random()) * 0.8;
@@ -1430,6 +1510,172 @@ function drawBirds(inst, rt) {
   setU(p, "uShadow", 0); gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, n);
   gl.disable(gl.BLEND);
 }
+/* ─────────────────────────── Fish ─────────────────────────── */
+
+/* Per scene: which species school here, how often a school turns up, and the water they swim in
+   (K: light lost per unit of depth, red first; light: how bright a lit fish is next to this scene's water).
+   Sizes and speeds are world units. Fish are drawn larger than life (~2.5× in the shallows, ~5× at sea): at true
+   scale they're a few pixels long and disappear. */
+const FISH = {
+  sea:   { kinds: [["tuna", 0.6], ["sardine", 0.4]], first: [3, 10], every: [20, 45], max: 2, K: [1.1, 0.3, 0.16], light: 0.35 },
+  shore: { kinds: [["mullet", 0.45], ["bait", 0.4], ["pompano", 0.15]], first: [2, 8], every: [15, 35], max: 2, K: [4.2, 1.25, 0.85], light: 1 },
+};
+const SPECIES = {
+  tuna:    { type: 0, n: [40, 90],   hs: [0.025, 0.031], sp: [0.06, 0.09],  w: 0.22, gap: 0.04,  beat: 2.2, turn: 2.5, depth: [0.3, 2.4] },
+  sardine: { type: 1, n: [150, 210], hs: [0.015, 0.018], sp: [0.035, 0.05], w: 0.19, gap: 0.024, beat: 4,   turn: 4,   depth: [0.3, 1.6], mill: true },
+  mullet:  { type: 2, n: [18, 40],   hs: [0.065, 0.08],  sp: [0.08, 0.12],  w: 0.21, gap: 0.14,  beat: 2.5, turn: 3 },
+  bait:    { type: 3, n: [50, 100],  hs: [0.028, 0.034], sp: [0.1, 0.15],   w: 0.18, gap: 0.06,  beat: 5,   turn: 5 },
+  pompano: { type: 4, n: [3, 8],     hs: [0.075, 0.09],  sp: [0.1, 0.14],   w: 0.3,  gap: 0.19,  beat: 2,   turn: 3 },
+};
+const MAX_FISH = 400;
+/* Shoreline: shore coordinate s = y + bend(x), open water starts at s = -0.3; fish keep to a band seaward of the swash */
+const SHORE_BAND = [-2.6, -0.7];
+const shoreBend = (inst, x) => { const pnx = x + inst.off[0]; return 1.3 * fbmJS(pnx * 0.07, 3.1, 3) + 0.3 * fbmJS(pnx * 0.3, 8, 2); };
+
+/* A school is one unit, like a flock: a shared heading and speed, each fish holding a loose slot and steering
+   toward it with a capped turn rate. A bait ball mills instead: the fish circle its centre at slightly different rates. */
+function spawnSchool(inst, c) {
+  const cfg = FISH[inst.scene.id], sp = SPECIES[pickKind(cfg.kinds)], shore = inst.scene.id === "shore";
+  const speed = rr(sp.sp), n = Math.round(rr(sp.n)), hs = rr(sp.hs), R = sp.gap * Math.sqrt(n) * 0.9;
+  /* schools mostly swim against or across the view's travel: one keeping pace with the camera would never arrive */
+  const cv = inst.camV || [0, 0], back0 = Math.atan2(-cv[1], -cv[0]);
+  const h = shore ? (Math.random() < 0.75 ? (cv[0] > 0 ? Math.PI : 0) : (cv[0] > 0 ? 0 : Math.PI)) + (Math.random() - 0.5) * 0.5
+    : back0 + (Math.random() - 0.5) * 3.2;
+  const move = sp.mill ? 0.15 : 1, vx = Math.cos(h) * speed * move, vy = Math.sin(h) * speed * move;
+  /* enter from the side the school is approaching from, relative to the moving view, so it crosses the screen */
+  let rx = vx - cv[0], ry = vy - cv[1]; const rl = Math.hypot(rx, ry) || 1; rx /= rl; ry /= rl;
+  const reach = c.zoom * Math.hypot(W / H / 2, 0.5), lat = (Math.random() - 0.5) * reach * 0.9, back = reach + R * 1.6 + 0.05;
+  const sc = { sp, h, speed: speed * move, n, R, t: 0, a: 0, turnPh: Math.random() * 6.28, dPh: Math.random() * 6.28, fish: [],
+    x: c.cam[0] - rx * back - ry * lat, y: c.cam[1] - ry * back + rx * lat,
+    depth: sp.depth ? rr(sp.depth) : 0, life: lerp(50, 110, Math.random()), th: 0,
+    om: (Math.random() < 0.5 ? -1 : 1) * speed / (R * 0.6) };
+  if (shore) { sc.sT = lerp(SHORE_BAND[0] + 0.5, SHORE_BAND[1] - 0.35, Math.random()); sc.y = sc.sT - shoreBend(inst, sc.x); }
+  const cs = Math.cos(h), sn = Math.sin(h);
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * 6.2832, r = Math.sqrt(Math.random());
+    const f = { ox: Math.cos(a) * r * R * 1.5, oy: Math.sin(a) * r * R * 0.7, a0: a, ring: R * (0.35 + 0.65 * Math.sqrt(Math.random())), omK: lerp(0.85, 1.15, Math.random()),
+      hs: hs * lerp(0.85, 1.15, Math.random()), v: speed, h, ph: Math.random() * 6.28, bend: 0, flash: 0, wob: Math.random() * 6.28,
+      dOff: (Math.random() - 0.5) * 0.6, seed: Math.random() };
+    if (sp.mill) { f.x = sc.x + Math.cos(a) * f.ring; f.y = sc.y + Math.sin(a) * f.ring; f.h = a + Math.sign(sc.om) * Math.PI / 2; }
+    else { f.x = sc.x + cs * f.ox - sn * f.oy; f.y = sc.y + sn * f.ox + cs * f.oy; }
+    sc.fish.push(f);
+  }
+  inst.schools.push(sc);
+}
+function stepFish(inst, dt, c0, c1) {
+  const cfg = FISH[inst.scene.id];
+  if (!cfg || !state.fish) return;
+  if (dt > 0) inst.camV = [(c1.cam[0] - c0.cam[0]) / dt, (c1.cam[1] - c0.cam[1]) / dt];
+  if (!inst.schools) { inst.schools = []; inst.fishNext = rr(cfg.first); }
+  if (dt <= 0) return;
+  const shore = inst.scene.id === "shore";
+  inst.fishNext -= dt;
+  if (inst.fishNext <= 0) {
+    inst.fishNext = rr(cfg.every);
+    const total = inst.schools.reduce((k, sc) => k + sc.fish.length, 0);
+    if (inst.schools.length < cfg.max && total <= MAX_FISH - 200) spawnSchool(inst, c1);
+  }
+  for (const sc of inst.schools) {
+    const sp = sc.sp;
+    sc.t += dt;
+    /* at sea a school rises and sinks slowly, and eventually sinks out of sight; in the shallows it swims on through */
+    const leaving = !shore && sc.t > sc.life;
+    sc.a = leaving ? Math.max(0, sc.a - dt * 0.12) : Math.min(1, sc.a + dt * 0.5);
+    if (sp.depth) sc.dNow = Math.max(0.3, sc.depth + 0.7 * Math.sin(sc.t * 0.05 + sc.dPh) + (leaving ? (sc.t - sc.life) * 0.12 : 0));
+    sc.h += (sp.mill ? 0.05 : 0.12) * Math.sin(sc.t * 0.17 + sc.turnPh) * dt;
+    if (shore) sc.h += wrapPi((Math.cos(sc.h) > 0 ? 0 : Math.PI) - sc.h) * 0.3 * dt; /* keep swimming along the beach */
+    const cs = Math.cos(sc.h), sn = Math.sin(sc.h), svx = cs * sc.speed, svy = sn * sc.speed;
+    sc.x += svx * dt; sc.y += svy * dt;
+    let ycorr = 0;
+    if (shore) {
+      sc.bend = shoreBend(inst, sc.x);
+      ycorr = (sc.sT - (sc.y + sc.bend)) * 0.5; /* follow the curve of the beach */
+      sc.y += ycorr * dt;
+      const E = swashAt(inst, sc.x);
+      sc.warp = E.warp;
+    }
+    sc.th += sc.om * dt;
+    const fish = sc.fish, g2 = sp.gap * sp.gap * 0.45;
+    for (const f of fish) {
+      let tx, ty, tvx, tvy;
+      if (sp.mill) {
+        const a = sc.th * f.omK + f.a0, R = f.ring * (1 + 0.1 * Math.sin(sc.t * 0.4 + f.wob));
+        tx = sc.x + Math.cos(a) * R; ty = sc.y + Math.sin(a) * R;
+        tvx = -Math.sin(a) * R * sc.om * f.omK + svx; tvy = Math.cos(a) * R * sc.om * f.omK + svy;
+      } else {
+        const ox = f.ox + sp.gap * 0.7 * Math.sin(sc.t * 0.3 + f.wob), oy = f.oy + sp.gap * 0.7 * Math.sin(sc.t * 0.23 + f.wob * 1.7);
+        tx = sc.x + cs * ox - sn * oy; ty = sc.y + sn * ox + cs * oy;
+        tvx = svx; tvy = svy + ycorr;
+      }
+      let dvx = tvx + (tx - f.x) * 0.9, dvy = tvy + (ty - f.y) * 0.9;
+      for (const o of fish) {
+        if (o === f) continue;
+        const dx = f.x - o.x, dy = f.y - o.y, d2 = dx * dx + dy * dy;
+        if (d2 < g2 && d2 > 1e-10) { const k = (1 - d2 / g2) * sc.speed * 0.8 / Math.sqrt(d2); dvx += dx * k; dvy += dy * k; }
+      }
+      if (shore) { const s = f.y + sc.bend; if (s > SHORE_BAND[1]) dvy -= (s - SHORE_BAND[1]) * 4; if (s < SHORE_BAND[0]) dvy += (SHORE_BAND[0] - s) * 4; }
+      const turn = Math.max(-sp.turn * dt, Math.min(sp.turn * dt, wrapPi(Math.atan2(dvy, dvx) - f.h)));
+      f.h += turn;
+      const want = Math.min(sc.speed * 1.8, Math.max(sc.speed * 0.5, Math.hypot(dvx, dvy)));
+      f.v += (want - f.v) * Math.min(1, dt * 3);
+      f.x += Math.cos(f.h) * f.v * dt; f.y += Math.sin(f.h) * f.v * dt;
+      /* tail beat speeds up with speed; a turn bends the whole body; a hard turn flashes the silver flank */
+      const tr = turn / dt;
+      f.ph += dt * sp.beat * 6.2832 * (0.5 + 0.7 * f.v / sc.speed);
+      f.bend = 0.35 * Math.sin(f.ph) + Math.max(-0.6, Math.min(0.6, tr * 0.35));
+      f.flash = Math.max(f.flash * Math.exp(-dt * 3), Math.min(1, Math.max(0, Math.abs(tr) - 0.8 * sp.turn) * 0.8));
+      if (Math.random() < dt * 0.004) f.flash = Math.max(f.flash, 0.6);
+    }
+  }
+  const reach = c1.zoom * Math.hypot(W / H / 2, 0.5);
+  inst.schools = inst.schools.filter(sc => (sc.a > 0 || sc.t < 5) &&
+    (sc.t < 8 || Math.hypot(sc.x - c1.cam[0], sc.y - c1.cam[1]) < reach + sc.R * 2 + 0.3));
+}
+
+const fishBuf = new Float32Array(MAX_FISH * 12);
+let fishVao = null, fishVbo = null;
+/* Draws the fish layer for one instance into T.F (always cleared, so water scenes without fish sample nothing) */
+function drawFish(inst, c) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, T.F.fb); gl.viewport(0, 0, T.F.w, T.F.h);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  const cfg = FISH[inst.scene.id];
+  if (!cfg || !state.fish || !inst.schools || !inst.schools.length) return;
+  const shore = inst.scene.id === "shore", U = inst.uniforms;
+  const w = shore ? 6.2831853 / U.uPeriod : 0;
+  const list = [];
+  for (const sc of inst.schools) for (const f of sc.fish) {
+    let d, y = f.y;
+    if (shore) {
+      /* depth follows the sloping bottom; fish swim 40% of the way down (the SHORE shader assumes this for their shadows),
+         and rock back and forth with the passing waves */
+      const s = f.y + sc.bend, offs = Math.max(-0.3 - s, 0.05);
+      d = offs * 0.72 * 0.4;
+      y += 0.02 * Math.cos(s * 2.4 - inst.t * w + sc.warp) * Math.min(1, offs * 2);
+    } else d = sc.dNow + f.dOff;
+    list.push([f.x, y, f.h, f.hs, f.bend, d, sc.sp.type, sc.a, f.flash, f.seed, sc.sp.w]);
+  }
+  list.sort((a, b) => b[5] - a[5]); /* deepest first, so shallower fish lie over them */
+  const n = Math.min(MAX_FISH, list.length);
+  for (let i = 0; i < n; i++) { const r = list[i]; fishBuf.set(r, i * 12); fishBuf[i * 12 + 11] = 0; }
+  if (!fishVao) {
+    fishVao = gl.createVertexArray(); gl.bindVertexArray(fishVao);
+    fishVbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, fishVbo);
+    gl.bufferData(gl.ARRAY_BUFFER, fishBuf.byteLength, gl.DYNAMIC_DRAW);
+    /* per-instance attributes in a buffer: the bird path's uniform arrays top out far below a school's size */
+    for (let i = 0; i < 3; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, 48, i * 16); gl.vertexAttribDivisor(i, 1); }
+  }
+  gl.bindVertexArray(fishVao); gl.bindBuffer(gl.ARRAY_BUFFER, fishVbo);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, fishBuf, 0, n * 12);
+  const p = progs.fish; gl.useProgram(p);
+  const L = U.uSun;
+  setU(p, "uRes", [T.F.w, T.F.h]); setU(p, "uCam", c.cam); setU(p, "uRot", c.rot); setU(p, "uZoom", c.zoom);
+  setU(p, "uSunW", [L[0], L[1]]); setU(p, "uSunZ", L[2]);
+  setU(p, "uK", cfg.K); setU(p, "uLight", cfg.light); setU(p, "uVeil", shore ? U.uShallow : U.uDeep);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); /* premultiplied "over" */
+  gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, n);
+  gl.disable(gl.BLEND); gl.bindVertexArray(vao0);
+}
+
 /* Advance an instance and its birds; birds also drift with the ground as the camera moves */
 function stepInst(inst, sdt, bdt) {
   const c0 = camera(inst);
@@ -1440,6 +1686,7 @@ function stepInst(inst, sdt, bdt) {
   const gv = [-(c * dx - s * dy) * inv, -(s * dx + c * dy) * inv];
   stepBirds(inst, bdt, gv);
   stepShore(inst, sdt, c1);
+  stepFish(inst, sdt, c0, c1);
 }
 
 function newSeed() { return 1 + Math.floor(Math.random() * 9998); }
@@ -1509,8 +1756,9 @@ const Sound = (() => {
   /* Shoreline: surf timed to the breaking waves, backwash fizz, distant gulls */
   function shore() {
     const out = gain(0); out.connect(mixBus);
+    const wet = gain(0); wet.connect(verbIn); /* reverb send, faded with out so a scene leaves no wash behind */
     const crashF = filt("lowpass", 900, 0.4), crash = gain(0);
-    src(nb("pink")).connect(crashF).connect(crash).connect(out); crash.connect(verbIn);
+    src(nb("pink")).connect(crashF).connect(crash).connect(out); crash.connect(wet);
     const hissF = filt("bandpass", 1300, 0.6), hiss = gain(0);
     src(nb("pink"), 1.07).connect(hissF).connect(filt("lowpass", 3200, 0.5)).connect(hiss).connect(out);
     const rumble = gain(0.35); src(nb("brown"), 0.8).connect(filt("lowpass", 160)).connect(rumble).connect(out);
@@ -1543,7 +1791,7 @@ const Sound = (() => {
       }
     }
     return {
-      out,
+      out, wet,
       update(inst, dt) {
         const P = (inst.uniforms.uPeriod || 10) , ph = ((inst.t / P) % 1 + 1) % 1;
         /* a slow swell into the break (about 1.5 s), then a long, darkening wash */
@@ -1560,11 +1808,12 @@ const Sound = (() => {
   /* Open Water: deep swell, spray and a low wind */
   function sea() {
     const out = gain(0); out.connect(mixBus);
+    const wet = gain(0); wet.connect(verbIn); /* reverb send, faded with out so a scene leaves no wash behind */
     const swF = filt("lowpass", 420, 0.5), sw = gain(0.5); src(nb("brown")).connect(swF).connect(sw).connect(out);
-    const spF = filt("bandpass", 1600, 0.4), sp = gain(0.05); src(nb("pink"), 0.93).connect(spF).connect(sp).connect(out); sp.connect(verbIn);
+    const spF = filt("bandpass", 1600, 0.4), sp = gain(0.05); src(nb("pink"), 0.93).connect(spF).connect(sp).connect(out); sp.connect(wet);
     const wiF = filt("bandpass", 520, 0.9), wi = gain(0.12); src(nb("pink"), 1.11).connect(wiF).connect(wi).connect(out);
     let a = rnd() * 9, b = rnd() * 9;
-    return { out, update(inst, dt) {
+    return { out, wet, update(inst, dt) {
       a += dt * 0.11; b += dt * 0.047;
       const swell = 0.5 + 0.5 * Math.sin(a) * Math.sin(b * 1.7 + 1);
       set(sw.gain, 0.3 + 0.45 * swell, 0.4); set(swF.frequency, 260 + 380 * swell, 0.4);
@@ -1575,11 +1824,12 @@ const Sound = (() => {
   /* Cloudline: high-altitude wind with slow gusts and a faint whistle */
   function clouds() {
     const out = gain(0); out.connect(mixBus);
-    const wF = filt("bandpass", 500, 0.6), w = gain(0.4); src(nb("pink")).connect(wF).connect(w).connect(out); w.connect(verbIn);
+    const wet = gain(0); wet.connect(verbIn); /* reverb send, faded with out so a scene leaves no wash behind */
+    const wF = filt("bandpass", 500, 0.6), w = gain(0.4); src(nb("pink")).connect(wF).connect(w).connect(out); w.connect(wet);
     const lo = gain(0.35); src(nb("brown"), 0.7).connect(filt("lowpass", 220)).connect(lo).connect(out);
-    const whF = filt("bandpass", 1300, 9), wh = gain(0); src(nb("pink"), 1.19).connect(whF).connect(wh).connect(out); wh.connect(verbIn);
+    const whF = filt("bandpass", 1300, 9), wh = gain(0); src(nb("pink"), 1.19).connect(whF).connect(wh).connect(out); wh.connect(wet);
     let g = rnd() * 9, h = rnd() * 9;
-    return { out, update(inst, dt) {
+    return { out, wet, update(inst, dt) {
       g += dt * 0.09; h += dt * 0.031;
       const gust = Math.max(0, 0.5 + 0.35 * Math.sin(g) + 0.3 * Math.sin(g * 2.7 + h * 3));
       set(w.gain, 0.26 + 0.55 * gust, 0.5); set(wF.frequency, 320 + 700 * gust, 0.6);
@@ -1591,7 +1841,8 @@ const Sound = (() => {
   const hz = m => 440 * Math.pow(2, (m - 69) / 12);
   function nebula() {
     const out = gain(0); out.connect(mixBus);
-    const lp = filt("lowpass", 700, 0.3), pad = gain(0.5); lp.connect(pad).connect(out); pad.connect(verbIn);
+    const wet = gain(0); wet.connect(verbIn); /* reverb send, faded with out so a scene leaves no wash behind */
+    const lp = filt("lowpass", 700, 0.3), pad = gain(0.5); lp.connect(pad).connect(out); pad.connect(wet);
     const voices = [];
     for (let i = 0; i < 6; i++) {
       const g = gain(0), pan = ctx.createStereoPanner(); pan.pan.value = (i / 5) * 1.2 - 0.6;
@@ -1600,7 +1851,7 @@ const Sound = (() => {
       o1.connect(g); o2.connect(g); g.connect(pan).connect(lp); o1.start(); o2.start();
       voices.push({ g, o1, o2 });
     }
-    const sh = gain(0.03); src(nb("pink"), 1.3).connect(filt("bandpass", 5200, 6)).connect(sh).connect(verbIn);
+    const sh = gain(0.03); src(nb("pink"), 1.3).connect(filt("bandpass", 5200, 6)).connect(sh).connect(wet);
     let chord = 0, t = 0, seed = -1, lfo = rnd() * 9;
     function voice(ci) {
       const c = CHORDS[ci % CHORDS.length];
@@ -1609,7 +1860,7 @@ const Sound = (() => {
         v.g.gain.setTargetAtTime(i < 2 ? 0.16 : 0.1, ctx.currentTime, 2);
       });
     }
-    return { out, update(inst, dt) {
+    return { out, wet, update(inst, dt) {
       if (seed !== inst.seed) { seed = inst.seed; chord = inst.seed % CHORDS.length; t = 0; voice(chord); }
       t += dt; lfo += dt * 0.05;
       if (t > 24) { t = 0; chord = (chord + 1 + Math.floor(rnd() * 2)) % CHORDS.length; voice(chord); }
@@ -1655,6 +1906,7 @@ const Sound = (() => {
         if (!w && !beds[id]) continue;
         const b = bed(id);
         set(b.out.gain, w ? w.g : 0, 0.25);
+        set(b.wet.gain, w ? w.g : 0, 0.25);
         if (w) b.update(w.inst, dt);
       }
     },
@@ -1961,6 +2213,10 @@ const btnBirds = document.getElementById("btnBirds");
 function setBirds(v) { state.birds = v; btnBirds.setAttribute("aria-pressed", String(v)); try { localStorage.setItem("driftglass-birds", v ? "1" : "0"); } catch (e) {} }
 btnBirds.addEventListener("click", () => setBirds(!state.birds));
 setBirds(state.birds);
+const btnFish = document.getElementById("btnFish");
+function setFish(v) { state.fish = v; btnFish.setAttribute("aria-pressed", String(v)); try { localStorage.setItem("driftglass-fish", v ? "1" : "0"); } catch (e) {} }
+btnFish.addEventListener("click", () => setFish(!state.fish));
+setFish(state.fish);
 const btnTourFav = document.getElementById("btnTourFav");
 state.tourFav = false;
 try { state.tourFav = localStorage.getItem("driftglass-tourfav") === "1"; } catch (e) {}
