@@ -10,8 +10,8 @@ interface Props {
 const {
   title = 'marsh.city',
   description = "Jason Marsh — Director of Technology, assistive technology, AI engineering",
-  image = '/footer-foliage.webp',  // sitewide default card when a page doesn't supply its own
-  imageAlt = 'marsh.city — Jason Marsh',
+  image = '/og-default.jpg',  // sitewide default card (scripts/og-card.mjs) when a page doesn't supply its own
+  imageAlt = 'marsh.city - Jason Marsh, Director of Technology, framed by painted foliage',
 } = Astro.props;
 const fullTitle = title === 'marsh.city' ? title : `${title} — marsh.city`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
