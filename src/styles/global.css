@@ -422,76 +422,112 @@ footer.site-foot {
 .site-foot-foliage {
   /* pinned to viewport bottom — never leaves the bottom of the screen.
      Width is capped by the stage so the foliage image stops scaling up on
-     ultrawide viewports; beyond --stage-max the sides become the frame. */
+     ultrawide viewports; beyond --stage-max the sides become the frame.
+     This box is only a clipping frame; the art lives on .foliage-layer. */
+  --foliage-h: 70vh;
   position: fixed;
   left: var(--stage-inset);
   width: var(--stage-width);
   bottom: 0;
-  height: 70vh;
+  height: var(--foliage-h);
   z-index: 0;
   display: block;
-  opacity: 1;
+  overflow: hidden;
   pointer-events: none;
   user-select: none;
-  background-image: url(/footer-foliage.webp);
-  background-size: max(100%, 150vh) auto;
-  background-position: center var(--foliage-pos, 0%);
-  background-repeat: no-repeat;
-  will-change: background-position;
   /* explicit filter identity so dark-mode tint can transition smoothly */
   filter: brightness(1) saturate(1);
-}
-/* nighttime foliage — cool moonlit blue multiply always present; opacity
-   scales up in dark mode so the ::before can crossfade between themes. */
-.site-foot-foliage::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgb(30, 42, 70);
-  mix-blend-mode: multiply;
-  opacity: 0;
-  pointer-events: none;
-  mask-image: url(/footer-foliage.webp);
-  -webkit-mask-image: url(/footer-foliage.webp);
-  mask-size: max(100%, 150vh) auto;
-  -webkit-mask-size: max(100%, 150vh) auto;
-  mask-position: center var(--foliage-pos, 0%);
-  -webkit-mask-position: center var(--foliage-pos, 0%);
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
 }
 :root[data-theme="dark"] .site-foot-foliage {
   filter: brightness(0.55) saturate(0.85);
 }
-:root[data-theme="dark"] .site-foot-foliage::before {
+/* One painted layer, sized to the art's own proportions and slid with
+   transform — the GPU moves it, so scrolling never repaints the image (the
+   old background-position pan repainted the whole layer, plus every frosted
+   card over it, on every frame). The pan keyframes are relative to each
+   layer's own height, so extra layers with different sizes parallax for free. */
+.foliage-layer {
+  --layer-img: url(/footer-foliage.webp);
+  --layer-ratio: 1400 / 934;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: max(100%, 150vh);
+  aspect-ratio: var(--layer-ratio);
+  background: var(--layer-img) center / 100% 100% no-repeat;
+  transform: translate(-50%, 0);
+  will-change: transform;
+}
+/* nighttime foliage — cool moonlit blue multiply always present; opacity
+   scales up in dark mode so the ::before can crossfade between themes. */
+.foliage-layer::before,
+.foliage-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* masks ride along with the layer, so they never need repositioning */
+  mask: var(--layer-img) center / 100% 100% no-repeat;
+  -webkit-mask: var(--layer-img) center / 100% 100% no-repeat;
+}
+.foliage-layer::before {
+  background: rgb(30, 42, 70);
+  mix-blend-mode: multiply;
+  opacity: 0;
+}
+:root[data-theme="dark"] .foliage-layer::before {
   opacity: 0.55;
 }
 /* "deeper into the jungle" — top-dark → transparent gradient painted ONLY over
    the foliage leaves (masked by the same image) so the transparent gaps between
-   leaves aren't darkened. Intensity scales with scroll (--foliage-dark, 0–1). */
-.site-foot-foliage::after {
-  content: '';
-  position: absolute;
-  inset: 0;
+   leaves aren't darkened. Fades in with scroll via foliage-darken. */
+.foliage-layer::after {
   background: linear-gradient(
     to bottom,
     rgba(4, 10, 6, 0.82) 0%,
     rgba(4, 10, 6, 0.45) 40%,
     transparent 100%
   );
-  /* max scroll-darken reduced to 30% of prior intensity — keeps the
-     "deeper into the jungle" cue subtle instead of heavy-handed */
-  opacity: calc(var(--foliage-dark, 0) * 0.3);
-  transition: opacity 0.15s linear;
-  pointer-events: none;
-  mask-image: url(/footer-foliage.webp);
-  -webkit-mask-image: url(/footer-foliage.webp);
-  mask-size: max(100%, 150vh) auto;
-  -webkit-mask-size: max(100%, 150vh) auto;
-  mask-position: center var(--foliage-pos, 0%);
-  -webkit-mask-position: center var(--foliage-pos, 0%);
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
+  opacity: 0;
+}
+/* pan from sky (layer top at frame top) to forest floor (layer bottom at
+   frame bottom) — same travel the old background-position 0% → 100% did */
+@keyframes foliage-pan {
+  from { transform: translate(-50%, 0); }
+  to   { transform: translate(-50%, calc(var(--foliage-h) - 100%)); }
+}
+/* max scroll-darken is 30% — keeps the cue subtle instead of heavy-handed */
+@keyframes foliage-darken {
+  from { opacity: 0; }
+  to   { opacity: 0.3; }
+}
+/* Scroll-driven animations run on the compositor's scroll thread, so the pan
+   can't lag behind the finger the way a JS scroll handler does on iOS.
+   The 0%–90% range means the floor is reached 90% of the way down the page.
+   Browsers without support get the JS fallback in Base.astro. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .foliage-layer,
+    .foliage-layer::after {
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+      animation-range: 0% 90%;
+    }
+    .foliage-layer { animation-name: foliage-pan; }
+    .foliage-layer::after { animation-name: foliage-darken; }
+  }
+}
+/* pages too short to scroll have no scroll timeline — show the floor,
+   matching the old behavior (Base.astro toggles the class) */
+.site-foot-foliage.is-unscrollable .foliage-layer {
+  animation: none;
+  transform: translate(-50%, calc(var(--foliage-h) - 100%));
+}
+.site-foot-foliage.is-unscrollable .foliage-layer::after {
+  animation: none;
+  opacity: 0.3;
 }
 /* Short-viewport behavior on wide layouts: lock the foliage container to
    the height it would have at a 800px-tall viewport, and let its bottom
@@ -500,7 +536,7 @@ footer.site-foot {
    pan-driven top clipping. Mobile keeps its normal 70vh-hugs-bottom flow. */
 @media (min-width: 900px) {
   .site-foot-foliage {
-    height: max(70vh, 560px);
+    --foliage-h: max(70vh, 560px);
     bottom: min(0px, calc(100vh - 800px));
   }
 }
@@ -1710,8 +1746,8 @@ html.theme-animating *::after {
    that repositions on every scroll frame — two full repaints per frame on mobile
    GPUs. The base dark-mode filter on the main element already handles the look. */
 @media (max-width: 820px) {
-  .site-foot-foliage::before,
-  .site-foot-foliage::after {
+  .foliage-layer::before,
+  .foliage-layer::after {
     display: none;
   }
 }
@@ -1752,7 +1788,7 @@ html.theme-animating *::after {
     padding: 0.5rem 1rem 1rem;
   }
   .site-foot-foliage {
-    height: 55vh;
+    --foliage-h: 55vh;
   }
   .site-foot-inner {
     padding: 0.6rem 0.9rem;

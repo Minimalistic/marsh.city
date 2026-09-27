@@ -300,7 +300,7 @@ const paletteItems = [
     </div>
 
     <footer class="site-foot">
-      <div class="site-foot-foliage" aria-hidden="true"></div>
+      <div class="site-foot-foliage" aria-hidden="true"><div class="foliage-layer"></div></div>
       <div class="site-foot-inner">
         <span>© <a href="/about/">Jason Marsh</a></span>
         <div class="foot-links">
@@ -859,35 +859,52 @@ const paletteItems = [
 
     <script is:inline>
       // foliage "elevator descending" — image is pinned to viewport bottom,
-      // pans sky → forest floor as user scrolls through the page
+      // pans sky → forest floor as user scrolls through the page. The pan
+      // itself is a CSS scroll-driven animation (global.css, .foliage-layer);
+      // this script only covers what CSS can't.
       (() => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const img = document.querySelector('.site-foot-foliage');
-        if (!img) return;
-        // PAN_SPAN: fraction of the page's total scrollable distance over which the pan completes.
-        //   1.0 = gentle, pan finishes exactly at the bottom of the page
-        //   0.6 = more pronounced, foliage floor reached 60% of the way down
-        //   0.4 = very dramatic
+        const frame = document.querySelector('.site-foot-foliage');
+        if (!frame) return;
+        const layers = frame.querySelectorAll('.foliage-layer');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const cssDriven = CSS.supports('animation-timeline: scroll()');
+
+        // a page too short to scroll has no scroll timeline; show the floor
+        function markUnscrollable() {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          frame.classList.toggle('is-unscrollable', max <= 0 && !reduceMotion);
+        }
+        markUnscrollable();
+        window.addEventListener('resize', markUnscrollable);
+        window.addEventListener('load', markUnscrollable);
+        if (reduceMotion || cssDriven) return;
+
+        // Fallback for browsers without scroll-driven animations. Writes a
+        // transform on each layer only (never :root, which would restyle the
+        // whole document every frame). The ::after darken stays at 0 here.
+        // PAN_SPAN matches animation-range: 0% 90% in global.css.
         const PAN_SPAN = 0.9;
-        // on mobile the ::before/::after masks are hidden (see global.css)
-        // so skip the --foliage-dark update that only they consume
-        const _foliageMobile = window.innerWidth <= 820;
+        let travel = [];
+        function measure() {
+          const frameH = frame.getBoundingClientRect().height;
+          travel = [...layers].map((l) => frameH - l.getBoundingClientRect().height);
+        }
         let ticking = false;
         function update() {
           const max = document.documentElement.scrollHeight - window.innerHeight;
           const raw = max > 0 ? window.scrollY / max : 1;
           const progress = Math.max(0, Math.min(1, raw / PAN_SPAN));
-          document.documentElement.style.setProperty('--foliage-pos', `${(progress * 100).toFixed(2)}%`);
-          if (!_foliageMobile) {
-            document.documentElement.style.setProperty('--foliage-dark', progress.toFixed(3));
-          }
+          layers.forEach((l, i) => {
+            l.style.transform = `translate(-50%, ${(progress * travel[i]).toFixed(1)}px)`;
+          });
           ticking = false;
         }
         function onScroll() {
           if (!ticking) { requestAnimationFrame(update); ticking = true; }
         }
         document.addEventListener('scroll', onScroll, { passive: true });
-        window.addEventListener('resize', onScroll);
+        window.addEventListener('resize', () => { measure(); onScroll(); });
+        measure();
         update();
       })();
     </script>
