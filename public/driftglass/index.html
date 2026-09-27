@@ -2297,7 +2297,7 @@ resize();
 
 const hashId = location.hash.replace("#", "");
 const startIdx = Math.max(0, SCENES.findIndex(s => s.id === hashId));
-go(hashId ? startIdx : Math.floor(Math.random() * SCENES.length));
+go(hashId ? startIdx : SCENES.findIndex(s => s.id === "shore")); /* opens on the shoreline unless the URL names a scene */
 lastSwitch = performance.now();
 poke();
 setTimeout(() => { if (!hoveringDock) body.classList.add("idle"); }, 5000);
