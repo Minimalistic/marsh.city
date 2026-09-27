@@ -1,11 +1,11 @@
 ---
 title: Driftglass
-description: Slow aerial scenes generated live - a nebula, cloud over open ocean, open water, a shoreline - with ambient sound to match.
+description: Slow aerial scenes, generated live, with ambient sound.
 ---
 
-After The Shallows I wanted to keep going in the same direction, but slower and quieter - something closer to meditative than playful. Driftglass is top-down aerial scenes that drift past on their own: a nebula, cumulus over open ocean, open water with gannets, and a shoreline where waves run up the sand and sandpipers work the water line.
+A slower, quieter follow-up to The Shallows. Four scenes: a nebula, clouds over the ocean, open water, and a shoreline. Everything is generated as it plays, sound included.
 
-Nothing here is a video or an image. Each scene is drawn in shaders from a seed, so every variation is new, and the sound is synthesized too - a drone, high-altitude wind, swell, and surf that breaks in time with the waves. Sound starts off; tap the speaker to turn it on. It's best full screen, left running.
+Sound starts off; tap the speaker to turn it on.
 
 <style>
 .driftglass-frame { position:relative; width:100%; aspect-ratio:16/9; border-radius:var(--radius); overflow:hidden; background:#000; }
