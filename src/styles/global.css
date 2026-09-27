@@ -53,12 +53,16 @@
   --stage-inset: max(0px, calc((100vw - var(--stage-max)) / 2));
   --frame-bg: #243208;
   --frame-rim: rgba(141, 184, 96, 0.9);
+  /* the frame's inward shadow over the stage edges reads as grime in
+     daylight; only night keeps it */
+  --frame-shadow: transparent;
   --frame-hatch: rgba(168, 204, 133, 0.05);
 }
 
 :root[data-theme="dark"] {
   --frame-bg: #06090a;
   --frame-rim: rgba(141, 184, 96, 0.3);
+  --frame-shadow: rgba(0, 0, 0, 0.55);
   --frame-hatch: rgba(168, 204, 133, 0.05);
   --bg: #0c150f;
   --bg-elev: #13201a;
@@ -400,7 +404,7 @@ footer.site-foot {
       transparent 0 8px,
       var(--frame-hatch) 8px 10px
     );
-  box-shadow: 30px 0 60px -10px rgba(0, 0, 0, 0.55);
+  box-shadow: 30px 0 60px -10px var(--frame-shadow);
 }
 .stage-frame::after {
   right: 0;
@@ -417,54 +421,173 @@ footer.site-foot {
       transparent 0 8px,
       var(--frame-hatch) 8px 10px
     );
-  box-shadow: -30px 0 60px -10px rgba(0, 0, 0, 0.55);
+  box-shadow: -30px 0 60px -10px var(--frame-shadow);
 }
+/* Wrapper for the parallax stack. display: contents keeps it out of layout
+   and stacking, so the frames below (and the firefly planes Base.astro slots
+   between them) all paint in the root stacking context in DOM order:
+   forest → far flies → back → mid flies → mid → near flies → front. */
 .site-foot-foliage {
-  /* pinned to viewport bottom — never leaves the bottom of the screen.
-     Width is capped by the stage so the foliage image stops scaling up on
-     ultrawide viewports; beyond --stage-max the sides become the frame.
-     This box is only a clipping frame; the art lives on .foliage-layer. */
   --foliage-h: 70vh;
+  display: contents;
+}
+/* One clipping frame per layer, pinned to viewport bottom — never leaves the
+   bottom of the screen. Width is capped by the stage so the art stops scaling
+   up on ultrawide viewports; beyond --stage-max the sides become the frame. */
+.foliage-frame {
   position: fixed;
   left: var(--stage-inset);
   width: var(--stage-width);
   bottom: 0;
   height: var(--foliage-h);
   z-index: 0;
-  display: block;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  /* explicit filter identity so dark-mode tint can transition smoothly */
-  filter: brightness(1) saturate(1);
+  /* no filter in light mode: even an identity filter forces a full-size
+     offscreen surface per frame, and five of those crashed iOS Safari.
+     none → brightness() still interpolates for the theme crossfade. */
 }
-:root[data-theme="dark"] .site-foot-foliage {
-  filter: brightness(0.55) saturate(0.85);
-}
-/* One painted layer, sized to the art's own proportions and slid with
-   transform — the GPU moves it, so scrolling never repaints the image (the
-   old background-position pan repainted the whole layer, plus every frosted
-   card over it, on every frame). The pan keyframes are relative to each
-   layer's own height, so extra layers with different sizes parallax for free. */
+/* Night: distance reads as darker, bluer silhouettes against the horizon
+   glow, so dimming deepens with depth. The filter sits on the layer (already
+   its own GPU surface via will-change) rather than the clipping frame, which
+   would need an extra offscreen surface per frame. */
+:root[data-theme="dark"] .foliage-frame--forest .foliage-layer { filter: brightness(0.17) saturate(0.5) hue-rotate(18deg); }
+:root[data-theme="dark"] .foliage-frame--back .foliage-layer   { filter: brightness(0.34) saturate(0.65) hue-rotate(8deg); }
+:root[data-theme="dark"] .foliage-frame--mid .foliage-layer    { filter: brightness(0.48) saturate(0.8); }
+:root[data-theme="dark"] .foliage-frame--front .foliage-layer,
+:root[data-theme="dark"] .foliage-frame--ground .foliage-layer { filter: brightness(0.55) saturate(0.85); }
+/* Each layer is sized to its art's proportions and slid with transform — the
+   GPU moves it, so scrolling never repaints the image (the old
+   background-position pan repainted the whole layer, plus every frosted card
+   over it, on every frame).
+   Each layer ends the page with one edge of its painted art pinned to a spot
+   in the band: canvas row --end-canvas lands at --end-band of the band height.
+   Pinning ends directly (not as a fraction of travel) keeps the finished
+   scene identical on every screen shape — portrait, landscape, ultrawide.
+   Farther layers end higher, so they travel less than near ones: parallax.
+   Geometry: --full-h is the whole art canvas (width × --layer-hw), which the
+   pan math uses. The box itself covers only the painted rows
+   [--content-top, --content-bottom] of that canvas — transparent sky costs
+   as much memory as paint, so the images are cropped to match. */
 .foliage-layer {
-  --layer-img: url(/footer-foliage.webp);
-  --layer-ratio: 1400 / 934;
+  --layer-w: max(var(--stage-width), 150vh);
+  --layer-hw: 0.6667;
+  --end-band: 1;
+  --end-canvas: var(--content-bottom);
+  --content-top: 0;
+  --content-bottom: 1;
+  --full-h: calc(var(--layer-w) * var(--layer-hw));
   position: absolute;
-  top: 0;
+  top: calc(var(--full-h) * var(--content-top));
   left: 50%;
-  width: max(100%, 150vh);
-  aspect-ratio: var(--layer-ratio);
+  width: var(--layer-w);
+  height: calc(var(--full-h) * (var(--content-bottom) - var(--content-top)));
   background: var(--layer-img) center / 100% 100% no-repeat;
-  transform: translate(-50%, 0);
+  transform: translate(-50%, var(--layer-start, 0px));
   will-change: transform;
 }
-/* The layer is drawn ~1270–2400 device px wide on phones and retina screens,
-   so the 1400px art upscales visibly there. Only high-density screens pull the
-   2800px file (~1.1MB); everyone else keeps the 1x. The masks read the same
-   variable, so tint and darken stay pixel-aligned with the art. */
-@supports (background-image: image-set(url(x.webp) 1x)) {
+/* The art is drawn ~1270–2400 device px wide on phones and retina screens, so
+   high-density screens get the 2800px files for the crisp near layers;
+   the hazy forest and reeds stay 1400px everywhere. The masks read the same variable,
+   so tint and darken stay pixel-aligned with the art. */
+.foliage-frame--forest .foliage-layer {
+  --end-canvas: var(--content-top);  /* treeline tips ~12% down the viewport */
+  --end-band: 0.12;
+  /* hazy by design — a 2x file adds ~130KB of detail nobody can see */
+  --layer-img: url(/foliage/forest.avif);
+}
+.foliage-frame--back .foliage-layer {
+  --end-band: 0.72;  /* misty reed base well above the ground line */
+  /* misty reeds: 1x everywhere on desktop, same reasoning as the forest */
+  --layer-img: url(/foliage/back.avif);
+}
+.foliage-frame--mid .foliage-layer {
+  --end-band: 1.086;  /* fern base just below the band, behind front/ground */
+  --layer-img: image-set(url(/foliage/mid.avif) 1x, url(/foliage/mid@2x.avif) 2x);
+}
+/* The nearest layers hold back: they start pushed down out of view
+   (--layer-start) and only rise over the later part of the scroll
+   (--layer-range-start), so the ground comes up to meet you near the end. */
+.foliage-frame--front .foliage-layer {
+  --end-band: 1;
+  --layer-start: 35vh;
+  --layer-range-start: 40%;
+  --layer-img: image-set(url(/foliage/front.avif) 1x, url(/foliage/front@2x.avif) 2x);
+}
+.foliage-frame--ground .foliage-layer {
+  --end-band: 1;
+  --layer-start: 45vh;
+  --layer-range-start: 60%;
+  --layer-img: image-set(url(/foliage/ground.avif) 1x, url(/foliage/ground@2x.avif) 2x);
+}
+/* foliage-boxes:start — painted-row bounds per layer, written by the compositor */
+.foliage-frame--forest .foliage-layer { --content-top: 0.1500; --content-bottom: 1.0000; }
+.foliage-frame--back .foliage-layer { --content-top: 0.1993; --content-bottom: 0.6643; }
+.foliage-frame--mid .foliage-layer { --content-top: 0.2711; --content-bottom: 1.0000; }
+.foliage-frame--front .foliage-layer { --content-top: 0.5186; --content-bottom: 1.0000; }
+.foliage-frame--ground .foliage-layer { --content-top: 0.7404; --content-bottom: 1.0000; }
+@media (max-width: 720px) and (orientation: portrait) {
+  .foliage-frame--forest .foliage-layer { --content-top: 0.1500; --content-bottom: 1.0000; }
+  .foliage-frame--back .foliage-layer { --content-top: 0.2850; --content-bottom: 0.6488; }
+  .foliage-frame--mid .foliage-layer { --content-top: 0.5913; --content-bottom: 0.9738; }
+  .foliage-frame--front .foliage-layer { --content-top: 0.7738; --content-bottom: 1.0000; }
+  .foliage-frame--ground .foliage-layer { --content-top: 0.8850; --content-bottom: 1.0000; }
+}
+/* foliage-boxes:end */
+/* The forest looms: its frame covers the full viewport instead of the bottom
+   band, so the treeline can tower behind the marsh. Drawn a little larger
+   than the frame so its (small, depth 0.3) pan still has room to travel. */
+.foliage-frame--forest {
+  --foliage-h: 100vh;
+}
+.foliage-frame--forest .foliage-layer {
+  --layer-w: max(var(--stage-width), 180vh);
+}
+/* Phones on their side get the wide layout but only the 1x files: the 2x set
+   decodes to ~60MB, the same memory cliff that crashed iOS Safari. 1400px
+   across an ~850px-wide screen is still ~1.6x. */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* a full-height band keeps band ÷ art ≈ 0.7 like desktop, so every layer's
+     painted top stays inside the band instead of being sliced by its edge */
+  /* html prefix outranks the later min-width: 900px short-viewport rule,
+     which wide landscape phones (e.g. 932x430) would otherwise also match */
+  html .site-foot-foliage { --foliage-h: 100vh; }
+  html .foliage-frame { bottom: 0; }
+  .foliage-frame--forest .foliage-layer { --layer-img: url(/foliage/forest.avif); }
+  .foliage-frame--back .foliage-layer { --layer-img: url(/foliage/back.avif); }
+  .foliage-frame--mid .foliage-layer { --layer-img: url(/foliage/mid.avif); }
+  .foliage-frame--front .foliage-layer { --layer-img: url(/foliage/front.avif); }
+  .foliage-frame--ground .foliage-layer { --layer-img: url(/foliage/ground.avif); }
+}
+/* Phones only ever see the middle of a wide 3:2 layer, which is where the
+   corner plants aren't. They get tall "-m" compositions exactly as wide as
+   the screen (1:2, forest 1:2.5), with corner clusters pinned to its edges.
+   Sized to what's visible so iOS never decodes or composites off-screen
+   art — the 200%-wide squares they replace ran Safari out of memory.
+   Portrait only: small phones on their side use the wide layout. */
+@media (max-width: 720px) and (orientation: portrait) {
   .foliage-layer {
-    --layer-img: image-set(url(/footer-foliage.webp) 1x, url(/footer-foliage@2x.webp) 2x);
+    --layer-w: var(--stage-width);
+    --layer-hw: 2;
+  }
+  .foliage-frame--forest .foliage-layer {
+    --layer-w: var(--stage-width);
+    --layer-hw: 2.5;
+    --layer-img: image-set(url(/foliage/forest-m.avif) 1x, url(/foliage/forest-m@2x.avif) 2x);
+  }
+  .foliage-frame--back .foliage-layer {
+    --layer-img: image-set(url(/foliage/back-m.avif) 1x, url(/foliage/back-m@2x.avif) 2x);
+  }
+  .foliage-frame--mid .foliage-layer {
+    --end-band: 1.04;
+    --layer-img: image-set(url(/foliage/mid-m.avif) 1x, url(/foliage/mid-m@2x.avif) 2x);
+  }
+  .foliage-frame--front .foliage-layer {
+    --layer-img: image-set(url(/foliage/front-m.avif) 1x, url(/foliage/front-m@2x.avif) 2x);
+  }
+  .foliage-frame--ground .foliage-layer {
+    --layer-img: image-set(url(/foliage/ground-m.avif) 1x, url(/foliage/ground-m@2x.avif) 2x);
   }
 }
 /* nighttime foliage — cool moonlit blue multiply always present; opacity
@@ -499,11 +622,11 @@ footer.site-foot {
   );
   opacity: 0;
 }
-/* pan from sky (layer top at frame top) to forest floor (layer bottom at
-   frame bottom) — same travel the old background-position 0% → 100% did */
+/* pan from sky (layer top at frame top) toward the floor; at depth 1 the
+   layer bottom meets the frame bottom, shallower depths stop proportionally */
 @keyframes foliage-pan {
-  from { transform: translate(-50%, 0); }
-  to   { transform: translate(-50%, calc(var(--foliage-h) - 100%)); }
+  from { transform: translate(-50%, var(--layer-start, 0px)); }
+  to   { transform: translate(-50%, calc(var(--foliage-h) * var(--end-band) - var(--full-h) * var(--end-canvas))); }
 }
 /* max scroll-darken is 30% — keeps the cue subtle instead of heavy-handed */
 @keyframes foliage-darken {
@@ -524,7 +647,10 @@ footer.site-foot {
       animation-timeline: scroll(root block);
       animation-range: 0% 90%;
     }
-    .foliage-layer { animation-name: foliage-pan; }
+    .foliage-layer {
+      animation-name: foliage-pan;
+      animation-range: var(--layer-range-start, 0%) 90%;
+    }
     .foliage-layer::after { animation-name: foliage-darken; }
   }
 }
@@ -532,20 +658,22 @@ footer.site-foot {
    matching the old behavior (Base.astro toggles the class) */
 .site-foot-foliage.is-unscrollable .foliage-layer {
   animation: none;
-  transform: translate(-50%, calc(var(--foliage-h) - 100%));
+  transform: translate(-50%, calc(var(--foliage-h) * var(--end-band) - var(--full-h) * var(--end-canvas)));
 }
 .site-foot-foliage.is-unscrollable .foliage-layer::after {
   animation: none;
   opacity: 0.3;
 }
-/* Short-viewport behavior on wide layouts: lock the foliage container to
-   the height it would have at a 800px-tall viewport, and let its bottom
+/* Short-viewport behavior on wide layouts: lock the foliage frames to the
+   height they would have at a 800px-tall viewport, and let their bottoms
    slide below the viewport bottom. The foliage top stays anchored where
    it "belongs," while the floor quietly overflows off-screen — no more
    pan-driven top clipping. Mobile keeps its normal 70vh-hugs-bottom flow. */
 @media (min-width: 900px) {
   .site-foot-foliage {
     --foliage-h: max(70vh, 560px);
+  }
+  .foliage-frame {
     bottom: min(0px, calc(100vh - 800px));
   }
 }
@@ -1682,6 +1810,51 @@ nav.site-nav .links .nav-menu-link.nav-show-mobile { display: none; }
 .theme-toggle.is-auto .icon-sun   { display: none; }
 .theme-toggle.is-auto .icon-moon  { display: none; }
 .theme-toggle.is-auto .icon-auto  { display: block; }
+
+/* --- sky ---
+   A fixed, viewport-sized gradient behind everything. Day: a clear summer
+   blue overhead, paling to a light blue haze behind the treeline. Night: deep navy overhead lifting to a dusky blue-teal glow, so
+   the dark forest reads as a silhouette. body::before comes first in paint
+   order, so the starfield canvas (prepended to body) and foliage draw over it.
+   The four stops are registered custom properties (@property) so the theme
+   toggle can crossfade them — gradients themselves don't interpolate. */
+@property --sky-top { syntax: '<color>'; inherits: false; initial-value: #4e8cc2; }
+@property --sky-upper { syntax: '<color>'; inherits: false; initial-value: #97bedb; }
+@property --sky-horizon { syntax: '<color>'; inherits: false; initial-value: #cfe2ec; }
+@property --sky-bottom { syntax: '<color>'; inherits: false; initial-value: #dde9ee; }
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: var(--stage-inset);
+  width: var(--stage-width);
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  --sky-top: #4e8cc2;
+  --sky-upper: #97bedb;
+  --sky-horizon: #cfe2ec;
+  --sky-bottom: #dde9ee;
+  background: linear-gradient(
+    to bottom,
+    var(--sky-top) 0%,
+    var(--sky-upper) 22%,
+    var(--sky-horizon) 50%,
+    var(--sky-bottom) 100%
+  );
+  transition: --sky-top 600ms ease, --sky-upper 600ms ease, --sky-horizon 600ms ease, --sky-bottom 600ms ease;
+}
+:root[data-theme="dark"] body::before {
+  --sky-top: #02050b;
+  --sky-upper: #0a1829;
+  --sky-horizon: #173244;
+  --sky-bottom: #1d3b42;
+}
+/* the theme-animating rule below swaps every pseudo-element's transition list
+   for its own; keep the sky's (more specific, so it wins among !important) */
+html.theme-animating body::before {
+  transition: --sky-top 600ms ease, --sky-upper 600ms ease, --sky-horizon 600ms ease, --sky-bottom 600ms ease !important;
+}
 
 /* --- starfield (dark mode only; opacity set per-frame by script) --- */
 

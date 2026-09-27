@@ -300,7 +300,13 @@ const paletteItems = [
     </div>
 
     <footer class="site-foot">
-      <div class="site-foot-foliage" aria-hidden="true"><div class="foliage-layer"></div></div>
+      <div class="site-foot-foliage" aria-hidden="true">
+        <div class="foliage-frame foliage-frame--forest"><div class="foliage-layer"></div></div>
+        <div class="foliage-frame foliage-frame--back"><div class="foliage-layer"></div></div>
+        <div class="foliage-frame foliage-frame--mid"><div class="foliage-layer"></div></div>
+        <div class="foliage-frame foliage-frame--front"><div class="foliage-layer"></div></div>
+        <div class="foliage-frame foliage-frame--ground"><div class="foliage-layer"></div></div>
+      </div>
       <div class="site-foot-inner">
         <span>© <a href="/about/">Jason Marsh</a></span>
         <div class="foot-links">
@@ -647,12 +653,18 @@ const paletteItems = [
         // .firefly-plane), so flies ride the background on the compositor
         // instead of trailing a JS scroll handler. Farther planes travel less.
         const PLANE_TRAVEL_VH = { far: 10, mid: 20, near: 30 };
+        // Each plane is slotted just in front of a foliage layer so flies glow
+        // between the plants: far flies ahead of the treeline, behind the
+        // cattails, and so on. Without the foliage stack they go on <body>.
+        const PLANE_BEFORE = { far: 'back', mid: 'mid', near: 'front' };
         const planes = {};
         for (const name of Object.keys(PLANE_TRAVEL_VH)) {
           const plane = document.createElement('div');
           plane.className = `firefly-plane firefly-plane--${name}`;
           plane.setAttribute('aria-hidden', 'true');
-          document.body.appendChild(plane);
+          const nextFrame = document.querySelector(`.foliage-frame--${PLANE_BEFORE[name]}`);
+          if (nextFrame) nextFrame.before(plane);
+          else document.body.appendChild(plane);
           planes[name] = plane;
         }
         const planeFor = (depth) => (depth < 0.4 ? 'far' : depth < 0.75 ? 'mid' : 'near');
@@ -912,20 +924,38 @@ const paletteItems = [
         // Fallback for browsers without scroll-driven animations. Writes a
         // transform on each layer only (never :root, which would restyle the
         // whole document every frame). The ::after darken stays at 0 here.
-        // PAN_SPAN matches animation-range: 0% 90% in global.css.
-        const PAN_SPAN = 0.9;
-        let travel = [];
+        // Mirrors the keyframes: each layer pans from --layer-start to its
+        // pinned end (--end-canvas row at --end-band of the band) over
+        // [--layer-range-start, 90%] of the scroll.
+        const PAN_END = 0.9;
+        let spans = [];
         function measure() {
-          const frameH = frame.getBoundingClientRect().height;
-          travel = [...layers].map((l) => frameH - l.getBoundingClientRect().height);
+          spans = [...layers].map((l) => {
+            const cs = getComputedStyle(l);
+            const frameH = l.parentElement.getBoundingClientRect().height;
+            const endBand = parseFloat(cs.getPropertyValue('--end-band')) || 1;
+            const endCanvas = parseFloat(cs.getPropertyValue('--end-canvas')) || 1;
+            const startVh = parseFloat(cs.getPropertyValue('--layer-start')) || 0;
+            const rangeStart = (parseFloat(cs.getPropertyValue('--layer-range-start')) || 0) / 100;
+            // the box covers only the painted rows; recover the full canvas height
+            const contentTop = parseFloat(cs.getPropertyValue('--content-top')) || 0;
+            const contentBottom = parseFloat(cs.getPropertyValue('--content-bottom')) || 1;
+            const fullH = l.getBoundingClientRect().height / (contentBottom - contentTop);
+            return {
+              from: startVh * window.innerHeight / 100,
+              to: frameH * endBand - fullH * endCanvas,
+              rangeStart,
+            };
+          });
         }
         let ticking = false;
         function update() {
           const max = document.documentElement.scrollHeight - window.innerHeight;
           const raw = max > 0 ? window.scrollY / max : 1;
-          const progress = Math.max(0, Math.min(1, raw / PAN_SPAN));
           layers.forEach((l, i) => {
-            l.style.transform = `translate(-50%, ${(progress * travel[i]).toFixed(1)}px)`;
+            const { from, to, rangeStart } = spans[i];
+            const t = Math.max(0, Math.min(1, (raw - rangeStart) / (PAN_END - rangeStart)));
+            l.style.transform = `translate(-50%, ${(from + (to - from) * t).toFixed(1)}px)`;
           });
           ticking = false;
         }

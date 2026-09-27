@@ -4,9 +4,9 @@
 //
 // The card is plain HTML screenshotted by headless Chrome — same approach as
 // resume-pdf.mjs, so real web fonts and CSS with no image-compositing deps.
-// Re-run whenever the foliage art or tagline changes; the JPEG is committed.
+// Re-run whenever the foliage layers or tagline change; the JPEG is committed.
 
-import { writeFileSync, rmSync, existsSync, mkdtempSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, rmSync, existsSync, mkdtempSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir, homedir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
@@ -15,12 +15,40 @@ import sharp from 'sharp';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outJpg = join(root, 'public/og-default.jpg');
-const foliage = pathToFileURL(join(root, 'public/footer-foliage@2x.webp')).href;
 
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-// Colors mirror the light-theme tokens in src/styles/global.css.
+// The footer scenery as it looks at the bottom of a page: each layer is a
+// cropped strip of a 3:2 canvas drawn at the card width, pinned where the site
+// pins it at the end of the scroll (row --end-canvas lands at --end-band of the
+// band). Painted-row bounds come from the compositor block in global.css, so
+// re-running this after re-composing the layers keeps the card in sync.
+const css = readFileSync(join(root, 'src/styles/global.css'), 'utf8');
+const boxesBlock = css.match(/foliage-boxes:start[\s\S]*?@media/)[0];
+const box = (name) => {
+  const m = boxesBlock.match(new RegExp(`\\.foliage-frame--${name} \\.foliage-layer \\{ --content-top: ([\\d.]+); --content-bottom: ([\\d.]+);`));
+  return { top: Number(m[1]), bottom: Number(m[2]) };
+};
+const CANVAS_H = WIDTH * (2 / 3);
+const BAND = HEIGHT * 0.7;  // the 70vh foliage band; the forest gets the full height
+const LAYERS = [
+  // name, band height, --end-band, pin by painted top (forest) or bottom
+  ['forest', HEIGHT, 0.12, 'top'],
+  ['back', BAND, 0.72, 'bottom'],
+  ['mid', BAND, 1.086, 'bottom'],
+  ['front', BAND, 1, 'bottom'],
+  ['ground', BAND, 1, 'bottom'],
+];
+const layerTags = LAYERS.map(([name, band, endBand, pin]) => {
+  const b = box(name);
+  const endCanvas = pin === 'top' ? b.top : b.bottom;
+  const canvasTop = (HEIGHT - band) + band * endBand - CANVAS_H * endCanvas;
+  const file = pathToFileURL(join(root, `public/foliage/${name}${name === 'forest' || name === 'back' ? '' : '@2x'}.avif`)).href;
+  return `<img src="${file}" alt="" style="position:absolute;left:0;width:${WIDTH}px;top:${(canvasTop + b.top * CANVAS_H).toFixed(1)}px;height:${((b.bottom - b.top) * CANVAS_H).toFixed(1)}px">`;
+}).join('\n  ');
+
+// Colors mirror the light-theme tokens and day sky in src/styles/global.css.
 const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -29,22 +57,22 @@ const html = `<!doctype html>
 <style>
   html, body { margin: 0; width: ${WIDTH}px; height: ${HEIGHT}px; overflow: hidden; }
   body {
-    background: radial-gradient(ellipse at 50% 30%, #f0ecda 0%, #e8e6d2 55%, #ddd9c2 100%);
+    background: linear-gradient(to bottom, #4e8cc2 0%, #97bedb 22%, #cfe2ec 50%, #dde9ee 100%);
     font-family: Inter, sans-serif;
     color: #243626;
     position: relative;
   }
-  .foliage {
+  .panel {
     position: absolute;
-    inset: 0;
-    background: url(${foliage}) center bottom / 1260px auto no-repeat;
-  }
-  .text {
-    position: absolute;
-    top: 92px;
-    left: 0;
-    right: 0;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 30px 56px 34px;
     text-align: center;
+    border-radius: 22px;
+    border: 1px solid rgba(74, 122, 50, 0.35);
+    background: rgba(240, 236, 218, 0.82);
+    box-shadow: 0 10px 40px rgba(20, 40, 30, 0.18);
   }
   .domain {
     font-family: 'JetBrains Mono', monospace;
@@ -56,21 +84,23 @@ const html = `<!doctype html>
   h1 {
     font-family: Lora, serif;
     font-weight: 600;
-    font-size: 96px;
+    font-size: 92px;
     line-height: 1;
-    margin: 18px 0 22px;
+    margin: 16px 0 20px;
     letter-spacing: -0.01em;
+    white-space: nowrap;
   }
   .tagline {
-    font-size: 27px;
-    color: #44574a;
+    font-size: 26px;
+    color: #33453a;
     line-height: 1.4;
+    white-space: nowrap;
   }
 </style>
 </head>
 <body>
-  <div class="foliage"></div>
-  <div class="text">
+  ${layerTags}
+  <div class="panel">
     <div class="domain">marsh.city</div>
     <h1>Jason Marsh</h1>
     <div class="tagline">Director of Technology · Assistive technology<br>Projects, writing &amp; experiments</div>

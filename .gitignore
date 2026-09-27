@@ -41,3 +41,6 @@ pnpm-debug.log*
 
 # Playwright MCP session artifacts
 .playwright-mcp/
+
+# source art for generated assets (large PNGs; regenerate/rebuild locally, never commit)
+/art-src/
