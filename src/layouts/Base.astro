@@ -85,12 +85,9 @@ const paletteItems = [
     <meta name="twitter:image:alt" content={imageAlt} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate" type="application/rss+xml" title="marsh.city — posts" href="/rss.xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!-- body text and headings are above the fold on every page; mono waits for the CSS -->
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/lora-latin.woff2" as="font" type="font/woff2" crossorigin />
     <script is:inline>
       // progressive image loading — LQIP blur-up
       // build generates /_lqip/map.json with {src: tinyDataURI} entries
