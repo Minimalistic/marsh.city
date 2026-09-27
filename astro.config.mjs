@@ -18,6 +18,11 @@ export default defineConfig({
     // allow any host header during local dev so the site is reachable
     // from LAN/Tailscale (jasons-mac-mini.local, 192.168.x.x, 100.x.x.x)
     server: { allowedHosts: true },
+    // Vite 8's default CSS minifier (Lightning CSS, no targets set) collapses
+    // `backdrop-filter` + `-webkit-backdrop-filter` into the prefixed one only,
+    // which Chrome and Firefox ignore, so the frosted glass lost its blur there.
+    // esbuild keeps both declarations as written.
+    build: { cssMinify: 'esbuild' },
   },
   markdown: {
     shikiConfig: {
