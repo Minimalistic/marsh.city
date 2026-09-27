@@ -1426,8 +1426,8 @@ function spawnShoreFlock(inst, x0) {
     const b = {
       ox: (Math.random() - 0.5) * lerp(0.35, 0.8, Math.random()), x: 0, s: E.edge + 0.4 + Math.random() * 0.12,
       gapA: lerp(0.36, 0.5, Math.random()), gapR: lerp(0.24, 0.32, Math.random()),
-      run: lerp(1.2, 1.6, Math.random()), walk: lerp(0.18, 0.32, Math.random()),
-      hs: hs * lerp(0.9, 1.1, Math.random()), h: -Math.PI / 2, peckT: 0, pk: 0, bob: Math.random() * 6, id: Math.random(), a: 0, vx: 0, vs: 0,
+      run: lerp(1.2, 1.6, Math.random()),
+      hs: hs * lerp(0.9, 1.1, Math.random()), h: -Math.PI / 2, pk: 0, bob: Math.random() * 6, id: Math.random(), a: 0, vx: 0, vs: 0,
     };
     b.x = x0 + b.ox; fl.birds.push(b);
   }
@@ -1450,35 +1450,50 @@ function stepShore(inst, dt, c) {
     const bs = fl.birds;
     for (const b of bs) {
       const E = swashAt(inst, b.x);
-      /* smooth, purposeful motion: run ahead of incoming water, follow the backwash down, pause to peck */
-      let vs = 0;
-      const upTarget = E.edge + b.gapA, downTarget = E.edge + b.gapR;
-      /* each bird forages on its own clock: short walks, then a stop to feed, so the flock never moves in lockstep */
-      if (b.feedT === undefined) { b.feedT = 0; b.moveT = lerp(0.2, 1.6, Math.random()); }
+      /* Sanderling foraging: dart to a spot on the sand a little to one side, on the wet band above the water, probe
+         there, dart to the next. Each spot is fixed once picked, but picked relative to where the edge is now, so as the
+         backwash retreats the flock works its way down after it in diagonal darts; an incoming wave sends them up the beach. */
+      let vs = 0, vx = 0;
+      const upTarget = E.edge + b.gapA;
+      if (b.feedT === undefined) { b.feedT = 0; b.tgt = null; b.dart = lerp(0.3, 0.5, Math.random()); }
       const waveNear = b.s < E.edge + 0.26 || (E.adv && b.s < E.edge + 0.45);
-      if (waveNear) b.feedT = 0;
+      if (waveNear && b.feedT > 0) { b.feedT = 0; b.tgt = null; }
       if (b.s < E.edge + 0.26) vs = b.run;   /* keep well clear of the water and its froth */
-      else if (b.feedT > 0) { b.feedT -= dt; vs = 0; if (b.feedT <= 0) b.moveT = lerp(0.4, 1.6, Math.random()); }
-      else if ((b.moveT -= dt) <= 0 && !waveNear) { b.feedT = lerp(0.5, 2.2, Math.random()); vs = 0; }
-      else if (E.adv) vs = Math.max(0, Math.min(b.run, (upTarget - b.s) * 7));
-      else if (b.peckT > 0) { b.peckT -= dt; vs = 0; }
+      else if (b.feedT > 0) { b.feedT -= dt; if (b.feedT <= 0) b.tgt = null; }
+      else if (E.adv && b.s < upTarget) { vs = Math.min(b.run, (upTarget - b.s) * 7); b.tgt = null; }
       else {
-        const gap = b.s - downTarget;
-        vs = gap > 0.015 ? -Math.min(b.walk * (gap > 0.25 ? 3 : 1), gap * 2.5) : 0;
-        if (gap <= 0.04 && Math.random() < dt * 1.2) b.peckT = lerp(0.4, 1.1, Math.random());
+        if (!b.tgt || (b.tgtT -= dt) <= 0) {
+          const home = fl.x + b.ox;
+          const side = Math.abs(b.x - home) > 0.25 ? Math.sign(home - b.x) : (Math.random() < 0.5 ? -1 : 1);
+          const ts = Math.max(E.edge + Math.max(0.3, b.gapR + lerp(0, 0.14, Math.random())), E.adv ? upTarget : -1e9);
+          b.tgt = { x: b.x + side * lerp(0.03, 0.2, Math.random()), s: ts };
+          b.tgtT = 3;
+        }
+        const dx = b.tgt.x - b.x, ds = b.tgt.s - b.s, d = Math.hypot(dx, ds);
+        if (d < 0.012) { b.feedT = lerp(0.4, 1.8, Math.random()); b.tgt = null; }
+        else { const v = Math.min(b.dart, d * 4); vx = dx / d * v; vs = ds / d * v; }
       }
       if (Math.random() < dt * 0.15) b.ox = Math.max(-0.4, Math.min(0.4, b.ox + (Math.random() - 0.5) * 0.25)); /* spacing keeps shifting */
-      let vx = b.feedT > 0 ? 0 : (fl.x + b.ox - b.x) * 0.35 + fl.drift; /* a feeding bird stays put and lets the flock drift on */
-      for (const o of bs) if (o !== b) { const dx = b.x - o.x, ds = b.s - o.s, d2 = dx * dx + ds * ds; if (d2 < 0.0025 && d2 > 1e-8) vx += (dx / Math.sqrt(d2)) * 0.03 * (1 - d2 / 0.0025); }
-      vx = Math.max(-0.25, Math.min(0.25, vx));
-      b.vx += (vx - b.vx) * Math.min(1, dt * 2.5); b.vs += (vs - b.vs) * Math.min(1, dt * 9);
+      if (b.feedT <= 0) for (const o of bs) if (o !== b) { const dx = b.x - o.x, ds = b.s - o.s, d2 = dx * dx + ds * ds; if (d2 < 0.0025 && d2 > 1e-8) vx += (dx / Math.sqrt(d2)) * 0.03 * (1 - d2 / 0.0025); }
+      vx = Math.max(-0.5, Math.min(0.5, vx));
+      /* a bird pivots to face where it's about to go, then walks that way: the body never trails the motion.
+         Running from a wave, it turns just as fast but sets off at once, so the stand-off from the water holds. */
+      const tsp = Math.hypot(vx, vs), going = tsp > 0.06;
+      const want = going ? Math.atan2(vs, vx) : b.feedT > 0 ? b.h : -Math.PI / 2 + Math.sin(b.id * 40 + inst.t * 0.12) * 0.35; /* probing where it stopped */
+      let dh = want - b.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+      b.h += dh * Math.min(1, dt * (going ? 16 : 2.5));
+      if (b.s < E.edge + 0.32) {
+        b.vx += (vx - b.vx) * Math.min(1, dt * 6); b.vs += (vs - b.vs) * Math.min(1, dt * 9);
+        b.spd = Math.hypot(b.vx, b.vs);
+      } else {
+        const rest = Math.atan2(Math.sin(want - b.h), Math.cos(want - b.h)), facing = going ? Math.max(0, Math.cos(rest)) ** 4 : 0;
+        b.spd = (b.spd || 0) + (tsp * facing - (b.spd || 0)) * Math.min(1, dt * 7);
+        b.vx = Math.cos(b.h) * b.spd; b.vs = Math.sin(b.h) * b.spd;
+      }
       b.x += b.vx * dt; b.s += b.vs * dt;
       const sp = Math.hypot(b.vx, b.vs);
-      const want = sp > 0.08 ? Math.atan2(b.vs, b.vx) : -Math.PI / 2 + Math.sin(b.id * 40 + inst.t * 0.12) * 0.35;
-      let dh = want - b.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
-      b.h += dh * Math.min(1, dt * (sp > 0.3 ? 9 : 2.5));
       b.bob += dt * (8 + sp * 30);
-      b.pk = b.peckT > 0 || b.feedT > 0 ? Math.max(0, Math.sin(b.bob * 1.6)) : b.pk * Math.max(0, 1 - dt * 8);
+      b.pk = b.feedT > 0 ? Math.max(0, Math.sin(b.bob * 1.6)) : b.pk * Math.max(0, 1 - dt * 8);
       b.a = Math.min(1, b.a + dt * 2);
       b.bend = E.bend;
     }
