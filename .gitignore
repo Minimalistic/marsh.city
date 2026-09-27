@@ -44,3 +44,6 @@ pnpm-debug.log*
 
 # source art for generated assets (large PNGs; regenerate/rebuild locally, never commit)
 /art-src/
+
+# generated art thumbnails for the home page strip (rebuilt by predev/prebuild)
+public/_thumbs/
