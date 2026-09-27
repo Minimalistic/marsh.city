@@ -348,7 +348,8 @@
     font-family: var(--serif); font-size: 26px; color: var(--ink-dim);
   }
 
-  @media (max-width: 720px) {
+  /* The one-row dock is ~920px wide; below 960px it wraps to two rows or the scene tabs spill into the controls. */
+  @media (max-width: 960px) {
     .dock { flex-wrap: wrap; justify-content: center; border-radius: 22px; width: calc(100vw - 32px); gap: 4px; }
     .sep { display: none; }
     .scenes { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -357,9 +358,11 @@
     .ctrls { width: 100%; justify-content: space-between; }
     .speed { flex: 1; min-width: 0; padding: 0 6px; }
     .speed input { flex: 1; min-width: 0; width: auto; }
+    .caption { bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @media (max-width: 720px) {
     .keys { display: none; }
     .mark span { display: none; }
-    .caption { bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
   }
   @media (max-width: 480px) {
     .scenes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
