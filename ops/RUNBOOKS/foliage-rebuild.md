@@ -5,12 +5,7 @@ The parallax footer is five painted layers (forest, back, mid, front, ground) co
 ## Precondition
 - `OPENAI_API_KEY` is in `.env` (only needed for step 1, and each call costs money).
 - `art-src/foliage/` holds the source PNGs, their `-x4` upscales and `prompts/*.txt`. It's gitignored and about 220 MB, and only this Mac has it.
-- The Real-ESRGAN binary is unpacked at `art-src/esrgan/`. On a fresh machine:
-  ```sh
-  mkdir -p art-src/esrgan && cd art-src/esrgan
-  curl -LO https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-macos.zip
-  unzip -q realesrgan-ncnn-vulkan-20220424-macos.zip && cd ../..
-  ```
+- The `realesrgan` upscaler is on PATH (`~/.local/bin/realesrgan`, a wrapper around `~/.local/share/realesrgan/`, shared by every project). On a fresh machine, unzip https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-macos.zip into `~/.local/share/realesrgan/` and recreate the wrapper, which runs the binary with `-m <that dir>/models -s 4`.
 - The working tree is clean, on `main`.
 
 ## Commands
@@ -22,7 +17,7 @@ node scripts/aux-image.mjs --out-dir $L --size 1536x1024 --quality high --backgr
   --prompt-file $L/prompts/strip3.txt --out strip3-4.png
 
 # 2. Upscale 4x (Metal: run outside the Claude sandbox)
-art-src/esrgan/realesrgan-ncnn-vulkan -i $L/strip3-4.png -o $L/strip3-4-x4.png -n realesrgan-x4plus-anime -s 4
+realesrgan -i $L/strip3-4.png -o $L/strip3-4-x4.png -n realesrgan-x4plus-anime
 
 # 3. Compose. forest= and ground= pick a source; the others are fixed in the script.
 #    Also rewrites the foliage-boxes block in src/styles/global.css.
