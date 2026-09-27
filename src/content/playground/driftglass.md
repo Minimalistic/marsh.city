@@ -5,6 +5,8 @@ description: Slow aerial scenes, generated live, with ambient sound.
 
 A slower, quieter follow-up to The Shallows. Four scenes: a nebula, clouds over the ocean, open water, and a shoreline. Everything is generated as it plays, sound included.
 
+It opens on the shoreline. Try the other three from the dock at the bottom - each has its own look and sound.
+
 Sound starts off; tap the speaker to turn it on.
 
 <style>
