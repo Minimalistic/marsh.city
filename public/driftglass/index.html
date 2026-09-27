@@ -433,7 +433,7 @@
 <div class="panel" id="setPanel" role="dialog" aria-label="Display options" hidden>
   <div class="panel-head"><span>Display</span></div>
   <label class="opt speed-row" for="speed2"><span class="opt-t">Speed</span><span class="speed2-wrap"><input type="range" id="speed2" min="0.1" max="3" step="0.05" value="0.5" aria-label="Speed"><output id="speedOut2">0.5×</output></span></label>
-  <button class="opt" id="btnTour" type="button" aria-pressed="true"><span class="opt-t">Tour scenes</span><span class="opt-k">every 90 s · T</span><i class="sw"></i></button>
+  <button class="opt" id="btnTour" type="button" aria-pressed="false"><span class="opt-t">Tour scenes</span><span class="opt-k">every 90 s · T</span><i class="sw"></i></button>
   <button class="opt" id="btnTourFav" type="button" aria-pressed="false"><span class="opt-t">Tour favorites only</span><span class="opt-k">needs 2 or more</span><i class="sw"></i></button>
   <button class="opt" id="btnGlow" type="button" aria-pressed="true"><span class="opt-t">Soft glow</span><span class="opt-k">G</span><i class="sw"></i></button>
   <button class="opt" id="btnSound2" type="button" aria-pressed="false"><span class="opt-t">Sound</span><span class="opt-k">M · surf, wind, ocean, drone</span><i class="sw"></i></button>
@@ -530,12 +530,20 @@ float cloudV(vec2 p,float t,int o){
   float big=fbm(p*.07+vec2(9.,3.)+t*.004,2);
   vec2 pp=p*.45+1.1*q;
   float d=fbm(pp+vec2(t*.02,0.),o);
+  /* Evolution layer: two copies of the body noise from different regions, crossfaded. Each copy jumps to a
+     new region only while its weight is zero, so clouds keep their place (q, big) but re-form without a seam. */
+  float ev=t*.095,f0=fract(ev);
+  float w0=smoothstep(0.,1.,1.-abs(2.*f0-1.)),w1=1.-w0;
+  vec2 o0=(hash22(vec2(floor(ev),3.1))-.5)*80.,o1=(hash22(vec2(floor(ev+.5),7.7))-.5)*80.;
+  float evo=(w0*fbm(pp*1.3+o0,o-1)+w1*fbm(pp*1.3+o1,o-1))/sqrt(w0*w0+w1*w1);
+  d=d*.85+evo*.6;
   float bl=0.,ba=.5;vec2 bp=pp*2.4+5.+vec2(0.,t*.035);
   for(int i=0;i<3;i++){bl+=ba*abs(gn(bp));bp=M2*bp*2.1-vec2(t*.02,0.);ba*=.5;}
-  d=d*1.15+big*.4+uCover+.35*(bl-.3);
+  d=d*1.15+big*.4+uCover+.22*(bl-.3);
   return d*3.2;
 }
-float cloudD(vec2 p,float t,int o){return clamp(cloudV(p,t,o),0.,1.);}
+/* log roll-off instead of a hard clamp at 1: dense cores keep slopes, so they shade instead of going flat white */
+float cloudD(vec2 p,float t,int o){return log(1.+max(cloudV(p,t,o),0.));}
 float wave(vec2 p,float t,int it){
   float fr=1.,tm=1.,w=1.,sv=0.,sw=0.;
   for(int i=0;i<32;i++){if(i>=it)break;
@@ -565,7 +573,9 @@ void main(){
   vec3 n=normalize(vec3((h0-hx)*HS/e,(h0-hy)*HS/e,1.));
   float sh;
   if(uMode<.5){
-    sh=exp(-clamp(cloudV(pcg+L.xy/L.z*.35,t,4)*.6+.25,0.,1.)*2.4);
+    /* the clouds sit ~1,800 m up, so each shadow lands about a cloud-width away from the sun, soft-edged */
+    float cs=cloudV(pcg+L.xy/L.z*1.1,t,3);
+    sh=mix(1.,.2,smoothstep(-.5,.6,cs));
   }else{
     float c=cloudV(pcg*.55,t,3);
     sh=1.-.5*smoothstep(-.9,1.,c);
@@ -577,19 +587,21 @@ void main(){
   float dif=max(dot(n,L),0.);
   float relief=clamp(1.+2.6*dot(n.xy,normalize(L.xy)),.25,2.2);
   vec3 base=uDeep*(.7+.6*h0)+uScatter*pow(h0,3.)*.5*(.3+.7*dif);
-  vec3 ocean=base*(.5+.5*sh)*relief;
-  ocean+=uSky*fres*(.55+.45*sh);
+  /* Cloudline's cumulus cast deep shadows; Open Water's high cloud stays soft (its original factors) */
+  vec2 shK=uMode<.5?vec2(.75,.6):vec2(.5,.45);
+  vec3 ocean=base*(1.-shK.x+shK.x*sh)*relief;
+  ocean+=uSky*fres*(1.-shK.y+shK.y*sh);
   ocean+=uSunCol*spec*sh;
   float wn=(gn(po*7.+vec2(t*.3,0.))+gn(M2*po*9.-vec2(0.,t*.35)))*.5;
   float wc=smoothstep(.8,.95,h0+.14*wn)*smoothstep(.05,.5,gn(po*.5+vec2(t*.02,-t*.015)));
   ocean=mix(ocean,vec3(.78,.83,.85)*(.35+.65*sh),wc*.75);
   vec3 col=ocean;
   if(uMode<.5){
-    float v=cloudV(pc,t,6);
+    float v=cloudV(pc,t,5);
     float wisp=fbm(M2*pc*vec2(1.3,3.8)+vec2(t*uMorph*.01,0.)+17.,4);
-    float va=v+.5*wisp+.1;
+    float va=v+.7*wisp+.1;
     if(va>-.5){
-      float d=clamp(v,0.,1.);
+      float d=log(1.+max(v,0.));
       float ex=.04;
       float d1=cloudD(pc+vec2(ex,0.),t,5),d2=cloudD(pc-vec2(ex,0.),t,5),d3=cloudD(pc+vec2(0.,ex),t,5),d4=cloudD(pc-vec2(0.,ex),t,5);
       const float Hc=.45;
@@ -601,7 +613,7 @@ void main(){
       for(int k=1;k<=6;k++){float st=float(k)*.045;float ch=cloudD(pc+Ld*st,t,4)*Hc;occ+=smoothstep(0.,.06,ch-(hc+st*tanE));}
       float trans=exp(-occ*.55);
       float cd=max(dot(cn,L),0.);
-      vec3 cc=uSunCol*cd*trans*1.05+uSky*(.3+.35*cn.z)*ao+uSunCol*.07*ao;
+      vec3 cc=uSunCol*cd*trans*.9+uSky*(.3+.35*cn.z)*ao+uSunCol*.07*ao;
       cc=mix(cc,uSunCol*.55+uSky*.3,(1.-smoothstep(0.,.25,d))*.45);
       col=mix(col,cc,smoothstep(-.5,.75,va)*mix(.45,1.,smoothstep(-.15,.5,v)));
     }
@@ -951,6 +963,10 @@ const NEB_PAL = [
   { name: "Rosette", a: [1.0, 0.7, 0.62],  b: [0.9, 0.16, 0.42], c: [0.35, 0.18, 0.7] },
 ];
 
+const CLOUD_MORPH = (() => {
+  const v = parseFloat(new URLSearchParams(location.search).get("morph"));
+  return v > 0 && v <= 5 ? v : 0.25;
+})();
 function oceanSky(rnd, mode) {
   const golden = rnd() < 0.35;
   const az = rnd() * Math.PI * 2, el = golden ? lerp(0.42, 0.55, rnd()) : lerp(0.62, 0.82, rnd());
@@ -958,8 +974,8 @@ function oceanSky(rnd, mode) {
   return {
     uniforms: {
       uMode: mode, uWaveScale: 14.3, uWindAng: rnd() * 6.2832,
-      /* cloud shape-change rate per unit of scene time; Cloudline's clock runs 2.8× (timeScale), so .02025 × 2 / 2.8 reads as 2× the old on-screen morph */
-      uMorph: mode ? 0.02025 : 0.02025 * 2 / 2.8,
+      /* cloud shape-change rate per unit of scene time. Open Water's shadows keep the original slow rate; Cloudline's clouds visibly evolve (?morph= overrides it for tuning) */
+      uMorph: mode ? 0.02025 : CLOUD_MORPH,
       uSun: norm3([Math.cos(az) * Math.cos(el), Math.sin(az) * Math.cos(el), Math.sin(el)]),
       uSunCol: golden ? [1.9, 1.4, 0.95] : [1.75, 1.66, 1.52],
       uSky: golden ? [0.42, 0.44, 0.56] : [0.36, 0.52, 0.8],
@@ -1105,7 +1121,7 @@ function draw(fb, w, h) { gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0,
 /* ─────────────────────────── State ─────────────────────────── */
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const state = { speed: reduced ? 0.3 : 0.5, paused: false, tour: !reduced, tourEvery: 90, tilt: false, glow: true, birds: true };
+const state = { speed: reduced ? 0.3 : 0.5, paused: false, tour: false, tourEvery: 90, tilt: false, glow: true, birds: true };
 try { const bd = localStorage.getItem("driftglass-birds"); if (bd !== null) state.birds = bd === "1"; } catch (e) {}
 try { const g = localStorage.getItem("driftglass-glow"); if (g !== null) state.glow = g === "1"; } catch (e) {}
 state.tilt = true; state.tiltLevel = 1;
@@ -1177,11 +1193,15 @@ function renderScene(inst, rt) {
 
 /* Per scene: which species, size (half-span, in screen heights), speed, altitude, flock size, spawn interval */
 const BIRDS = {
-  sea:   { kinds: [[1, 0.8], [2, 0.2]], hs: [0.0025, 0.0033], speed: [0.016, 0.026], alt: [0.0008, 0.0016], flock: [4, 9], every: [9, 18], par: 1.0, gap: 0.006 },
+  sea:   { kinds: [[1, 0.8], [2, 0.2]], hs: [0.0015, 0.002], speed: [0.016, 0.026], alt: [0.0008, 0.0016], flock: [4, 9], every: [9, 18], par: 1.0, gap: 0.014, circle: 0.45 },
 };
 const FLAP = { 0: { hz: 2.6, flap: [1, 2.4], glide: [1.5, 4], dihedral: 0.14 }, 1: { hz: 3.2, flap: [1.4, 3], glide: [1, 2.2], dihedral: 0.05 }, 2: { hz: 3.6, flap: [0.4, 0.9], glide: [3, 6], dihedral: 0 } };
 const rr = (a) => lerp(a[0], a[1], Math.random());
 function pickKind(kinds) { let r = Math.random(), acc = 0; for (const [t, w] of kinds) { acc += w; if (r <= acc) return t; } return kinds[0][0]; }
+const wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a));
+/* A flock is one unit: a shared heading and speed, with each bird holding a loose slot. Flocks either travel
+   (gentle meander) or wheel in a slow circle that drifts, the way seabirds work an area. Birds steer toward
+   their slot with a capped turn rate, so they bank in smooth arcs instead of jittering. */
 function spawnFlock(inst) {
   const cfg = BIRDS[inst.scene.id]; if (!cfg) return;
   const aspect = W / H;
@@ -1192,44 +1212,95 @@ function spawnFlock(inst) {
   const type = pickKind(cfg.kinds), n = Math.round(rr(cfg.flock));
   const hs = rr(cfg.hs), sp = rr(cfg.speed), alt = rr(cfg.alt);
   const f = [Math.cos(h), Math.sin(h)], r = [-f[1], f[0]];
+  const flock = { x: sx, y: sy, h, sp, mode: "travel", modeT: lerp(6, 14, Math.random()), t: 0, turnPh: Math.random() * 6.28, birds: [] };
   for (let k = 0; k < n; k++) {
-    const back = k * cfg.gap * (0.8 + Math.random() * 0.5), side = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * cfg.gap * 0.55 * (0.6 + Math.random() * 0.8);
+    const back = k * cfg.gap * (0.8 + Math.random() * 0.5), side = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * cfg.gap * 0.8 * (0.6 + Math.random() * 0.8);
     const fl = FLAP[type];
-    inst.birds.push({
-      x: sx - f[0] * back + r[0] * side, y: sy - f[1] * back + r[1] * side,
+    const b = {
+      x: sx - f[0] * back + r[0] * side, y: sy - f[1] * back + r[1] * side, back, side,
       h: h + (Math.random() - 0.5) * 0.12, hs: hs * (0.92 + Math.random() * 0.16), sp: sp * (0.95 + Math.random() * 0.1),
       alt: alt * (0.85 + Math.random() * 0.3), type, t: 0, ph: Math.random() * 6.28, th: fl.dihedral,
-      flapping: Math.random() < 0.6, modeT: rr(fl.flap) * Math.random(), turnPh: Math.random() * 6.28, turnA: 0.1 + Math.random() * 0.12,
-      par: cfg.par, a: 0,
-    });
+      flapping: Math.random() < 0.6, modeT: rr(fl.flap) * Math.random(), wob: Math.random() * 6.28,
+      ringA: 0, ringR: 1, spread: (Math.random() - 0.5) * 0.3, par: cfg.par, a: 0,
+    };
+    flock.birds.push(b); inst.birds.push(b);
+  }
+  (inst.birdFlocks = inst.birdFlocks || []).push(flock);
+}
+function stepFlock(fl, cfg, dt, gv) {
+  fl.t += dt; fl.modeT -= dt;
+  const gx = gv[0] * cfg.par, gy = gv[1] * cfg.par;
+  if (fl.mode === "travel") {
+    fl.h += 0.08 * Math.sin(fl.t * 0.21 + fl.turnPh) * dt;
+    fl.x += (Math.cos(fl.h) * fl.sp + gx) * dt; fl.y += (Math.sin(fl.h) * fl.sp + gy) * dt;
+    if (fl.modeT > 0) return;
+    if (Math.random() >= cfg.circle || fl.t > 50) { fl.modeT = lerp(6, 14, Math.random()); return; }
+    /* start wheeling on a circle tangent to the current path; each bird joins from where it already is */
+    fl.mode = "circle"; fl.dir = Math.random() < 0.5 ? -1 : 1; fl.R = lerp(0.05, 0.09, Math.random());
+    fl.cx = fl.x - Math.sin(fl.h) * fl.dir * fl.R; fl.cy = fl.y + Math.cos(fl.h) * fl.dir * fl.R;
+    fl.th = Math.atan2(fl.y - fl.cy, fl.x - fl.cx); fl.om = fl.dir * fl.sp * 0.85 / fl.R;
+    fl.modeT = lerp(10, 25, Math.random());
+    for (const b of fl.birds) {
+      b.ringA = Math.atan2(b.y - fl.cy, b.x - fl.cx) - fl.th;
+      b.ringR = Math.min(1.5, Math.max(0.5, Math.hypot(b.x - fl.cx, b.y - fl.cy) / fl.R));
+    }
+  } else {
+    fl.th += fl.om * dt;
+    fl.cx += (Math.cos(fl.h) * fl.sp * 0.15 + gx) * dt; fl.cy += (Math.sin(fl.h) * fl.sp * 0.15 + gy) * dt;
+    fl.x = fl.cx + Math.cos(fl.th) * fl.R; fl.y = fl.cy + Math.sin(fl.th) * fl.R;
+    if (fl.modeT <= 0) { fl.mode = "travel"; fl.h = fl.th + fl.dir * Math.PI / 2; fl.modeT = lerp(8, 16, Math.random()); }
   }
 }
 function stepBirds(inst, dt, gv) {
   const cfg = BIRDS[inst.scene.id]; if (!cfg || dt <= 0) return;
+  if (!inst.birdFlocks) inst.birdFlocks = [];
   if (inst.birdNext === undefined) inst.birdNext = 1 + Math.random() * 2;
   inst.birdNext -= dt;
   if (inst.birdNext <= 0 && inst.birds.length < 18) { spawnFlock(inst); inst.birdNext = rr(cfg.every); }
-  const aspect = W / H;
-  for (const b of inst.birds) {
-    const fl = FLAP[b.type];
-    b.t += dt;
-    b.h += b.turnA * Math.sin(b.t * 0.33 + b.turnPh) * dt;
-    b.modeT -= dt;
-    if (b.flapping) {
-      b.ph += 6.2832 * fl.hz * dt;
-      const target = 0.72 * Math.sin(b.ph);
-      b.th += (target - b.th) * Math.min(1, dt * 18);
-      if (b.modeT <= 0 && Math.abs(Math.sin(b.ph)) < 0.25) { b.flapping = false; b.modeT = rr(fl.glide); }
-    } else {
-      b.th += (fl.dihedral - b.th) * Math.min(1, dt * 4);
-      if (b.modeT <= 0) { b.flapping = true; b.modeT = rr(fl.flap); b.ph = 0; }
+  const aspect = W / H, gx = gv[0] * cfg.par, gy = gv[1] * cfg.par;
+  for (const fl of inst.birdFlocks) {
+    stepFlock(fl, cfg, dt, gv);
+    const circling = fl.mode === "circle";
+    for (const b of fl.birds) {
+      const fm = FLAP[b.type];
+      b.t += dt;
+      /* where this bird wants to be, and how that spot is moving */
+      let tx, ty, tvx, tvy;
+      if (circling) {
+        b.ringA += b.spread * dt;
+        const a = fl.th + b.ringA, R = fl.R * b.ringR;
+        tx = fl.cx + Math.cos(a) * R; ty = fl.cy + Math.sin(a) * R;
+        tvx = -Math.sin(a) * R * fl.om + Math.cos(fl.h) * fl.sp * 0.15; tvy = Math.cos(a) * R * fl.om + Math.sin(fl.h) * fl.sp * 0.15;
+      } else {
+        const f0 = Math.cos(fl.h), f1 = Math.sin(fl.h);
+        const side = b.side + cfg.gap * 0.35 * Math.sin(b.t * 0.5 + b.wob), back = b.back + cfg.gap * 0.25 * Math.sin(b.t * 0.37 + b.wob * 1.7);
+        tx = fl.x - f0 * back - f1 * side; ty = fl.y - f1 * back + f0 * side;
+        tvx = f0 * fl.sp; tvy = f1 * fl.sp;
+      }
+      /* air velocity = the slot's velocity plus a pull toward it; the bird turns toward it at a capped rate */
+      const avx = tvx + (tx - b.x) * 1.2, avy = tvy + (ty - b.y) * 1.2;
+      const spd = Math.min(b.sp * 1.5, Math.max(b.sp * 0.6, Math.hypot(avx, avy)));
+      b.h += Math.max(-2.2 * dt, Math.min(2.2 * dt, wrapPi(Math.atan2(avy, avx) - b.h)));
+      b.x += (Math.cos(b.h) * spd + gx) * dt;
+      b.y += (Math.sin(b.h) * spd + gy) * dt;
+      /* wing beats: circling birds glide more */
+      b.modeT -= dt;
+      if (b.flapping) {
+        b.ph += 6.2832 * fm.hz * dt;
+        const target = 0.72 * Math.sin(b.ph);
+        b.th += (target - b.th) * Math.min(1, dt * 18);
+        if (b.modeT <= 0 && Math.abs(Math.sin(b.ph)) < 0.25) { b.flapping = false; b.modeT = rr(fm.glide) * (circling ? 2 : 1); }
+      } else {
+        b.th += (fm.dihedral - b.th) * Math.min(1, dt * 4);
+        if (b.modeT <= 0) { b.flapping = true; b.modeT = rr(fm.flap) * (circling ? 0.5 : 1); b.ph = 0; }
+      }
+      b.a = Math.min(1, b.a + dt * 1.5);
     }
-    const lift = b.flapping ? 1 : 0.97;
-    b.x += (Math.cos(b.h) * b.sp * lift + gv[0] * b.par) * dt;
-    b.y += (Math.sin(b.h) * b.sp * lift + gv[1] * b.par) * dt;
-    b.a = Math.min(1, b.a + dt * 1.5);
   }
-  inst.birds = inst.birds.filter(b => b.t < 3 || (Math.abs(b.x) < aspect / 2 + 0.3 && Math.abs(b.y) < 0.8));
+  const onScreen = b => b.t < 3 || (Math.abs(b.x) < aspect / 2 + 0.3 && Math.abs(b.y) < 0.8);
+  for (const fl of inst.birdFlocks) fl.birds = fl.birds.filter(onScreen);
+  inst.birdFlocks = inst.birdFlocks.filter(fl => fl.birds.length);
+  inst.birds = inst.birds.filter(onScreen);
 }
 
 /* ── Shoreline sandpipers ──
@@ -1748,8 +1819,9 @@ speed.addEventListener("input", () => setSpeed(parseFloat(speed.value)));
 setSpeed(state.speed);
 
 const btnTour = document.getElementById("btnTour");
-function setTour(v) { state.tour = v; btnTour.setAttribute("aria-pressed", String(v)); if (v) lastSwitch = performance.now(); }
+function setTour(v) { state.tour = v; btnTour.setAttribute("aria-pressed", String(v)); if (v) lastSwitch = performance.now(); try { localStorage.setItem("driftglass-tour", v ? "1" : "0"); } catch (e) {} }
 btnTour.addEventListener("click", () => setTour(!state.tour));
+try { state.tour = localStorage.getItem("driftglass-tour") === "1"; } catch (e) {}
 setTour(state.tour);
 
 const btnTilt = document.getElementById("btnTilt");
