@@ -1,0 +1,1955 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Driftglass</title>
+<meta name="description" content="Procedural aerial scenes that never repeat.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ink: #f1eee6;
+    --ink-dim: rgba(244, 241, 234, 0.84);
+    --ink-faint: rgba(244, 241, 234, 0.64);
+    --halo: 0 0 1px rgba(0,0,0,.7), 0 1px 3px rgba(0,0,0,.65), 0 0 10px rgba(0,0,0,.5), 0 0 26px rgba(0,0,0,.4);
+    --glass: rgba(10, 12, 16, 0.62);
+    --glass-edge: rgba(255, 255, 255, 0.09);
+    --glow: #f3dcae;
+    --ground: #000;
+    --serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: "Geist", ui-sans-serif, "Segoe UI", system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  body.idle, body.idle * { cursor: none !important; }
+
+  #c {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: block;
+    background: #000;
+  }
+
+  /* Chrome that fades in and out */
+  .chrome {
+    transition: opacity 900ms cubic-bezier(.2,.7,.2,1), transform 900ms cubic-bezier(.2,.7,.2,1);
+  }
+  body.idle .chrome { opacity: 0; pointer-events: none; }
+  body.idle .dock { transform: translate(-50%, 10px); }
+
+
+  /* Soft blurred scrims behind text so it stays legible on bright scenes */
+  .scrim {
+    position: fixed;
+    z-index: 1;
+    pointer-events: none;
+    backdrop-filter: blur(30px) saturate(1.05) brightness(.85);
+    -webkit-backdrop-filter: blur(30px) saturate(1.05) brightness(.85);
+    background: rgba(4, 6, 10, 0.13);
+  }
+  .scrim-top {
+    top: 0; left: 0; right: 0;
+    height: calc(150px + env(safe-area-inset-top, 0px));
+    -webkit-mask-image: linear-gradient(#000 0%, #000 30%, rgba(0,0,0,.82) 48%, rgba(0,0,0,.55) 63%, rgba(0,0,0,.3) 77%, rgba(0,0,0,.12) 89%, rgba(0,0,0,.03) 96%, transparent 100%);
+    mask-image: linear-gradient(#000 0%, #000 30%, rgba(0,0,0,.82) 48%, rgba(0,0,0,.55) 63%, rgba(0,0,0,.3) 77%, rgba(0,0,0,.12) 89%, rgba(0,0,0,.03) 96%, transparent 100%);
+  }
+  .scrim-cap {
+    left: 0; bottom: 0;
+    width: min(1000px, 100vw);
+    height: min(600px, 85vh);
+    -webkit-mask-image: radial-gradient(ellipse 100% 100% at 0% 100%, #000 0%, #000 30%, rgba(0,0,0,.82) 48%, rgba(0,0,0,.55) 63%, rgba(0,0,0,.3) 77%, rgba(0,0,0,.12) 89%, rgba(0,0,0,.03) 96%, transparent 100%);
+    mask-image: radial-gradient(ellipse 100% 100% at 0% 100%, #000 0%, #000 30%, rgba(0,0,0,.82) 48%, rgba(0,0,0,.55) 63%, rgba(0,0,0,.3) 77%, rgba(0,0,0,.12) 89%, rgba(0,0,0,.03) 96%, transparent 100%);
+    opacity: 0;
+    transition: opacity 1400ms cubic-bezier(.2,.7,.2,1);
+  }
+  .caption.show + .scrim-cap, body:not(.idle) .scrim-cap { opacity: 1; }
+  .mark, .keys, .caption { z-index: 2; }
+  .dock { z-index: 3; }
+
+
+  
+  /* Heart */
+  .icon.heart[aria-pressed="true"] { color: #f2a7a0; }
+  .icon.heart[aria-pressed="true"] svg { fill: currentColor; }
+  .icon.heart.pop svg { animation: pop 420ms cubic-bezier(.3,1.6,.5,1); }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+
+  /* Panels above the dock */
+  .panel {
+    position: fixed;
+    z-index: 4;
+    left: 50%;
+    bottom: 90px;
+    transform: translateX(-50%);
+    width: min(360px, calc(100vw - 32px));
+    box-sizing: border-box;
+    max-height: min(420px, 60vh);
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--glass);
+    border: 1px solid var(--glass-edge);
+    border-radius: 20px;
+    backdrop-filter: blur(22px) saturate(1.5);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    box-shadow: 0 18px 50px -18px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: opacity 400ms, transform 400ms cubic-bezier(.2,.7,.2,1);
+  }
+  body.idle .panel { opacity: 0; pointer-events: none; }
+  .panel-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 10px 10px;
+    font-family: var(--serif); font-style: italic; font-size: 22px;
+  }
+  .panel-count { font: 400 10.5px/1 var(--mono); letter-spacing: .14em; color: var(--ink-faint); font-style: normal; }
+  .panel-empty { margin: 0; padding: 4px 10px 10px; font-size: 13px; line-height: 1.5; color: var(--ink-dim); }
+  .fav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .fav { display: flex; align-items: center; gap: 4px; border-radius: 14px; }
+  .fav:hover, .fav:focus-within { background: rgba(255,255,255,.06); }
+  .fav.on { background: rgba(255,255,255,.1); }
+  .fav-go {
+    flex: 1; min-width: 0;
+    appearance: none; border: 0; background: none; color: var(--ink); cursor: pointer; text-align: left;
+    padding: 9px 10px; display: flex; align-items: center; gap: 12px; border-radius: 14px;
+  }
+  .fav-sw {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  .fav-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .fav-name { font-family: var(--serif); font-size: 19px; line-height: 1; }
+  .fav-meta { font: 400 10.5px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fav-x {
+    appearance: none; border: 0; background: none; color: var(--ink-faint); cursor: pointer;
+    width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; margin-right: 4px;
+  }
+  .fav-x:hover { color: var(--ink); background: rgba(255,255,255,.08); }
+  .fav-x svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.6; fill: none; stroke-linecap: round; }
+  .opt {
+    appearance: none; border: 0; background: none; color: var(--ink); cursor: pointer;
+    display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 12px; row-gap: 3px;
+    text-align: left; padding: 10px 12px; border-radius: 14px; align-items: center;
+  }
+  .opt:hover { background: rgba(255,255,255,.06); }
+  .opt-t { font-size: 14px; grid-column: 1; }
+  .opt-k { font: 400 10px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); grid-column: 1; }
+  .sw {
+    grid-column: 2; grid-row: 1 / span 2;
+    width: 36px; height: 21px; border-radius: 999px; background: rgba(255,255,255,.14); position: relative;
+    transition: background 250ms;
+  }
+  .sw::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 15px; height: 15px; border-radius: 50%;
+    background: var(--ink); transition: transform 250ms cubic-bezier(.3,1.3,.5,1);
+  }
+  .opt[aria-pressed="true"] .sw { background: color-mix(in srgb, var(--glow) 70%, transparent); }
+  .opt[aria-pressed="true"] .sw::after { transform: translateX(15px); background: #1a1712; }
+  .speed-row { display: none; grid-template-columns: auto 1fr; }
+  .vol-row { grid-template-columns: auto 1fr; }
+  .vol-row.dim { opacity: .45; }
+  .vol-row .speed2-wrap output { min-width: 2.8em; }
+  .vol-row .speed2-wrap output { width: 2.2em; text-align: right; }
+  .speed2-wrap { display: flex; align-items: center; gap: 10px; grid-column: 2; grid-row: 1; font: 400 11px/1 var(--mono); color: var(--ink-dim); }
+  .speed2-wrap input { flex: 1; min-width: 0; width: auto; }
+  @media (max-width: 480px) { .dock .speed { display: none; } .speed-row { display: grid; } }
+  .icon[aria-expanded="true"] { color: var(--ink); background: rgba(255,255,255,.1); }
+
+
+  /* Legibility on bright scenes */
+  .mark, .keys, .caption { text-shadow: var(--halo); }
+  .cap-sub { color: var(--ink); font-weight: 400; }
+  .cap-code, .mark span, .keys { color: var(--ink-dim); font-weight: 500; }
+
+  /* Wordmark */
+  .mark {
+    position: fixed;
+    top: calc(22px + env(safe-area-inset-top, 0px));
+    left: calc(26px + env(safe-area-inset-left, 0px));
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    text-shadow: 0 1px 18px rgba(0,0,0,.5);
+  }
+  .mark b {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 26px;
+    letter-spacing: 0.01em;
+  }
+  .mark span {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Scene caption, placed the way aerial screensavers label a location */
+  .caption {
+    position: fixed;
+    left: calc(28px + env(safe-area-inset-left, 0px));
+    bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+    max-width: min(560px, calc(100vw - 56px));
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 1400ms cubic-bezier(.2,.7,.2,1), transform 1400ms cubic-bezier(.2,.7,.2,1);
+    pointer-events: none;
+    text-shadow: 0 2px 24px rgba(0,0,0,.55), 0 0 2px rgba(0,0,0,.3);
+  }
+  .caption.show, body:not(.idle) .caption { opacity: 1; transform: none; }
+  .cap-title {
+    font-family: var(--serif);
+    font-size: clamp(40px, 6vw, 68px);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .cap-title i { font-style: italic; color: var(--glow); }
+  .cap-sub {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    color: var(--ink-dim);
+  }
+  .cap-code {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Dock */
+  .dock {
+    position: fixed;
+    left: 50%;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    background: var(--glass);
+    border: 1px solid var(--glass-edge);
+    border-radius: 999px;
+    backdrop-filter: blur(22px) saturate(1.2) brightness(.7);
+    -webkit-backdrop-filter: blur(22px) saturate(1.2) brightness(.7);
+    box-shadow: 0 18px 50px -18px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06);
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+  }
+  .scenes { display: flex; gap: 2px; min-width: 0; }
+  .chip {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--ink-dim);
+    font: 400 13.5px/1 var(--sans);
+    letter-spacing: 0.02em;
+    padding: 11px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 250ms, color 250ms;
+    white-space: nowrap;
+  }
+  .chip::before {
+    content: "";
+    width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 300ms, box-shadow 300ms;
+  }
+  .chip:hover { color: var(--ink); background: rgba(255,255,255,.06); }
+  .chip[aria-selected="true"] { color: var(--ink); background: rgba(255,255,255,.1); }
+  .chip[aria-selected="true"]::before { opacity: 1; background: var(--glow); box-shadow: 0 0 10px var(--glow); }
+  .sep { width: 1px; height: 22px; background: var(--glass-edge); margin: 0 4px; flex: none; }
+  .ctrls { display: flex; align-items: center; gap: 2px; }
+  .icon {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--ink-dim);
+    width: 40px; height: 38px;
+    border-radius: 999px;
+    display: grid; place-items: center;
+    cursor: pointer;
+    transition: background 250ms, color 250ms;
+    flex: none;
+  }
+  .icon:hover { color: var(--ink); background: rgba(255,255,255,.07); }
+  .icon[aria-pressed="true"] { color: var(--glow); }
+  .icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .speed {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 10px 0 8px;
+    color: var(--ink-dim);
+    font: 400 11px/1 var(--mono);
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+  }
+  .speed output { width: 3.4em; text-align: right; }
+  input[type="range"] {
+    appearance: none; -webkit-appearance: none;
+    width: 96px; height: 20px; background: transparent; cursor: pointer; margin: 0;
+  }
+  input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: rgba(255,255,255,.18); border-radius: 2px; }
+  input[type="range"]::-moz-range-track { height: 2px; background: rgba(255,255,255,.18); border-radius: 2px; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--ink); margin-top: -5px; box-shadow: 0 0 0 4px rgba(255,255,255,.08);
+  }
+  input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: var(--ink); }
+
+  button:focus-visible, input:focus-visible { outline: 1.5px solid var(--glow); outline-offset: 2px; }
+
+  .keys {
+    position: fixed;
+    top: calc(26px + env(safe-area-inset-top, 0px));
+    right: calc(26px + env(safe-area-inset-right, 0px));
+    font: 400 10.5px/1.9 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-align: right;
+    text-shadow: 0 1px 12px rgba(0,0,0,.6);
+  }
+  .keys kbd { font: inherit; color: var(--ink-dim); }
+
+  .fail {
+    position: fixed; inset: 0; display: grid; place-items: center; padding: 0 24px; text-align: center;
+    font-family: var(--serif); font-size: 26px; color: var(--ink-dim);
+  }
+
+  @media (max-width: 720px) {
+    .dock { flex-wrap: wrap; justify-content: center; border-radius: 22px; width: calc(100vw - 32px); gap: 4px; }
+    .sep { display: none; }
+    .scenes { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .chip { padding: 10px 6px; justify-content: center; font-size: 13px; }
+    .chip::before { display: none; }
+    .ctrls { width: 100%; justify-content: space-between; }
+    .speed { flex: 1; min-width: 0; padding: 0 6px; }
+    .speed input { flex: 1; min-width: 0; width: auto; }
+    .keys { display: none; }
+    .mark span { display: none; }
+    .caption { bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @media (max-width: 480px) {
+    .scenes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .caption { bottom: calc(180px + env(safe-area-inset-bottom, 0px)); }
+    .cap-title { font-size: 38px; }
+  }
+  @media (hover: none) { .keys { display: none; } }
+</style>
+</head>
+<body>
+
+
+<canvas id="c" aria-label="Procedural aerial scene"></canvas>
+
+<div class="scrim scrim-top chrome" aria-hidden="true"></div>
+
+<div class="mark chrome"><b>Driftglass</b><span id="res">—</span></div>
+
+<div class="keys chrome" aria-hidden="true">
+  <div><kbd>← →</kbd> scene · <kbd>N</kbd> new variation · <kbd>S</kbd> favorite · <kbd>L</kbd> list</div>
+  <div><kbd>Space</kbd> pause · <kbd>T</kbd> tour · <kbd>G</kbd> glow · <kbd>M</kbd> sound · <kbd>B</kbd> tilt-shift · <kbd>F</kbd> fullscreen</div>
+</div>
+
+<div class="caption" id="caption" aria-live="polite">
+  <div class="cap-title" id="capTitle"></div>
+  <div class="cap-sub" id="capSub"></div>
+  <div class="cap-code" id="capCode"></div>
+</div>
+<div class="scrim scrim-cap" aria-hidden="true"></div>
+
+<div class="dock chrome" id="dock">
+  <div class="scenes" id="scenes" role="tablist" aria-label="Scenes"></div>
+  <div class="sep"></div>
+  <div class="ctrls">
+    <button class="icon" id="btnSeed" title="New variation (N)" aria-label="New variation">
+      <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5"/><path d="M20 4v4.5h-4.5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.5"/><path d="M4 20v-4.5h4.5"/></svg>
+    </button>
+    <button class="icon" id="btnSound" title="Sound (M)" aria-label="Sound" aria-pressed="false">
+      <svg viewBox="0 0 24 24" id="icoSound"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5c1 1.4 1 3.6 0 5" opacity=".35"/><path d="M18.5 7c2.2 2.8 2.2 7.2 0 10" opacity=".35"/></svg>
+    </button>
+    <button class="icon heart" id="btnFav" title="Save to favorites (S)" aria-label="Save to favorites" aria-pressed="false">
+      <svg viewBox="0 0 24 24"><path d="M12 20s-7.2-4.5-7.2-10.1A4.1 4.1 0 0 1 12 7.2a4.1 4.1 0 0 1 7.2 2.7C19.2 15.5 12 20 12 20z"/></svg>
+    </button>
+    <button class="icon" id="btnPlay" title="Pause (Space)" aria-label="Pause">
+      <svg viewBox="0 0 24 24" id="icoPlay"><path d="M9 6v12M15 6v12"/></svg>
+    </button>
+    <label class="speed" for="speed">
+      <input type="range" id="speed" min="0.1" max="3" step="0.05" value="0.5" aria-label="Speed">
+      <output id="speedOut">0.5×</output>
+    </label>
+    <button class="icon" id="btnFavs" title="Favorites (L)" aria-label="Favorites" aria-expanded="false" aria-controls="favPanel">
+      <svg viewBox="0 0 24 24"><path d="M4 6h11M4 12h11M4 18h7"/><path d="M18.5 20.5s-3-1.9-3-4.2a1.6 1.6 0 0 1 3-1 1.6 1.6 0 0 1 3 1c0 2.3-3 4.2-3 4.2z"/></svg>
+    </button>
+    <button class="icon" id="btnSet" title="Display options" aria-label="Display options" aria-expanded="false" aria-controls="setPanel">
+      <svg viewBox="0 0 24 24"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.3"/><circle cx="9" cy="17" r="2.3"/></svg>
+    </button>
+    <button class="icon" id="btnFull" title="Fullscreen (F)" aria-label="Fullscreen">
+      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="panel" id="favPanel" role="dialog" aria-label="Favorites" hidden>
+  <div class="panel-head"><span>Favorites</span><span class="panel-count" id="favCount"></span></div>
+  <ul class="fav-list" id="favList"></ul>
+  <p class="panel-empty" id="favEmpty">Tap the heart to keep the scene you're watching, with its speed and look.</p>
+</div>
+
+<div class="panel" id="setPanel" role="dialog" aria-label="Display options" hidden>
+  <div class="panel-head"><span>Display</span></div>
+  <label class="opt speed-row" for="speed2"><span class="opt-t">Speed</span><span class="speed2-wrap"><input type="range" id="speed2" min="0.1" max="3" step="0.05" value="0.5" aria-label="Speed"><output id="speedOut2">0.5×</output></span></label>
+  <button class="opt" id="btnTour" type="button" aria-pressed="true"><span class="opt-t">Tour scenes</span><span class="opt-k">every 90 s · T</span><i class="sw"></i></button>
+  <button class="opt" id="btnTourFav" type="button" aria-pressed="false"><span class="opt-t">Tour favorites only</span><span class="opt-k">needs 2 or more</span><i class="sw"></i></button>
+  <button class="opt" id="btnGlow" type="button" aria-pressed="true"><span class="opt-t">Soft glow</span><span class="opt-k">G</span><i class="sw"></i></button>
+  <button class="opt" id="btnSound2" type="button" aria-pressed="false"><span class="opt-t">Sound</span><span class="opt-k">M · surf, wind, ocean, drone</span><i class="sw"></i></button>
+  <label class="opt vol-row" for="vol"><span class="opt-t">Volume</span><span class="speed2-wrap"><input type="range" id="vol" min="0" max="1" step="0.01" value="0.7" aria-label="Volume"><output id="volOut">70</output></span></label>
+  <button class="opt" id="btnBirds" type="button" aria-pressed="true"><span class="opt-t">Birds</span><span class="opt-k">sandpipers on the beach, gannets at sea</span><i class="sw"></i></button>
+  <button class="opt" id="btnTilt" type="button" aria-pressed="true"><span class="opt-t">Tilt-shift</span><span class="opt-k">B</span><i class="sw"></i></button>
+  <label class="opt vol-row" id="tiltRow" for="tiltLevel"><span class="opt-t">Tilt-shift strength</span><span class="speed2-wrap"><input type="range" id="tiltLevel" min="0" max="2" step="0.05" value="1" aria-label="Tilt-shift strength"><output id="tiltOut">100%</output></span></label>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ─────────────────────────── GLSL ─────────────────────────── */
+
+const VS = `#version 300 es
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.-1.,0.,1.);}`;
+
+const COMMON = `#version 300 es
+precision highp float;
+uniform vec2 uRes; uniform float uTime; uniform vec2 uCam; uniform float uRot; uniform float uZoom; uniform vec2 uOff;
+out vec4 fragColor;
+#define PI 3.14159265
+#define TAU 6.2831853
+float hash12(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+vec2 hash22(vec2 p){vec3 p3=fract(vec3(p.xyx)*vec3(.1031,.1030,.0973));p3+=dot(p3,p3.yzx+33.33);return fract((p3.xx+p3.yz)*p3.zy);}
+vec2 gr(vec2 i){return hash22(i)*2.-1.;}
+float gn(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*f*(f*(f*6.-15.)+10.);
+ return 2.*mix(mix(dot(gr(i),f),dot(gr(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(gr(i+vec2(0,1)),f-vec2(0,1)),dot(gr(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}
+const mat2 M2=mat2(.8,-.6,.6,.8);
+float fbm(vec2 p,int o){float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;s+=a*gn(p);p=M2*p*2.03+vec2(3.1,1.7);a*=.5;}return s;}
+float ridged(vec2 p,int o){float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;float n=1.-abs(gn(p));s+=a*n*n;p=M2*p*2.03+vec2(1.3,7.1);a*=.5;}return s;}
+mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
+vec2 screenUV(){return (gl_FragCoord.xy-.5*uRes)/uRes.y;}
+`;
+
+/* Nebula: layered, domain-warped emission and dust with parallax and real star PSFs */
+const NEBULA = COMMON + `
+uniform vec3 uPalA,uPalB,uPalC;
+vec3 stars(vec2 p,float cellPx,float dens,float bright){
+  vec2 i=floor(p),f=fract(p);vec3 c=vec3(0);
+  for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){
+    vec2 g=vec2(float(x),float(y));vec2 id=i+g;
+    if(hash12(id*1.13+uOff)>dens)continue;
+    vec2 d=(g+hash22(id+uOff*.7)-f)*cellPx;
+    float h2=hash12(id*3.7+11.);
+    float b=pow(h2,18.)*bright*5.+.03+h2*.1;
+    float r2=dot(d,d);
+    float core=exp(-r2*.85);
+    float halo=exp(-sqrt(r2)*.4)*.07*smoothstep(.4,1.,h2);
+    float spike=0.;
+    if(h2>.985){vec2 ad=abs(d);spike=(exp(-ad.x*1.2)*exp(-ad.y*.055)+exp(-ad.y*1.2)*exp(-ad.x*.055))*.22;}
+    vec3 tc=mix(vec3(1.,.7,.48),vec3(.7,.8,1.),hash12(id*7.1));
+    c+=tc*b*(core+halo+spike);
+  }
+  return c;
+}
+void main(){
+  vec2 uv=rot(uRot)*screenUV();float t=uTime;
+  vec3 col=vec3(.0012,.0016,.004);
+  col+=stars((uv*uZoom+uCam*.22)*15.,uRes.y/(uZoom*15.),.55,.5);
+  col+=stars((uv*uZoom+uCam*.22)*6.+37.,uRes.y/(uZoom*6.),.22,.9);
+  const int L=5;
+  for(int i=0;i<L;i++){
+    float fi=float(i),k=fi/float(L-1);
+    float par=mix(.45,1.5,k),sc=mix(1.1,.72,k);
+    vec2 p=rot(fi*1.3)*(uv*uZoom*sc)+uCam*par+uOff+vec2(fi*17.1,-fi*9.3);
+    float tt=t*.018;
+    vec2 q=vec2(fbm(p*.33+vec2(0.,tt),3),fbm(p*.33+vec2(5.2,1.3)-vec2(tt*.7,0.),3));
+    vec2 r=vec2(fbm(p*.55+1.5*q+vec2(1.7,9.2)+tt*.5,3),fbm(p*.55+1.5*q+vec2(8.3,2.8),3));
+    float d=fbm(p*.8+1.3*r,4);
+    float region=smoothstep(-.12,.38,fbm(p*.09+vec2(3.,fi),3)+.05);
+    float dens=smoothstep(-.04,.5,d+.2*r.x)*region;
+    float fil=pow(ridged(p*1.1+1.1*r,4),6.)*region;
+    vec3 emi=mix(uPalC,uPalB,smoothstep(-.3,.3,q.x+r.y));
+    emi=mix(emi,uPalA,smoothstep(.35,.85,dens+fil*.5)*.85);
+    float bright=mix(1.35,.75,k);
+    vec3 E=emi*(dens*dens*1.25+fil*1.7)*bright;
+    float dust=smoothstep(.1,.5,fbm(p*.9+1.6*r+7.,4)+.05)*mix(.15,1.,k)*smoothstep(.0,.3,region);
+    col=col*exp(-(dens*.55+dust*2.4))+E;
+    col+=uPalA*.5*dust*(1.-dust)*dens;
+    if(i==2)col+=stars((uv*uZoom*sc+uCam*par)*3.2+91.,uRes.y/(uZoom*sc*3.2),.13,1.3);
+  }
+  col+=stars((uv*uZoom*.7+uCam*1.8)*2.1+5.,uRes.y/(uZoom*.7*2.1),.07,1.6);
+  fragColor=vec4(col,1);
+}`;
+
+/* Cloudline and Open Water share one ocean: stacked exponential-sine waves with drag, plus clouds or their shadows */
+const CLOUDS = COMMON + `
+uniform vec3 uSun,uSunCol,uSky,uDeep,uScatter;uniform float uCover,uMode,uWaveScale,uWindAng;uniform vec2 uWind,uWindOff;
+float cloudV(vec2 p,float t,int o){
+  t*=.02025;
+  vec2 q=vec2(fbm(p*.16+vec2(t*.012,0.),2),fbm(p*.16+vec2(4.3,1.9)-vec2(0.,t*.01),2));
+  float big=fbm(p*.07+vec2(9.,3.)+t*.004,2);
+  vec2 pp=p*.45+1.1*q;
+  float d=fbm(pp+vec2(t*.02,0.),o);
+  float bl=0.,ba=.5;vec2 bp=pp*2.4+5.+vec2(0.,t*.035);
+  for(int i=0;i<3;i++){bl+=ba*abs(gn(bp));bp=M2*bp*2.1-vec2(t*.02,0.);ba*=.5;}
+  d=d*1.15+big*.4+uCover+.35*(bl-.3);
+  return d*3.2;
+}
+float cloudD(vec2 p,float t,int o){return clamp(cloudV(p,t,o),0.,1.);}
+float wave(vec2 p,float t,int it){
+  float fr=1.,tm=1.,w=1.,sv=0.,sw=0.;
+  for(int i=0;i<32;i++){if(i>=it)break;
+    float fi=float(i);
+    float ang=uWindAng+(fract(sin(fi*12.9898+4.1)*43758.5453)-.5)*mix(1.2,2.6,fi/32.);
+    vec2 d=vec2(cos(ang),sin(ang));
+    float x=dot(d,p)*fr+t*tm;
+    float e=exp(sin(x)-1.);
+    p-=d*e*cos(x)*w*.36;
+    sv+=e*w;sw+=w;
+    w*=.83;fr*=1.18;tm*=1.07;
+  }
+  return sv/sw;
+}
+void main(){
+  vec2 uv=rot(uRot)*screenUV();float t=uTime;
+  vec2 po=uv*uZoom+uCam+uOff;
+  const float CS=.4;
+  vec2 pc=(uv*uZoom*1.8+uCam+uOff*1.3)*CS+uWindOff;
+  vec2 pcg=pc;
+  vec3 L=uSun;
+  vec3 V=normalize(vec3(uv*.8,-1.));
+  vec2 pw=po*uWaveScale;float tw=t*1.25;
+  float e=max(uZoom/uRes.y*.9,.002);
+  float HS=.24/uWaveScale;
+  float h0=wave(pw,tw,23),hx=wave(pw+vec2(e*uWaveScale,0.),tw,23),hy=wave(pw+vec2(0.,e*uWaveScale),tw,23);
+  vec3 n=normalize(vec3((h0-hx)*HS/e,(h0-hy)*HS/e,1.));
+  float sh;
+  if(uMode<.5){
+    sh=exp(-clamp(cloudV(pcg+L.xy/L.z*.35,t,4)*.6+.25,0.,1.)*2.4);
+  }else{
+    float c=cloudV(pcg*.55,t,3);
+    sh=1.-.5*smoothstep(-.9,1.,c);
+  }
+  vec3 Rf=reflect(V,n);
+  float rl=max(dot(Rf,L),0.);
+  float spec=pow(rl,2400.)*40.+pow(rl,220.)*2.6+pow(rl,14.)*.12;
+  float fres=.02+.98*pow(1.-max(dot(-V,n),0.),5.);
+  float dif=max(dot(n,L),0.);
+  float relief=clamp(1.+2.6*dot(n.xy,normalize(L.xy)),.25,2.2);
+  vec3 base=uDeep*(.7+.6*h0)+uScatter*pow(h0,3.)*.5*(.3+.7*dif);
+  vec3 ocean=base*(.5+.5*sh)*relief;
+  ocean+=uSky*fres*(.55+.45*sh);
+  ocean+=uSunCol*spec*sh;
+  float wn=(gn(po*7.+vec2(t*.3,0.))+gn(M2*po*9.-vec2(0.,t*.35)))*.5;
+  float wc=smoothstep(.8,.95,h0+.14*wn)*smoothstep(.05,.5,gn(po*.5+vec2(t*.02,-t*.015)));
+  ocean=mix(ocean,vec3(.78,.83,.85)*(.35+.65*sh),wc*.75);
+  vec3 col=ocean;
+  if(uMode<.5){
+    float v=cloudV(pc,t,6);
+    float wisp=fbm(M2*pc*vec2(1.3,3.8)+vec2(t*.0002025,0.)+17.,4);
+    float va=v+.5*wisp+.1;
+    if(va>-.5){
+      float d=clamp(v,0.,1.);
+      float ex=.04;
+      float d1=cloudD(pc+vec2(ex,0.),t,5),d2=cloudD(pc-vec2(ex,0.),t,5),d3=cloudD(pc+vec2(0.,ex),t,5),d4=cloudD(pc-vec2(0.,ex),t,5);
+      const float Hc=.45;
+      vec3 cn=normalize(vec3(-(d1-d2)/(2.*ex)*Hc,-(d3-d4)/(2.*ex)*Hc,1.));
+      float mean=(d1+d2+d3+d4)*.25;
+      float ao=clamp(.8+(d-mean)*4.,.42,1.1);
+      vec2 Ld=normalize(L.xy);float tanE=L.z/max(length(L.xy),.05);
+      float occ=0.,hc=d*Hc;
+      for(int k=1;k<=6;k++){float st=float(k)*.045;float ch=cloudD(pc+Ld*st,t,4)*Hc;occ+=smoothstep(0.,.06,ch-(hc+st*tanE));}
+      float trans=exp(-occ*.55);
+      float cd=max(dot(cn,L),0.);
+      vec3 cc=uSunCol*cd*trans*1.05+uSky*(.3+.35*cn.z)*ao+uSunCol*.07*ao;
+      cc=mix(cc,uSunCol*.55+uSky*.3,(1.-smoothstep(0.,.25,d))*.45);
+      col=mix(col,cc,smoothstep(-.5,.75,va)*mix(.45,1.,smoothstep(-.15,.5,v)));
+    }
+  }
+  col=mix(col,uSky*.85,.05);
+  fragColor=vec4(col,1);
+}`;
+
+/* Shoreline: breaking waves, swash run-up and backwash, lace foam, wet sand, caustics */
+const SHORE = COMMON + `
+uniform vec3 uSun,uSunCol,uSky,uSand,uShallow,uDeepW;uniform float uPeriod;
+float worley(vec2 p,float t){vec2 i=floor(p),f=fract(p);float d1=9.,d2=9.;
+ for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y));vec2 h=hash22(i+g);
+  vec2 o=.5+.42*sin(t*(.7+h.yx*.9)+TAU*h);vec2 r=g+o-f;float d=dot(r,r);
+  if(d<d1){d2=d1;d1=d;}else if(d<d2){d2=d;}}
+ return sqrt(d2)-sqrt(d1);}
+float lace(vec2 q,float t){
+  q+=.45*vec2(gn(q*.33+vec2(t*.28,0.)),gn(q*.33+vec2(3.7,-t*.25)));
+  float w1=worley(q,t),w2=worley(q*2.4+5.3,t*1.7);
+  return (1.-smoothstep(0.,.28,w1))*.62+(1.-smoothstep(0.,.2,w2))*.45;
+}
+void main(){
+  vec2 uv=rot(uRot)*screenUV();float t=uTime;
+  vec2 p=uv*uZoom+uCam;
+  vec2 pn=p+uOff;
+  vec3 L=uSun;
+  float bend=1.3*fbm(vec2(pn.x*.07,3.1),3)+.3*fbm(vec2(pn.x*.3,8.),2);
+  float s=p.y+bend;
+  float f=2.4,w=TAU/uPeriod;
+  /* arrival time wanders along the shore and over time, so crests meet the backwash irregularly instead of zippering */
+  float warp=2.4*fbm(vec2(pn.x*.1,1.7),3)+.33*p.x+1.1*fbm(vec2(pn.x*.32+5.,t*.045),2)+.35*gn(vec2(pn.x*1.3,t*.11+2.));
+  float th=s*f-t*w+warp;
+  float phr=(t*w+.3*f-warp)/TAU;
+  float ph=fract(phr),cyc=floor(phr);
+  float amp=.62+.3*gn(vec2(cyc*1.71,pn.x*.06));
+  float up=.3;
+  float e=ph<up?1.-pow(1.-ph/up,2.4):1.-smoothstep(0.,1.,(ph-up)/(1.-up));
+  float lobe=.15*gn(vec2(pn.x*1.1,cyc*3.1))+.05*gn(vec2(pn.x*3.7,cyc*5.3));
+  float edge=-.3+e*(amp*1.25+lobe);
+  float emax=-.3+amp*1.25+lobe;
+  float hm=.98+.12*fbm(vec2(pn.x*.2,4.),2);
+  float aa=max(fwidth(s),1e-4)*1.2;
+  float wd=edge-s;
+  float covered=smoothstep(-aa,aa,wd);
+  float offs=max(-.3-s,0.);
+  float bar=.3*exp(-pow((offs-1.7)*1.6,2.))*(.6+.4*gn(pn*.4));
+  float depth=max(max(wd,0.)*.1+offs*.72-bar,.004);
+
+  /* sand, dunes, wetness */
+  float g1=fbm(pn*1.3,3);
+  vec3 sand=uSand*(.9+.2*g1)*(.97+.06*gn(pn*44.));
+  float rip=cos(s*28.+3.*fbm(pn*.9,2)+g1*2.);
+  float ripMask=smoothstep(1.3,-.2,s);
+  float dune=smoothstep(2.5,3.4,s+.9*fbm(pn*.45+2.,3));
+  vec3 grass=mix(vec3(.12,.15,.06),vec3(.3,.29,.14),fbm(pn*4.,3)+.5)*(.75+.5*max(gn(pn*24.),0.));
+  sand*=1.+.07*rip*ripMask*(1.-dune);
+  float duneShade=1.+.25*fbm(pn*.7+9.,3);
+  sand=mix(sand,grass*duneShade,dune*.9);
+  float damp=smoothstep(hm+.22,hm-.08,s)*.5;
+  float recent=exp(-max(s-edge,0.)*2.2)*smoothstep(-.03,.03,s-edge)*smoothstep(emax+.1,emax-.02,s)*smoothstep(up-.02,up+.1,ph)*(1.-smoothstep(.72,1.,ph));
+  float wet=clamp(max(damp,recent*.95),0.,1.)*(1.-dune);
+  sand=mix(sand,sand*vec3(.5,.49,.47),wet);
+  float wr=smoothstep(.08,0.,abs(s-hm-.3+.12*gn(pn*2.)))*smoothstep(.05,.35,fbm(pn*7.,3));
+  sand=mix(sand,vec3(.11,.085,.05),wr*.85);
+  float shell=step(.996,hash12(floor(pn*90.)))*smoothstep(hm+.9,hm,s)*(1.-covered)*(1.-dune);
+  sand=mix(sand,vec3(.95,.9,.84),shell*.6);
+
+  /* wave height field (steep landward face, long seaward back) */
+  float shoal=smoothstep(4.5,1.2,offs)*(1.-smoothstep(.0,.4,-offs));
+  float fr=fract(th/TAU);
+  float hA=max(smoothstep(.3,1.,fr),exp(-fr*22.));
+  float fr2=fract((th+.02*f)/TAU);
+  float hB=max(smoothstep(.3,1.,fr2),exp(-fr2*22.));
+  float A=.1*shoal*(1.-smoothstep(-.35,-.1,s));
+  float dhds=(hB-hA)/.02*A;
+  vec2 chop=vec2(gn(pn*9.+vec2(t*.45,0.)),gn(pn*9.+vec2(4.,-t*.4)))*.09+vec2(gn(pn*26.-t*.6),gn(pn*26.+t*.5))*.035;
+  vec3 n=normalize(vec3(chop.x,chop.y-dhds,1.));
+
+  /* water */
+  vec2 cp=pn*4.5;
+  float c1=gn(cp+vec2(t*.33,t*.21)),c2=gn(cp*1.37-vec2(t*.24,-t*.29)+3.);
+  float cz=c1+c2+.35*gn(cp*.5+vec2(-t*.1,t*.07));
+  float caus=pow(max(0.,1.-abs(cz)*.9),4.);
+  vec3 bottom=sand*(1.+caus*.3*exp(-depth*3.2)*smoothstep(0.,.08,depth));
+  vec3 tr=exp(-depth*vec3(4.2,1.25,.85));
+  vec3 insc=mix(uShallow,uDeepW,1.-exp(-depth*.8));
+  vec3 water=bottom*tr+insc*(1.-tr);
+  water*=1.+dhds*.9;
+  vec3 V=normalize(vec3(uv*.8,-1.));
+  vec3 Rf=reflect(V,n);
+  float rl=max(dot(Rf,L),0.);
+  float fres=.02+.98*pow(1.-max(dot(-V,n),0.),5.);
+  water+=uSky*fres*.9+uSunCol*(pow(rl,700.)*30.+pow(rl,60.)*.35);
+
+  /* foam */
+  float brk=smoothstep(2.9,1.4,offs+.5*gn(pn*.8))*step(.001,offs+.35);
+  /* crests stay mostly clean in deeper water; whitewater builds as they reach the shallows */
+  float brkC=smoothstep(2.4,.75,offs+.3*gn(pn*.8))*step(.001,offs+.35);
+  float crestF=brkC*(exp(-(1.-fr)*5.)*.95+exp(-fr*45.)*.9436+.12*smoothstep(1.6,.5,offs)); /* equal on both sides of the crest line: no seam */
+  /* every swash quantity is continuous across the cycle reset, so no seam sweeps across the beach */
+  float ramp=smoothstep(0.,.05,ph);
+  /* bubbles: fresh when the bore arrives, thinning steadily as the run-up slows, a faint remnant in the backwash */
+  float life=mix(.12,(1.-.78*smoothstep(.03,up*1.15,ph))*(1.-.45*smoothstep(up,1.,ph)),ramp);
+  float lead=exp(-max(wd,0.)*15.)*mix(.2,1.,ramp)*(ph<up?1.:mix(1.,.2,smoothstep(0.,1.,(ph-up)/(1.-up))));
+  float sheet=smoothstep(-.4,-.1,s)*exp(-max(wd,0.)*2.2)*(1.-ph)*.65*ramp;
+  float swF=covered*smoothstep(-.6,-.25,s)*max(lead,sheet);
+  float lC=lace(vec2(pn.x*1.1,th/f*1.6)*4.2,t);
+  vec2 lq=vec2(pn.x,(s-edge)*1.4)*5.5;
+  float lS=lace(lq+vec2(cyc*13.1,cyc*7.7),t*1.2);
+  if(ramp<1.)lS=mix(lace(lq+vec2((cyc-1.)*13.1,(cyc-1.)*7.7),t*1.2),lS,ramp);
+  float age=min(1.-fr,fr*9.);
+  float foamC=smoothstep(.5+.28*age,.8+.2*age,crestF*(.5+lC));
+  float fade_=1.-life;
+  float foamS=max(smoothstep(.45+.32*fade_,.75+.22*fade_,swF*(.45+lS)*mix(.35,1.,life)),smoothstep(.75,.95,lead*covered)*smoothstep(.2,.7,life));
+  /* the incoming whitewater keeps its momentum over the retreating backwash: it spills a little past the
+     water line as a thinning sheet, loses its bubbles gradually as it climbs the beach, and throws spray */
+  float swZ=smoothstep(-.4,-.2,s);
+  float vary=.5+.5*gn(vec2(pn.x*.55,phr*.8+3.));
+  float crestLife=mix(1.,exp(-max(s+.3,0.)*mix(.8,2.8,vary)),swZ);
+  float ov=mix(.03,.16,1.-vary);
+  float overrun=smoothstep(-ov,.03,wd);
+  float foamCs=foamC*crestLife*mix(.35,1.,smoothstep(-.02,.06,wd));
+  float foam=max(foamCs*overrun,foamS*covered);
+  vec3 foamCol=vec3(.93,.96,.98)*(.86+.14*n.z+.1*lC)+uSunCol*.08;
+  vec3 col=mix(sand,water,covered);
+  col*=1.-.18*smoothstep(.2,.9,foam)*(1.-foam);
+  col=mix(col,foamCol,foam*.96);
+  col+=uSky*.35*recent*(1.-covered);
+  /* spray: the breaking lip throws mist and droplets as it reaches the shallows, drifting up the beach */
+  float lipF=exp(-(1.-fr)*6.)+exp(-fr*9.);
+  float zone=smoothstep(1.9,.8,offs+.3*gn(pn*.5+vec2(t*.03,0.)))*smoothstep(-.1,.3,offs);
+  float impact=lipF*zone*brk*(.55+.45*smoothstep(-.2,.4,gn(vec2(pn.x*.9,phr*1.3))));
+  float runF=covered*exp(-max(wd,0.)*8.)*(1.-smoothstep(0.,.2,ph))*ramp*smoothstep(-.6,-.2,s);
+  float collide=crestF*swZ*crestLife*exp(-abs(wd)*12.)*smoothstep(up-.02,up+.1,ph)*1.4;
+  float sprayAmt=clamp(max(max(impact,runF*.75),collide),0.,1.);
+  vec2 mq=vec2(pn.x*2.2+t*.06,pn.y*2.2-t*.42);
+  float mist=fbm(mq+.6*vec2(gn(mq*.7+t*.1),gn(mq*.7-3.)),4);
+  float mistA=clamp(sprayAmt*1.15,0.,1.)*smoothstep(-.3,.4,mist)*.62;
+  float drops=0.;
+  for(int L=0;L<2;L++){
+    float fl=float(L),sc=mix(42.,78.,fl);
+    vec2 q=pn*sc+vec2(t*sc*.012,-t*sc*mix(.1,.16,fl));
+    vec2 id=floor(q),fq=fract(q)-.5;
+    vec2 h=hash22(id+fl*17.3);
+    float life=fract(h.x*7.1+t*(.5+h.y*.8));
+    float rr=length(fq-(h-.5)*.6);
+    drops+=smoothstep(.26,.03,rr)*step(.4,h.y)*sin(life*PI)*mix(1.,.7,fl);
+  }
+  vec3 sprayCol=vec3(.94,.97,1.)+uSunCol*.12;
+  col=mix(col,sprayCol,mistA);
+  col+=sprayCol*1.6*drops*min(sprayAmt*1.4,1.)*smoothstep(-.3,.3,mist+.2);
+
+  col+=uSunCol*.12*exp(-abs(wd)*70.)*(1.-foam);
+  fragColor=vec4(col,1);
+}`;
+
+
+/* Birds: instanced quads, each drawing a top-down bird (or its soft shadow) from a signed-distance planform */
+const BIRD_VS = `#version 300 es
+precision highp float;
+uniform vec4 uA[32];uniform vec4 uB[32];
+uniform vec2 uRes,uSunXY;uniform float uSunZ,uShadow;
+out vec2 vL;flat out vec4 vB;flat out vec2 vSun;flat out float vPx;flat out float vSoft;
+const vec2 Q[6]=vec2[6](vec2(-1,-1),vec2(1,-1),vec2(1,1),vec2(-1,-1),vec2(1,1),vec2(-1,1));
+void main(){
+  vec4 a=uA[gl_InstanceID],b=uB[gl_InstanceID];
+  vec2 f=vec2(cos(a.z),sin(a.z)),r=vec2(-f.y,f.x);
+  float hs=a.w;
+  float soft=uShadow>.5?(b.y/hs)*.3:0.;
+  vec2 L=Q[gl_VertexID]*(1.25+soft*1.2);
+  vec2 c=a.xy;
+  if(uShadow>.5)c-=uSunXY/max(uSunZ,.25)*b.y;
+  vec2 p=c+(f*L.x+r*L.y)*hs;
+  gl_Position=vec4(p.x*2.*uRes.y/uRes.x,p.y*2.,0.,1.);
+  vL=L;vB=b;vSun=vec2(dot(uSunXY,f),dot(uSunXY,r));vPx=1./(hs*uRes.y);vSoft=soft;
+}`;
+
+const BIRD_FS = `#version 300 es
+precision highp float;
+in vec2 vL;flat in vec4 vB;flat in vec2 vSun;flat in float vPx;flat in float vSoft;
+uniform float uShadow,uSunZ;
+out vec4 o;
+float sdEll(vec2 p,vec2 r){return (length(p/r)-1.)*min(r.x,r.y);}
+float h21(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+void main(){
+  float u=vL.x,v=vL.y,ty=vB.z,th=vB.x;
+  float aa=vPx*1.2;
+  if(ty>2.5){
+    /* sandpiper on the sand, seen from above: plump body, round head, short dark bill; th = peck */
+    float hx=.5+.14*th;
+    float db=sdEll(vec2(u+.06,v),vec2(.56,.3));
+    float dh=length(vec2(u-hx,v))-.19;
+    float dk=max(abs(v)-.035,max(u-(hx+.4),(hx+.12)-u));
+    float dtl=max(max(-(u+.55)-.2,u+.55),abs(v)-(.13-(-(u+.55))*.5));
+    float d=min(min(min(db,dh),dk),dtl);
+    if(uShadow>.5){
+      float s=aa+vSoft+.06;
+      float a=(1.-smoothstep(-s,s,d+.02))*.5*vB.w;
+      if(a<.002)discard;
+      o=vec4(0.,0.,0.,a);return;
+    }
+    float m=1.-smoothstep(-aa,aa,d);
+    if(m<.002)discard;
+    float mott=h21(floor(vec2(u,v)*14.)+vB.y*977.);
+    vec3 back=mix(vec3(.075,.062,.048),vec3(.15,.125,.095),mott);
+    back=mix(back,vec3(.045,.037,.03),smoothstep(.12,.26,abs(v))*smoothstep(.35,-.1,u)*.7);
+    vec3 col=back;
+    if(dh<0.)col=mix(vec3(.16,.14,.115),vec3(.1,.085,.07),smoothstep(0.,.15,abs(v)));
+    if(dtl<0.&&db>0.)col=vec3(.04,.033,.027);
+    if(dk<0.&&dh>0.)col=vec3(.015,.013,.012);
+    vec3 L=normalize(vec3(vSun,uSunZ));
+    vec3 n=normalize(vec3(-(u+.06)*.8,-v*1.6,1.));
+    col*=(.55+.85*max(dot(n,L),0.))*1.1;
+    o=vec4(col,m*vB.w);return;
+  }
+  float cs=max(cos(th),.2);
+  float x=abs(v)/cs;
+  float le,ch,bl;
+  if(ty<.5){le=.10+.08*min(x,.42)-.40*max(x-.42,0.);ch=mix(.23,.07,smoothstep(.3,1.,x));bl=.30;}
+  else if(ty<1.5){le=.08-.18*x*x;ch=mix(.17,.04,smoothstep(.2,1.,x));bl=.34;}
+  else{le=.06-.10*x*x;ch=mix(.15,.04,smoothstep(.35,1.,x));bl=.28;}
+  float te=le-ch;
+  float dw=max(max(te-u,u-le),(x-1.)*cs*.6);
+  float db=sdEll(vec2(u-.02,v),vec2(bl,.07));
+  float dh=length(vec2(u-bl*.95,v))-.062;
+  float tu=-(u+bl*.8);
+  float dt=ty<.5?max(max(tu-.16,-tu),abs(v)-(.05+tu*.25)):max(max(tu-.2,-tu),abs(v)-(.06-tu*.28));
+  float dk=max(abs(v)-.018,max(u-(bl*.95+.13),(bl*.95+.03)-u));
+  float dbody=min(min(db,dh),dt);
+  float d=min(min(dw,dbody),dk);
+  if(uShadow>.5){
+    float s=aa+vSoft;
+    float a=(1.-smoothstep(-s,s,d))*.3*vB.w;
+    if(a<.002)discard;
+    o=vec4(0.,0.,0.,a);return;
+  }
+  float m=1.-smoothstep(-aa,aa,d);
+  if(m<.002)discard;
+  bool wing=dw<min(dbody,dk);
+  vec3 col;
+  if(ty<.5){
+    col=wing?mix(vec3(.56,.6,.66),vec3(.03),smoothstep(.72,.8,x)):vec3(.95);
+    if(wing)col=mix(col,vec3(.82),smoothstep(.04,0.,u-te)*(1.-smoothstep(.7,.78,x)));
+    if(dk<0.&&!wing&&dh>0.)col=vec3(.8,.62,.16);
+  }else if(ty<1.5){
+    col=wing?mix(vec3(.97),vec3(.03),smoothstep(.64,.72,x)):vec3(.97);
+    if(dh<0.)col=vec3(.95,.8,.48);
+    if(dk<0.&&dh>0.)col=vec3(.62,.64,.68);
+  }else{
+    col=wing?vec3(.14,.13,.12):vec3(.17,.16,.15);
+  }
+  float sg=v<0.?-1.:1.;
+  vec3 n=wing?normalize(vec3(0.,-sg*sin(th),cos(th))):normalize(vec3(0.,v*5.,1.));
+  vec3 L=normalize(vec3(vSun,uSunZ));
+  col*=(.62+.9*max(dot(n,L),0.))*1.25;
+  o=vec4(col,m*vB.w);
+}`;
+
+const POST_COMMON = `#version 300 es
+precision highp float;
+uniform sampler2D uA,uB;uniform float uMix,uAspect;uniform vec2 uOut;
+out vec4 fragColor;
+float hash12(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+vec2 hash22(vec2 p){vec3 p3=fract(vec3(p.xyx)*vec3(.1031,.1030,.0973));p3+=dot(p3,p3.yzx+33.33);return fract((p3.xx+p3.yz)*p3.zy);}
+float gn(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*f*(f*(f*6.-15.)+10.);
+ #define G(o) (hash22(i+o)*2.-1.)
+ return 2.*mix(mix(dot(G(vec2(0)),f),dot(G(vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(G(vec2(0,1)),f-vec2(0,1)),dot(G(vec2(1)),f-vec2(1)),u.x),u.y);}
+float dissolve(vec2 uv,float m){
+  vec2 q=uv*vec2(uAspect,1.);
+  float n=.5+.32*gn(q*2.2+7.)+.12*gn(q*7.+3.);
+  return smoothstep(n-.22,n+.22,m*1.5-.25);
+}
+vec3 sceneAt(vec2 uv){
+  vec3 a=texture(uA,uv).rgb;
+  if(uMix<=0.)return a;
+  return mix(a,texture(uB,uv).rgb,dissolve(uv,uMix));
+}`;
+
+const PREFILTER = POST_COMMON + `
+uniform vec2 uTexel;uniform float uThr,uRaw;
+void main(){
+  vec2 uv=gl_FragCoord.xy/uOut;
+  vec3 c=(sceneAt(uv+uTexel*vec2(-1,-1))+sceneAt(uv+uTexel*vec2(1,-1))+sceneAt(uv+uTexel*vec2(-1,1))+sceneAt(uv+uTexel*vec2(1,1)))*.25;
+  if(uRaw>.5){fragColor=vec4(c,1);return;}
+  float br=max(c.r,max(c.g,c.b));
+  float k=max(br-uThr,0.);k=k*k/(k+.5);
+  fragColor=vec4(c*k/max(br,1e-4),1);
+}`;
+
+const DOWN = `#version 300 es
+precision highp float;uniform sampler2D uSrc;uniform vec2 uTexel,uOut;out vec4 fragColor;
+void main(){vec2 uv=gl_FragCoord.xy/uOut;
+fragColor=(texture(uSrc,uv+uTexel*vec2(-1,-1))+texture(uSrc,uv+uTexel*vec2(1,-1))+texture(uSrc,uv+uTexel*vec2(-1,1))+texture(uSrc,uv+uTexel*vec2(1,1)))*.25;}`;
+
+const BLUR = `#version 300 es
+precision highp float;uniform sampler2D uSrc;uniform vec2 uDir,uOut;out vec4 fragColor;
+void main(){vec2 uv=gl_FragCoord.xy/uOut;
+vec4 c=texture(uSrc,uv)*.2270270270;
+c+=(texture(uSrc,uv+uDir*1.3846153846)+texture(uSrc,uv-uDir*1.3846153846))*.3162162162;
+c+=(texture(uSrc,uv+uDir*3.2307692308)+texture(uSrc,uv-uDir*3.2307692308))*.0702702703;
+fragColor=c;}`;
+
+const POST = POST_COMMON + `
+uniform sampler2D uB4,uB8,uM8,uM16;uniform float uExposure,uTime,uFade,uBloom,uTilt,uGlow;
+vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
+void main(){
+  vec2 uv=gl_FragCoord.xy/uOut;
+  vec2 dc=uv-.5;vec2 da=dc*vec2(uAspect,1.);float r2=dot(da,da);
+  vec2 ca=dc*.013*r2*(1.-.5*min(uTilt,1.));
+  vec3 c;
+  float amt=smoothstep(.18,.46,abs(uv.y-.52))*uTilt;
+  if(amt>.003){
+    vec2 rad=vec2(1./uAspect,1.)*.016*amt;
+    vec3 acc=sceneAt(uv);float ws=1.;
+    for(int i=1;i<28;i++){float fi=float(i);float r=sqrt(fi/28.);float a=fi*2.39996;
+      vec3 s=sceneAt(uv+vec2(cos(a),sin(a))*r*rad);float w=1.+max(max(s.r,s.g),s.b)*.6;acc+=s*w;ws+=w;}
+    c=acc/ws;
+  }else{
+    vec3 s0=sceneAt(uv-ca),s1=sceneAt(uv-ca*.5),s2=sceneAt(uv),s3=sceneAt(uv+ca*.5),s4=sceneAt(uv+ca);
+    c=vec3(s0.r*.6+s1.r*.4,s2.g*.6+(s1.g+s3.g)*.2,s4.b*.6+s3.b*.4);
+  }
+  c+=(texture(uB4,uv).rgb*.5+texture(uB8,uv).rgb*.8)*uBloom;
+  vec3 mist=texture(uM8,uv).rgb*.45+texture(uM16,uv).rgb*.55;
+  c=mix(c,max(c,mist),.28*uGlow)+mist*.15*uGlow;
+  float lum=dot(c,vec3(.2126,.7152,.0722));
+  c=max(mix(vec3(lum),c,1.+.26*min(uTilt,1.5)),0.);
+  c=aces(c*uExposure);
+  c*=1.-.34*smoothstep(.12,1.,r2);
+  c=pow(c,vec3(1./2.2));
+  float g=hash12(gl_FragCoord.xy+fract(uTime*7.13)*517.)-.5;
+  c+=g*.024*(1.-c*.55);
+  fragColor=vec4(c*uFade,1);
+}`;
+
+/* ─────────────────────────── Scenes ─────────────────────────── */
+
+const mulberry = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const lerp = (a, b, t) => a + (b - a) * t;
+const lerp3 = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
+const norm3 = v => { const l = Math.hypot(...v); return v.map(x => x / l); };
+
+const NEB_PAL = [
+  { name: "Carina",  a: [1.0, 0.6, 0.3],   b: [0.95, 0.2, 0.3],  c: [0.08, 0.4, 0.62] },
+  { name: "Eagle",   a: [1.0, 0.84, 0.55], b: [0.62, 0.29, 0.13], c: [0.1, 0.32, 0.55] },
+  { name: "Veil",    a: [0.62, 0.9, 1.0],  b: [0.2, 0.3, 1.0],   c: [0.85, 0.2, 0.55] },
+  { name: "Lagoon",  a: [1.0, 0.88, 0.6],  b: [0.1, 0.6, 0.55],  c: [0.85, 0.18, 0.22] },
+  { name: "Rosette", a: [1.0, 0.7, 0.62],  b: [0.9, 0.16, 0.42], c: [0.35, 0.18, 0.7] },
+];
+
+function oceanSky(rnd, mode) {
+  const golden = rnd() < 0.35;
+  const az = rnd() * Math.PI * 2, el = golden ? lerp(0.42, 0.55, rnd()) : lerp(0.62, 0.82, rnd());
+  const wa = rnd() * Math.PI * 2, ws = lerp(0.006, 0.01, rnd()) * (mode ? 0.45 : 1);
+  return {
+    uniforms: {
+      uMode: mode, uWaveScale: 14.3, uWindAng: rnd() * 6.2832,
+      uSun: norm3([Math.cos(az) * Math.cos(el), Math.sin(az) * Math.cos(el), Math.sin(el)]),
+      uSunCol: golden ? [1.9, 1.4, 0.95] : [1.75, 1.66, 1.52],
+      uSky: golden ? [0.42, 0.44, 0.56] : [0.36, 0.52, 0.8],
+      uDeep: lerp3([0.004, 0.03, 0.065], [0.004, 0.055, 0.08], rnd()),
+      uScatter: [0.02, 0.2, 0.22],
+      uCover: mode ? lerp(-0.2, -0.08, rnd()) : lerp(-0.33, -0.24, rnd()),
+      uWind: [Math.cos(wa) * ws, Math.sin(wa) * ws],
+    },
+    sub: mode
+      ? `Open ocean · shadows of high cloud passing overhead · ${golden ? "late afternoon" : "midday"}`
+      : `Fair-weather cumulus over open ocean · ${golden ? "late afternoon" : "midday"} · ≈ 1,800 m`,
+  };
+}
+
+const SCENES = [
+  {
+    id: "nebula", title: "Nebula", frag: NEBULA,
+    zoom: 2.3, drift: 0.03, rotRate: 0.0035, exposure: 1.1, bloom: 0.9, thr: 0.55, glow: 0.8,
+    make(rnd) {
+      const pal = NEB_PAL[Math.floor(rnd() * NEB_PAL.length)];
+      return {
+        uniforms: { uPalA: pal.a, uPalB: pal.b, uPalC: pal.c },
+        sub: `${pal.name}-type emission region · Hα and O III`,
+      };
+    },
+  },
+  {
+    id: "clouds", title: "Cloudline", frag: CLOUDS,
+    zoom: 6.5, drift: 0.08, rotRate: 0.002, exposure: 1.12, bloom: 0.5, thr: 1.2, glow: 1.0,
+    make: rnd => oceanSky(rnd, 0),
+  },
+  {
+    id: "sea", title: "Open Water", frag: CLOUDS,
+    zoom: 6.5, drift: 0.08, rotRate: 0.002, exposure: 1.12, bloom: 0.5, thr: 1.2, glow: 1.0,
+    make: rnd => oceanSky(rnd, 1),
+  },
+  {
+    id: "shore", title: "Shoreline", frag: SHORE,
+    zoom: 5.25, drift: 0.06, rotRate: 0.0, exposure: 1.05, bloom: 0.45, thr: 1.3, glow: 0.9, alongX: true,
+    make(rnd) {
+      const period = lerp(8.5, 11.5, rnd());
+      const tone = rnd(), tint = rnd();
+      return {
+        uniforms: {
+          uSun: norm3([-0.5, 0.4, 0.78]),
+          uSunCol: [1.5, 1.42, 1.3],
+          uSky: [0.3, 0.42, 0.55],
+          uSand: lerp3([0.6, 0.47, 0.31], [0.72, 0.62, 0.45], tone),
+          uShallow: lerp3([0.02, 0.33, 0.33], [0.04, 0.3, 0.2], tint * 0.6),
+          uDeepW: lerp3([0.004, 0.045, 0.1], [0.004, 0.06, 0.08], tint),
+          uPeriod: period,
+        },
+        sub: `Swash zone · ${period.toFixed(1)} s wave period · falling tide`,
+      };
+    },
+  },
+];
+
+/* ─────────────────────────── WebGL ─────────────────────────── */
+
+const canvas = document.getElementById("c");
+const gl = canvas.getContext("webgl2", { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: "high-performance", preserveDrawingBuffer: false });
+if (!gl) {
+  document.body.insertAdjacentHTML("beforeend", '<div class="fail">This needs WebGL 2. Try a current version of Chrome, Safari, Edge or Firefox.</div>');
+  return;
+}
+const halfFloat = !!gl.getExtension("EXT_color_buffer_float");
+gl.bindVertexArray(gl.createVertexArray());
+
+function compile(src, type) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(s)); throw new Error("shader"); }
+  return s;
+}
+function program(fs, vs = VS) {
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(vs, gl.VERTEX_SHADER));
+  gl.attachShader(p, compile(fs, gl.FRAGMENT_SHADER));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(p)); throw new Error("link"); }
+  const cache = {};
+  p.u = n => (n in cache ? cache[n] : (cache[n] = gl.getUniformLocation(p, n)));
+  return p;
+}
+function setU(p, name, v) {
+  const loc = p.u(name); if (loc === null) return;
+  if (typeof v === "number") gl.uniform1f(loc, v);
+  else if (v.length === 2) gl.uniform2fv(loc, v);
+  else if (v.length === 3) gl.uniform3fv(loc, v);
+}
+function tex(p, name, unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(p.u(name), unit); }
+
+const progs = {};
+try {
+  SCENES.forEach(s => { progs[s.id] = program(s.frag); });
+  progs.bird = program(BIRD_FS, BIRD_VS); progs.pre = program(PREFILTER); progs.down = program(DOWN); progs.blur = program(BLUR); progs.post = program(POST);
+} catch (e) {
+  document.body.insertAdjacentHTML("beforeend", '<div class="fail">The renderer could not start on this device.</div>');
+  return;
+}
+
+function target(w, h) {
+  const t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  if (halfFloat) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+  return { t, fb, w, h };
+}
+function drop(r) { if (r) { gl.deleteTexture(r.t); gl.deleteFramebuffer(r.fb); } }
+
+let W = 0, H = 0, scale = 1, maxScale = 1, T = {};
+function allocate() {
+  const sw = Math.max(2, Math.round(W * scale)), sh = Math.max(2, Math.round(H * scale));
+  if (T.A && T.A.w === sw && T.A.h === sh) return;
+  Object.values(T).forEach(drop);
+  T = {
+    A: target(sw, sh), B: target(sw, sh),
+    q1: target(Math.max(1, sw >> 2), Math.max(1, sh >> 2)), q2: target(Math.max(1, sw >> 2), Math.max(1, sh >> 2)),
+    e1: target(Math.max(1, sw >> 3), Math.max(1, sh >> 3)), e2: target(Math.max(1, sw >> 3), Math.max(1, sh >> 3)),
+    m1: target(Math.max(1, sw >> 3), Math.max(1, sh >> 3)), m2: target(Math.max(1, sw >> 3), Math.max(1, sh >> 3)),
+    n1: target(Math.max(1, sw >> 4), Math.max(1, sh >> 4)), n2: target(Math.max(1, sw >> 4), Math.max(1, sh >> 4)),
+  };
+  resLabel();
+}
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.max(2, Math.round(canvas.clientWidth * dpr));
+  H = Math.max(2, Math.round(canvas.clientHeight * dpr));
+  canvas.width = W; canvas.height = H;
+  maxScale = Math.min(1, Math.sqrt(3.2e6 / (W * H)));
+  scale = Math.min(scale, maxScale, Math.sqrt(1.4e6 / (W * H)));
+  allocate();
+}
+function draw(fb, w, h) { gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0, 0, w, h); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+
+/* ─────────────────────────── State ─────────────────────────── */
+
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const state = { speed: reduced ? 0.3 : 0.5, paused: false, tour: !reduced, tourEvery: 90, tilt: false, glow: true, birds: true };
+try { const bd = localStorage.getItem("driftglass-birds"); if (bd !== null) state.birds = bd === "1"; } catch (e) {}
+try { const g = localStorage.getItem("driftglass-glow"); if (g !== null) state.glow = g === "1"; } catch (e) {}
+state.tilt = true; state.tiltLevel = 1;
+try { const tv = localStorage.getItem("driftglass-tilt2"); if (tv !== null) state.tilt = tv === "1"; const tl = parseFloat(localStorage.getItem("driftglass-tiltlevel")); if (tl >= 0 && tl <= 2) state.tiltLevel = tl; } catch (e) {}
+let cur = null, next = null, mixT = 0, lastSwitch = 0, fade = 0, tiltAmt = 0, glowAmt = 1;
+const TRANSITION = 4.5;
+
+/* Travel is never locked to the screen axes: any angle except within 15° of horizontal or vertical */
+function instance(scene, seed, t0 = 0) {
+  const rnd = mulberry(seed * 7919 + 13);
+  const m = scene.make(rnd);
+  const inst = {
+    scene, seed, t: 0, ...m,
+    dir: [rnd() < 0.5 ? -1 : 1, 0],
+    phi: (Math.floor(rnd() * 4) * 90 + lerp(15, 75, rnd())) * Math.PI / 180,
+    rot0: scene.alongX ? lerp(15, 75, rnd()) * Math.PI / 180 * (rnd() < 0.5 ? 1 : -1) : rnd() * Math.PI * 2,
+    rotDir: rnd() < 0.5 ? -1 : 1,
+    off: [rnd() * 180 + 10, rnd() * 180 + 10],
+    ph: rnd() * 100,
+    pos: [0, 0], birds: [], windOff: [0, 0],
+    windSkew: (rnd() * 2 - 1) * 0.8, windMag: lerp(0.15, 0.4, rnd()),
+  };
+  for (let k = 0; k < t0; k += 0.5) advance(inst, Math.min(0.5, t0 - k));
+  return inst;
+}
+function rotAt(inst) {
+  const s = inst.scene, t = inst.t;
+  return inst.rot0 + t * s.rotRate * inst.rotDir + Math.sin((t + inst.ph) * 0.008) * 0.06;
+}
+function advance(inst, dt) {
+  if (dt <= 0) return;
+  let d = inst.dir;
+  if (!inst.scene.alongX) {
+    /* the view is rotated, so pick the world direction that reads as angle phi on screen */
+    const a = inst.phi - Math.PI - rotAt(inst);
+    d = [Math.cos(a), Math.sin(a)];
+  }
+  inst.pos[0] += d[0] * inst.scene.drift * dt;
+  inst.pos[1] += d[1] * inst.scene.drift * dt;
+  /* Clouds are never still: wind always blows within ±46° of the travel direction, so it adds to the drift and can't cancel it */
+  const wa = Math.atan2(d[1], d[0]) + inst.windSkew, wm = inst.windMag * inst.scene.drift * 0.4;
+  inst.windOff[0] += Math.cos(wa) * wm * dt;
+  inst.windOff[1] += Math.sin(wa) * wm * dt;
+  inst.t += dt;
+}
+function camera(inst) {
+  const s = inst.scene, t = inst.t, v = s.drift;
+  const mx = Math.sin((t + inst.ph) * 0.011) * 18 * v, my = Math.cos((t + inst.ph) * 0.0137) * 18 * v;
+  return {
+    cam: [inst.pos[0] + mx, inst.pos[1] + my],
+    rot: rotAt(inst),
+    zoom: s.zoom * (1 + Math.sin((t + inst.ph) * 0.006) * 0.05),
+  };
+}
+function renderScene(inst, rt) {
+  const p = progs[inst.scene.id];
+  gl.useProgram(p);
+  const c = camera(inst);
+  setU(p, "uRes", [rt.w, rt.h]); setU(p, "uTime", inst.t); setU(p, "uCam", c.cam);
+  setU(p, "uRot", c.rot); setU(p, "uZoom", c.zoom); setU(p, "uOff", inst.off);
+  for (const k in inst.uniforms) setU(p, k, inst.uniforms[k]);
+  setU(p, "uWindOff", inst.windOff);
+  draw(rt.fb, rt.w, rt.h);
+  drawBirds(inst, rt);
+}
+
+
+/* ─────────────────────────── Birds ─────────────────────────── */
+
+/* Per scene: which species, size (half-span, in screen heights), speed, altitude, flock size, spawn interval */
+const BIRDS = {
+  sea:   { kinds: [[1, 0.8], [2, 0.2]], hs: [0.0025, 0.0033], speed: [0.016, 0.026], alt: [0.0008, 0.0016], flock: [4, 9], every: [9, 18], par: 1.0, gap: 0.006 },
+};
+const FLAP = { 0: { hz: 2.6, flap: [1, 2.4], glide: [1.5, 4], dihedral: 0.14 }, 1: { hz: 3.2, flap: [1.4, 3], glide: [1, 2.2], dihedral: 0.05 }, 2: { hz: 3.6, flap: [0.4, 0.9], glide: [3, 6], dihedral: 0 } };
+const rr = (a) => lerp(a[0], a[1], Math.random());
+function pickKind(kinds) { let r = Math.random(), acc = 0; for (const [t, w] of kinds) { acc += w; if (r <= acc) return t; } return kinds[0][0]; }
+function spawnFlock(inst) {
+  const cfg = BIRDS[inst.scene.id]; if (!cfg) return;
+  const aspect = W / H;
+  const a = Math.random() * Math.PI * 2;
+  const sx = Math.cos(a) * (aspect / 2 + 0.12), sy = Math.sin(a) * 0.62;
+  const tx = (Math.random() - 0.5) * aspect * 0.6, ty = (Math.random() - 0.5) * 0.5;
+  const h = Math.atan2(ty - sy, tx - sx);
+  const type = pickKind(cfg.kinds), n = Math.round(rr(cfg.flock));
+  const hs = rr(cfg.hs), sp = rr(cfg.speed), alt = rr(cfg.alt);
+  const f = [Math.cos(h), Math.sin(h)], r = [-f[1], f[0]];
+  for (let k = 0; k < n; k++) {
+    const back = k * cfg.gap * (0.8 + Math.random() * 0.5), side = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * cfg.gap * 0.55 * (0.6 + Math.random() * 0.8);
+    const fl = FLAP[type];
+    inst.birds.push({
+      x: sx - f[0] * back + r[0] * side, y: sy - f[1] * back + r[1] * side,
+      h: h + (Math.random() - 0.5) * 0.12, hs: hs * (0.92 + Math.random() * 0.16), sp: sp * (0.95 + Math.random() * 0.1),
+      alt: alt * (0.85 + Math.random() * 0.3), type, t: 0, ph: Math.random() * 6.28, th: fl.dihedral,
+      flapping: Math.random() < 0.6, modeT: rr(fl.flap) * Math.random(), turnPh: Math.random() * 6.28, turnA: 0.1 + Math.random() * 0.12,
+      par: cfg.par, a: 0,
+    });
+  }
+}
+function stepBirds(inst, dt, gv) {
+  const cfg = BIRDS[inst.scene.id]; if (!cfg || dt <= 0) return;
+  if (inst.birdNext === undefined) inst.birdNext = 1 + Math.random() * 2;
+  inst.birdNext -= dt;
+  if (inst.birdNext <= 0 && inst.birds.length < 18) { spawnFlock(inst); inst.birdNext = rr(cfg.every); }
+  const aspect = W / H;
+  for (const b of inst.birds) {
+    const fl = FLAP[b.type];
+    b.t += dt;
+    b.h += b.turnA * Math.sin(b.t * 0.33 + b.turnPh) * dt;
+    b.modeT -= dt;
+    if (b.flapping) {
+      b.ph += 6.2832 * fl.hz * dt;
+      const target = 0.72 * Math.sin(b.ph);
+      b.th += (target - b.th) * Math.min(1, dt * 18);
+      if (b.modeT <= 0 && Math.abs(Math.sin(b.ph)) < 0.25) { b.flapping = false; b.modeT = rr(fl.glide); }
+    } else {
+      b.th += (fl.dihedral - b.th) * Math.min(1, dt * 4);
+      if (b.modeT <= 0) { b.flapping = true; b.modeT = rr(fl.flap); b.ph = 0; }
+    }
+    const lift = b.flapping ? 1 : 0.97;
+    b.x += (Math.cos(b.h) * b.sp * lift + gv[0] * b.par) * dt;
+    b.y += (Math.sin(b.h) * b.sp * lift + gv[1] * b.par) * dt;
+    b.a = Math.min(1, b.a + dt * 1.5);
+  }
+  inst.birds = inst.birds.filter(b => b.t < 3 || (Math.abs(b.x) < aspect / 2 + 0.3 && Math.abs(b.y) < 0.8));
+}
+
+/* ── Shoreline sandpipers ──
+   The swash edge is recomputed here with the same noise as the shader (in 32-bit float steps),
+   so the birds can run from each incoming wave and follow the backwash down. */
+const fr32 = Math.fround, fract = x => x - Math.floor(x);
+function h22(x, y) {
+  let a = fract(fr32(x * 0.1031)), b = fract(fr32(y * 0.1030)), c = fract(fr32(x * 0.0973));
+  const d = fr32(fr32(a * fr32(b + 33.33)) + fr32(b * fr32(c + 33.33)) + fr32(c * fr32(a + 33.33)));
+  a = fr32(a + d); b = fr32(b + d); c = fr32(c + d);
+  return [fract(fr32(fr32(a + b) * c)), fract(fr32(fr32(a + c) * b))];
+}
+function gnJS(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
+  const ux = fx * fx * fx * (fx * (fx * 6 - 15) + 10), uy = fy * fy * fy * (fy * (fy * 6 - 15) + 10);
+  const g = (ox, oy) => { const h = h22(ix + ox, iy + oy); return (h[0] * 2 - 1) * (fx - ox) + (h[1] * 2 - 1) * (fy - oy); };
+  const a = g(0, 0), b = g(1, 0), c = g(0, 1), d = g(1, 1);
+  return 2 * ((a + (b - a) * ux) + ((c + (d - c) * ux) - (a + (b - a) * ux)) * uy);
+}
+function fbmJS(x, y, o) {
+  let s = 0, a = 0.5;
+  for (let i = 0; i < o; i++) { s += a * gnJS(x, y); const nx = (0.8 * x + 0.6 * y) * 2.03 + 3.1, ny = (-0.6 * x + 0.8 * y) * 2.03 + 1.7; x = nx; y = ny; a *= 0.5; }
+  return s;
+}
+/* world x → { bend, edge (in shore coordinate s), advancing } at the instance's current time */
+function swashAt(inst, px) {
+  const pnx = px + inst.off[0], t = inst.t, P = inst.uniforms.uPeriod, f = 2.4, w = 6.2831853 / P, up = 0.3;
+  const bend = 1.3 * fbmJS(pnx * 0.07, 3.1, 3) + 0.3 * fbmJS(pnx * 0.3, 8, 2);
+  const warp = 2.4 * fbmJS(pnx * 0.1, 1.7, 3) + 0.33 * px + 1.1 * fbmJS(pnx * 0.32 + 5, t * 0.045, 2) + 0.35 * gnJS(pnx * 1.3, t * 0.11 + 2);
+  const phr = (t * w + 0.3 * f - warp) / 6.2831853, ph = fract(phr), cyc = Math.floor(phr);
+  const amp = 0.62 + 0.3 * gnJS(cyc * 1.71, pnx * 0.06);
+  const k = (ph - up) / (1 - up), sm = k * k * (3 - 2 * k);
+  const e = ph < up ? 1 - Math.pow(1 - ph / up, 2.4) : 1 - sm;
+  const lobe = 0.15 * gnJS(pnx * 1.1, cyc * 3.1) + 0.05 * gnJS(pnx * 3.7, cyc * 5.3);
+  return { bend, edge: -0.3 + e * (amp * 1.25 + lobe), adv: ph < up, ph };
+}
+function spawnShoreFlock(inst, x0) {
+  const n = 6 + Math.floor(Math.random() * 9), hs = lerp(0.0041, 0.0053, Math.random()) * 0.8;
+  const E = swashAt(inst, x0);
+  const fl = { x: x0, drift: (Math.random() < 0.5 ? -1 : 1) * lerp(0.01, 0.04, Math.random()), birds: [] };
+  for (let i = 0; i < n; i++) {
+    const b = {
+      ox: (Math.random() - 0.5) * lerp(0.35, 0.8, Math.random()), x: 0, s: E.edge + 0.4 + Math.random() * 0.12,
+      gapA: lerp(0.36, 0.5, Math.random()), gapR: lerp(0.24, 0.32, Math.random()),
+      run: lerp(1.2, 1.6, Math.random()), walk: lerp(0.18, 0.32, Math.random()),
+      hs: hs * lerp(0.9, 1.1, Math.random()), h: -Math.PI / 2, peckT: 0, pk: 0, bob: Math.random() * 6, id: Math.random(), a: 0, vx: 0, vs: 0,
+    };
+    b.x = x0 + b.ox; fl.birds.push(b);
+  }
+  inst.flocks.push(fl);
+}
+function stepShore(inst, dt, c) {
+  if (inst.scene.id !== "shore") return;
+  if (!inst.flocks) inst.flocks = [];
+  const aspect = W / H, reach = c.zoom * Math.hypot(aspect / 2, 0.5) + 0.6;
+  const dir = inst.dir[0];
+  inst.flocks = inst.flocks.filter(fl => Math.abs(fl.x - c.cam[0]) < reach + 1.2);
+  if (!inst.flocks.length) spawnShoreFlock(inst, c.cam[0] + dir * lerp(-0.3, 0.6, Math.random()) * c.zoom * 0.5);
+  if (inst.flocks.length < 2 && !inst.flocks.some(fl => (fl.x - c.cam[0]) * dir > reach * 0.4)) {
+    if (Math.random() < dt * 0.08) spawnShoreFlock(inst, c.cam[0] + dir * (reach + 0.3));
+  }
+  if (dt <= 0) return;
+  for (const fl of inst.flocks) {
+    fl.x += fl.drift * dt;
+    if (Math.random() < dt * 0.02) fl.drift = -fl.drift;
+    const bs = fl.birds;
+    for (const b of bs) {
+      const E = swashAt(inst, b.x);
+      /* smooth, purposeful motion: run ahead of incoming water, follow the backwash down, pause to peck */
+      let vs = 0;
+      const upTarget = E.edge + b.gapA, downTarget = E.edge + b.gapR;
+      if (b.s < E.edge + 0.26) vs = b.run;   /* keep well clear of the water and its froth */
+      else if (E.adv) vs = Math.max(0, Math.min(b.run, (upTarget - b.s) * 7));
+      else if (b.peckT > 0) { b.peckT -= dt; vs = 0; }
+      else {
+        const gap = b.s - downTarget;
+        vs = gap > 0.015 ? -Math.min(b.walk * (gap > 0.25 ? 3 : 1), gap * 2.5) : 0;
+        if (gap <= 0.04 && Math.random() < dt * 1.2) b.peckT = lerp(0.4, 1.1, Math.random());
+      }
+      let vx = (fl.x + b.ox - b.x) * 0.35 + fl.drift;
+      for (const o of bs) if (o !== b) { const dx = b.x - o.x, ds = b.s - o.s, d2 = dx * dx + ds * ds; if (d2 < 0.0025 && d2 > 1e-8) vx += (dx / Math.sqrt(d2)) * 0.03 * (1 - d2 / 0.0025); }
+      vx = Math.max(-0.25, Math.min(0.25, vx));
+      b.vx += (vx - b.vx) * Math.min(1, dt * 2.5); b.vs += (vs - b.vs) * Math.min(1, dt * 9);
+      b.x += b.vx * dt; b.s += b.vs * dt;
+      const sp = Math.hypot(b.vx, b.vs);
+      const want = sp > 0.08 ? Math.atan2(b.vs, b.vx) : -Math.PI / 2 + Math.sin(b.id * 40 + inst.t * 0.12) * 0.35;
+      let dh = want - b.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+      b.h += dh * Math.min(1, dt * (sp > 0.3 ? 9 : 2.5));
+      b.bob += dt * (8 + sp * 30);
+      b.pk = b.peckT > 0 ? Math.max(0, Math.sin(b.bob * 1.6)) : b.pk * Math.max(0, 1 - dt * 8);
+      b.a = Math.min(1, b.a + dt * 2);
+      b.bend = E.bend;
+    }
+  }
+}
+/* ground birds → screen-space instance data */
+function shoreInstances(inst, c, list) {
+  if (!inst.flocks) return;
+  const cr = Math.cos(c.rot), sr = Math.sin(c.rot);
+  for (const fl of inst.flocks) for (const b of fl.birds) {
+    const py = b.s - (b.bend || 0), sp = Math.hypot(b.vx, b.vs);
+    const wob = 0;
+    const u = (b.x - c.cam[0]) / c.zoom, v = (py - c.cam[1]) / c.zoom;
+    const sx = cr * u - sr * v, sy = sr * u + cr * v;
+    const hh = b.h + c.rot;
+    list.push([sx - Math.sin(hh) * wob, sy + Math.cos(hh) * wob, hh, b.hs, b.pk, b.hs * 0.5, 3, b.a]);
+  }
+}
+
+const birdA = new Float32Array(128), birdB = new Float32Array(128);
+function drawBirds(inst, rt) {
+  if (!state.birds) return;
+  const list = [];
+  (inst.birds || []).forEach(b => list.push([b.x, b.y, b.h, b.hs, b.th, b.alt, b.type, b.a]));
+  shoreInstances(inst, camera(inst), list);
+  if (!list.length) return;
+  const n = Math.min(32, list.length);
+  for (let i = 0; i < n; i++) { const r = list[i]; birdA.set([r[0], r[1], r[2], r[3]], i * 4); birdB.set([r[4], r[5], r[6], r[7]], i * 4); }
+  const p = progs.bird; gl.useProgram(p);
+  const rot = rotAt(inst), L = inst.uniforms.uSun || [0.3, 0.4, 0.87];
+  const c = Math.cos(rot), s = Math.sin(rot);
+  gl.uniform4fv(p.u("uA"), birdA); gl.uniform4fv(p.u("uB"), birdB);
+  setU(p, "uRes", [rt.w, rt.h]); setU(p, "uSunXY", [c * L[0] - s * L[1], s * L[0] + c * L[1]]); setU(p, "uSunZ", L[2]);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, rt.fb); gl.viewport(0, 0, rt.w, rt.h);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  setU(p, "uShadow", 1); gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, n);
+  setU(p, "uShadow", 0); gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, n);
+  gl.disable(gl.BLEND);
+}
+/* Advance an instance and its birds; birds also drift with the ground as the camera moves */
+function stepInst(inst, sdt, bdt) {
+  const c0 = camera(inst);
+  advance(inst, sdt);
+  const c1 = camera(inst);
+  const dx = c1.cam[0] - c0.cam[0], dy = c1.cam[1] - c0.cam[1], c = Math.cos(c1.rot), s = Math.sin(c1.rot);
+  const inv = bdt > 0 ? 1 / (bdt * c1.zoom) : 0;
+  const gv = [-(c * dx - s * dy) * inv, -(s * dx + c * dy) * inv];
+  stepBirds(inst, bdt, gv);
+  stepShore(inst, sdt, c1);
+}
+
+function newSeed() { return 1 + Math.floor(Math.random() * 9998); }
+function go(sceneIdx, seed = newSeed(), t0 = 0) {
+  const inst = instance(SCENES[sceneIdx], seed, t0);
+  if (!cur) { cur = inst; showCaption(inst); updateChips(); updateHeart(); return; }
+  if (next) { cur = next; }
+  next = inst; mixT = 0;
+  lastSwitch = performance.now();
+  showCaption(inst); updateChips(); updateHeart();
+}
+
+
+/* ─────────────────────────── Sound ─────────────────────────── */
+/* Everything is synthesized live with Web Audio: no files, no loops that repeat. */
+const Sound = (() => {
+  let lastMeter = 0, trimG = null, ctx = null, master = null, mixBus = null, agc = null, meter = null, meterBuf = null, energy = -1, verbIn = null, beds = {}, on = false, vol = 0.7, ducked = false;
+  const TARGET = 0.06; /* long-term loudness every scene is leveled to (about -24 dBFS RMS) */
+  const rnd = Math.random;
+  function noise(kind, secs = 6) {
+    const n = Math.floor(ctx.sampleRate * secs), buf = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, last = 0;
+      for (let i = 0; i < n; i++) {
+        const w = rnd() * 2 - 1;
+        if (kind === "brown") { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.2; }
+        else {
+          b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759; b2 = 0.969 * b2 + w * 0.153852;
+          b3 = 0.8665 * b3 + w * 0.3104856; b4 = 0.55 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.016898;
+          d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926;
+        }
+      }
+      /* crossfade the ends so the loop has no seam */
+      const x = Math.floor(ctx.sampleRate * 0.25);
+      for (let i = 0; i < x; i++) { const a = i / x; d[i] = d[i] * a + d[n - x + i] * (1 - a); }
+    }
+    return buf;
+  }
+  function src(buf, rate = 1) { const s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; s.playbackRate.value = rate; s.loopEnd = buf.duration - 0.25; s.start(0, rnd() * 3); return s; }
+  function filt(type, f, q = 0.7) { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; return b; }
+  function gain(v = 0) { const g = ctx.createGain(); g.gain.value = v; return g; }
+  const set = (p, v, tc = 0.12) => p.setTargetAtTime(v, ctx.currentTime, tc);
+  function impulse(secs, decay) {
+    const n = Math.floor(ctx.sampleRate * secs), b = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (rnd() * 2 - 1) * Math.pow(1 - i / n, decay); }
+    return b;
+  }
+  function init() {
+    if (ctx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+    try { ctx = new AC(); } catch (e) { return false; }
+    /* mix (metered) → auto-leveler → gentle compressor → hard limiter → volume */
+    mixBus = gain(1); agc = gain(1); trimG = gain(1); master = gain(0);
+    meter = ctx.createAnalyser(); meter.fftSize = 2048; meterBuf = new Float32Array(meter.fftSize);
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 2.5; comp.attack.value = 0.03; comp.release.value = 0.5;
+    const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -12; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.25;
+    mixBus.connect(meter);
+    mixBus.connect(agc).connect(trimG).connect(comp).connect(lim).connect(master).connect(ctx.destination);
+    const verb = ctx.createConvolver(); verb.buffer = impulse(4.5, 2.6);
+    verbIn = gain(1); const verbOut = gain(0.55); verbIn.connect(verb).connect(verbOut).connect(mixBus);
+    return true;
+  }
+  const NOISE = {};
+  const nb = k => NOISE[k] || (NOISE[k] = noise(k));
+
+  /* Shoreline: surf timed to the breaking waves, backwash fizz, distant gulls */
+  function shore() {
+    const out = gain(0); out.connect(mixBus);
+    const crashF = filt("lowpass", 900, 0.4), crash = gain(0);
+    src(nb("pink")).connect(crashF).connect(crash).connect(out); crash.connect(verbIn);
+    const hissF = filt("bandpass", 1300, 0.6), hiss = gain(0);
+    src(nb("pink"), 1.07).connect(hissF).connect(filt("lowpass", 3200, 0.5)).connect(hiss).connect(out);
+    const rumble = gain(0.35); src(nb("brown"), 0.8).connect(filt("lowpass", 160)).connect(rumble).connect(out);
+    let gullT = 4 + rnd() * 6;
+    function gull() {
+      const now = ctx.currentTime, pan = ctx.createStereoPanner(); pan.pan.value = rnd() * 1.6 - 0.8;
+      const g = gain(0), bp = filt("bandpass", 1500, 3);
+      const calls = 2 + Math.floor(rnd() * 3), base = 1150 + rnd() * 350, lvl = 0.05 + rnd() * 0.05;
+      g.connect(pan).connect(mixBus); pan.connect(verbIn);
+      for (let k = 0; k < calls; k++) {
+        const t0 = now + k * (0.32 + rnd() * 0.08), o = ctx.createOscillator(), vib = ctx.createOscillator(), vg = gain(24);
+        o.type = "sawtooth"; vib.frequency.value = 22 + rnd() * 6; vib.connect(vg).connect(o.frequency);
+        o.frequency.setValueAtTime(base * 1.25, t0); o.frequency.exponentialRampToValueAtTime(base * 0.72, t0 + 0.26);
+        const e = gain(0); o.connect(bp).connect(e).connect(g);
+        e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(lvl, t0 + 0.03); e.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.28);
+        o.start(t0); vib.start(t0); o.stop(t0 + 0.32); vib.stop(t0 + 0.32);
+      }
+      g.gain.value = 1;
+    }
+    function kip() {
+      const now = ctx.currentTime, pan = ctx.createStereoPanner(); pan.pan.value = rnd() * 1.4 - 0.7;
+      const g = gain(1); g.connect(pan).connect(mixBus); pan.connect(verbIn);
+      const n = 1 + Math.floor(rnd() * 4), f0 = 3000 + rnd() * 700, lvl = 0.012 + rnd() * 0.012;
+      for (let k = 0; k < n; k++) {
+        const t0 = now + k * (0.09 + rnd() * 0.05), o = ctx.createOscillator(), e = gain(0);
+        o.type = "sine"; o.frequency.setValueAtTime(f0 * 1.08, t0); o.frequency.exponentialRampToValueAtTime(f0 * 0.9, t0 + 0.05);
+        o.connect(e).connect(g);
+        e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(lvl, t0 + 0.006); e.gain.exponentialRampToValueAtTime(0.0005, t0 + 0.06);
+        o.start(t0); o.stop(t0 + 0.08);
+      }
+    }
+    return {
+      out,
+      update(inst, dt) {
+        const P = (inst.uniforms.uPeriod || 10) , ph = ((inst.t / P) % 1 + 1) % 1;
+        /* a slow swell into the break (about 1.5 s), then a long, darkening wash */
+        const since = (ph - 0.86 + 1) % 1, rise = 0.15;
+        const surge = since < rise ? Math.pow(Math.sin(since / rise * Math.PI / 2), 2) : Math.exp(-(since - rise) * 3.2);
+        set(crash.gain, 0.14 + 0.85 * surge, 0.35);
+        set(crashF.frequency, 300 + 750 * surge, 0.45);
+        const back = ph > 0.3 && ph < 0.85 ? Math.sin((ph - 0.3) / 0.55 * Math.PI) : 0;
+        set(hiss.gain, 0.015 + 0.09 * back + 0.03 * surge, 0.4);
+        if (state.birds && inst.flocks && inst.flocks.length) { gullT -= dt; if (gullT <= 0) { kip(); gullT = 3 + rnd() * 9; } }
+      },
+    };
+  }
+  /* Open Water: deep swell, spray and a low wind */
+  function sea() {
+    const out = gain(0); out.connect(mixBus);
+    const swF = filt("lowpass", 420, 0.5), sw = gain(0.5); src(nb("brown")).connect(swF).connect(sw).connect(out);
+    const spF = filt("bandpass", 1600, 0.4), sp = gain(0.05); src(nb("pink"), 0.93).connect(spF).connect(sp).connect(out); sp.connect(verbIn);
+    const wiF = filt("bandpass", 520, 0.9), wi = gain(0.12); src(nb("pink"), 1.11).connect(wiF).connect(wi).connect(out);
+    let a = rnd() * 9, b = rnd() * 9;
+    return { out, update(inst, dt) {
+      a += dt * 0.11; b += dt * 0.047;
+      const swell = 0.5 + 0.5 * Math.sin(a) * Math.sin(b * 1.7 + 1);
+      set(sw.gain, 0.3 + 0.45 * swell, 0.4); set(swF.frequency, 260 + 380 * swell, 0.4);
+      set(sp.gain, 0.02 + 0.08 * swell * swell, 0.3);
+      set(wiF.frequency, 420 + 260 * Math.sin(b * 2.3), 0.8);
+    } };
+  }
+  /* Cloudline: high-altitude wind with slow gusts and a faint whistle */
+  function clouds() {
+    const out = gain(0); out.connect(mixBus);
+    const wF = filt("bandpass", 500, 0.6), w = gain(0.4); src(nb("pink")).connect(wF).connect(w).connect(out); w.connect(verbIn);
+    const lo = gain(0.35); src(nb("brown"), 0.7).connect(filt("lowpass", 220)).connect(lo).connect(out);
+    const whF = filt("bandpass", 1300, 9), wh = gain(0); src(nb("pink"), 1.19).connect(whF).connect(wh).connect(out); wh.connect(verbIn);
+    let g = rnd() * 9, h = rnd() * 9;
+    return { out, update(inst, dt) {
+      g += dt * 0.09; h += dt * 0.031;
+      const gust = Math.max(0, 0.5 + 0.35 * Math.sin(g) + 0.3 * Math.sin(g * 2.7 + h * 3));
+      set(w.gain, 0.26 + 0.55 * gust, 0.5); set(wF.frequency, 320 + 700 * gust, 0.6);
+      set(wh.gain, 0.04 * Math.max(0, Math.sin(h * 2.1)) * gust, 0.8); set(whF.frequency, 1000 + 500 * Math.sin(h * 1.3), 1.2);
+    } };
+  }
+  /* Nebula: a slow evolving chord, heavy reverb, faint shimmer */
+  const CHORDS = [[38, 45, 52, 53, 57, 64], [36, 43, 50, 52, 55, 62], [41, 48, 55, 57, 60, 67], [33, 40, 47, 48, 52, 59]];
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+  function nebula() {
+    const out = gain(0); out.connect(mixBus);
+    const lp = filt("lowpass", 700, 0.3), pad = gain(0.5); lp.connect(pad).connect(out); pad.connect(verbIn);
+    const voices = [];
+    for (let i = 0; i < 6; i++) {
+      const g = gain(0), pan = ctx.createStereoPanner(); pan.pan.value = (i / 5) * 1.2 - 0.6;
+      const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+      o1.type = "triangle"; o2.type = "sine"; o2.detune.value = 7 + rnd() * 5; o1.detune.value = -4;
+      o1.connect(g); o2.connect(g); g.connect(pan).connect(lp); o1.start(); o2.start();
+      voices.push({ g, o1, o2 });
+    }
+    const sh = gain(0.03); src(nb("pink"), 1.3).connect(filt("bandpass", 5200, 6)).connect(sh).connect(verbIn);
+    let chord = 0, t = 0, seed = -1, lfo = rnd() * 9;
+    function voice(ci) {
+      const c = CHORDS[ci % CHORDS.length];
+      voices.forEach((v, i) => {
+        const f = hz(c[i]); v.o1.frequency.setTargetAtTime(f, ctx.currentTime, 2.5); v.o2.frequency.setTargetAtTime(f, ctx.currentTime, 2.5);
+        v.g.gain.setTargetAtTime(i < 2 ? 0.16 : 0.1, ctx.currentTime, 2);
+      });
+    }
+    return { out, update(inst, dt) {
+      if (seed !== inst.seed) { seed = inst.seed; chord = inst.seed % CHORDS.length; t = 0; voice(chord); }
+      t += dt; lfo += dt * 0.05;
+      if (t > 24) { t = 0; chord = (chord + 1 + Math.floor(rnd() * 2)) % CHORDS.length; voice(chord); }
+      set(lp.frequency, 450 + 500 * (0.5 + 0.5 * Math.sin(lfo)), 1.5);
+    } };
+  }
+  const BUILD = { shore, sea, clouds, nebula };
+  /* per-scene trims so each one sits at the same perceived level after leveling */
+  const TRIM = { shore: 1, sea: 1, clouds: 1, nebula: 0.68 };
+  function bed(id) { return beds[id] || (beds[id] = BUILD[id]()); }
+  function start() {
+    if (!init()) return false;
+    on = true; ctx.resume && ctx.resume().catch(() => {});
+    set(master.gain, ducked ? 0 : vol, 0.6);
+    return true;
+  }
+  function stop() { on = false; if (ctx) set(master.gain, 0, 0.4); }
+  return {
+    get on() { return on; }, start, stop,
+    setVolume(v) { vol = v; if (on && ctx && !ducked) set(master.gain, v, 0.2); },
+    duck(v) { ducked = v; if (on && ctx) set(master.gain, v ? 0 : vol, v ? 0.3 : 0.8); },
+    frame(cur, next, m, dt) {
+      if (!on || !ctx || !cur) return;
+      /* auto-leveler: track loudness over several seconds; pull down quickly, bring up slowly */
+      const now = ctx.currentTime, adt = Math.min(0.5, Math.max(0, now - (lastMeter || now))); lastMeter = now;
+      meter.getFloatTimeDomainData(meterBuf);
+      let s = 0; for (let i = 0; i < meterBuf.length; i++) s += meterBuf[i] * meterBuf[i];
+      const e = s / meterBuf.length;
+      if (energy < 0) energy = e; else energy += (e - energy) * Math.min(1, adt / (e > energy ? 1.5 : 6));
+      const rms = Math.sqrt(Math.max(energy, 1e-9));
+      if (rms > 1e-4) {
+        const want = Math.min(2.5, Math.max(0.2, TARGET / rms));
+        const g = agc.gain.value;
+        set(agc.gain, g + (want - g) * Math.min(1, adt / (want < g ? 0.8 : 4)), 0.1);
+      }
+      const want = {};
+      want[cur.scene.id] = { inst: cur, g: 1 - m };
+      if (next) want[next.scene.id] = { inst: next, g: (want[next.scene.id] ? want[next.scene.id].g : 0) + m };
+      let tr = 0; for (const id in want) tr += want[id].g * (TRIM[id] || 1);
+      set(trimG.gain, tr, 0.3);
+      for (const id in BUILD) {
+        const w = want[id];
+        if (!w && !beds[id]) continue;
+        const b = bed(id);
+        set(b.out.gain, w ? w.g : 0, 0.25);
+        if (w) b.update(w.inst, dt);
+      }
+    },
+    suspend(v) { if (!ctx) return; try { v ? ctx.suspend() : (on && ctx.resume()); } catch (e) {} },
+  };
+})();
+
+/* ─────────────────────────── Frame loop ─────────────────────────── */
+
+let last = performance.now(), acc = [], baseline = 1 / 60, cooldown = 0, frames = 0;
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  const sdt = Math.min(dt, 0.05) * (state.paused ? 0 : state.speed);
+  const bdt = state.paused ? 0 : Math.min(dt, 0.05) * Math.min(1, 0.4 + state.speed);
+  if (cur) stepInst(cur, sdt, bdt);
+  if (next) { stepInst(next, sdt, bdt); mixT += Math.min(dt, 0.05) / TRANSITION; if (mixT >= 1) { cur = next; next = null; mixT = 0; } }
+  fade = Math.min(1, fade + dt / 2.8);
+  tiltAmt += ((state.tilt ? 1 : 0) - tiltAmt) * Math.min(1, dt * 3.5);
+  glowAmt += ((state.glow ? 1 : 0) - glowAmt) * Math.min(1, dt * 3.5);
+
+  if (cur) {
+    renderScene(cur, T.A);
+    if (next) renderScene(next, T.B);
+    const m = next ? easeInOut(mixT) : 0;
+    const sc = next ? { exposure: lerp(cur.scene.exposure, next.scene.exposure, m), bloom: lerp(cur.scene.bloom, next.scene.bloom, m), thr: lerp(cur.scene.thr, next.scene.thr, m), glow: lerp(cur.scene.glow, next.scene.glow, m) } : cur.scene;
+    const aspect = W / H;
+
+    let p = progs.pre; gl.useProgram(p);
+    tex(p, "uA", 0, T.A.t); tex(p, "uB", 1, (next ? T.B : T.A).t);
+    setU(p, "uMix", m); setU(p, "uAspect", aspect); setU(p, "uOut", [T.q1.w, T.q1.h]);
+    setU(p, "uTexel", [1 / T.A.w, 1 / T.A.h]); setU(p, "uThr", halfFloat ? sc.thr : Math.min(sc.thr, 0.8)); setU(p, "uRaw", 0);
+    draw(T.q1.fb, T.q1.w, T.q1.h);
+    setU(p, "uRaw", 1); setU(p, "uOut", [T.m1.w, T.m1.h]); setU(p, "uTexel", [3 / T.A.w, 3 / T.A.h]);
+    draw(T.m1.fb, T.m1.w, T.m1.h);
+    blurPass(T.q1, T.q2);
+    p = progs.down; gl.useProgram(p);
+    tex(p, "uSrc", 0, T.q1.t); setU(p, "uTexel", [1 / T.q1.w, 1 / T.q1.h]); setU(p, "uOut", [T.e1.w, T.e1.h]);
+    draw(T.e1.fb, T.e1.w, T.e1.h);
+    blurPass(T.e1, T.e2);
+    blurPass(T.m1, T.m2);
+    p = progs.down; gl.useProgram(p);
+    tex(p, "uSrc", 0, T.m1.t); setU(p, "uTexel", [1 / T.m1.w, 1 / T.m1.h]); setU(p, "uOut", [T.n1.w, T.n1.h]);
+    draw(T.n1.fb, T.n1.w, T.n1.h);
+    blurPass(T.n1, T.n2);
+
+    p = progs.post; gl.useProgram(p);
+    tex(p, "uA", 0, T.A.t); tex(p, "uB", 1, (next ? T.B : T.A).t); tex(p, "uB4", 2, T.q1.t); tex(p, "uB8", 3, T.e1.t); tex(p, "uM8", 4, T.m1.t); tex(p, "uM16", 5, T.n1.t); setU(p, "uGlow", glowAmt * sc.glow);
+    setU(p, "uMix", m); setU(p, "uAspect", aspect); setU(p, "uOut", [W, H]);
+    setU(p, "uExposure", sc.exposure); setU(p, "uTilt", tiltAmt * state.tiltLevel); setU(p, "uBloom", sc.bloom); setU(p, "uTime", now / 1000); setU(p, "uFade", easeInOut(fade));
+    draw(null, W, H);
+  }
+
+  Sound.frame(cur, next, next ? easeInOut(mixT) : 0, state.paused ? 0 : Math.min(dt, 0.1));
+  adapt(dt, now);
+  if (state.tour && !next && cur && now - lastSwitch > state.tourEvery * 1000) {
+    const pool = favs.filter(x => !(x.scene === cur.scene.id && x.seed === cur.seed));
+    if (state.tourFav && favs.length > 1 && pool.length) loadFav(pool[Math.floor(Math.random() * pool.length)]);
+    else {
+      const idx = SCENES.indexOf(cur.scene);
+      let n = Math.floor(Math.random() * (SCENES.length - 1)); if (n >= idx) n++;
+      go(n);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+function blurPass(a, b) {
+  const p = progs.blur; gl.useProgram(p);
+  for (let i = 0; i < 2; i++) {
+    tex(p, "uSrc", 0, a.t); setU(p, "uDir", [1 / a.w, 0]); setU(p, "uOut", [b.w, b.h]); draw(b.fb, b.w, b.h);
+    tex(p, "uSrc", 0, b.t); setU(p, "uDir", [0, 1 / b.h]); setU(p, "uOut", [a.w, a.h]); draw(a.fb, a.w, a.h);
+  }
+}
+const easeInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
+/* Keep the frame rate locked by trading internal resolution */
+function adapt(dt, now) {
+  if (document.hidden) return;
+  frames++;
+  acc.push(dt); if (acc.length > 40) acc.shift();
+  if (frames < 30 || acc.length < 40) return;
+  const sorted = [...acc].sort((a, b) => a - b);
+  baseline = Math.min(Math.max(sorted[2], 1 / 240), 1 / 30);
+  const avg = acc.reduce((a, b) => a + b, 0) / acc.length;
+  if (avg > baseline * 1.3 && scale > 0.3) {
+    maxScale = Math.max(0.3, scale * 0.97);
+    scale = Math.max(0.3, scale * 0.86); acc = []; cooldown = now + 8000; allocate();
+  } else if (avg < baseline * 1.08 && now > cooldown && scale < maxScale) {
+    scale = Math.min(maxScale, scale * 1.06); acc = []; cooldown = now + 2500; allocate();
+  }
+}
+function resLabel() {
+  const el = document.getElementById("res");
+  if (el && T.A) el.textContent = `${T.A.w}×${T.A.h}`;
+}
+
+/* ─────────────────────────── Interface ─────────────────────────── */
+
+const body = document.body;
+const chipsEl = document.getElementById("scenes");
+SCENES.forEach((s, i) => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.type = "button"; b.id = "scene-" + s.id;
+  b.setAttribute("role", "tab"); b.textContent = s.title;
+  b.addEventListener("click", () => { if (active() !== s) go(i); poke(); });
+  chipsEl.appendChild(b);
+});
+const active = () => (next || cur)?.scene;
+function updateChips() {
+  SCENES.forEach(s => document.getElementById("scene-" + s.id).setAttribute("aria-selected", String(active() === s)));
+}
+
+const capEl = document.getElementById("caption");
+let capTimer = 0;
+function showCaption(inst) {
+  const [first, ...rest] = inst.scene.title.split("");
+  document.getElementById("capTitle").innerHTML = `<i>${first}</i>${rest.join("")}`;
+  document.getElementById("capSub").textContent = inst.sub;
+  document.getElementById("capCode").textContent = `Variation ${String(inst.seed).padStart(4, "0")}`;
+  capEl.classList.remove("show");
+  clearTimeout(capTimer);
+  capTimer = setTimeout(() => {
+    capEl.classList.add("show");
+    capTimer = setTimeout(() => capEl.classList.remove("show"), 7000);
+  }, 1600);
+}
+
+let idleTimer = 0, hoveringDock = false;
+const dock = document.getElementById("dock");
+dock.addEventListener("pointerenter", () => { hoveringDock = true; });
+dock.addEventListener("pointerleave", () => { hoveringDock = false; poke(); });
+function poke() {
+  body.classList.remove("idle");
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(function hide() {
+    if (hoveringDock || dock.querySelector(":focus-visible") || openPanel) {
+      idleTimer = setTimeout(hide, 1500); return;
+    }
+    body.classList.add("idle");
+  }, 2600);
+}
+window.addEventListener("pointermove", e => { if (e.pointerType === "mouse") poke(); });
+window.addEventListener("pointerdown", e => {
+  wake();
+  if (e.pointerType !== "mouse" && !e.target.closest(".dock, .panel")) {
+    if (body.classList.contains("idle")) poke(); else { clearTimeout(idleTimer); body.classList.add("idle"); }
+  } else poke();
+});
+
+const btnPlay = document.getElementById("btnPlay"), icoPlay = document.getElementById("icoPlay");
+function setPaused(v) {
+  state.paused = v;
+  Sound.duck(v);
+  icoPlay.innerHTML = v ? '<path d="M8 5.5v13l10.5-6.5z"/>' : '<path d="M9 6v12M15 6v12"/>';
+  btnPlay.setAttribute("aria-label", v ? "Play" : "Pause");
+  btnPlay.title = v ? "Play (Space)" : "Pause (Space)";
+}
+btnPlay.addEventListener("click", () => setPaused(!state.paused));
+
+const speed = document.getElementById("speed"), speedOut = document.getElementById("speedOut");
+function setSpeed(v) { state.speed = v; speed.value = v; speedOut.textContent = v.toFixed(1) + "×"; const s2 = document.getElementById("speed2"); s2.value = v; document.getElementById("speedOut2").textContent = v.toFixed(1) + "×"; }
+document.getElementById("speed2").addEventListener("input", e => setSpeed(parseFloat(e.target.value)));
+speed.addEventListener("input", () => setSpeed(parseFloat(speed.value)));
+setSpeed(state.speed);
+
+const btnTour = document.getElementById("btnTour");
+function setTour(v) { state.tour = v; btnTour.setAttribute("aria-pressed", String(v)); if (v) lastSwitch = performance.now(); }
+btnTour.addEventListener("click", () => setTour(!state.tour));
+setTour(state.tour);
+
+const btnTilt = document.getElementById("btnTilt");
+function setTilt(v) { state.tilt = v; btnTilt.setAttribute("aria-pressed", String(v)); document.getElementById("tiltRow").classList.toggle("dim", !v); try { localStorage.setItem("driftglass-tilt2", v ? "1" : "0"); } catch (e) {} }
+const tiltEl = document.getElementById("tiltLevel");
+function setTiltLevel(v) { state.tiltLevel = v; tiltEl.value = v; document.getElementById("tiltOut").textContent = Math.round(v * 100) + "%"; try { localStorage.setItem("driftglass-tiltlevel", String(v)); } catch (e) {} }
+tiltEl.addEventListener("input", () => { setTiltLevel(parseFloat(tiltEl.value)); if (!state.tilt) setTilt(true); });
+setTiltLevel(state.tiltLevel);
+btnTilt.addEventListener("click", () => setTilt(!state.tilt));
+setTilt(state.tilt);
+tiltAmt = state.tilt ? 1 : 0;
+const btnGlow = document.getElementById("btnGlow");
+function setGlow(v) { state.glow = v; btnGlow.setAttribute("aria-pressed", String(v)); try { localStorage.setItem("driftglass-glow", v ? "1" : "0"); } catch (e) {} }
+btnGlow.addEventListener("click", () => setGlow(!state.glow));
+setGlow(state.glow);
+glowAmt = state.glow ? 1 : 0;
+
+/* Favorites */
+let favs = [];
+try { favs = JSON.parse(localStorage.getItem("driftglass-favs") || "[]") || []; } catch (e) { favs = []; }
+const saveFavs = () => { try { localStorage.setItem("driftglass-favs", JSON.stringify(favs)); } catch (e) {} };
+const btnFav = document.getElementById("btnFav");
+const activeInst = () => next || cur;
+const favIndex = inst => inst ? favs.findIndex(x => x.scene === inst.scene.id && x.seed === inst.seed) : -1;
+function updateHeart() {
+  const on = favIndex(activeInst()) >= 0;
+  btnFav.setAttribute("aria-pressed", String(on));
+  btnFav.setAttribute("aria-label", on ? "Remove from favorites" : "Save to favorites");
+  btnFav.title = on ? "Remove from favorites (S)" : "Save to favorites (S)";
+  renderFavs();
+}
+function toggleFav() {
+  const inst = activeInst(); if (!inst) return;
+  const i = favIndex(inst);
+  if (i >= 0) favs.splice(i, 1);
+  else {
+    favs.unshift({ scene: inst.scene.id, seed: inst.seed, t: Math.round(inst.t * 10) / 10, speed: state.speed, tilt: state.tilt, tiltLevel: state.tiltLevel, glow: state.glow, sub: inst.sub, at: Date.now() });
+    if (favs.length > 60) favs.length = 60;
+    btnFav.classList.remove("pop"); void btnFav.offsetWidth; btnFav.classList.add("pop");
+  }
+  saveFavs(); updateHeart();
+}
+function loadFav(fv) {
+  const idx = SCENES.findIndex(s => s.id === fv.scene); if (idx < 0) return;
+  if (typeof fv.speed === "number") setSpeed(fv.speed);
+  if (typeof fv.tilt === "boolean") setTilt(fv.tilt);
+  if (typeof fv.tiltLevel === "number") setTiltLevel(fv.tiltLevel);
+  if (typeof fv.glow === "boolean") setGlow(fv.glow);
+  go(idx, fv.seed, fv.t || 0);
+}
+const SWATCH = {
+  nebula: "radial-gradient(circle at 35% 40%, #e0785a, #6b2350 45%, #0a0d1c 80%)",
+  clouds: "radial-gradient(circle at 60% 40%, #f4f1ea 22%, #12405c 55%, #07243a)",
+  sea: "linear-gradient(150deg, #1d5a6e, #0a2a3d 60%, #06192a)",
+  shore: "linear-gradient(160deg, #d9c8a4 45%, #eef2f0 50%, #2bb3b0 58%, #0b5c73)",
+};
+function renderFavs() {
+  const list = document.getElementById("favList");
+  list.textContent = "";
+  document.getElementById("favEmpty").hidden = favs.length > 0;
+  document.getElementById("favCount").textContent = favs.length ? `${favs.length} saved` : "";
+  const a = activeInst();
+  favs.forEach((fv, i) => {
+    const sc = SCENES.find(s => s.id === fv.scene); if (!sc) return;
+    const li = document.createElement("li"); li.className = "fav" + (a && a.scene.id === fv.scene && a.seed === fv.seed ? " on" : "");
+    const go_ = document.createElement("button"); go_.type = "button"; go_.className = "fav-go";
+    go_.innerHTML = `<span class="fav-sw" style="background:${SWATCH[fv.scene] || "#222"}"></span><span class="fav-txt"><span class="fav-name"></span><span class="fav-meta"></span></span>`;
+    go_.querySelector(".fav-name").textContent = sc.title;
+    go_.querySelector(".fav-meta").textContent = `Variation ${String(fv.seed).padStart(4, "0")} · ${Number(fv.speed || 0.5).toFixed(1)}×${fv.tilt ? " · tilt" : ""}`;
+    go_.addEventListener("click", () => { loadFav(fv); poke(); });
+    const x = document.createElement("button"); x.type = "button"; x.className = "fav-x"; x.setAttribute("aria-label", `Remove ${sc.title} ${fv.seed}`);
+    x.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    x.addEventListener("click", () => { favs.splice(i, 1); saveFavs(); updateHeart(); poke(); });
+    li.append(go_, x); list.appendChild(li);
+  });
+}
+btnFav.addEventListener("click", () => { toggleFav(); poke(); });
+
+/* Panels */
+let openPanel = null;
+function placePanel(el) {
+  const top = dock.getBoundingClientRect().top;
+  el.style.bottom = Math.max(16, window.innerHeight - top + 10) + "px";
+}
+function togglePanel(id, btn) {
+  const el = document.getElementById(id);
+  const wasOpen = openPanel === el;
+  closePanels();
+  if (wasOpen) return;
+  el.hidden = false; placePanel(el); openPanel = el; btn.setAttribute("aria-expanded", "true");
+  if (id === "favPanel") renderFavs();
+  poke();
+}
+function closePanels() {
+  document.querySelectorAll(".panel").forEach(p => { p.hidden = true; });
+  document.querySelectorAll("[aria-controls]").forEach(b => b.setAttribute("aria-expanded", "false"));
+  openPanel = null;
+}
+document.getElementById("btnFavs").addEventListener("click", () => togglePanel("favPanel", document.getElementById("btnFavs")));
+document.getElementById("btnSet").addEventListener("click", () => togglePanel("setPanel", document.getElementById("btnSet")));
+document.addEventListener("pointerdown", e => { if (openPanel && !e.target.closest(".panel, [aria-controls]")) closePanels(); });
+window.addEventListener("resize", () => { if (openPanel) placePanel(openPanel); });
+document.querySelectorAll(".panel").forEach(p => {
+  p.addEventListener("pointerenter", () => { hoveringDock = true; });
+  p.addEventListener("pointerleave", () => { hoveringDock = false; poke(); });
+});
+
+/* Sound controls */
+const btnSound = document.getElementById("btnSound"), btnSound2 = document.getElementById("btnSound2");
+let soundPref = false, soundVol = 0.7;
+try { soundPref = localStorage.getItem("driftglass-sound") === "1"; const v = parseFloat(localStorage.getItem("driftglass-vol")); if (v >= 0 && v <= 1) soundVol = v; } catch (e) {}
+function paintSound(v) {
+  [btnSound, btnSound2].forEach(b => b.setAttribute("aria-pressed", String(v)));
+  document.getElementById("icoSound").querySelectorAll("path").forEach((p, i) => { if (i) p.setAttribute("opacity", v ? "1" : ".35"); });
+  btnSound.title = v ? "Mute (M)" : "Sound (M)";
+}
+function setSound(v) {
+  soundPref = v;
+  try { localStorage.setItem("driftglass-sound", v ? "1" : "0"); } catch (e) {}
+  if (v) { if (!Sound.start()) { soundPref = false; } } else Sound.stop();
+  paintSound(soundPref);
+}
+btnSound.addEventListener("click", () => { setSound(!Sound.on); poke(); });
+btnSound2.addEventListener("click", () => setSound(!Sound.on));
+const volEl = document.getElementById("vol");
+function setVol(v) { soundVol = v; volEl.value = v; document.getElementById("volOut").textContent = Math.round(v * 100); Sound.setVolume(v); try { localStorage.setItem("driftglass-vol", String(v)); } catch (e) {} }
+volEl.addEventListener("input", () => setVol(parseFloat(volEl.value)));
+setVol(soundVol);
+paintSound(false);
+/* Browsers only allow sound after a tap or key press, so a remembered "on" starts at the first one */
+if (soundPref) {
+  const kick = () => { window.removeEventListener("pointerdown", kick, true); window.removeEventListener("keydown", kick, true); if (!Sound.on) setSound(true); };
+  window.addEventListener("pointerdown", kick, true); window.addEventListener("keydown", kick, true);
+}
+
+const btnBirds = document.getElementById("btnBirds");
+function setBirds(v) { state.birds = v; btnBirds.setAttribute("aria-pressed", String(v)); try { localStorage.setItem("driftglass-birds", v ? "1" : "0"); } catch (e) {} }
+btnBirds.addEventListener("click", () => setBirds(!state.birds));
+setBirds(state.birds);
+const btnTourFav = document.getElementById("btnTourFav");
+state.tourFav = false;
+try { state.tourFav = localStorage.getItem("driftglass-tourfav") === "1"; } catch (e) {}
+function setTourFav(v) { state.tourFav = v; btnTourFav.setAttribute("aria-pressed", String(v)); try { localStorage.setItem("driftglass-tourfav", v ? "1" : "0"); } catch (e) {} if (v && !state.tour) setTour(true); }
+btnTourFav.addEventListener("click", () => setTourFav(!state.tourFav));
+setTourFav(state.tourFav);
+renderFavs();
+
+
+
+document.getElementById("btnSeed").addEventListener("click", () => go(SCENES.indexOf(active())));
+document.getElementById("btnFull").addEventListener("click", toggleFull);
+function toggleFull() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else document.documentElement.requestFullscreen?.().catch(() => {});
+  } catch (e) {}
+}
+
+window.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" && (e.target.type === "text" || e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
+  const idx = SCENES.indexOf(active());
+  let used = true;
+  switch (e.key) {
+    case "ArrowRight": go((idx + 1) % SCENES.length); break;
+    case "ArrowLeft": go((idx + SCENES.length - 1) % SCENES.length); break;
+    case " ": setPaused(!state.paused); break;
+    case "n": case "N": go(idx); break;
+    case "f": case "F": toggleFull(); break;
+    case "t": case "T": setTour(!state.tour); break;
+    case "b": case "B": setTilt(!state.tilt); break;
+    case "g": case "G": setGlow(!state.glow); break;
+    case "m": case "M": setSound(!Sound.on); break;
+    case "s": case "S": toggleFav(); break;
+    case "l": case "L": togglePanel("favPanel", document.getElementById("btnFavs")); break;
+    case "Escape": closePanels(); break;
+    case "h": case "H": clearTimeout(idleTimer); body.classList.add("idle"); return e.preventDefault();
+    default: used = false;
+  }
+  if (used) { e.preventDefault(); wake(); }
+  poke();
+});
+
+let lock = null;
+function wake() {
+  if (lock || !navigator.wakeLock) return;
+  navigator.wakeLock.request("screen").then(l => { lock = l; l.addEventListener("release", () => { lock = null; }); }).catch(() => {});
+}
+document.addEventListener("visibilitychange", () => { Sound.suspend(document.hidden); if (!document.hidden) { last = performance.now(); acc = []; wake(); } });
+
+canvas.addEventListener("webglcontextlost", e => e.preventDefault());
+
+window.addEventListener("resize", resize);
+resize();
+
+const hashId = location.hash.replace("#", "");
+const startIdx = Math.max(0, SCENES.findIndex(s => s.id === hashId));
+go(hashId ? startIdx : Math.floor(Math.random() * SCENES.length));
+lastSwitch = performance.now();
+poke();
+setTimeout(() => { if (!hoveringDock) body.classList.add("idle"); }, 5000);
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
