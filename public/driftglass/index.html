@@ -226,7 +226,6 @@
     letter-spacing: -0.01em;
     text-wrap: balance;
   }
-  .cap-title i { font-style: italic; color: var(--glow); }
   .cap-sub {
     margin-top: 12px;
     font-size: 13px;
@@ -524,9 +523,9 @@ void main(){
 
 /* Cloudline and Open Water share one ocean: stacked exponential-sine waves with drag, plus clouds or their shadows */
 const CLOUDS = COMMON + `
-uniform vec3 uSun,uSunCol,uSky,uDeep,uScatter;uniform float uCover,uMode,uWaveScale,uWindAng;uniform vec2 uWind,uWindOff;
+uniform vec3 uSun,uSunCol,uSky,uDeep,uScatter;uniform float uCover,uMode,uWaveScale,uWindAng,uMorph;uniform vec2 uWind,uWindOff;
 float cloudV(vec2 p,float t,int o){
-  t*=.02025;
+  t*=uMorph;
   vec2 q=vec2(fbm(p*.16+vec2(t*.012,0.),2),fbm(p*.16+vec2(4.3,1.9)-vec2(0.,t*.01),2));
   float big=fbm(p*.07+vec2(9.,3.)+t*.004,2);
   vec2 pp=p*.45+1.1*q;
@@ -587,7 +586,7 @@ void main(){
   vec3 col=ocean;
   if(uMode<.5){
     float v=cloudV(pc,t,6);
-    float wisp=fbm(M2*pc*vec2(1.3,3.8)+vec2(t*.0002025,0.)+17.,4);
+    float wisp=fbm(M2*pc*vec2(1.3,3.8)+vec2(t*uMorph*.01,0.)+17.,4);
     float va=v+.5*wisp+.1;
     if(va>-.5){
       float d=clamp(v,0.,1.);
@@ -959,6 +958,8 @@ function oceanSky(rnd, mode) {
   return {
     uniforms: {
       uMode: mode, uWaveScale: 14.3, uWindAng: rnd() * 6.2832,
+      /* cloud shape-change rate per unit of scene time; Cloudline's clock runs 2.8× (timeScale), so .02025 × 2 / 2.8 reads as 2× the old on-screen morph */
+      uMorph: mode ? 0.02025 : 0.02025 * 2 / 2.8,
       uSun: norm3([Math.cos(az) * Math.cos(el), Math.sin(az) * Math.cos(el), Math.sin(el)]),
       uSunCol: golden ? [1.9, 1.4, 0.95] : [1.75, 1.66, 1.52],
       uSky: golden ? [0.42, 0.44, 0.56] : [0.36, 0.52, 0.8],
@@ -986,7 +987,7 @@ const SCENES = [
     },
   },
   {
-    id: "clouds", title: "Cloudline", frag: CLOUDS,
+    id: "clouds", title: "Cloudline", frag: CLOUDS, timeScale: 2.8, /* at the default 0.5× slider it plays like 1.4× */
     zoom: 6.5, drift: 0.08, rotRate: 0.002, exposure: 1.12, bloom: 0.5, thr: 1.2, glow: 1.0,
     make: rnd => oceanSky(rnd, 0),
   },
@@ -1361,7 +1362,7 @@ function drawBirds(inst, rt) {
 /* Advance an instance and its birds; birds also drift with the ground as the camera moves */
 function stepInst(inst, sdt, bdt) {
   const c0 = camera(inst);
-  advance(inst, sdt);
+  advance(inst, sdt * (inst.scene.timeScale || 1));
   const c1 = camera(inst);
   const dx = c1.cam[0] - c0.cam[0], dy = c1.cam[1] - c0.cam[1], c = Math.cos(c1.rot), s = Math.sin(c1.rot);
   const inv = bdt > 0 ? 1 / (bdt * c1.zoom) : 0;
@@ -1697,8 +1698,7 @@ function updateChips() {
 const capEl = document.getElementById("caption");
 let capTimer = 0;
 function showCaption(inst) {
-  const [first, ...rest] = inst.scene.title.split("");
-  document.getElementById("capTitle").innerHTML = `<i>${first}</i>${rest.join("")}`;
+  document.getElementById("capTitle").textContent = inst.scene.title;
   document.getElementById("capSub").textContent = inst.sub;
   document.getElementById("capCode").textContent = `Variation ${String(inst.seed).padStart(4, "0")}`;
   capEl.classList.remove("show");
