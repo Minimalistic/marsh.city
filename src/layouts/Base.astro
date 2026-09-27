@@ -640,15 +640,40 @@ const paletteItems = [
         const WANDER_MIN_MS = 3000;
         const WANDER_MAX_MS = 8000;
         const IDLE = 0, FLEEING = 1, WANDERING = 2, RETURNING = 3;
-        const container = document.body;
         const flies = [];
 
-        let scrollY = window.scrollY;
-        let mx = -9999, my = -9999;    // cursor position; off-screen until first move
+        // Depth planes: fixed full-screen layers that pan with the page via the
+        // same CSS scroll-driven timeline as the foliage (global.css,
+        // .firefly-plane), so flies ride the background on the compositor
+        // instead of trailing a JS scroll handler. Farther planes travel less.
+        const PLANE_TRAVEL_VH = { far: 10, mid: 20, near: 30 };
+        const planes = {};
+        for (const name of Object.keys(PLANE_TRAVEL_VH)) {
+          const plane = document.createElement('div');
+          plane.className = `firefly-plane firefly-plane--${name}`;
+          plane.setAttribute('aria-hidden', 'true');
+          document.body.appendChild(plane);
+          planes[name] = plane;
+        }
+        const planeFor = (depth) => (depth < 0.4 ? 'far' : depth < 0.75 ? 'mid' : 'near');
+        const planeOffset = {};  // current translateY of each plane, px
+        function readPlaneOffsets() {
+          for (const name in planes) planeOffset[name] = planes[name].getBoundingClientRect().top;
+        }
 
-        document.addEventListener('scroll', () => {
-          scrollY = window.scrollY;
-        }, { passive: true });
+        // Fallback for browsers without scroll-driven animations: move the
+        // three planes (not every fly) from scroll progress, like the foliage.
+        const cssDriven = CSS.supports('animation-timeline: scroll()');
+        function movePlanesFallback() {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          const progress = max > 0 ? Math.min(1, window.scrollY / max / 0.9) : 0;
+          for (const name in planes) {
+            const px = -progress * PLANE_TRAVEL_VH[name] * window.innerHeight / 100;
+            planes[name].style.transform = `translateY(${px.toFixed(1)}px)`;
+          }
+        }
+
+        let mx = -9999, my = -9999;    // cursor position; off-screen until first move
 
         document.addEventListener('mousemove', e => {
           mx = e.clientX;
@@ -659,10 +684,14 @@ const paletteItems = [
           my = -9999;
         });
 
+        // read plane positions before spawning so a page restored mid-scroll
+        // still places its first flies on screen
+        if (!cssDriven) movePlanesFallback();
+        readPlaneOffsets();
+
         for (let i = 0; i < COUNT; i++) {
           const el = document.createElement('div');
           el.className = 'firefly';
-          container.appendChild(el);
           // depth drives parallax speed + visual scale so flies read as being
           // at varying distances. All flies render behind cards regardless.
           // Floor pushed lower (0.08) so more flies populate the far-distance
@@ -670,10 +699,11 @@ const paletteItems = [
           const depth = 0.08 + Math.random() * 0.92;  // 0.08 – 1.0
           const sizeFactor = 0.5 + depth * 0.6;       // 0.55 – 1.1
           const opacityFactor = 0.45 + depth * 0.6;   // 0.50 – 1.05
+          const plane = planeFor(depth);
+          planes[plane].appendChild(el);
           flies.push({
-            el, depth, sizeFactor, opacityFactor,
+            el, depth, sizeFactor, opacityFactor, plane,
             baseX: 0, baseY: 0,
-            spawnScrollY: scrollY,
             driftX: 0, driftY: 0,
             fleeX: 0, fleeY: 0,
             fleeVX: 0, fleeVY: 0,
@@ -687,6 +717,8 @@ const paletteItems = [
         // render loop — state machine: idle → fleeing → wandering → returning → idle
         function renderLoop() {
           const now = performance.now();
+          if (!cssDriven) movePlanesFallback();
+          readPlaneOffsets();
           // stage bounds — fireflies get clamped here so they can't drift
           // into the side frame on ultrawide viewports
           const STAGE_MAX = 1200;
@@ -695,8 +727,6 @@ const paletteItems = [
           const stageRight = vw - stageLeft;
           const MARGIN = 8;
           for (const fly of flies) {
-            const parallaxFactor = 0.15 + fly.depth * 0.35;
-            const scrollDelta = scrollY - fly.spawnScrollY;
             // soft wall: if flee offset would push the fly outside the stage,
             // clamp and dampen-reverse the velocity so it bounces gently inward
             {
@@ -710,7 +740,8 @@ const paletteItems = [
               }
             }
             const flyX = fly.baseX + fly.driftX + fly.fleeX;
-            const flyY = fly.baseY + fly.driftY + fly.fleeY - scrollDelta * parallaxFactor;
+            // baseY is plane-local; add the plane's pan to get viewport coords
+            const flyY = fly.baseY + planeOffset[fly.plane] + fly.driftY + fly.fleeY;
 
             const dx = flyX - mx;
             const dy = flyY - my;
@@ -766,9 +797,9 @@ const paletteItems = [
               fly.agitation = Math.max(0, fly.agitation - 0.004);
             }
 
-            const scrollOffset = -scrollY * parallaxFactor;
+            // scroll parallax lives on the plane; the fly only carries its own motion
             fly.el.style.transform =
-              `translate(${fly.driftX + fly.fleeX}px, ${fly.driftY + fly.fleeY + scrollOffset}px)`;
+              `translate(${fly.driftX + fly.fleeX}px, ${fly.driftY + fly.fleeY}px)`;
           }
           requestAnimationFrame(renderLoop);
         }
@@ -783,16 +814,15 @@ const paletteItems = [
           const stageW = Math.min(vw, STAGE_MAX);
           const stageInset = Math.max(0, (vw - STAGE_MAX) / 2);
           const x = stageInset + Math.random() * stageW;
-          // compensate for scroll parallax so respawned flies land in the visible viewport
-          const parallaxFactor = 0.15 + fly.depth * 0.35;
+          // subtract the plane's current pan so respawned flies land in the
+          // visible viewport, then ride the plane from there
           const viewportY = Math.random() * window.innerHeight;
-          const y = viewportY + scrollY * parallaxFactor;
+          const y = viewportY - (planeOffset[fly.plane] ?? 0);
           el.style.left = x + 'px';
           el.style.top = y + 'px';
-          // baseX/Y = viewport coordinates (matches mouse clientX/Y for flee detection)
+          // baseX is viewport x (planes never move sideways); baseY is plane-local
           fly.baseX = x;
-          fly.baseY = viewportY;
-          fly.spawnScrollY = scrollY;
+          fly.baseY = y;
 
           const dx = (Math.random() - 0.5) * 200;
           const dy = (Math.random() - 0.5) * 160;

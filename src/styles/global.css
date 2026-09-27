@@ -1725,12 +1725,41 @@ html.theme-animating *::after {
 
 /* --- fireflies --- */
 
-.firefly {
+/* depth planes — fixed full-screen layers the flies live in. Each pans with
+   the page on the same scroll-driven timeline as the foliage, farther planes
+   traveling less, so flies ride the background on the compositor. Base.astro
+   creates them and falls back to JS where animation-timeline is missing. */
+.firefly-plane {
   position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+.firefly-plane--far  { --plane-travel: 10vh; }
+.firefly-plane--mid  { --plane-travel: 20vh; }
+.firefly-plane--near { --plane-travel: 30vh; }
+@keyframes firefly-plane-pan {
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(-1 * var(--plane-travel))); }
+}
+@supports (animation-timeline: scroll()) {
+  .firefly-plane {
+    animation-name: firefly-plane-pan;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root block);
+    animation-range: 0% 90%;
+  }
+}
+
+.firefly {
+  position: absolute;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  /* All fireflies sit on the starfield's layer (z-index: 0) — .layout is at
+  /* All fireflies sit on the starfield's layer (planes are z-index: 0) — .layout is at
      z-index: 1 and contains the cards, so every fly renders *below* the
      cards and the card's backdrop-filter blurs them through the glass.
      Sprite is punched bright enough to survive the 35% wash + 14px blur. */
