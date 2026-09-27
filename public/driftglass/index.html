@@ -1126,7 +1126,7 @@ try { const bd = localStorage.getItem("driftglass-birds"); if (bd !== null) stat
 try { const g = localStorage.getItem("driftglass-glow"); if (g !== null) state.glow = g === "1"; } catch (e) {}
 state.tilt = true; state.tiltLevel = 1;
 try { const tv = localStorage.getItem("driftglass-tilt2"); if (tv !== null) state.tilt = tv === "1"; const tl = parseFloat(localStorage.getItem("driftglass-tiltlevel")); if (tl >= 0 && tl <= 2) state.tiltLevel = tl; } catch (e) {}
-let cur = null, next = null, mixT = 0, lastSwitch = 0, fade = 0, tiltAmt = 0, glowAmt = 1;
+let cur = null, next = null, pending = null, mixT = 0, lastSwitch = 0, fade = 0, tiltAmt = 0, glowAmt = 1;
 const TRANSITION = 4.5;
 
 /* Travel is never locked to the screen axes: any angle except within 15° of horizontal or vertical */
@@ -1446,8 +1446,8 @@ function newSeed() { return 1 + Math.floor(Math.random() * 9998); }
 function go(sceneIdx, seed = newSeed(), t0 = 0) {
   const inst = instance(SCENES[sceneIdx], seed, t0);
   if (!cur) { cur = inst; showCaption(inst); updateChips(); updateHeart(); return; }
-  if (next) { cur = next; }
-  next = inst; mixT = 0;
+  /* mid-fade: don't cut to the half-shown scene; finish this fade quickly, then fade to the newest pick */
+  if (next) pending = inst; else { next = inst; mixT = 0; }
   lastSwitch = performance.now();
   showCaption(inst); updateChips(); updateHeart();
 }
@@ -1670,7 +1670,7 @@ function frame(now) {
   const sdt = Math.min(dt, 0.05) * (state.paused ? 0 : state.speed);
   const bdt = state.paused ? 0 : Math.min(dt, 0.05) * Math.min(1, 0.4 + state.speed);
   if (cur) stepInst(cur, sdt, bdt);
-  if (next) { stepInst(next, sdt, bdt); mixT += Math.min(dt, 0.05) / TRANSITION; if (mixT >= 1) { cur = next; next = null; mixT = 0; } }
+  if (next) { stepInst(next, sdt, bdt); mixT += Math.min(dt, 0.05) / (pending ? 1 : TRANSITION); if (mixT >= 1) { cur = next; next = pending; pending = null; mixT = 0; } }
   fade = Math.min(1, fade + dt / 2.8);
   tiltAmt += ((state.tilt ? 1 : 0) - tiltAmt) * Math.min(1, dt * 3.5);
   glowAmt += ((state.glow ? 1 : 0) - glowAmt) * Math.min(1, dt * 3.5);
@@ -1761,7 +1761,7 @@ SCENES.forEach((s, i) => {
   b.addEventListener("click", () => { if (active() !== s) go(i); poke(); });
   chipsEl.appendChild(b);
 });
-const active = () => (next || cur)?.scene;
+const active = () => (pending || next || cur)?.scene;
 function updateChips() {
   SCENES.forEach(s => document.getElementById("scene-" + s.id).setAttribute("aria-selected", String(active() === s)));
 }
@@ -1844,7 +1844,7 @@ let favs = [];
 try { favs = JSON.parse(localStorage.getItem("driftglass-favs") || "[]") || []; } catch (e) { favs = []; }
 const saveFavs = () => { try { localStorage.setItem("driftglass-favs", JSON.stringify(favs)); } catch (e) {} };
 const btnFav = document.getElementById("btnFav");
-const activeInst = () => next || cur;
+const activeInst = () => pending || next || cur;
 const favIndex = inst => inst ? favs.findIndex(x => x.scene === inst.scene.id && x.seed === inst.seed) : -1;
 function updateHeart() {
   const on = favIndex(activeInst()) >= 0;
