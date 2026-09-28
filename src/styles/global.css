@@ -498,7 +498,8 @@ footer.site-foot {
 /* Wrapper for the parallax stack. display: contents keeps it out of layout
    and stacking, so the frames below (and the firefly planes Base.astro slots
    between them) all paint in the root stacking context in DOM order:
-   forest → far flies → back → mid flies → mid → near flies → front. */
+   forest → far flies → back → mid flies → mid → near flies → front →
+   ground → fore flies. */
 .site-foot-foliage {
   --foliage-h: 70vh;
   display: contents;
@@ -1988,6 +1989,7 @@ html.theme-animating *::after {
 .firefly-plane--far  { --plane-travel: 10vh; }
 .firefly-plane--mid  { --plane-travel: 20vh; }
 .firefly-plane--near { --plane-travel: 30vh; }
+.firefly-plane--fore { --plane-travel: 40vh; }
 @keyframes firefly-plane-pan {
   from { transform: translateY(0); }
   to   { transform: translateY(calc(-1 * var(--plane-travel))); }

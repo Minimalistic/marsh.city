@@ -662,22 +662,31 @@ const paletteItems = [
         // same CSS scroll-driven timeline as the foliage (global.css,
         // .firefly-plane), so flies ride the background on the compositor
         // instead of trailing a JS scroll handler. Farther planes travel less.
-        const PLANE_TRAVEL_VH = { far: 10, mid: 20, near: 30 };
+        const PLANE_TRAVEL_VH = { far: 10, mid: 20, near: 30, fore: 40 };
         // Each plane is slotted just in front of a foliage layer so flies glow
         // between the plants: far flies ahead of the treeline, behind the
-        // cattails, and so on. Without the foliage stack they go on <body>.
-        const PLANE_BEFORE = { far: 'back', mid: 'mid', near: 'front' };
+        // cattails, and so on. 'fore' goes after the ground layer, so those
+        // flies hover in front of every plant. Without the foliage stack they
+        // go on <body>.
+        const PLANE_SLOT = {
+          far: ['before', 'back'],
+          mid: ['before', 'mid'],
+          near: ['before', 'front'],
+          fore: ['after', 'ground'],
+        };
         const planes = {};
         for (const name of Object.keys(PLANE_TRAVEL_VH)) {
           const plane = document.createElement('div');
           plane.className = `firefly-plane firefly-plane--${name}`;
           plane.setAttribute('aria-hidden', 'true');
-          const nextFrame = document.querySelector(`.foliage-frame--${PLANE_BEFORE[name]}`);
-          if (nextFrame) nextFrame.before(plane);
+          const [where, layer] = PLANE_SLOT[name];
+          const frame = document.querySelector(`.foliage-frame--${layer}`);
+          if (frame) frame[where](plane);
           else document.body.appendChild(plane);
           planes[name] = plane;
         }
-        const planeFor = (depth) => (depth < 0.4 ? 'far' : depth < 0.75 ? 'mid' : 'near');
+        const planeFor = (depth) =>
+          depth < 0.35 ? 'far' : depth < 0.6 ? 'mid' : depth < 0.82 ? 'near' : 'fore';
         const planeOffset = {};  // current translateY of each plane, px
         function readPlaneOffsets() {
           for (const name in planes) planeOffset[name] = planes[name].getBoundingClientRect().top;
@@ -859,7 +868,11 @@ const paletteItems = [
           const x = stageInset + Math.random() * stageW;
           // subtract the plane's current pan so respawned flies land in the
           // visible viewport, then ride the plane from there
-          const viewportY = Math.random() * window.innerHeight;
+          // fireflies hang low: sqrt skews the pick toward the bottom of the
+          // viewport (down in the plants), with a few strays drifting higher
+          const low = Math.random() < 0.85;
+          const viewportY = window.innerHeight *
+            (low ? 0.45 + 0.55 * Math.sqrt(Math.random()) : Math.random() * 0.5);
           const y = viewportY - (planeOffset[fly.plane] ?? 0);
           el.style.left = x + 'px';
           el.style.top = y + 'px';
