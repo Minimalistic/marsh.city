@@ -346,6 +346,10 @@
     position: fixed; inset: 0; display: grid; place-items: center; padding: 0 24px; text-align: center;
     font-family: var(--serif); font-size: 26px; color: var(--ink-dim);
   }
+  .fail .restart {
+    margin-top: 18px; padding: 10px 18px; border-radius: 999px; border: 1px solid currentColor;
+    background: none; color: inherit; font: 16px var(--sans, system-ui); cursor: pointer;
+  }
 
   /* The one-row dock is ~920px wide; below 960px it wraps to two rows or the scene tabs spill into the controls. */
   @media (max-width: 960px) {
@@ -1175,6 +1179,12 @@ function target(w, h) {
 function drop(r) { if (r) { gl.deleteTexture(r.t); gl.deleteFramebuffer(r.fb); } }
 
 let W = 0, H = 0, scale = 1, maxScale = 1, T = {};
+/* Opening frames run at a modest budget and climb from there. Starting at full size and waiting for the frame-time
+   average to drop it left a weak GPU saturated for 10+ s, which on Windows froze the whole desktop. After a driver
+   reset, the restart (safe mode) opens at the floor. */
+const START_PIXELS = 0.5e6;
+let safeStart = false;
+try { safeStart = sessionStorage.getItem("driftglass-safe") === "1"; } catch (e) {}
 function allocate() {
   const sw = Math.max(2, Math.round(W * scale)), sh = Math.max(2, Math.round(H * scale));
   if (T.A && T.A.w === sw && T.A.h === sh) return;
@@ -2004,9 +2014,11 @@ const Sound = (() => {
 /* ─────────────────────────── Frame loop ─────────────────────────── */
 
 let last = performance.now(), acc = [], cooldown = 0, frames = 0, lastDrop = 0, capScale = 1;
-let wasFading = false, fastClimbUntil = 0, probe = null, capFt = 0, capUntil = 0;
+let wasFading = false, fastClimbUntil = 0, probe = null, capFt = 0, capUntil = 0, slowStreak = 0, lost = false;
 function frame(now) {
-  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (lost) return;
+  const rawDt = (now - last) / 1000;
+  const dt = Math.min(0.1, rawDt); last = now;
   const sdt = Math.min(dt, 0.05) * (state.paused ? 0 : state.speed);
   const bdt = state.paused ? 0 : Math.min(dt, 0.05) * Math.min(1, 0.4 + state.speed);
   const rdt = state.paused ? 0 : Math.min(dt, 0.05);
@@ -2049,7 +2061,7 @@ function frame(now) {
   }
 
   Sound.frame(cur, next, next ? easeInOut(mixT) : 0, state.paused ? 0 : Math.min(dt, 0.1));
-  adapt(dt, now);
+  adapt(dt, now, rawDt);
   if (state.tour && !next && cur && now - lastSwitch > state.tourEvery * 1000) {
     const pool = favs.filter(x => !(x.scene === cur.scene.id && x.seed === cur.seed));
     if (state.tourFav && favs.length > 1 && pool.length) loadFav(pool[Math.floor(Math.random() * pool.length)]);
@@ -2074,9 +2086,16 @@ const easeInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
    scene's own fastest ones read a steadily slow scene as healthy, so heavy scenes chugged along at full resolution.
    60 even on 120 Hz screens: chasing 120 would halve the resolution for no visible gain in these slow scenes. */
 const TARGET_FT = 1 / 60;
-function adapt(dt, now) {
+function adapt(dt, now, rawDt) {
   if (document.hidden) return;
   frames++;
+  /* Frames over 100 ms mean the GPU is drowning. dt is clamped at 0.1, so the average can't see how bad it is; skip
+     the averaging window and go straight to the floor. Two in a row, so a single hitch (or the first frame back from
+     a throttled iframe) doesn't trigger it. The normal climb takes resolution back up if the device copes. */
+  slowStreak = frames > 5 && rawDt > 0.1 ? slowStreak + 1 : 0;
+  if (slowStreak >= 2 && scale > 0.3) {
+    scale = 0.3; slowStreak = 0; probe = null; acc = []; lastDrop = now; cooldown = now + 8000; allocate(); return;
+  }
   /* a crossfade renders two scenes at once. It's judged on a short window so it can adapt within the fade, and its drops
      are temporary: they leave the ceiling alone, and resolution climbs back quickly once the fade ends */
   const fading = !!next;
@@ -2377,10 +2396,22 @@ function wake() {
 }
 document.addEventListener("visibilitychange", () => { Sound.suspend(document.hidden); if (!document.hidden) { last = performance.now(); acc = []; wake(); } });
 
-canvas.addEventListener("webglcontextlost", e => e.preventDefault());
+/* A lost context (usually a GPU driver reset) leaves every program, buffer and target dead. Rebuilding in place would
+   mean threading teardown through the whole renderer; reloading into safe mode is simpler, and asking first avoids a
+   reset → reload → reset loop. */
+canvas.addEventListener("webglcontextlost", e => {
+  e.preventDefault();
+  lost = true;
+  Sound.suspend(true);
+  try { sessionStorage.setItem("driftglass-safe", "1"); } catch (err) {}
+  body.insertAdjacentHTML("beforeend", '<div class="fail"><p>The graphics driver reset.<br><button type="button" class="restart">Restart at lower quality</button></p></div>');
+  body.querySelector(".fail .restart").addEventListener("click", () => location.reload());
+});
 
 window.addEventListener("resize", resize);
 resize();
+scale = Math.min(scale, safeStart ? 0.3 : Math.sqrt(START_PIXELS / (W * H))); allocate();
+fastClimbUntil = performance.now() + 15000; /* climb in 0.8 s steps while the opening budget finds its level */
 
 const hashId = location.hash.replace("#", "");
 const startIdx = Math.max(0, SCENES.findIndex(s => s.id === hashId));
