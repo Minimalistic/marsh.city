@@ -366,6 +366,8 @@ function toggleSound() {
   const btn = document.getElementById('sound-toggle');
   btn.setAttribute('aria-pressed', soundEnabled);
   if (soundEnabled) {
+    // the pool has its own sound; hold the site's ambient sound while it plays
+    window.dispatchEvent(new Event('marsh:ambient-hold'));
     soundFadeIn = 0;
     soundFadeStart = audioCtx.currentTime + 0.05; // match source start delay on first init
     oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -379,6 +381,7 @@ function toggleSound() {
     oceanGain.gain.cancelScheduledValues(audioCtx.currentTime);
     oceanGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);
     document.getElementById('sound-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+    window.dispatchEvent(new Event('marsh:ambient-release'));
   }
 }
 

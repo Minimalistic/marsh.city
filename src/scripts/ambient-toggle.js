@@ -70,6 +70,13 @@ const AMBIENT_URL = '/ambient.js';
     updateUI();
     if (engine) engine.stop();
   });
+  // the page's own audio stopped; the site sound comes back if it was wanted
+  window.addEventListener('marsh:ambient-release', () => {
+    if (!held) return;
+    held = false;
+    updateUI();
+    if (wanted) start();
+  });
 
   window.addEventListener('marsh:theme', () => {
     if (engine && wanted) engine.setNight(window.__isDark());
