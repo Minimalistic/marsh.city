@@ -3,7 +3,7 @@ title: About
 description: About Jason Marsh - Director of Technology working in assistive technology and AI-integrated tools.
 ---
 
-I'm Jason - Director of Technology at an assistive technology & older adult services nonprofit in
+I'm Jason - Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit in
 Duluth, Minnesota, with 13+ years in IT. I manage infrastructure, lead assistive
 technology services, and run an AT lending library. The people we serve are older
 adults, people with disabilities, and anyone who needs help navigating technology.

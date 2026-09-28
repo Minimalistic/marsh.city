@@ -16,7 +16,7 @@ Astro, GitHub Pages, content as conversation.
 
 ## Working
 
-Director of Technology at an assistive technology & older adult services nonprofit in Duluth, MN.
+Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit in Duluth, MN.
 Assistive technology evaluation, infrastructure, and keeping everything running.
 
 ## Exploring

@@ -11,7 +11,7 @@ export async function GET(context) {
   const lines = [
     '# marsh.city',
     '',
-    '> The personal site of Jason Marsh — Director of Technology at an assistive technology & older adult services nonprofit in Duluth, Minnesota. Projects, writing, generative art, and browser experiments, built by orchestrating AI from the terminal.',
+    '> The personal site of Jason Marsh — Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit in Duluth, Minnesota. Projects, writing, generative art, and browser experiments, built by orchestrating AI from the terminal.',
     '',
     `All content is written in Markdown and rendered by Astro. The full text of every page is available in one file at ${url('/llms-full.txt')}.`,
     '',

@@ -10,7 +10,7 @@ image: /images/whatcanhelp/landing.webp
 imageAlt: WhatCanHelp landing page - wordmark, Find what actually helps tagline, Describe the situation button, and How it works steps
 ---
 
-I'm the Director of Technology at a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what works. WhatCanHelp grew out of a question I kept coming back to: what would it look like if the AT industry had better discovery tools?
+I'm the Director of Technology at Lighthouse Center for Vital Living, a nonprofit in Duluth that serves people with disabilities and aging populations. Part of that work is assistive technology - evaluating devices, configuring them for clients, running an AT lending library, answering colleagues' questions about what works. WhatCanHelp grew out of a question I kept coming back to: what would it look like if the AT industry had better discovery tools?
 
 I built a free tool that brings together thousands of assistive technology products from hundreds of manufacturers in one searchable place: AI-written plain-language descriptions, a freeform intake that produces a matched shortlist, state-by-state directories for borrowing devices and finding funding, and PDF reports designed for funding meetings and IEP appendices. No account required, and no cookies or personal tracking.
 
