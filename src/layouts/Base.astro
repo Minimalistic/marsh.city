@@ -64,7 +64,7 @@ const paletteItems = [
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -146,27 +146,6 @@ const paletteItems = [
         document.documentElement.dataset.theme = resolved;
         document.documentElement.dataset.themePref = pref;
       })();
-    </script>
-    <script is:inline>
-      // block iOS Safari's native page pinch-zoom (it ignores the viewport meta).
-      // the lightbox runs its own pointer-based zoom, so we suppress the native
-      // gesture everywhere — including over an open lightbox.
-      document.addEventListener('gesturestart', e => e.preventDefault());
-      document.addEventListener('gesturechange', e => e.preventDefault());
-      document.addEventListener('gestureend', e => e.preventDefault());
-      document.addEventListener('touchmove', e => {
-        if (e.touches.length > 1) e.preventDefault();
-      }, { passive: false });
-      // failsafe: if the page ever zooms anyway, snap it back to 1x
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-          if (Math.abs(window.visualViewport.scale - 1) > 0.05) {
-            document.body.style.transform = 'scale(1)';
-            document.body.style.transformOrigin = '0 0';
-            window.scrollTo(0, window.scrollY);
-          }
-        });
-      }
     </script>
   </head>
   <body>
@@ -1408,7 +1387,7 @@ const paletteItems = [
 
     <script is:inline>
       // lightbox — click any .prose img to view fullscreen; JS-driven
-      // pinch-to-zoom + pan since the viewport meta blocks native zoom.
+      // pinch-to-zoom + pan, confined to the overlay (touch-action: none in CSS).
       (() => {
         let overlay = null;   // active overlay element, or null
         let detach = null;    // teardown for the active viewer's window listeners
@@ -1579,6 +1558,9 @@ const paletteItems = [
           ov.addEventListener('pointercancel', onUp);
           ov.addEventListener('wheel', onWheel, { passive: false });
           ov.addEventListener('dblclick', onDblClick);
+          // Safari's trackpad pinch fires gesture events, not ctrl+wheel; scope the
+          // block to the overlay so the rest of the page keeps native zoom
+          ov.addEventListener('gesturestart', e => e.preventDefault());
           window.addEventListener('resize', onResize);
 
           return () => window.removeEventListener('resize', onResize);
