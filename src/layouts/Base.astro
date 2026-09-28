@@ -167,15 +167,15 @@ const paletteItems = [
             </svg>
           </button>
           <div class="nav-menu">
-            <button type="button" class="nav-menu-btn" aria-label="Open menu" aria-expanded="false" aria-haspopup="true" aria-controls="nav-menu-panel">
+            <button type="button" class="nav-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu-panel">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                 <line x1="4" y1="7" x2="20" y2="7"/>
                 <line x1="4" y1="12" x2="20" y2="12"/>
                 <line x1="4" y1="17" x2="20" y2="17"/>
               </svg>
             </button>
-            <div class="nav-menu-panel" id="nav-menu-panel" role="menu" hidden>
-              <a href="/projects/" class="nav-menu-link nav-show-mobile" role="menuitem" aria-current={isActive('/projects/')}>
+            <div class="nav-menu-panel" id="nav-menu-panel" hidden>
+              <a href="/projects/" class="nav-menu-link nav-show-mobile" aria-current={isActive('/projects/')}>
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -183,7 +183,7 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">Projects</span>
               </a>
-              <a href="/posts/" class="nav-menu-link nav-show-mobile" role="menuitem" aria-current={isActive('/posts/')}>
+              <a href="/posts/" class="nav-menu-link nav-show-mobile" aria-current={isActive('/posts/')}>
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 20h9"/>
@@ -192,7 +192,7 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">Posts</span>
               </a>
-              <a href="/playground/" class="nav-menu-link nav-show-mobile" role="menuitem" aria-current={isActive('/playground/')}>
+              <a href="/playground/" class="nav-menu-link nav-show-mobile" aria-current={isActive('/playground/')}>
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/>
@@ -204,7 +204,7 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">Playground</span>
               </a>
-              <a href="/resume/" class="nav-menu-link nav-show-mobile" role="menuitem" aria-current={isActive('/resume/')}>
+              <a href="/resume/" class="nav-menu-link nav-show-mobile" aria-current={isActive('/resume/')}>
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
@@ -215,7 +215,7 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">Resume</span>
               </a>
-              <a href="/about/" class="nav-menu-link nav-show-mobile" role="menuitem" aria-current={isActive('/about/')}>
+              <a href="/about/" class="nav-menu-link nav-show-mobile" aria-current={isActive('/about/')}>
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="8" r="4"/>
@@ -224,7 +224,7 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">About</span>
               </a>
-              <button type="button" class="theme-toggle" role="menuitem" aria-label="Toggle theme: light, dark, or auto">
+              <button type="button" class="theme-toggle">
                 <span class="nav-menu-item-icon">
                   <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="4.2"/>
@@ -241,7 +241,7 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">Theme: <span class="theme-label">auto</span></span>
               </button>
-              <button type="button" class="sound-toggle" role="menuitemcheckbox" aria-checked="false" aria-label="Ambient sound">
+              <button type="button" class="sound-toggle" aria-pressed="false">
                 <span class="nav-menu-item-icon">
                   <svg class="icon-sound-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M11 5L6 9H3v6h3l5 4z"/>
@@ -256,7 +256,7 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">Sound: <span class="sound-label">off</span></span>
               </button>
-              <button type="button" class="cmdk-trigger" role="menuitem" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K">
+              <button type="button" class="cmdk-trigger" aria-keyshortcuts="Meta+K Control+K">
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="7"/>
@@ -278,9 +278,9 @@ const paletteItems = [
 
     <div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-labelledby="cmdk-input-label" hidden>
       <div class="cmdk-backdrop" data-cmdk-close></div>
-      <div class="cmdk-panel" role="combobox" aria-expanded="true" aria-haspopup="listbox" aria-owns="cmdk-results">
+      <div class="cmdk-panel">
         <label id="cmdk-input-label" class="sr-only" for="cmdk-input">Search projects, posts, and pages</label>
-        <input id="cmdk-input" class="cmdk-input" type="text" placeholder="Search projects, posts, pages…" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="cmdk-results" />
+        <input id="cmdk-input" class="cmdk-input" type="text" role="combobox" aria-expanded="true" placeholder="Search projects, posts, pages…" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="cmdk-results" />
         <ul id="cmdk-results" class="cmdk-results" role="listbox"></ul>
         <div class="cmdk-hint" aria-hidden="true">
           <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
@@ -465,7 +465,7 @@ const paletteItems = [
         let engine = null;
 
         function updateUI() {
-          btn.setAttribute('aria-checked', String(wanted));
+          btn.setAttribute('aria-pressed', String(wanted));
           if (label) label.textContent = wanted ? 'on' : 'off';
         }
         updateUI();
@@ -1162,6 +1162,7 @@ const paletteItems = [
         function render() {
           if (!filtered.length) {
             list.innerHTML = '<li class="cmdk-empty" role="presentation">No matches</li>';
+            input.removeAttribute('aria-activedescendant');
             return;
           }
           list.innerHTML = filtered.map((it, i) => `
@@ -1172,6 +1173,8 @@ const paletteItems = [
               <span class="cmdk-result-hint">${escapeHtml(it.hint || '')}</span>
             </li>
           `).join('');
+          // screen readers announce the highlighted option while typing, not only on arrow keys
+          input.setAttribute('aria-activedescendant', `cmdk-opt-${selected}`);
         }
 
         function select(i) {
@@ -1234,6 +1237,8 @@ const paletteItems = [
           if (root.hidden) return;
           switch (e.key) {
             case 'Escape': e.preventDefault(); close(); break;
+            // the input is the dialog's only focusable element; keep focus in the modal
+            case 'Tab': e.preventDefault(); break;
             case 'ArrowDown': e.preventDefault(); select(selected + 1); break;
             case 'ArrowUp': e.preventDefault(); select(selected - 1); break;
             case 'Home': e.preventDefault(); select(0); break;
@@ -1391,6 +1396,14 @@ const paletteItems = [
       (() => {
         let overlay = null;   // active overlay element, or null
         let detach = null;    // teardown for the active viewer's window listeners
+        let returnFocus = null;  // element that opened the lightbox, refocused on close
+
+        function mount() {
+          if (!returnFocus) returnFocus = document.activeElement;
+          document.body.appendChild(overlay);
+          document.body.style.overflow = 'hidden';
+          overlay.querySelector('.lightbox-close').focus();
+        }
 
         function closeLightbox() {
           if (!overlay) return;
@@ -1400,6 +1413,8 @@ const paletteItems = [
           el.classList.remove('open');
           document.body.style.overflow = '';
           setTimeout(() => el.remove(), 250);
+          if (returnFocus && returnFocus.focus) returnFocus.focus();
+          returnFocus = null;
         }
 
         function makeCloseBtn(label) {
@@ -1581,8 +1596,7 @@ const paletteItems = [
 
           overlay.appendChild(makeCloseBtn('Close image preview'));
           overlay.appendChild(img);
-          document.body.appendChild(overlay);
-          document.body.style.overflow = 'hidden';
+          mount();
 
           detach = attachViewer(overlay, img, true);
           requestAnimationFrame(() => { if (overlay) overlay.classList.add('open'); });
@@ -1606,8 +1620,7 @@ const paletteItems = [
 
           overlay.appendChild(makeCloseBtn('Close video preview'));
           overlay.appendChild(vid);
-          document.body.appendChild(overlay);
-          document.body.style.overflow = 'hidden';
+          mount();
 
           detach = attachViewer(overlay, vid, false);
           requestAnimationFrame(() => { if (overlay) overlay.classList.add('open'); });
@@ -1661,8 +1674,7 @@ const paletteItems = [
           wrap.appendChild(clone);
           overlay.appendChild(makeCloseBtn('Close diagram preview'));
           overlay.appendChild(wrap);
-          document.body.appendChild(overlay);
-          document.body.style.overflow = 'hidden';
+          mount();
 
           detach = attachViewer(overlay, wrap, true);
           requestAnimationFrame(() => { if (overlay) overlay.classList.add('open'); });
@@ -1683,6 +1695,8 @@ const paletteItems = [
 
         document.addEventListener('keydown', function(e) {
           if (e.key === 'Escape' && overlay) closeLightbox();
+          // the close button is the overlay's only focusable element; keep focus in the modal
+          if (e.key === 'Tab' && overlay) e.preventDefault();
         });
       })();
     </script>

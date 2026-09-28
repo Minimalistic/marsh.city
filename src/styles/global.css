@@ -1898,9 +1898,9 @@ nav.site-nav .links .nav-menu-link.nav-show-mobile { display: none; }
 
 /* sound toggle: muted speaker when off, speaker with waves when on */
 .sound-toggle .icon-sound-on { display: none; }
-.sound-toggle[aria-checked="true"] .icon-sound-off { display: none; }
-.sound-toggle[aria-checked="true"] .icon-sound-on  { display: block; }
-.sound-toggle[aria-checked="true"] .nav-menu-item-icon { color: var(--leaf); }
+.sound-toggle[aria-pressed="true"] .icon-sound-off { display: none; }
+.sound-toggle[aria-pressed="true"] .icon-sound-on  { display: block; }
+.sound-toggle[aria-pressed="true"] .nav-menu-item-icon { color: var(--leaf); }
 
 /* --- sky ---
    A fixed, viewport-sized gradient behind everything. Day: a clear summer
