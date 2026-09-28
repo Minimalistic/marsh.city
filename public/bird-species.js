@@ -8,7 +8,9 @@
 //            rather than just calls (outside those it only calls)
 //   weight   how common, a number or one value per month
 //   every    [min, max] seconds of rest between songs (callEvery for calls)
-//   near/far distance range, loud relative level
+//   near/far distance range (0 next tree .. 1.5 far treeline), loud relative level
+//   answers  false to stop far neighbours replying; match(b, n) to shape a reply
+//   duet     night: a mate answers at this pitch ratio
 //   song/call(v, out, t, lvl, bird) schedule notes, return seconds used
 //
 // v.tone(out, t, dur, freq, lvl, opts) and v.hiss(out, t, dur, freq, q, lvl)
@@ -38,6 +40,8 @@ export const SPECIES = {
       return 0.9;
     },
     // chick-a-dee-dee: two high sweeps, then nasal buzzy dees (more dees = more alarmed)
+    // countersinging chickadees match each other's pitch
+    match(b, n) { if (b.state.fee) { n.state.fee = b.state.fee; n.state.left = 3; } },
     call(v, out, t, lvl, b) {
       v.tone(out, t, 0.04, [8500 * b.pitch, 5500 * b.pitch], lvl * 0.7);
       v.tone(out, t + 0.07, 0.04, [7200 * b.pitch, 4600 * b.pitch], lvl * 0.6);
@@ -85,7 +89,7 @@ export const SPECIES = {
   // "question" ending up, then an "answer" ending down
   vireo: {
     kind: 'resident', months: [5, 9], songMonths: [5, 8], weight: [0, 0, 0, 0, 4, 5, 5, 3, 1, 0, 0, 0],
-    every: [0.6, 1.2], callEvery: [6, 15], stay: [60, 180],
+    every: [0.6, 1.2], callEvery: [6, 15], stay: [60, 180], answers: false,  // sings nonstop; replies would pile up
     song(v, out, t, lvl, b) {
       const up = (b.state.q = !b.state.q);
       const n = 2 + Math.floor(v.rnd() * 3);
@@ -246,7 +250,7 @@ export const SPECIES = {
   // shore. Rare on purpose: one every several minutes at most.
   loon: {
     kind: 'night', months: [4, 11], weight: [0, 0, 0, 0.2, 0.3, 0.3, 0.3, 0.3, 0.2, 0.2, 0.1, 0],
-    near: 0.85, far: 1, loud: 1.1,
+    near: 0.95, far: 1.5, loud: 1.1,
     song(v, out, t, lvl, b) {
       const f = v.between(900, 1050) * b.pitch, rate = v.between(9, 11);
       const d = Math.round(v.between(3, 7)) / rate + 0.3;
@@ -261,6 +265,7 @@ export const SPECIES = {
   // great horned owl: low (300-400 Hz), breathy, "hoo, h'HOO, hoo, hoo"
   horned: {
     kind: 'night', months: [1, 12], weight: [3, 3, 2, 1, 1, 1, 1, 1, 2, 3, 3, 3], loud: 2,
+    duet: 1.15,  // pairs call back and forth; the female's hoot is higher
     song(v, out, t, lvl, b) {
       const f = v.between(300, 360) * b.pitch, o = { harm: [1, 0.15], atk: 0.05, rel: 0.12 };
       v.tone(out, t, 0.35, [f, f * 0.96], lvl, o);

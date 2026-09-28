@@ -130,17 +130,52 @@ export function createBirds(ctx, { day, night, verbIn }) {
   }
 
   // --- placement -----------------------------------------------------------
-  // distance 0 = the next tree, 1 = across the clearing. Air soaks up the
-  // highs with distance, so far birds get darker as well as quieter.
+  // distance 0 = the next tree, 1 = across the clearing, 1.5 = the far
+  // treeline. Air soaks up the highs with distance, so far birds get darker
+  // and wetter as well as quieter.
+  const levelAt = d => Math.exp(-1.05 * d);
+  const cutoffAt = d => 16000 * Math.exp(-1.05 * d);
+  const sendAt = d => 0.2 + 0.7 * Math.min(d, 1.3);
+
   function perch(bed, distance, pan = between(-0.85, 0.85)) {
     const p = ctx.createStereoPanner();
     p.pan.value = pan;
+    // facing: a bird singing away from you is duller and a little quieter
+    const face = gain(1);
+    const faceLp = ctx.createBiquadFilter();
+    faceLp.type = 'lowpass'; faceLp.frequency.value = 16000; faceLp.Q.value = 0.5;
     const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 16000 - distance * 11000; lp.Q.value = 0.5;
+    lp.type = 'lowpass'; lp.frequency.value = cutoffAt(distance); lp.Q.value = 0.5;
+    const trim = gain(1);  // level changes when the bird moves
+    const send = gain(sendAt(distance));
     const out = gain(1);
-    out.connect(lp).connect(p).connect(bed);
-    lp.connect(gain(0.2 + distance * 0.7)).connect(verbIn);
-    return { out, pan: p.pan, level: 1 - distance * 0.65 };
+    out.connect(face).connect(faceLp).connect(lp).connect(trim).connect(p).connect(bed);
+    trim.connect(send).connect(verbIn);
+    return { out, pan: p.pan, level: levelAt(distance), face, faceLp, lp, trim, send, distance, x: pan };
+  }
+
+  // turn a little between songs
+  function turn(spot, t) {
+    spot.face.gain.setValueAtTime(between(0.7, 1), t);
+    spot.faceLp.frequency.setValueAtTime(between(5500, 16000), t);
+  }
+
+  // fly to another perch nearby: glide distance and position over a second or so
+  function hop(spot, t) {
+    const d = Math.min(1.5, Math.max(0, spot.distance + between(-0.3, 0.3)));
+    const x = Math.min(0.9, Math.max(-0.9, spot.x + between(-0.35, 0.35)));
+    spot.lp.frequency.setTargetAtTime(cutoffAt(d), t, 0.35);
+    spot.send.gain.setTargetAtTime(sendAt(d), t, 0.35);
+    spot.trim.gain.setTargetAtTime(levelAt(d) / spot.level, t, 0.35);
+    spot.pan.setTargetAtTime(x, t, 0.35);
+    spot.distance = d; spot.x = x;
+  }
+
+  // most birds in the middle distance, some close, some at the far treeline
+  function pickDistance(sp) {
+    const r = rnd();
+    const d = r < 0.25 ? between(0.05, 0.35) : r < 0.75 ? between(0.35, 0.9) : between(0.9, 1.5);
+    return Math.min(sp.far ?? 1.5, Math.max(sp.near ?? 0, d));
   }
 
   const voice = { tone, hiss, between, pick, rnd };
@@ -176,8 +211,7 @@ export function createBirds(ctx, { day, night, verbIn }) {
     const pool = available('resident').filter(([name, sp]) => sp.flock || solo || !cast.some(b => b.name === name));
     if (!pool.length) return;
     const [name, sp] = weighted(pool);
-    const distance = between(sp.near ?? 0.1, sp.far ?? 1);
-    const spot = perch(day, distance);
+    const spot = perch(day, pickDistance(sp));
     cast.push({
       name, sp, spot,
       lvl: 0.05 * spot.level * (sp.loud ?? 1),
@@ -189,24 +223,60 @@ export function createBirds(ctx, { day, night, verbIn }) {
   }
 
   function sing(b, now) {
+    // now and then, move to another perch first and sing from there
+    if (!b.hopped && rnd() < 0.06) {
+      hop(b.spot, now);
+      b.hopped = true;
+      b.next = now + between(1.2, 3);
+      return;
+    }
+    b.hopped = false;
     const m = month();
     const useSong = !b.sp.call || (singing(b.sp, m) && rnd() > (b.sp.callShare ?? 0.2));
     const act = useSong ? b.sp.song : b.sp.call;
+    turn(b.spot, now + 0.04);
     const len = act(voice, b.spot.out, now + 0.05, b.lvl, b) || 2;
     const [lo, hi] = useSong ? b.sp.every : (b.sp.callEvery ?? b.sp.every);
     b.next = now + len + between(lo, hi);
+    if (useSong && b.sp.answers !== false && rnd() < 0.2) b.next = Math.max(b.next, answer(b, now + 0.05 + len));
+  }
+
+  // A neighbour of the same species sings back from far off, the way
+  // territorial birds trade songs across a boundary. Each bird keeps the
+  // same neighbour, so the reply comes from the same spot with its own song.
+  function answer(b, after) {
+    const n = (b.neighbor ??= {
+      spot: perch(day, between(1.05, 1.5)),
+      pitch: between(0.94, 1.06),
+      state: {},
+    });
+    b.sp.match?.(b, n);
+    const t = after + between(0.4, 1.5);
+    turn(n.spot, t - 0.01);
+    const len = b.sp.song(voice, n.spot.out, t, 0.05 * n.spot.level * (b.sp.loud ?? 1), n) || 2;
+    return t + len + between(0.5, 1.5);
   }
 
   // night: a loon out on the lake, an owl in the woods
   let nextNight = 0;
   function nightCall(now) {
     const pool = available('night');
+    let len = 0;
     if (pool.length) {
       const [, sp] = weighted(pool);
-      const spot = perch(night, between(sp.near ?? 0.45, sp.far ?? 0.95));
-      sp.song(voice, spot.out, now + 0.05, 0.05 * spot.level * (sp.loud ?? 1), { pitch: between(0.95, 1.05), state: {} });
+      const d = between(sp.near ?? 0.45, sp.far ?? 1.3);
+      const spot = perch(night, d);
+      const pitch = between(0.95, 1.05);
+      len = sp.song(voice, spot.out, now + 0.05, 0.05 * spot.level * (sp.loud ?? 1), { pitch, state: {} }) || 2;
+      // a mate answering from nearby, on the other side
+      if (sp.duet && rnd() < 0.4) {
+        const mate = perch(night, Math.min(1.5, d + between(-0.2, 0.2)), -spot.x * between(0.5, 1));
+        const t = now + 0.05 + len + between(0.3, 1.2);
+        const mateLen = sp.song(voice, mate.out, t, 0.05 * mate.level * (sp.loud ?? 1), { pitch: pitch * sp.duet, state: {} }) || 2;
+        len = t - now + mateLen;
+      }
     }
-    nextNight = now + (solo ? between(8, 14) : between(25, 75));
+    nextNight = now + len + (solo ? between(8, 14) : between(25, 75));
   }
 
   return {
