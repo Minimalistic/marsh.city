@@ -999,7 +999,7 @@ c+=(texture(uSrc,uv+uDir*3.2307692308)+texture(uSrc,uv-uDir*3.2307692308))*.0702
 fragColor=c;}`;
 
 const POST = POST_COMMON + `
-uniform sampler2D uB4,uB8,uM8,uM16;uniform float uExposure,uTime,uFade,uBloom,uTilt,uGlow;
+uniform sampler2D uB4,uB8,uM8,uM16;uniform float uExposure,uTime,uFade,uBloom,uTilt,uGlow,uTaps;
 vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
 void main(){
   vec2 uv=gl_FragCoord.xy/uOut;
@@ -1013,7 +1013,7 @@ void main(){
   if(amt>.003){
     vec2 rad=vec2(1./uAspect,1.)*.016*amt;
     vec3 acc=sceneAt(uv);float ws=1.;
-    for(int i=1;i<28;i++){float fi=float(i);float r=sqrt(fi/28.);float a=fi*2.39996;
+    for(int i=1;i<28;i++){float fi=float(i);if(fi>=uTaps)break;float r=sqrt(fi/uTaps);float a=fi*2.39996;
       vec3 s=sceneAt(uv+vec2(cos(a),sin(a))*r*rad);float w=1.+max(max(s.r,s.g),s.b)*.6;acc+=s*w;ws+=w;}
     c=acc/ws;
   }else{
@@ -1155,7 +1155,12 @@ function tex(p, name, unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTe
 
 const progs = {};
 try {
-  SCENES.forEach(s => { progs[s.id] = program(s.frag); });
+  /* scenes can share a shader (Cloudline and Open Water); compile each source once */
+  const bySource = new Map();
+  SCENES.forEach(s => {
+    if (!bySource.has(s.frag)) bySource.set(s.frag, program(s.frag));
+    progs[s.id] = bySource.get(s.frag);
+  });
   progs.bird = program(BIRD_FS, BIRD_VS); progs.fish = program(FISH_FS, FISH_VS); progs.pre = program(PREFILTER); progs.down = program(DOWN); progs.blur = program(BLUR); progs.post = program(POST);
 } catch (e) {
   document.body.insertAdjacentHTML("beforeend", '<div class="fail">The renderer could not start on this device.</div>');
@@ -2057,6 +2062,7 @@ function frame(now) {
     tex(p, "uA", 0, T.A.t); tex(p, "uB", 1, (next ? T.B : T.A).t); tex(p, "uB4", 2, T.q1.t); tex(p, "uB8", 3, T.e1.t); tex(p, "uM8", 4, T.m1.t); tex(p, "uM16", 5, T.n1.t); setU(p, "uGlow", glowAmt * sc.glow);
     setU(p, "uMix", m); setU(p, "uAspect", aspect); setU(p, "uOut", [W, H]);
     setU(p, "uExposure", sc.exposure); setU(p, "uTilt", tiltAmt * state.tiltLevel); setU(p, "uBloom", sc.bloom); setU(p, "uTime", now / 1000); setU(p, "uFade", easeInOut(fade));
+    setU(p, "uTaps", tiltTaps());
     draw(null, W, H);
   }
 
@@ -2080,6 +2086,13 @@ function blurPass(a, b) {
     tex(p, "uSrc", 0, b.t); setU(p, "uDir", [0, 1 / b.h]); setU(p, "uOut", [a.w, a.h]); draw(a.fb, a.w, a.h);
   }
 }
+/* The post pass runs at native resolution, so internal scale never touched its cost; on a laptop iGPU the tilt-shift
+   blur alone could stall the machine. Its tap count follows the scale instead: 8 at the floor, the full 28 at the
+   device's ceiling, so a machine that holds full resolution renders exactly as before. */
+function tiltTaps() {
+  const t = capScale > 0.3 ? Math.min(1, Math.max(0, (scale - 0.3) / (capScale - 0.3))) : 1;
+  return Math.round(8 + 20 * t);
+}
 const easeInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 
 /* Keep the frame rate near 60 fps by trading internal resolution. The goal is absolute: judging frames against the
@@ -2092,7 +2105,7 @@ function adapt(dt, now, rawDt) {
   /* Frames over 100 ms mean the GPU is drowning. dt is clamped at 0.1, so the average can't see how bad it is; skip
      the averaging window and go straight to the floor. Two in a row, so a single hitch (or the first frame back from
      a throttled iframe) doesn't trigger it. The normal climb takes resolution back up if the device copes. */
-  slowStreak = frames > 5 && rawDt > 0.1 ? slowStreak + 1 : 0;
+  slowStreak = frames > 2 && rawDt > 0.1 ? slowStreak + 1 : 0;
   if (slowStreak >= 2 && scale > 0.3) {
     scale = 0.3; slowStreak = 0; probe = null; acc = []; lastDrop = now; cooldown = now + 8000; allocate(); return;
   }
