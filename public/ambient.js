@@ -7,6 +7,7 @@
 // AudioContext (it has to be created inside the user's tap for iOS).
 
 const LEVEL = 0.55;        // master level once faded in
+const WIND_LEVEL = 0.75;   // day and night wind beds, relative to the rest
 const FADE_IN_TC = 0.9;    // setTargetAtTime time constants, in seconds
 const FADE_OUT_TC = 0.35;
 const CROSSFADE_TC = 0.9;  // day ↔ night, roughly matches the visual crossfade
@@ -92,19 +93,21 @@ export function createAmbient(ctx) {
   const brown = noiseBuffer('brown');
 
   // day wind: pink noise through a wide bandpass; gusts move its centre and level
+  const dayWind = gain(WIND_LEVEL);
+  dayWind.connect(day);
   const windF = filt('bandpass', 450, 0.6);
   const windG = gain(0.2);
-  loop(pink).connect(windF).connect(windG).connect(day);
+  loop(pink).connect(windF).connect(windG).connect(dayWind);
   // leaf rustle rides on top of the gusts
   const leafG = gain(0.01);
-  loop(pink, 1.13).connect(filt('highpass', 3500)).connect(leafG).connect(day);
+  loop(pink, 1.13).connect(filt('highpass', 3500)).connect(leafG).connect(dayWind);
   // low body so the wind isn't all hiss
-  loop(brown).connect(filt('lowpass', 220)).connect(gain(0.3)).connect(day);
+  loop(brown).connect(filt('lowpass', 220)).connect(gain(0.3)).connect(dayWind);
 
   // night: darker and quieter, mostly low rumble with a hint of air
   const nightWindF = filt('lowpass', 380, 0.5);
   const nightWindG = gain(0.1);
-  loop(brown, 0.9).connect(nightWindF).connect(nightWindG).connect(night);
+  loop(brown, 0.9).connect(nightWindF).connect(nightWindG).connect(gain(WIND_LEVEL)).connect(night);
 
   // --- day: gusts ----------------------------------------------------------
   let nextGust = 0;
@@ -195,13 +198,13 @@ export function createAmbient(ctx) {
   }
 
   // --- night: crickets -----------------------------------------------------
-  // Tree crickets: a soft, low (~2.7-3.2 kHz) pulse on a steady beat, the
-  // gentle end of the cricket spectrum. Each one sings in runs and rests,
-  // so the chorus thins and swells instead of droning.
+  // Tree crickets: a soft, low (~2.1-2.5 kHz) pulse on a steady beat, the
+  // gentle end of the cricket spectrum. Each one sings in short runs with
+  // long rests, so there are stretches of just breeze instead of a drone.
   const crickets = [0, 1, 2].map(() => {
     const osc = ctx.createOscillator();
     osc.type = 'sine';
-    osc.frequency.value = between(2650, 3200);
+    osc.frequency.value = between(2100, 2500);
     const env = gain(0);
     const pan = ctx.createStereoPanner();
     pan.pan.value = between(-0.9, 0.9);
@@ -211,7 +214,7 @@ export function createAmbient(ctx) {
     osc.start();
     return {
       env,
-      level: between(0.012, 0.028),
+      level: between(0.005, 0.011),
       period: between(0.48, 0.7),   // seconds between chirps
       pulses: 2 + Math.floor(rnd() * 3),
       singing: false,
@@ -223,7 +226,7 @@ export function createAmbient(ctx) {
   function cricketTick(c, now) {
     if (now >= c.switchAt) {
       c.singing = !c.singing;
-      c.switchAt = now + (c.singing ? between(6, 20) : between(3, 14));
+      c.switchAt = now + (c.singing ? between(4, 12) : between(10, 35));
       c.nextChirp = now + 0.05;
     }
     if (!c.singing) return;
