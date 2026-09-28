@@ -818,6 +818,12 @@ const paletteItems = [
           const depth = 0.08 + Math.random() * 0.92;  // 0.08 – 1.0
           const sizeFactor = 0.5 + depth * 0.6;       // 0.55 – 1.1
           const opacityFactor = 0.45 + depth * 0.6;   // 0.50 – 1.05
+          // Size is set once, for life. Resizing on every respawn reallocated
+          // the fly's ~330px glow texture, and on iOS that churn under a
+          // card's backdrop-filter made the foliage layers blink out.
+          const size = (3 + Math.random() * 5) * sizeFactor;
+          el.style.width = size + 'px';
+          el.style.height = size + 'px';
           const plane = planeFor(depth);
           planes[plane].appendChild(el);
           flies.push({
@@ -927,9 +933,11 @@ const paletteItems = [
               fly.agitation = Math.max(0, fly.agitation - 0.004);
             }
 
-            // scroll parallax lives on the plane; the fly only carries its own motion
+            // scroll parallax lives on the plane; the fly carries its spawn
+            // point plus its own motion, all in the transform so a respawn
+            // never touches layout (see animateFirefly)
             fly.el.style.transform =
-              `translate(${fly.driftX + fly.fleeX}px, ${fly.driftY + fly.fleeY}px)`;
+              `translate(${fly.baseX + fly.driftX + fly.fleeX}px, ${fly.baseY + fly.driftY + fly.fleeY}px)`;
           }
           requestAnimationFrame(renderLoop);
         }
@@ -962,8 +970,8 @@ const paletteItems = [
           const viewportY = window.innerHeight *
             (low ? 0.45 + 0.55 * Math.sqrt(Math.random()) : Math.random() * 0.5);
           const y = viewportY - (planeOffset[fly.plane] ?? 0);
-          el.style.left = x + 'px';
-          el.style.top = y + 'px';
+          // position goes through the render loop's transform, not left/top:
+          // moving a fly is then a compositor-only change, with no layout pass
           // baseX is viewport x (planes never move sideways); baseY is plane-local
           fly.baseX = x;
           fly.baseY = y;
@@ -976,10 +984,6 @@ const paletteItems = [
           const fadeOut = 1600 + Math.random() * 2400;
           const totalDrift = fadeIn + glow + fadeOut;
           const delay = first ? Math.random() * 5000 : 200 + Math.random() * 3000;
-
-          const size = (3 + Math.random() * 5) * fly.sizeFactor;
-          el.style.width = size + 'px';
-          el.style.height = size + 'px';
 
           fly.driftX = 0;
           fly.driftY = 0;

@@ -2021,6 +2021,9 @@ html.theme-animating *::after {
 
 .firefly {
   position: absolute;
+  /* pinned to the plane's corner; Base.astro places each fly via transform */
+  left: 0;
+  top: 0;
   width: 6px;
   height: 6px;
   border-radius: 50%;
