@@ -222,6 +222,8 @@ export function createBirds(ctx, { day, night, verbIn }) {
   }
 
   return {
+    // for the soundboard (birdboard.html), which plays species one at a time
+    voice, perch,
     day(now) {
       const want = solo ? 1 : CAST_BY_MONTH[month() - 1];
       cast = cast.filter(b => now < b.leave);

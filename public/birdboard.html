@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bird Soundboard</title>
+<style>
+  :root {
+    --bg: #f5f0e6; --card: #fffaf0; --ink: #1f2a22; --muted: #5d6b60;
+    --accent: #2f5d3a; --accent-ink: #fff; --line: #d9d0bf;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141a16; --card: #1d2520; --ink: #e8e4d8; --muted: #9aa89d;
+      --accent: #7fb08a; --accent-ink: #10160f; --line: #2e3a32; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.45 Inter, system-ui, -apple-system, sans-serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-family: Lora, Georgia, serif; font-weight: 600; margin: 0 0 4px; font-size: 1.6rem; }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: 0.92rem; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 18px;
+    position: sticky; top: 0; background: var(--bg); padding: 8px 0; z-index: 1; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .seg button { border: 0; background: transparent; color: var(--ink); padding: 8px 14px; font: inherit; font-size: 0.9rem; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .stop { margin-left: auto; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 0.9rem; }
+  h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 22px 0 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .bird { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .name { font-weight: 600; }
+  .note { color: var(--muted); font-size: 0.85rem; margin: 2px 0 10px; }
+  .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .acts button { min-height: 44px; min-width: 76px; border-radius: 10px; border: 0;
+    background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600; }
+  .acts button.alt { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .acts button.playing { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .acts a { margin-left: auto; color: var(--accent); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bird soundboard</h1>
+  <p class="sub">The synthesized birds from the site's ambient sound, one at a time. "Real" opens the Cornell recordings to compare. On iPhone, the ringer switch has to be on.</p>
+  <div class="bar">
+    <span class="seg" role="group" aria-label="Distance">
+      <button type="button" data-dist="0.1" aria-pressed="true">Near</button>
+      <button type="button" data-dist="0.5" aria-pressed="false">Mid</button>
+      <button type="button" data-dist="0.9" aria-pressed="false">Far</button>
+    </span>
+    <button type="button" class="stop" id="stop">Stop</button>
+  </div>
+  <div id="board"></div>
+</main>
+<script type="module">
+import { SPECIES } from './bird-species.js';
+import { createBirds } from './birds.js';
+
+// display names, what to listen for, and the Cornell page with real recordings
+const INFO = {
+  chickadee: ['Black-capped Chickadee', 'Song: "fee-bee". Call: chick-a-dee-dee.', 'Black-capped_Chickadee'],
+  whitethroat: ['White-throated Sparrow', '"Oh sweet canada canada"', 'White-throated_Sparrow'],
+  hermitthrush: ['Hermit Thrush', 'Clear intro note, then a flutey cascade', 'Hermit_Thrush'],
+  veery: ['Veery', 'Rolling phrases spiraling down', 'Veery'],
+  vireo: ['Red-eyed Vireo', 'Short phrases, question and answer', 'Red-eyed_Vireo'],
+  ovenbird: ['Ovenbird', '"teacher TEACHER TEACHER"', 'Ovenbird'],
+  winterwren: ['Winter Wren', 'Long, fast tumbling song', 'Winter_Wren'],
+  btgreen: ['Black-throated Green Warbler', 'Buzzy "zee zee zoo zee"', 'Black-throated_Green_Warbler'],
+  junco: ['Dark-eyed Junco', 'Musical trill on one pitch', 'Dark-eyed_Junco'],
+  robin: ['American Robin', 'Caroling phrases', 'American_Robin'],
+  nuthatch: ['Red-breasted Nuthatch', 'Nasal tin-horn "yank"', 'Red-breasted_Nuthatch'],
+  bluejay: ['Blue Jay', 'Harsh "jeer", or the bell-like queedle', 'Blue_Jay'],
+  crow: ['American Crow', 'Caw caw caw', 'American_Crow'],
+  raven: ['Common Raven', 'Deep rolling croak', 'Common_Raven'],
+  dove: ['Mourning Dove', 'Song: "coo-OOO-oo, oo, oo". Call: wing whistle.', 'Mourning_Dove'],
+  pileated: ['Pileated Woodpecker', 'Song: drumming. Call: "wuk wuk wuk".', 'Pileated_Woodpecker'],
+  geese: ['Canada Goose', 'A flock passing overhead', 'Canada_Goose'],
+  loon: ['Common Loon', 'Wail (usually) or tremolo', 'Common_Loon'],
+  barredowl: ['Barred Owl', '"Who cooks for you, who cooks for you-all"', 'Barred_Owl'],
+  horned: ['Great Horned Owl', '"hoo, h\'HOO, hoo, hoo"', 'Great_Horned_Owl'],
+};
+
+let ctx, birds, bus, distance = 0.1;
+
+// the AudioContext has to be made inside a tap for iOS
+function audio() {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = ctx.createDynamicsCompressor();
+    comp.connect(ctx.destination);
+    // the same short soft room the site uses, so far birds sit back the same way
+    const verb = ctx.createConvolver(), n = Math.floor(ctx.sampleRate * 2.8);
+    const ir = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) {
+      const d = ir.getChannelData(c);
+      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    }
+    verb.buffer = ir;
+    const verbIn = ctx.createGain(), verbOut = ctx.createGain();
+    verbOut.gain.value = 0.4;
+    verbIn.connect(verb).connect(verbOut).connect(comp);
+    newBus(comp);
+    birds = createBirds(ctx, { day: bus, night: bus, verbIn });
+  }
+  ctx.resume();
+  return ctx;
+}
+
+// everything plays into a bus that Stop can cut; a fresh one replaces it
+function newBus(dest = bus?._dest) {
+  bus = ctx.createGain();
+  bus._dest = dest;
+  bus.connect(dest);
+}
+
+let playingBtn = null;
+function play(key, act, btn) {
+  audio();
+  const sp = SPECIES[key], t = ctx.currentTime + 0.05;
+  const spot = birds.perch(bus, distance, 0);
+  const lvl = 0.05 * spot.level * (sp.loud ?? 1) * 2.5;
+  let len;
+  if (act === 'pass') { sp.pass(birds.voice, spot, t, lvl); len = 15; }
+  else len = sp[act](birds.voice, spot.out, t, lvl, { pitch: 1, state: {} });
+  playingBtn?.classList.remove('playing');
+  btn.classList.add('playing'); playingBtn = btn;
+  setTimeout(() => btn.classList.remove('playing'), (len + 0.3) * 1000);
+}
+
+document.getElementById('stop').addEventListener('click', () => {
+  if (!ctx) return;
+  bus.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
+  const old = bus;
+  setTimeout(() => old.disconnect(), 300);
+  newBus();
+  playingBtn?.classList.remove('playing');
+});
+
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  distance = +b.dataset.dist;
+  document.querySelectorAll('.seg button').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+}));
+
+const groups = { resident: 'Day', flyby: 'Overhead', night: 'Night' };
+const board = document.getElementById('board');
+for (const [kind, title] of Object.entries(groups)) {
+  const h = document.createElement('h2'); h.textContent = title; board.append(h);
+  const grid = document.createElement('div'); grid.className = 'grid'; board.append(grid);
+  for (const [key, sp] of Object.entries(SPECIES)) {
+    if (sp.kind !== kind) continue;
+    const [name, note, slug] = INFO[key] ?? [key, '', ''];
+    const card = document.createElement('div'); card.className = 'bird';
+    card.innerHTML = `<div class="name"></div><div class="note"></div><div class="acts"></div>`;
+    card.querySelector('.name').textContent = name;
+    card.querySelector('.note').textContent = note;
+    const acts = card.querySelector('.acts');
+    for (const act of ['song', 'call', 'pass']) {
+      if (!sp[act]) continue;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = act === 'pass' ? 'Fly over' : act === 'song' ? (sp.call ? 'Song' : 'Play') : 'Call';
+      if (act === 'call') btn.className = 'alt';
+      btn.addEventListener('click', () => play(key, act, btn));
+      acts.append(btn);
+    }
+    if (slug) {
+      const a = document.createElement('a');
+      a.href = `https://www.allaboutbirds.org/guide/${slug}/sounds`;
+      a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Real ↗';
+      acts.append(a);
+    }
+    grid.append(card);
+  }
+}
+</script>
+</body>
+</html>
