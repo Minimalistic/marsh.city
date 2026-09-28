@@ -9,7 +9,7 @@ export async function GET(context) {
 
   return rss({
     title: 'marsh.city — Jason Marsh',
-    description: 'Writing on building, accessibility, and AI engineering.',
+    description: 'Writing on building, accessibility, and AI-integrated tools.',
     site: context.site,
     items: sorted.map((post) => ({
       title: post.data.title,

@@ -1,17 +1,17 @@
 ---
 title: Now
 description: What I'm working on right now.
-updated: August 2026
+updated: September 2026
 ---
 
 ## Building
 
-**WhatCanHelp** — a free assistive technology discovery tool. Thousands of
+**WhatCanHelp** - a free assistive technology discovery tool. Thousands of
 products from hundreds of manufacturers, freeform AI intake, plain-language guidance,
 state-by-state borrow and funding directories, and exportable PDF reports for
 funding meetings and IEP appendices. It's the main thing I'm building right now.
 
-**marsh.city** — this site, still growing into a living portfolio.
+**marsh.city** - this site, still growing into a living portfolio.
 Astro, GitHub Pages, content as conversation.
 
 ## Working
@@ -21,4 +21,4 @@ Assistive technology evaluation, infrastructure, and keeping everything running.
 
 ## Exploring
 
-AI engineering roles. Looking for teams building real products with LLMs.
+AI integration and assistive technology roles. Looking for teams building real products with LLMs.

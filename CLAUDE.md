@@ -58,7 +58,7 @@ Use diagrams when they meaningfully convey information. Don't shoehorn them in.
 
 ## Design tokens (monstera vibe)
 
-Cream/forest palette in `src/styles/global.css`. Light + dark mode via `prefers-color-scheme`. Fonts: Fraunces (serif headings), Inter (body), JetBrains Mono (code).
+Cream/forest palette in `src/styles/global.css`. Light + dark mode via `prefers-color-scheme`. Fonts: Lora (serif headings), Inter (body), JetBrains Mono (code).
 
 **Do not change layout, navigation, design tokens, or component structure without explicitly asking Jason.** Freely add/edit content.
 

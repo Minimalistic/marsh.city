@@ -1,6 +1,6 @@
 ---
 title: About
-description: About Jason Marsh - Director of Technology specializing in assistive technology and AI engineering.
+description: About Jason Marsh - Director of Technology working in assistive technology and AI-integrated tools.
 ---
 
 I'm Jason - Director of Technology at an assistive technology & older adult services nonprofit in
@@ -11,7 +11,7 @@ I hold an Assistive Technology Applications Certificate from CSUN.
 
 I also build and maintain production software outside of that role.
 [A meal planning app](/projects/mealdeck/) with AI-powered
-recipe adaptation. [An AT discovery tool](/projects/whatcanhelp/)
+recipe adaptation, now winding down. [An AT discovery tool](/projects/whatcanhelp/)
 that matches people with assistive technology.
 [An automated pet feeder](/projects/petfeedr/)
 on a Raspberry Pi. [A radio streaming app](/projects/radiogridxl/)
@@ -35,12 +35,12 @@ For a more detailed look at my experience and skills, check out my [resume](/res
 I orchestrate, AI implements. Most of what's here - the production apps, this site, the
 project pages - I build by working through [Claude Code](https://claude.com/product/claude-code) in
 the terminal. I make the calls on architecture, design, and tradeoffs; I read what comes
-back, test it, and send it back when it's wrong. It's still programming - the leverage
-changed, the judgment and the responsibility didn't. [More on how the site is built.](/oak/)
+back, test it, and send it back when it's wrong. It's still programming, and I'm
+responsible for what ships. [More on how the site is built.](/oak/)
 
 ## Get in touch
 
-I'm interested in AI engineering, assistive technology, and the places they
+I'm interested in AI integration, assistive technology, and the places they
 overlap. If something here catches your attention, reach out.
 
 - Email: [jason@marsh.city](mailto:jason@marsh.city)

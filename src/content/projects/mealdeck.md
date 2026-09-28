@@ -1,16 +1,16 @@
 ---
 title: MealDeck
-description: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation — in private beta at mealdeck.net.
-status: wip
+description: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
+status: archived
 url: https://mealdeck.net
 tags: [node, sqlite, express, vanilla-js, claude-api]
 started: 2025-01-01
-updated: 2026-04-09
+updated: 2026-09-28
 image: /images/mealdeck/landing.webp
 imageAlt: MealDeck landing page — recipe mosaic and waitlist call-to-action
 ---
 
-MealDeck started as me seeing what I could get AI to do, and kept growing from there. I built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists - currently in use with friends and family.
+MealDeck started as me seeing what I could get AI to do, and kept growing from there. I built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists, used by friends and family. I'm winding it down now.
 
 ![MealDeck landing page showing the recipe mosaic and waitlist call-to-action](/images/mealdeck/landing.webp)
 
@@ -35,6 +35,9 @@ MealDeck started as me seeing what I could get AI to do, and kept growing from t
 Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic API powers recipe adaptation and natural language recipe import. No frameworks, no build step.
 
 ## Updates
+
+### 2026-08-28
+Winding down. mealdeck.net is still up for now.
 
 ### 2026-04-26
 In active use with friends and family.

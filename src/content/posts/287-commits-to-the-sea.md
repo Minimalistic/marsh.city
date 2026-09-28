@@ -43,7 +43,7 @@ I have a side hobby of testing water in video games. Loading up a new game and g
 
 ![A school of fish near the reef as a wave washes through the scene](/images/the-shallows/scene-action.webp)
 
-The predator (a tuna-like shape) exists to create drama in an otherwise meditative scene. It cruises slowly - gentle course corrections, in no hurry - until it spots a straggler. Then a burst of speed, bubbles trailing behind, and the school explodes into panic mode.
+The predator (a barracuda) exists to create drama in an otherwise meditative scene. It cruises slowly - gentle course corrections, in no hurry - until it spots a straggler. Then a burst of speed, bubbles trailing behind, and the school explodes into panic mode.
 
 Getting the predator's temperament right mattered more than getting its movement physics right. Too aggressive and it dominates the scene - the fish are permanently terrified, the calm never returns. Too passive and it's just a big shape drifting through. The sweet spot is a predator that's mostly lazy but occasionally *decides* to hunt, creating these punctuated moments of chaos in an otherwise flowing scene.
 

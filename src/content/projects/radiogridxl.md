@@ -83,7 +83,7 @@ flowchart TD
 ## Updates
 
 ### 2026-05-29
-Synced the live demo to v7.5.5. Advanced mode now separates Pause - a soft, resumable hold on the stream - from Stop, which tears the connection down fully. The transport icons moved from unicode characters to inline SVG so iOS stops substituting its skeuomorphic emoji glyphs. v7.5.2 re-centered the logo and regenerated the maskable PWA icons, since the home-screen mark was getting cropped off-center on add-to-home-screen.
+Synced the live demo to v7.5.5, which adds the Pause/Stop split in Advanced mode and the inline SVG transport icons. v7.5.2 re-centered the logo and regenerated the maskable PWA icons, since the home-screen mark was getting cropped off-center on add-to-home-screen.
 
 ### 2026-05-28
 Updated the live demo to v7.5.1. The big addition since launch is a PWA shell - installable, with lock-screen audio controls (MediaSession), auto-resume, and offline app-shell caching via a service worker. Also added backup/restore of settings, accessibility presets, and per-stream loudness leveling so stations don't jump in volume. The demo moved from `/radio.html` to `/radio/` so the service worker stays scoped to its own directory instead of the whole site.
