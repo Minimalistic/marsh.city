@@ -110,6 +110,9 @@
      its dark crowns drop body text below WCAG AA (measured 2.7:1 at 35%;
      72%/55% plus the text tokens passes all 408 audited text blocks). */
   --glass-wash: 72%;
+  /* frosted-glass blur on cards, hero, prose, footer: GPU cost grows with the
+     radius and every glass surface re-blurs while the parallax moves behind it */
+  --glass-blur: 8px;
   --frame-bg: #243208;
   --frame-rim: rgba(141, 184, 96, 0.9);
   /* the frame's inward shadow over the stage edges reads as grime in
@@ -364,6 +367,13 @@ nav.site-nav {
   nav.site-nav {
     background: color-mix(in srgb, var(--bg) 94%, transparent);
   }
+}
+/* OS "reduce transparency": solid panels and no blur anywhere. Browser support
+   is still partial; where it's missing the query never matches. */
+@media (prefers-reduced-transparency: reduce) {
+  :root, :root[data-theme="dark"] { --glass-wash: 100%; }
+  nav.site-nav { background: var(--bg); }
+  * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 }
 
 /* Keep jump / tab-into-view targets clear of the fixed nav pill. */
@@ -757,8 +767,8 @@ footer.site-foot {
       color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent) 0%,
       color-mix(in srgb, var(--bg-elev2) var(--glass-wash), transparent) 100%
     );
-  backdrop-filter: blur(14px) saturate(130%);
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   display: flex;
@@ -797,8 +807,8 @@ footer.site-foot a:hover {
       color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent) 0%,
       color-mix(in srgb, var(--bg-elev2) var(--glass-wash), transparent) 100%
     );
-  backdrop-filter: blur(14px) saturate(130%);
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
   padding: 1.5rem 1.5rem 1.25rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -1078,8 +1088,8 @@ footer.site-foot a:hover {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent);
-  backdrop-filter: blur(14px) saturate(130%);
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
 }
 /* Bare-h1 fallback: if a page has a top-level h1 that isn't already inside
    a frosted container (.prose, .page-head, .hero), it still gets a plaque
@@ -1090,8 +1100,8 @@ main > h1 {
   border: 1px solid var(--border);
   border-radius: 14px;
   background: color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent);
-  backdrop-filter: blur(14px) saturate(130%);
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
 }
 /* Shared frosted container for page-title blocks (h1 + optional tagline).
    Matches .prose so the title reads as the top of a unified content panel. */
@@ -1115,8 +1125,8 @@ main > h1 {
   /* Frosted glass to match the cards — translucent wash + backdrop blur
      so foliage and fireflies behind get diffused through the pill. */
   background: color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent);
-  backdrop-filter: blur(14px) saturate(130%);
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 .section-header a::after {
@@ -1183,8 +1193,8 @@ nav.site-nav .links a[aria-current="page"]::after {
       color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent) 0%,
       color-mix(in srgb, var(--bg-elev2) var(--glass-wash), transparent) 100%
     );
-  backdrop-filter: blur(14px) saturate(130%);
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
   border: 1px solid var(--border);
   border-left: 3px solid var(--border-leaf);
   border-radius: var(--radius);
