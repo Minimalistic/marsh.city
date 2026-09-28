@@ -20,7 +20,7 @@
     el.classList.remove('open');
     document.body.style.overflow = '';
     setTimeout(() => el.remove(), 250);
-    if (returnFocus && returnFocus.focus) returnFocus.focus();
+    if (returnFocus && returnFocus.focus) returnFocus.focus({ preventScroll: true });
     returnFocus = null;
   }
 

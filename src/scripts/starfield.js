@@ -9,6 +9,7 @@
   canvas.setAttribute('aria-hidden', 'true');
   document.body.insertBefore(canvas, document.body.firstChild);
   const ctx = canvas.getContext('2d');
+  if (!ctx) { canvas.remove(); return; }  // null under canvas limits; don't take the rest of the bundle down
 
   let W = 0, H = 0, DPR = 1;
   const stars = [];

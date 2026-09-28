@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import { getCollection } from 'astro:content';
+// inlined, not bundled: it hides headings, so it has to run before first paint or they blink out and back
+import fadeInScript from '../scripts/fade-in.js?raw';
 interface Props {
   title?: string;
   description?: string;
@@ -264,6 +266,7 @@ const paletteItems = [
       </div>
     </footer>
 
+    <script is:inline set:html={fadeInScript} />
     <!-- index data stays per-page; `<` is escaped so a title can't close the tag -->
     <script type="application/json" id="cmdk-items" set:html={JSON.stringify(paletteItems).replace(/</g, '\\u003c')} />
     <script>
@@ -271,7 +274,6 @@ const paletteItems = [
       // the browser caches across pages; order matters — theme-toggle defines
       // window.__isDark / __themeMix before starfield and fireflies read them
       import '../scripts/lqip.js';
-      import '../scripts/fade-in.js';
       import '../scripts/nav-menu.js';
       import '../scripts/theme-toggle.js';
       import '../scripts/ambient-toggle.js';
