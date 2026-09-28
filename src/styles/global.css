@@ -2011,13 +2011,14 @@ html.theme-animating *::after {
   /* All fireflies sit on the starfield's layer (planes are z-index: 0) — .layout is at
      z-index: 1 and contains the cards, so every fly renders *below* the
      cards and the card's backdrop-filter blurs them through the glass.
-     Sprite is punched bright enough to survive the 35% wash + 14px blur. */
+     The glow's reach sets each fly's GPU layer size: a former fourth ring
+     (230px blur) made every fly an ~835px texture, ~150MB for the swarm on
+     retina, for a haze nobody could see. Three rings keep it near 330px. */
   background: rgba(255, 255, 220, 0.95);
   box-shadow:
     0 0 10px 3px rgba(230, 255, 180, 0.95),
     0 0 40px 12px rgba(200, 240, 140, 0.7),
-    0 0 110px 32px rgba(170, 225, 115, 0.4),
-    0 0 230px 70px rgba(145, 210, 100, 0.22);
+    0 0 90px 28px rgba(170, 225, 115, 0.45);
   pointer-events: none;
   z-index: 0;
   opacity: 0;
