@@ -1,6 +1,6 @@
 ---
 title: EchoEtcher
-description: Voice memos to structured Obsidian notes — local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
+description: Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
 status: wip
 repo: https://github.com/Minimalistic/EchoEtcher
 tags: [python, whisper, ollama, obsidian, ai]

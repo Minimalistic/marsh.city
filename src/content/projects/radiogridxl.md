@@ -1,6 +1,6 @@
 ---
 title: RadioGridXL
-description: Internet radio designed for older adults and people with disabilities — zero-dependency, single-file, WCAG AA accessible, deployed at a nonprofit.
+description: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, WCAG AA accessible, deployed at a nonprofit.
 status: shipped
 repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio/
@@ -11,7 +11,7 @@ image: /images/radiogridxl/grid-dark.webp
 imageAlt: RadioGridXL — two large station buttons filling a dark screen
 ---
 
-RadioGridXL is an internet radio app built for older adults and people with disabilities - the users mainstream music apps tend to leave behind. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where I'm the Director of Technology, in the hands of people who just want to listen to music without fighting the interface.
+RadioGridXL is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where I'm the Director of Technology, in the hands of people who just want to listen to music without fighting the interface.
 
 [Try the live demo](/radio/)
 

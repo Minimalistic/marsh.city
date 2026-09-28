@@ -11,7 +11,7 @@ updated: 2026-09-27
 
 I needed a central place to point people - a resume that stays current, project pages that show what I'm actually building, and posts when something's worth writing about. The problem with most personal sites is maintenance. They launch polished and rot within months because updating them feels like work on top of work.
 
-I solved that by making the whole site conversational. I describe a change to Claude Code in the terminal, it edits the Markdown, git push, GitHub Actions deploys. There's no CMS login, no admin panel, no template wrangling. Adding a project page takes about as long as describing the project out loud.
+I solved that by making the whole site conversational. I describe a change to Claude Code in the terminal, it edits the Markdown, git push, GitHub Actions deploys.
 
 ## How it works
 
@@ -27,7 +27,7 @@ Mermaid diagrams render client-side when a page needs them. Images open in a lig
 
 ## The workflow
 
-The site doubles as a journal. At the start of each session, Claude Code checks recent GitHub activity across my projects, surfaces what's changed, and offers to update project pages or draft posts based on the conversation. It's less "content management" and more "ongoing documentation that happens naturally."
+The site doubles as a journal. At the start of each session, Claude Code checks recent GitHub activity across my projects, surfaces what's changed, and offers to update project pages or draft posts based on the conversation.
 
 This means the site reflects what I'm actually working on at any given time, not what I remembered to write up six months later.
 

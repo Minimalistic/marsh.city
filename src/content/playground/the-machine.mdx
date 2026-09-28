@@ -9,7 +9,7 @@ description: Real-world system architectures, animated and explained - a differe
   <span class="terminal-title">the-machine v1.0</span>
 </div>
 <div class="terminal-body">
-<p class="terminal-prompt">Every time you load this page, a different real-world system reveals how it works under the hood - from DNS resolution to video streaming to how your credit card actually processes. Hit shuffle to explore another.</p>
+<p class="terminal-prompt">Every time you load this page, a different real-world system shows how it works - from DNS resolution to video streaming to what happens when you tap a credit card. Hit shuffle to explore another.</p>
 
 <h2 id="machine-title" class="machine-title"></h2>
 
@@ -34,7 +34,7 @@ description: Real-world system architectures, animated and explained - a differe
 <div class="terminal-body">
 <h2 class="howto-heading">How it works</h2>
 
-<p>Each system is a data object - nodes grouped into layers, edges defining connections. No hand-drawn SVG, no image files. The diagram is built from structure.</p>
+<p>Each system is a data object - nodes grouped into layers, edges defining connections. The diagram is generated from that data rather than drawn by hand.</p>
 
 <pre class="machine-code"><code>{`// each system defines its architecture as data
 {
@@ -83,7 +83,7 @@ flowchart TD
 
 <p>The animation system walks the SVG after mermaid renders it. Nodes start invisible, then fade in one by one. Edges draw themselves using <code>stroke-dashoffset</code> transitions. Arrowheads are hidden until their edge finishes drawing. The whole sequence chains through <code>setTimeout</code> callbacks - each step triggers the next.</p>
 
-<p>10 systems. Animated on scroll, instant on shuffle. All generated from ~500 lines of data.</p>
+<p>There are 10 systems, about 500 lines of data in all. Diagrams animate in on scroll and appear instantly on shuffle.</p>
 </div>
 </div>
 

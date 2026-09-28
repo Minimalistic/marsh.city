@@ -1,6 +1,6 @@
 ---
 title: Building a radio app for people who don't want an app
-description: Internet radio built for older adults and people with disabilities — accessibility-first, single-file, deployed at a nonprofit.
+description: Internet radio built for older adults and people with disabilities - accessibility-first, single-file, deployed at a nonprofit.
 date: 2026-04-09
 tags: [accessibility, vanilla-js, building]
 image: /images/radiogridxl/grid-dark.webp
@@ -17,9 +17,9 @@ It's a single HTML file. No dependencies, no build step, no backend. Open the fi
 
 I'm the Director of Technology at a nonprofit that serves older adults and people with disabilities, so the problem was right in front of me from the start: mainstream apps assume a level of technical comfort many clients don't have. Spotify is overwhelming if you just want to hear jazz. Even a basic podcast app has too many screens, too many options, too much text.
 
-That's the problem RadioGridXL was built to solve. A profile system brands and pre-configures the app for each deployment - the version running at Lighthouse Center has curated stations, a locked-down settings panel behind a technician PIN, and large touch targets sized for users who may have limited dexterity or vision.
+A profile system brands and pre-configures the app for each deployment - the version running at Lighthouse Center has curated stations, a locked-down settings panel behind a technician PIN, and large touch targets sized for users who may have limited dexterity or vision.
 
-It's in use with older adults there now. The feedback has been simple and telling: people use it. They don't ask for help with it.
+It's in use with older adults there now. The feedback so far: people use it. They don't ask for help with it.
 
 ## Designing accessibility-first
 
@@ -37,9 +37,9 @@ The accessibility features shaped the architecture from the start.
 
 ## The single-file bet
 
-Keeping everything in one HTML file sounds like a limitation, but it eliminated an entire class of deployment problems. There's no server to maintain, no dependency to update, no CDN to go down. The app can run from a local file, a Docker container, or a USB drive. For a kiosk deployment in a nonprofit with limited IT resources, that reliability matters more than architectural elegance.
+Keeping everything in one HTML file removed most of the deployment problems. There's no server to maintain, no dependency to update, no CDN to go down. The app can run from a local file, a Docker container, or a USB drive. For a kiosk deployment in a nonprofit with limited IT resources, that reliability matters more than architectural elegance.
 
-The tradeoff is real: around 4,600 lines in one file is not how anyone would recommend writing software. But I've never had a dependency conflict take it down, never needed a security patch for someone else's package, and anyone can understand the whole thing by reading one file.
+The cost is maintainability: around 4,600 lines in one file is not how anyone would recommend writing software. But I've never had a dependency conflict take it down, never needed a security patch for someone else's package, and anyone can understand the whole thing by reading one file.
 
 ## What's next
 

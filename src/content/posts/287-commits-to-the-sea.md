@@ -17,7 +17,7 @@ It's spring in Duluth, which means it's gray and 40 degrees and the lake is stil
 
 The very first version had fish and a tidal current. That's it. They moved, but they didn't *behave*. Getting from "animated dots" to "things that feel alive" meant giving each fish something like needs - borrowing from The Sims more than from physics.
 
-If you've played [SimLife](https://en.wikipedia.org/wiki/SimLife) or [El-Fish](https://en.wikipedia.org/wiki/El-Fish) - Maxis-era sims where simple creature rules produced complex behavior - that's the lineage here. A fish with no food around and no predator nearby wants to stick with its school and roam. A fish near food wants to eat, but not if the big fish is between it and the pellet. A curious fish wanders off. A lazy one trails behind. Stack enough of these simple drives and you get emergent behavior that's genuinely fun to watch - the rules interact in ways you never explicitly programmed.
+If you've played [SimLife](https://en.wikipedia.org/wiki/SimLife) or [El-Fish](https://en.wikipedia.org/wiki/El-Fish) - Maxis-era sims where simple creature rules produced complex behavior - that's the lineage here. A fish with no food around and no predator nearby wants to stick with its school and roam. A fish near food wants to eat, but not if the big fish is between it and the pellet. A curious fish wanders off. A lazy one trails behind. Stack enough of these simple drives and you get emergent behavior that's fun to watch - the rules interact in ways you never explicitly programmed.
 
 ![Two schools of fish sweep through the scene, navigating around reef rocks and seaweed](/images/the-shallows/scene-late.webp)
 
@@ -25,7 +25,7 @@ Some specific problems that took more iterations than expected:
 
 **Edge behavior.** Fish ramming into the viewport edge looks terrible. I added an offscreen buffer - fish can swim 30% beyond the visible area - plus a gentle pull toward center-crossing paths so the school regularly sweeps through the interesting part of the frame. Without that, they'd cluster in a corner and the scene would feel dead.
 
-**The white flash.** When a fish turns sharply enough while panicking, it briefly flashes white - simulating the side of its body catching light. This was the moment the fish stopped looking like animations and started looking like fish. Before that, tight turns just looked like geometry pivoting. After it, the school's panic response became visually legible from a distance.
+**The white flash.** When a fish turns sharply enough while panicking, it briefly flashes white - simulating the side of its body catching light. Before that, tight turns just looked like geometry pivoting. With it, you can read the school's panic from across the screen.
 
 **Avoidance gradients.** Early collision avoidance was binary - fish either ignored rocks or bounced off them like pinballs. Neither looked natural. The fix was multiple gradient envelopes: a wide outer zone where fish gently steer away (like they can see the rock coming), a tighter zone where they turn more aggressively, and a hard boundary they truly can't cross. Three simple zones, but the result is fish that look like they're *anticipating* obstacles rather than reacting to them.
 
@@ -35,7 +35,7 @@ The environment grew organically. Fish needed something to swim around, so I add
 
 ![Close-up of reef rocks, seaweed, and the subtle sand ripple texture between two reef formations](/images/the-shallows/reef-detail.webp)
 
-The sand ripples alone took about ten commits. Too prominent and they competed with the fish. Wrong color temperature and they looked like a texture from a different scene. Too sharp and they read as drawn lines rather than light refracting through moving water. The final version uses thick blurred strokes at very low opacity, built up in layers. They're barely there - which is the point.
+The sand ripples alone took about ten commits. Too prominent and they competed with the fish. Wrong color temperature and they looked like a texture from a different scene. Too sharp and they read as drawn lines rather than light refracting through moving water. The final version uses thick blurred strokes at very low opacity, built up in layers. You mostly notice them when they're missing.
 
 I have a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - the *absence* of that interaction reads as fake to anyone who's spent time watching real water, even if nobody could name what's missing.
 
@@ -49,7 +49,7 @@ Getting the predator's temperament right mattered more than getting its movement
 
 The kill animation went through revisions. I tried blood first - red particles dispersing from the bite. It looked fine technically but completely broke the vibe. This is supposed to be something you leave running in the background, something pleasant to glance at. Blood made it feel violent rather than natural.
 
-The solution: sparkly scales spray out from the impact, glinting as they slowly spread and sink. And then - the part that really tied it together - those drifting scales become food that the other fish want to eat. So after the moment of panic, the school cautiously returns to pick at the remnants. Tension, release, return to calm. The full cycle of a nature scene in maybe fifteen seconds.
+The solution: sparkly scales spray out from the impact, glinting as they slowly spread and sink. And then - the part that really tied it together - those drifting scales become food that the other fish want to eat. So after the moment of panic, the school cautiously returns to pick at the remnants. The whole cycle takes maybe fifteen seconds.
 
 Seagulls were added for visual variety - they cast dynamic shadows on the water as they circle. Their wing animation still needs work (canvas-drawn bird wings are surprisingly hard to make look right), but the shadows moving across the school create nice moments of the fish briefly scattering from what's probably just a shape overhead.
 
@@ -87,13 +87,13 @@ A few lessons from doing this 287 times:
 
 **Know when to throw things away.** The particle waves. Some visual effects that tanked performance. A blood system that worked fine but felt wrong. Sunk cost doesn't apply here - if it doesn't serve the thing you're making, revert it and move on.
 
-## What this means
+## Where this leaves me
 
-My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would've meant hiring someone. The result is one 314KB file - built for momentum over maintainability. For a decorative canvas you leave running in the background, that's the right call: I'll never need to extend it, just glance at it. 314KB, and you've got a cartoony ocean to stare at. Fair trade.
+My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would've meant hiring someone. The result is one 314KB file, built for momentum over maintainability. For a decorative canvas you leave running in the background, that's the right call: I'll never need to extend it, just glance at it. Fair trade for a cartoony ocean.
 
-The broader implication is still playing out. If someone with curiosity and taste but limited programming experience can produce something like this in a few weeks of evening sessions - and if it would've been a respectable side project from a solo developer even three or four years ago - then the next six months are going to be interesting as people with deep programming expertise finish getting through their more ambitious projects.
+The bigger question is still open. If someone with limited programming experience can build this in a few weeks of evening sessions, and it would've been a respectable solo side project three or four years ago, then the next six months should be interesting, as people with deep programming expertise start finishing their more ambitious projects.
 
-Or maybe at best we'll be pets for an ASI. Hopefully they find [meatbags](https://starwars.fandom.com/wiki/Meatbag/Legends) novel in some way.
+Or we'll all be pets for an ASI. Hopefully they find [meatbags](https://starwars.fandom.com/wiki/Meatbag/Legends) novel in some way.
 
 ---
 

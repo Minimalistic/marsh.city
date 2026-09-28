@@ -18,7 +18,7 @@ I built a free tool that brings together thousands of assistive technology produ
 
 ![WhatCanHelp landing page with the wordmark, a Find what actually helps tagline, a Describe the situation primary button, and a three-step How it works section](/images/whatcanhelp/landing.webp)
 
-The landing page leads with one thing: a "Describe the situation" button under the wordmark and a "Find what actually helps" line. Below it, a short pitch (shortlist with complexity tiers and funding pathways, plus a PDF summary for funding meetings or IEP appendices) and a vendor-neutral / updated weekly / independent tagline. A "How it works" section breaks the flow into three steps: describe, review, export. Secondary links go to the full catalog and the glossary for people new to AT.
+The landing page leads with one action, "Describe the situation," and a three-step outline of what happens next: describe, review, export. The full catalog and the glossary are one link away for people who'd rather browse.
 
 ![WhatCanHelp catalog with thousands of products, faceted sidebar filters, a Recently Added thumbnail row, and a dense product table with complexity badges](/images/whatcanhelp/browse.webp)
 
@@ -41,13 +41,13 @@ Every product is rated on a four-tier scale:
 | **Professional guidance helps** | You can start alone, but a pro gets much better results |
 | **Professional setup required** | Needs professional assessment and configuration |
 
-The badges show up everywhere - catalog, detail pages, reports. Finding the right product isn't only a matching problem. Whether someone (or their support network) can realistically get the device set up and keep it working matters just as much. A product that fits the need but requires professional configuration is a different recommendation than one someone can unbox and start using.
+The badges show up everywhere - catalog, detail pages, reports. Whether someone (or their support network) can realistically set a device up and keep it working matters as much as whether it fits the need, so the tier sits right next to the match.
 
 ## Product detail and AI descriptions
 
 ![BIGmack product detail page with price, shortlist and share buttons, a Professional guidance recommended callout with finder links, and a summary section](/images/whatcanhelp/detail.webp)
 
-Each product page leads with the essentials: image, price, manufacturer, complexity badge, when the entry was last verified, and shortlist + share buttons. For tiers that benefit from a clinician, a callout near the top points to RESNA's AT Professional Finder, ASHA ProFind for SLPs, and State AT Act Programs. Below that, a Claude-generated summary (reviewed and stored, not generated on the fly) plus a "What setup looks like" walkthrough, and the full classification across needs, product type, platforms, and funding sources.
+Each product page leads with price, manufacturer, complexity tier, and when the entry was last verified. For tiers that benefit from a clinician, a callout near the top points to RESNA's AT Professional Finder, ASHA ProFind for SLPs, and State AT Act Programs. Below that, a Claude-generated summary (reviewed and stored, not generated on the fly) plus a "What setup looks like" walkthrough, and the full classification across needs, product type, platforms, and funding sources.
 
 Descriptions are written to be understandable without AT industry jargon - useful for families and clients researching on their own, and faster to skim for professionals who already know the landscape. AT terminology throughout the site is highlighted with plain-language glossary definitions on hover.
 
@@ -63,23 +63,23 @@ Term pages also gain a "Products in our catalog that use this" section: a revers
 
 ![WhatCanHelp borrow page titled Borrow Assistive Technology Before You Buy, with a state selector and per-state lending programs listing website, phone, and a verified date](/images/whatcanhelp/borrow.webp)
 
-Every US state and territory runs a federally funded AT program under the Assistive Technology Act, and most offer short-term device loans - usually two to six weeks, free or low-cost - plus hands-on demonstrations. A device you can try for a month before committing is a different decision than one you buy sight unseen. The borrow directory maps all 56 programs: who they are, how to reach them, and a "verified" date on each listing so the contact details aren't quietly rotting. When intake signals that someone wants to try before buying, lending surfaces first in the results.
+Every US state and territory runs a federally funded AT program under the Assistive Technology Act, and most offer short-term device loans - usually two to six weeks, free or low-cost - plus hands-on demonstrations. Trying a device for a month is a much better basis for a decision than a product listing. The borrow directory maps all 56 programs: who they are, how to reach them, and a "verified" date on each listing so the contact details aren't quietly rotting. When intake signals that someone wants to try before buying, lending surfaces first in the results.
 
 ## Funding pathways
 
 ![WhatCanHelp funding directory titled Find Assistive Technology Funding Programs in Your State, with a state selector and a grid of all 56 states and territories](/images/whatcanhelp/funding.webp)
 
-Paying for assistive technology usually starts with a phone call, not a price tag. Every state has official routes - Medicaid and its waivers, Vocational Rehabilitation, AT Act financing loans, ABLE savings accounts - and most people never hear about them. The funding directory maps these doors for all 56 states and territories: who to contact and what to ask. It's framed as starting points rather than coverage advice, because each program decides what it covers. The same data drives "How to fund this" panels on product and intake-result pages and a funding-pathways section in every PDF report, so the money question travels with the recommendation instead of arriving as an afterthought.
+Every state has official routes for paying for assistive technology - Medicaid and its waivers, Vocational Rehabilitation, AT Act financing loans, ABLE savings accounts - and most people never hear about them. The funding directory covers all 56 states and territories: who to contact and what to ask. Each program decides what it covers, so these are starting points, not coverage advice. The same data drives "How to fund this" panels on product and intake-result pages and a funding section in every PDF report.
 
 ## PDF reports
 
-After intake, the tool generates a PDF report: a summary of the person's profile, matched products with explanations, complexity warnings, guidance notes, and the funding pathways that apply. The reports use the same visual language as the web interface so they feel like a cohesive document you can hand to a funding committee, slot into an IEP appendix, or share with a family.
+After intake, the tool generates a PDF report: a summary of the person's profile, matched products with explanations, complexity warnings, guidance notes, and the funding pathways that apply. They're formatted to hand to a funding committee, attach to an IEP, or share with a family.
 
 ## Journey guides
 
 ![WhatCanHelp step-by-step guides index with four cards: getting a communication device, low vision and blindness, hearing loss, and mobility equipment](/images/whatcanhelp/journeys.webp)
 
-Finding AT is rarely one decision - it's a sequence: understand the options, borrow before buying, narrow the list, line up funding, and bring it all to the right meeting. The journey guides walk that sequence one kind of need at a time - communication, vision, hearing, mobility - linking the glossary, lending programs, intake, funding routes, and report along the way. They're the connective tissue between features that otherwise sit in separate corners of the site, written for someone who knows the goal ("get my kid a communication device") but not the path to it.
+Getting AT usually takes several steps: understand the options, borrow before buying, narrow the list, line up funding, and bring it all to the right meeting. The journey guides walk through those steps for one kind of need at a time - communication, vision, hearing, mobility - linking the glossary, lending programs, intake, funding, and report along the way. They're written for someone who knows the goal ("get my kid a communication device") but not how to get there.
 
 ## Accessibility controls
 
@@ -91,7 +91,7 @@ A settings dropdown in the header offers theme switching (auto, light, dark), te
 
 ![WhatCanHelp blog page showing post cards with hero images for posts on hearing aids in loud rooms, low-effort daily tools, AAC paths, and budget AT](/images/whatcanhelp/blog.webp)
 
-The blog runs honest guides, product roundups, and news for the people who actually use AT and the professionals who guide them. Posts get their own hero images and pull in product thumbnails inline - hovering a product reference shows a catalog-style preview card, so you can scan a roundup without losing your place.
+The blog runs guides, product roundups, and news for the people who actually use AT and the professionals who guide them. Posts get their own hero images and pull in product thumbnails inline - hovering a product reference shows a catalog-style preview card, so you can scan a roundup without losing your place.
 
 ## How it's built
 
@@ -117,7 +117,7 @@ flowchart TD
 ## Updates
 
 ### 2026-06-15
-Three new pillars around the core recommendation: borrowing, funding, and guided journeys. A borrow directory maps all 56 state and territory AT Act lending programs, so people can try a device before buying it. A funding directory maps the Medicaid, Vocational Rehabilitation, AT Act loan, and ABLE routes for the same 56 jurisdictions, and now drives "How to fund this" panels on products and a funding section in every PDF report. Step-by-step journey guides walk one kind of need (communication, vision, hearing, mobility) through the whole sequence, linking the glossary, lending programs, intake, funding, and report. The catalog grew to 5,502 products across 350+ manufacturers. Under the hood: an accessibility axe-gate across two dozen surfaces, 'unsafe-inline' dropped from the script CSP, an SSRF guard on scraped images, an AI kill switch with per-pool budgets, and daily database backups with a tested restore.
+Three additions around the core recommendation: borrowing, funding, and guided journeys. A borrow directory maps all 56 state and territory AT Act lending programs, so people can try a device before buying it. A funding directory maps the Medicaid, Vocational Rehabilitation, AT Act loan, and ABLE routes for the same 56 jurisdictions, and now drives "How to fund this" panels on products and a funding section in every PDF report. Step-by-step journey guides walk one kind of need (communication, vision, hearing, mobility) through the whole sequence, linking the glossary, lending programs, intake, funding, and report. The catalog grew to 5,502 products across 350+ manufacturers. Under the hood: an accessibility axe-gate across two dozen surfaces, 'unsafe-inline' dropped from the script CSP, an SSRF guard on scraped images, an AI kill switch with per-pool budgets, and daily database backups with a tested restore.
 
 ### 2026-05-25
 Pivoted toward a professional audience (AT specialists, SLPs, OTs, educators) without losing the family-and-self-advocate doorway. Intake collapsed from a multi-step checkbox flow into one freeform "Describe the situation" textarea. Catalog grew to 5,060 products from 23 vendors. Detail pages added price, shortlist + share buttons, and a professional-finder callout pointing to RESNA, ASHA ProFind, and State AT Act Programs. Glossary gained a peek drawer with shareable URLs and a reverse "products that use this term" lookup on term pages. Blog posts now ship with hero images and inline product hover previews. Fresh screenshots throughout.
