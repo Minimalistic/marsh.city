@@ -1863,12 +1863,8 @@ const Sound = (() => {
     mixBus.connect(sub).connect(sub2);
     sub2.connect(meter);
     sub2.connect(agc).connect(trimG).connect(comp).connect(lim).connect(master).connect(ctx.destination);
-    verbIn = gain(1);
-    /* ?verb=0 leaves the reverb out, to A/B whether the 4.5 s convolution is what glitches on a given machine */
-    if (new URLSearchParams(location.search).get("verb") !== "0") {
-      const verb = ctx.createConvolver(); verb.buffer = impulse(4.5, 2.6);
-      const verbOut = gain(0.55); verbIn.connect(verb).connect(verbOut).connect(mixBus);
-    }
+    const verb = ctx.createConvolver(); verb.buffer = impulse(4.5, 2.6);
+    verbIn = gain(1); const verbOut = gain(0.55); verbIn.connect(verb).connect(verbOut).connect(mixBus);
     return true;
   }
   const NOISE = {};
