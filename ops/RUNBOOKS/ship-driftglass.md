@@ -17,6 +17,8 @@ gh run watch "$(gh run list --limit 1 --json databaseId --jq '.[0].databaseId')"
 ```
 `gh` and `git push` need to run outside the Claude sandbox (TLS verification fails inside it).
 
+If the sync script refuses, `public/driftglass/index.html` was edited in this repo and those edits aren't in Driftglass. Fix it at the source: apply `git diff <last sync commit> HEAD -- public/driftglass/index.html` to `../Driftglass/index.html` (`git apply -p3`), commit there, then sync. Use `--force` only after confirming the live copy holds nothing Driftglass lacks.
+
 ## Postcondition check
 ```sh
 curl -s "https://marsh.city/driftglass/?cb=$(date +%s)" | grep -c "<a string only the new build has>"
