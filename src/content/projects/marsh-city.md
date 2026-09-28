@@ -6,7 +6,7 @@ repo: https://github.com/Minimalistic/marsh.city
 url: https://marsh.city
 tags: [astro, markdown, github-actions, pwa]
 started: 2026-03-01
-updated: 2026-04-30
+updated: 2026-09-27
 ---
 
 I needed a central place to point people - a resume that stays current, project pages that show what I'm actually building, and posts when something's worth writing about. The problem with most personal sites is maintenance. They launch polished and rot within months because updating them feels like work on top of work.
@@ -30,3 +30,8 @@ Mermaid diagrams render client-side when a page needs them. Images open in a lig
 The site doubles as a journal. At the start of each session, Claude Code checks recent GitHub activity across my projects, surfaces what's changed, and offers to update project pages or draft posts based on the conversation. It's less "content management" and more "ongoing documentation that happens naturally."
 
 This means the site reflects what I'm actually working on at any given time, not what I remembered to write up six months later.
+
+## Updates
+
+### 2026-09-27
+The menu button is touch-sized on phones now, and every item in it is a comfortable tap target. The site also has optional ambient sound, off until you turn it on in the menu: wind and birdsong by day, a soft breeze and sparse crickets at night, crossfading with the theme. It's all synthesized live in the browser with Web Audio, so there are no audio files, and the sound code only downloads for people who switch it on.
