@@ -1,10 +1,12 @@
 // Ambient beds for the main site: day (wind, leaves, birdsong) and night
-// (a soft breeze, tree crickets, a rare distant owl). Everything is
+// (a soft breeze, tree crickets, loons and owls). Everything is
 // synthesized live with Web Audio, the same approach as Driftglass: nothing
 // to download, and nothing loops audibly because every call is rolled fresh.
 //
 // Loaded on demand by the Sound toggle in Base.astro, which owns the
 // AudioContext (it has to be created inside the user's tap for iOS).
+
+import { createBirds } from './birds.js';
 
 const LEVEL = 0.55;        // master level once faded in
 const WIND_LEVEL = 0.75;   // day and night wind beds, relative to the rest
@@ -122,84 +124,9 @@ export function createAmbient(ctx) {
     nextGust = now + between(3, 9);
   }
 
-  // --- day: birds ----------------------------------------------------------
-  // One whistled note: a sine with a pitch glide and optional vibrato,
-  // placed somewhere in the stereo field. Far-off birds are quieter and wetter.
-  function note(t0, dur, f0, f1, lvl, dest, vibHz = 0, vibDepth = 0) {
-    const o = ctx.createOscillator();
-    o.type = 'sine';
-    o.frequency.setValueAtTime(f0, t0);
-    o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
-    if (vibHz) {
-      const vib = ctx.createOscillator(); const vg = gain(vibDepth);
-      vib.frequency.value = vibHz; vib.connect(vg).connect(o.frequency);
-      vib.start(t0); vib.stop(t0 + dur + 0.05);
-    }
-    const e = gain(0);
-    e.gain.setValueAtTime(0, t0);
-    e.gain.linearRampToValueAtTime(lvl, t0 + Math.min(0.02, dur * 0.3));
-    e.gain.setTargetAtTime(0, t0 + dur * 0.6, dur * 0.15);
-    o.connect(e).connect(dest);
-    o.start(t0); o.stop(t0 + dur + 0.1);
-  }
-
-  function birdVoice(distance) {
-    const pan = ctx.createStereoPanner();
-    pan.pan.value = between(-0.85, 0.85);
-    const out = gain(1);
-    const send = gain(0.25 + distance * 0.6);
-    out.connect(pan).connect(day);
-    out.connect(send).connect(verbIn);
-    return out;
-  }
-
-  const SONGS = [
-    // "fee-bee-bee": one high whistle, then two or four lower ones
-    (t, out, lvl) => {
-      const hi = between(3300, 3900);
-      const lows = rnd() < 0.5 ? 2 : 4;
-      note(t, 0.32, hi, hi * 0.97, lvl, out);
-      for (let k = 0; k < lows; k++) {
-        const at = t + 0.42 + k * 0.34;
-        note(at, 0.26, hi * 0.86, hi * 0.83, lvl * (0.9 - k * 0.06), out);
-      }
-    },
-    // dry trill: a quick run of identical chips
-    (t, out, lvl) => {
-      const n = 8 + Math.floor(rnd() * 9), f = between(4200, 5200), step = between(0.055, 0.075);
-      for (let k = 0; k < n; k++) note(t + k * step, 0.035, f * 1.15, f * 0.8, lvl * 0.7, out);
-    },
-    // warbler: short phrases of gliding, fluttering notes
-    (t, out, lvl) => {
-      const phrases = 2 + Math.floor(rnd() * 3);
-      let at = t;
-      for (let p = 0; p < phrases; p++) {
-        const notes = 2 + Math.floor(rnd() * 2);
-        for (let k = 0; k < notes; k++) {
-          const f = between(2100, 3300), dur = between(0.12, 0.22);
-          note(at, dur, f, f * between(0.85, 1.2), lvl * 0.8, out, between(18, 30), f * 0.03);
-          at += dur + 0.04;
-        }
-        at += between(0.15, 0.35);
-      }
-    },
-    // a couple of bright upslurred tweets
-    (t, out, lvl) => {
-      const n = 1 + Math.floor(rnd() * 3), f = between(2800, 3400);
-      for (let k = 0; k < n; k++) note(t + k * 0.16, 0.09, f, f * 1.45, lvl * 0.8, out);
-    },
-  ];
-
-  let nextBird = 0;
-  function bird(now) {
-    const distance = rnd();
-    const lvl = 0.05 * (1 - distance * 0.7);
-    const song = SONGS[Math.floor(rnd() * SONGS.length)];
-    song(now + 0.05, birdVoice(distance), lvl);
-    // sometimes a second bird answers from elsewhere
-    if (rnd() < 0.3) song(now + between(1.2, 2.2), birdVoice(rnd()), lvl * 0.7);
-    nextBird = now + between(2.5, 9);
-  }
+  // --- birds ---------------------------------------------------------------
+  // species, behaviour and seasons live in birds.js
+  const birds = createBirds(ctx, { day, night, verbIn });
 
   // --- night: crickets -----------------------------------------------------
   // Tree crickets: a soft, low (~2.1-2.5 kHz) pulse on a steady beat, the
@@ -246,25 +173,6 @@ export function createAmbient(ctx) {
     }
   }
 
-  // a great horned owl, far off and rare: hoo, h'HOO, hoo, hoo
-  let nextOwl = 0;
-  function owl(now) {
-    const out = gain(1);
-    const pan = ctx.createStereoPanner();
-    pan.pan.value = between(-0.7, 0.7);
-    const lp = filt('lowpass', 900);
-    out.connect(lp).connect(pan).connect(night);
-    pan.connect(gain(0.9)).connect(verbIn);
-    const f = between(300, 360), lvl = 0.045;
-    const t = now + 0.05;
-    note(t, 0.35, f, f * 0.96, lvl, out);
-    note(t + 0.55, 0.12, f * 0.98, f, lvl * 0.7, out);
-    note(t + 0.7, 0.45, f * 1.04, f * 0.95, lvl, out);
-    note(t + 1.35, 0.35, f, f * 0.95, lvl * 0.85, out);
-    note(t + 1.9, 0.35, f * 0.98, f * 0.93, lvl * 0.75, out);
-    nextOwl = now + between(45, 110);
-  }
-
   // --- scheduler -----------------------------------------------------------
   let isNight = false;
   let timer = null;
@@ -275,9 +183,9 @@ export function createAmbient(ctx) {
     if (now >= nextGust) gust(now);
     if (isNight) {
       crickets.forEach(c => cricketTick(c, now));
-      if (nextOwl && now >= nextOwl) owl(now);
-    } else if (now >= nextBird) {
-      bird(now);
+      birds.night(now);
+    } else {
+      birds.day(now);
     }
   }
 
@@ -286,12 +194,8 @@ export function createAmbient(ctx) {
     glide(day.gain, isNight ? 0 : 1, CROSSFADE_TC);
     glide(night.gain, isNight ? 1 : 0, CROSSFADE_TC);
     const now = ctx.currentTime;
-    if (isNight) {
-      if (!nextOwl) nextOwl = now + between(20, 60);
-      crickets.forEach((c, i) => { c.singing = false; c.switchAt = now + i * between(0.5, 2); });
-    } else {
-      nextBird = now + between(1, 3);
-    }
+    birds.reset();
+    if (isNight) crickets.forEach((c, i) => { c.singing = false; c.switchAt = now + i * between(0.5, 2); });
   }
 
   return {
