@@ -112,7 +112,7 @@
   --glass-wash: 72%;
   /* frosted-glass blur on cards, hero, prose, footer: GPU cost grows with the
      radius and every glass surface re-blurs while the parallax moves behind it */
-  --glass-blur: 8px;
+  --glass-blur: 6px;
   --frame-bg: #243208;
   --frame-rim: rgba(141, 184, 96, 0.9);
   /* the frame's inward shadow over the stage edges reads as grime in
@@ -1108,8 +1108,8 @@ main > h1 {
    Matches .prose so the title reads as the top of a unified content panel. */
 .page-head {
   background: color-mix(in srgb, var(--bg) var(--glass-wash), transparent);
-  backdrop-filter: blur(8px) saturate(115%);
-  -webkit-backdrop-filter: blur(8px) saturate(115%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(115%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(115%);
   border-radius: var(--radius);
   padding: 1rem 1.25rem;
   margin: 0 -0.5rem 1.5rem;
@@ -1178,8 +1178,8 @@ nav.site-nav .links a[aria-current="page"]::after {
 
 .prose {
   background: color-mix(in srgb, var(--bg) var(--glass-wash), transparent);
-  backdrop-filter: blur(8px) saturate(115%);
-  -webkit-backdrop-filter: blur(8px) saturate(115%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(115%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(115%);
   border-radius: var(--radius);
   padding: 1rem 1.25rem;
   margin: 0 -0.5rem;
