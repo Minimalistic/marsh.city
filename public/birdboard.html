@@ -62,22 +62,13 @@ import { createBirds } from './birds.js';
 const INFO = {
   chickadee: ['Black-capped Chickadee', 'Song: "fee-bee". Call: chick-a-dee-dee.', 'Black-capped_Chickadee'],
   whitethroat: ['White-throated Sparrow', '"Oh sweet canada canada"', 'White-throated_Sparrow'],
-  hermitthrush: ['Hermit Thrush', 'Clear intro note, then a flutey cascade', 'Hermit_Thrush'],
-  veery: ['Veery', 'Rolling phrases spiraling down', 'Veery'],
   vireo: ['Red-eyed Vireo', 'Short phrases, question and answer', 'Red-eyed_Vireo'],
   ovenbird: ['Ovenbird', '"teacher TEACHER TEACHER"', 'Ovenbird'],
   winterwren: ['Winter Wren', 'Long, fast tumbling song', 'Winter_Wren'],
   btgreen: ['Black-throated Green Warbler', 'Buzzy "zee zee zoo zee"', 'Black-throated_Green_Warbler'],
   junco: ['Dark-eyed Junco', 'Musical trill on one pitch', 'Dark-eyed_Junco'],
-  robin: ['American Robin', 'Caroling phrases', 'American_Robin'],
   nuthatch: ['Red-breasted Nuthatch', 'Nasal tin-horn "yank"', 'Red-breasted_Nuthatch'],
-  bluejay: ['Blue Jay', 'Harsh "jeer", or the bell-like queedle', 'Blue_Jay'],
-  crow: ['American Crow', 'Caw caw caw', 'American_Crow'],
-  raven: ['Common Raven', 'Deep rolling croak', 'Common_Raven'],
-  dove: ['Mourning Dove', 'Song: "coo-OOO-oo, oo, oo". Call: wing whistle.', 'Mourning_Dove'],
   pileated: ['Pileated Woodpecker', 'Song: drumming. Call: "wuk wuk wuk".', 'Pileated_Woodpecker'],
-  geese: ['Canada Goose', 'A flock passing overhead', 'Canada_Goose'],
-  loon: ['Common Loon', 'Wail (usually) or tremolo', 'Common_Loon'],
   barredowl: ['Barred Owl', '"Who cooks for you, who cooks for you-all"', 'Barred_Owl'],
   horned: ['Great Horned Owl', '"hoo, h\'HOO, hoo, hoo"', 'Great_Horned_Owl'],
 };
@@ -121,9 +112,7 @@ function play(key, act, btn) {
   const sp = SPECIES[key], t = ctx.currentTime + 0.05;
   const spot = birds.perch(bus, distance, 0);
   const lvl = 0.05 * spot.level * (sp.loud ?? 1) * 2.5;
-  let len;
-  if (act === 'pass') { sp.pass(birds.voice, spot, t, lvl); len = 15; }
-  else len = sp[act](birds.voice, spot.out, t, lvl, { pitch: 1, state: {} });
+  const len = sp[act](birds.voice, spot.out, t, lvl, { pitch: 1, state: {} });
   playingBtn?.classList.remove('playing');
   btn.classList.add('playing'); playingBtn = btn;
   setTimeout(() => btn.classList.remove('playing'), (len + 0.3) * 1000);
@@ -143,7 +132,7 @@ document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click'
   document.querySelectorAll('.seg button').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
 }));
 
-const groups = { resident: 'Day', flyby: 'Overhead', night: 'Night' };
+const groups = { resident: 'Day', night: 'Night' };
 const board = document.getElementById('board');
 for (const [kind, title] of Object.entries(groups)) {
   const h = document.createElement('h2'); h.textContent = title; board.append(h);
@@ -156,11 +145,11 @@ for (const [kind, title] of Object.entries(groups)) {
     card.querySelector('.name').textContent = name;
     card.querySelector('.note').textContent = note;
     const acts = card.querySelector('.acts');
-    for (const act of ['song', 'call', 'pass']) {
+    for (const act of ['song', 'call']) {
       if (!sp[act]) continue;
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = act === 'pass' ? 'Fly over' : act === 'song' ? (sp.call ? 'Song' : 'Play') : 'Call';
+      btn.textContent = act === 'song' ? (sp.call ? 'Song' : 'Play') : 'Call';
       if (act === 'call') btn.className = 'alt';
       btn.addEventListener('click', () => play(key, act, btn));
       acts.append(btn);

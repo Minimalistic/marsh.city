@@ -3,7 +3,7 @@
 // where they exist; the few marked "est." are best guesses by ear.
 //
 // Each entry:
-//   kind     resident (holds a spot and sings bouts), flyby, or night
+//   kind     resident (holds a spot and sings bouts) or night
 //   months   [from, to] present near Duluth; songMonths when it sings
 //            rather than just calls (outside those it only calls)
 //   weight   how common, a number or one value per month
@@ -16,7 +16,6 @@
 // bird.state lets it remember its song types between songs.
 
 const H_NASAL = [0.5, 1, 0.9, 0.7, 0.5, 0.35, 0.22, 0.12];
-const H_HOARSE = [1, 0.8, 0.9, 0.7, 0.6, 0.45, 0.35, 0.25, 0.18, 0.12];
 const H_HOOT = [1, 0.18, 0.05];
 
 // a song repertoire, made once per bird and reused, the way real birds do
@@ -80,59 +79,6 @@ export const SPECIES = {
     call(v, out, t, lvl) {  // sharp "chink"
       v.tone(out, t, 0.03, [6200, 4200], lvl * 0.6, { harm: [1, 0.4, 0.2] });
       return 0.1;
-    },
-  },
-
-  // Built on true overtone ratios: an intro whistle, then a quick flutey
-  // cascade from the same harmonic series with a second voice overlapping.
-  // Each song is one of the bird's song types, at a new pitch every time.
-  hermitthrush: {
-    kind: 'resident', months: [4, 10], songMonths: [5, 8], weight: [0, 0, 0, 1, 3, 3, 3, 2, 1, 1, 0, 0],
-    every: [3, 6], callEvery: [5, 12], near: 0.3,
-    song(v, out, t, lvl, b) {
-      const types = repertoire(b, 'types', 6, () => ({
-        f0: v.between(1000, 1250) * 2 ** v.between(-0.5, 0.9),
-        steps: Array.from({ length: 6 + Math.floor(v.rnd() * 4) }, () => v.pick([4, 5, 6, 6, 7, 8])),
-      }));
-      let k = Math.floor(v.rnd() * types.length);
-      if (k === b.state.last) k = (k + 1) % types.length;
-      b.state.last = k;
-      const { f0, steps } = types[k];
-      v.tone(out, t, 0.32, [f0 * 3, f0 * 3.02], lvl * 0.8, { atk: 0.04 });
-      let at = t + 0.36;
-      for (const h of steps) {
-        const d = v.between(0.05, 0.08);
-        v.tone(out, at, d, [f0 * h * 0.97, f0 * h], lvl * 0.7, { atk: 0.006 });
-        v.tone(out, at + 0.012, d, [f0 * (h + 1) * 0.98, f0 * (h + 1)], lvl * 0.3);
-        at += d + 0.012;
-      }
-      return at - t + 0.2;
-    },
-    call(v, out, t, lvl) {  // low "chuck"
-      v.tone(out, t, 0.05, [1800, 1500], lvl * 0.6, { harm: [1, 0.5, 0.3] });
-      return 0.1;
-    },
-  },
-
-  // "vee-ur vee-ur veer veer": a rolling, fluttering phrase stepping down
-  // in a spiral, two voices at once
-  veery: {
-    kind: 'resident', months: [5, 9], songMonths: [5, 7], weight: [0, 0, 0, 0, 2, 3, 2, 1, 1, 0, 0, 0],
-    every: [3, 7], callEvery: [6, 14], near: 0.35,
-    song(v, out, t, lvl, b) {
-      let f = v.between(4300, 4800) * b.pitch, at = t;
-      const n = 4 + Math.floor(v.rnd() * 2);
-      for (let k = 0; k < n; k++) {
-        const d = 0.34;
-        v.tone(out, at, d, [f, f * 0.92], lvl * (1 - k * 0.1), { vib: [v.between(24, 30), f * 0.07] });
-        v.tone(out, at, d, [f * 0.84, f * 0.78], lvl * 0.35 * (1 - k * 0.1), { vib: [27, f * 0.05] });
-        at += d + 0.04; f *= 0.87;
-      }
-      return at - t;
-    },
-    call(v, out, t, lvl) {  // "veer"
-      v.tone(out, t, 0.28, [3000, 2600, 2100], lvl * 0.7);
-      return 0.3;
     },
   },
 
@@ -251,36 +197,6 @@ export const SPECIES = {
     },
   },
 
-  // unhurried caroling: two- and three-note whistled phrases with pauses,
-  // the odd thin high "hisselly" note tucked between
-  robin: {
-    kind: 'resident', months: [3, 10], songMonths: [4, 7], weight: [0, 0, 2, 4, 4, 4, 3, 2, 2, 1, 0, 0],
-    every: [2, 5], callEvery: [4, 12], near: 0.2,
-    song(v, out, t, lvl, b) {
-      const phrases = repertoire(b, 'phrases', 8, () =>
-        Array.from({ length: 2 + Math.floor(v.rnd() * 2) }, () => {
-          const f = v.between(2000, 3600);
-          return [v.between(0.1, 0.18), f, f * v.between(0.8, 1.25)];
-        }));
-      let at = t;
-      const n = 4 + Math.floor(v.rnd() * 5);
-      for (let k = 0; k < n; k++) {
-        for (const [d, f0, f1] of v.pick(phrases)) {
-          v.tone(out, at, d, [f0, (f0 + f1) / 2 * 1.04, f1], lvl * 0.8, { harm: [1, 0.08] });
-          at += d + 0.04;
-        }
-        if (v.rnd() < 0.25) { v.tone(out, at, 0.08, [6500, 5200], lvl * 0.25); at += 0.1; }
-        at += v.between(0.25, 0.5);
-      }
-      return at - t;
-    },
-    call(v, out, t, lvl) {  // "tut tut tut"
-      const n = 2 + Math.floor(v.rnd() * 3);
-      for (let k = 0; k < n; k++) v.tone(out, t + k * 0.22, 0.05, [2800, 3100, 2600], lvl * 0.6, { harm: [1, 0.5, 0.25] });
-      return n * 0.22;
-    },
-  },
-
   // tin-horn "yank yank": nasal, heavy harmonics; fundamental est. ~1.6 kHz
   nuthatch: {
     kind: 'resident', months: [1, 12], weight: 3, every: [3, 10], near: 0.2,
@@ -292,69 +208,6 @@ export const SPECIES = {
         at += v.between(0.28, 0.5);
       }
       return at - t;
-    },
-  },
-
-  // harsh "jeer" (broadband, fundamental ~800 Hz, energy to 3 kHz+), and
-  // now and then the tonal "queedle" at ~1.6 kHz. Busiest in the fall.
-  bluejay: {
-    kind: 'resident', months: [1, 12], weight: [2, 2, 2, 2, 2, 2, 2, 3, 5, 5, 3, 2],
-    every: [6, 18], near: 0.2, loud: 1.2,
-    song(v, out, t, lvl, b) {
-      if (v.rnd() < 0.3) {
-        for (let k = 0; k < 2; k++) v.tone(out, t + k * 0.45, 0.3, [1500, 1800, 1620], lvl * 0.7, { harm: [1, 0.3, 0.1] });
-        return 0.8;
-      }
-      const n = 1 + Math.floor(v.rnd() * 3), f = 820 * b.pitch;
-      for (let k = 0; k < n; k++) {
-        const at = t + k * 0.45;
-        v.tone(out, at, 0.34, [f * 0.95, f, f * 0.85], lvl * 0.45, { harm: H_HOARSE, shape: [0.6, 1, 0.8, 0.5] });
-        v.hiss(out, at, 0.34, [2600, 3000, 2400], 1.5, lvl * 2.2, { shape: [0.6, 1, 0.8, 0.5] });
-      }
-      return n * 0.45;
-    },
-  },
-
-  // caws in twos to fives, hoarse, fundamental est. ~400 Hz; usually off a way
-  crow: {
-    kind: 'resident', months: [1, 12], weight: 2, every: [8, 25], near: 0.5, loud: 1.3, stay: [30, 90],
-    song(v, out, t, lvl, b) {
-      const n = 2 + Math.floor(v.rnd() * 4), f = 400 * b.pitch;
-      for (let k = 0; k < n; k++) {
-        const at = t + k * v.between(0.55, 0.75), d = v.between(0.3, 0.45);
-        v.tone(out, at, d, [f * 0.9, f * 1.08, f, f * 0.85], lvl * 0.5, { harm: H_HOARSE });
-        v.hiss(out, at, d, 1400, 1, lvl * 1.2);
-      }
-      return n * 0.7;
-    },
-  },
-
-  // deep, rolling "gronk", fundamental 200-650 Hz, rough (AM ~40 Hz)
-  raven: {
-    kind: 'resident', months: [1, 12], weight: 1.5, every: [10, 30], near: 0.4, loud: 1.5, stay: [30, 90],
-    song(v, out, t, lvl, b) {
-      const n = 1 + Math.floor(v.rnd() * 3), f = v.between(330, 450) * b.pitch;
-      for (let k = 0; k < n; k++) {
-        v.tone(out, t + k * 1.4, 0.32, [f * 0.9, f * 1.1, f], lvl * 0.6, { harm: H_HOARSE, am: [v.between(35, 45), 0.6] });
-      }
-      return n * 1.4;
-    },
-  },
-
-  // "coo-OOO-oo, oo, oo": soft low hoots, the second slurring up and down
-  dove: {
-    kind: 'resident', months: [4, 10], songMonths: [4, 8], weight: 2,
-    every: [12, 25], near: 0.3, loud: 2.2,
-    song(v, out, t, lvl, b) {
-      const f = 500 * b.pitch, o = { harm: [1, 0.25, 0.08], atk: 0.08, rel: 0.12 };
-      v.tone(out, t, 0.35, [f, f * 1.12], lvl * 0.7, o);
-      v.tone(out, t + 0.38, 0.6, [f * 1.3, f * 1.4, f * 1.05], lvl, o);
-      for (let k = 0; k < 3; k++) v.tone(out, t + 1.35 + k * 0.72, 0.5, [f * 0.98, f * 0.93], lvl * 0.8, o);
-      return 3.5;
-    },
-    call(v, out, t, lvl) {  // wing whistle as one flushes
-      v.hiss(out, t, 0.7, [2000, 2400, 1800], 3, lvl * 0.8, { shape: [0.3, 1, 0.8, 1, 0.3] });
-      return 0.8;
     },
   },
 
@@ -386,45 +239,7 @@ export const SPECIES = {
     },
   },
 
-  // Canada geese passing over, honking, left to right or back:
-  // each honk an atonal "h" then a louder nasal tone that falls at the end
-  geese: {
-    kind: 'flyby', months: [3, 11], weight: [0, 0, 3, 3, 1, 1, 1, 1, 4, 5, 3, 0], loud: 1.4,
-    pass(v, spot, t, lvl) {
-      const dur = v.between(9, 15), dir = v.rnd() < 0.5 ? -1 : 1;
-      spot.pan.setValueAtTime(-0.95 * dir, t);
-      spot.pan.linearRampToValueAtTime(0.95 * dir, t + dur);
-      const birds = Array.from({ length: Math.floor(v.between(3, 9)) }, () =>
-        v.rnd() < 0.5 ? v.between(300, 420) : v.between(480, 560));
-      for (let at = 0.3; at < dur - 0.5; at += v.between(0.12, 0.7)) {
-        const f = v.pick(birds), near = 1 - Math.abs(2 * at / dur - 1) * 0.75;
-        v.hiss(spot.out, t + at, 0.06, 900, 2, lvl * near * 1.5);
-        v.tone(spot.out, t + at + 0.05, v.between(0.18, 0.28), [f * 0.9, f * 1.15, f * 1.1, f * 0.8], lvl * near * 0.6, { harm: H_NASAL });
-      }
-    },
-  },
-
   // --- night ---------------------------------------------------------------
-
-  // Common loon, out on the lake. The wail: a long tonal "ooo" near
-  // 600-750 Hz breaking up into "AAH" and sometimes back. The tremolo:
-  // a laughing warble, about 10 pulses a second.
-  loon: {
-    kind: 'night', months: [4, 11], weight: [0, 0, 0, 2, 4, 4, 4, 3, 3, 2, 1, 0], loud: 1.6,
-    song(v, out, t, lvl, b) {
-      const f = v.between(620, 740) * b.pitch, o = { harm: [1, 0.35, 0.12, 0.05], atk: 0.25, rel: 0.45, vib: [5, 3] };
-      if (v.rnd() < 0.3) {
-        const d = v.between(1.2, 2.2);
-        v.tone(out, t, d, [f * 1.4, f * 1.5, f * 1.45], lvl * 0.8, { harm: [1, 0.5, 0.2], am: [10, 0.9], vib: [10, 40] });
-        return d;
-      }
-      const d1 = v.between(1.2, 2), d2 = v.between(1.6, 2.6);
-      v.tone(out, t, d1, [f, f * 1.05, f * 1.09], lvl * 0.8, o);
-      v.tone(out, t + d1 - 0.05, d2, [f * 1.45, f * 1.52, f * 1.5, f * 1.38], lvl, o);
-      if (v.rnd() < 0.4) v.tone(out, t + d1 + d2 - 0.1, 1.4, [f * 1.25, f * 1.22, f * 1.1], lvl * 0.7, o);
-      return d1 + d2 + 1.3;
-    },
-  },
 
   // "who cooks for you, who cooks for you-all": the fourth note of each
   // half accented, the last sliding down

@@ -1,5 +1,5 @@
 // Ambient beds for the main site: day (wind, leaves, birdsong) and night
-// (a soft breeze, tree crickets, loons and owls). Everything is
+// (a soft breeze, tree crickets, owls). Everything is
 // synthesized live with Web Audio, the same approach as Driftglass: nothing
 // to download, and nothing loops audibly because every call is rolled fresh.
 //

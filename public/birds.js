@@ -11,7 +11,7 @@
 // - distance takes the highs off as well as the level, and adds room
 //
 // Audition from the address bar: ?birdmonth=6 pretends it's June,
-// ?bird=loon solos one species (night birds need the dark theme on).
+// ?bird=barredowl solos one species (night birds need the dark theme on).
 
 import { SPECIES } from './bird-species.js';
 
@@ -197,19 +197,7 @@ export function createBirds(ctx, { day, night, verbIn }) {
     b.next = now + len + between(lo, hi);
   }
 
-  // passers-by: geese overhead, a woodpecker drumming across the stand
-  let nextFlyby = 0;
-  function flyby(now) {
-    const pool = available('flyby');
-    if (pool.length) {
-      const [, sp] = weighted(pool);
-      const spot = perch(day, between(0.3, 0.8), 0);
-      sp.pass(voice, spot, now + 0.05, 0.05 * spot.level * (sp.loud ?? 1));
-    }
-    nextFlyby = now + (solo ? between(10, 16) : between(40, 120));
-  }
-
-  // night: loons out on the water, owls in the woods
+  // night: owls in the woods
   let nextNight = 0;
   function nightCall(now) {
     const pool = available('night');
@@ -233,14 +221,12 @@ export function createBirds(ctx, { day, night, verbIn }) {
         if (cast.length === before) break;
       }
       for (const b of cast) if (now >= b.next) sing(b, now);
-      if (!nextFlyby) nextFlyby = now + (solo ? 1 : between(15, 50));
-      if (now >= nextFlyby) flyby(now);
     },
     night(now) {
       if (!nextNight) nextNight = now + (solo ? 1 : between(12, 40));
       if (now >= nextNight) nightCall(now);
     },
     // coming back to day: a fresh set of neighbours, not the ones from before
-    reset() { cast = []; nextFlyby = 0; nextNight = 0; },
+    reset() { cast = []; nextNight = 0; },
   };
 }
