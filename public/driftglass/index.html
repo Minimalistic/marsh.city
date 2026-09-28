@@ -1855,8 +1855,12 @@ const Sound = (() => {
     meter = ctx.createAnalyser(); meter.fftSize = 2048; meterBuf = new Float32Array(meter.fftSize);
     const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 2.5; comp.attack.value = 0.03; comp.release.value = 0.5;
     const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -12; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.25;
-    mixBus.connect(meter);
-    mixBus.connect(agc).connect(trimG).connect(comp).connect(lim).connect(master).connect(ctx.destination);
+    /* 24 dB/oct high-pass at 35 Hz: the brown-noise rumbles carry ~20% of their energy below 20 Hz, which small speakers
+       can't play but still try to (cone bottoming, DSP limiter pumping = pops and crackle). Before the meter so the leveler hears only what's audible. */
+    const sub = filt("highpass", 35, 0.54), sub2 = filt("highpass", 35, 1.31); /* Q pair = 4th-order Butterworth */
+    mixBus.connect(sub).connect(sub2);
+    sub2.connect(meter);
+    sub2.connect(agc).connect(trimG).connect(comp).connect(lim).connect(master).connect(ctx.destination);
     const verb = ctx.createConvolver(); verb.buffer = impulse(4.5, 2.6);
     verbIn = gain(1); const verbOut = gain(0.55); verbIn.connect(verb).connect(verbOut).connect(mixBus);
     return true;
