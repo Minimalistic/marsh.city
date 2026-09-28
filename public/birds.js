@@ -11,7 +11,7 @@
 // - distance takes the highs off as well as the level, and adds room
 //
 // Audition from the address bar: ?birdmonth=6 pretends it's June,
-// ?bird=barredowl solos one species (night birds need the dark theme on).
+// ?bird=loon solos one species (night birds need the dark theme on).
 
 import { SPECIES } from './bird-species.js';
 
@@ -197,13 +197,13 @@ export function createBirds(ctx, { day, night, verbIn }) {
     b.next = now + len + between(lo, hi);
   }
 
-  // night: owls in the woods
+  // night: a loon out on the lake, an owl in the woods
   let nextNight = 0;
   function nightCall(now) {
     const pool = available('night');
     if (pool.length) {
       const [, sp] = weighted(pool);
-      const spot = perch(night, between(0.45, 0.95));
+      const spot = perch(night, between(sp.near ?? 0.45, sp.far ?? 0.95));
       sp.song(voice, spot.out, now + 0.05, 0.05 * spot.level * (sp.loud ?? 1), { pitch: between(0.95, 1.05), state: {} });
     }
     nextNight = now + (solo ? between(8, 14) : between(25, 75));

@@ -16,7 +16,6 @@
 // bird.state lets it remember its song types between songs.
 
 const H_NASAL = [0.5, 1, 0.9, 0.7, 0.5, 0.35, 0.22, 0.12];
-const H_HOOT = [1, 0.18, 0.05];
 
 // a song repertoire, made once per bird and reused, the way real birds do
 function repertoire(b, key, n, make) {
@@ -241,21 +240,21 @@ export const SPECIES = {
 
   // --- night ---------------------------------------------------------------
 
-  // "who cooks for you, who cooks for you-all": the fourth note of each
-  // half accented, the last sliding down
-  barredowl: {
-    kind: 'night', months: [1, 12], weight: [4, 5, 5, 4, 3, 3, 3, 3, 4, 4, 4, 3], loud: 1.8,
+  // Common loon, far out on the lake, now and then: just the tremolo, the
+  // quick laughing call (~10 pulses a second, 1.5-7 pulses, 1-2
+  // harmonics). Always distant, with a faint darker echo off the far
+  // shore. Rare on purpose: one every several minutes at most.
+  loon: {
+    kind: 'night', months: [4, 11], weight: [0, 0, 0, 0.2, 0.3, 0.3, 0.3, 0.3, 0.2, 0.2, 0.1, 0],
+    near: 0.85, far: 1, loud: 1.1,
     song(v, out, t, lvl, b) {
-      const f = v.between(380, 440) * b.pitch, o = { harm: H_HOOT, atk: 0.04, rel: 0.08 };
-      const half = (at, last) => {
-        v.tone(out, at, 0.16, [f, f * 1.03], lvl * 0.7, o);
-        v.tone(out, at + 0.24, 0.16, [f * 1.05, f * 1.08], lvl * 0.75, o);
-        v.tone(out, at + 0.48, 0.18, [f * 1.1, f * 1.14], lvl * 0.8, o);
-        v.tone(out, at + 0.74, last ? 0.9 : 0.45, last ? [f * 1.25, f * 1.3, f * 1.1, f * 0.75] : [f * 1.2, f * 1.25, f * 0.95], lvl, o);
-      };
-      half(t, false);
-      half(t + 1.7, true);
-      return 3.4;
+      const f = v.between(900, 1050) * b.pitch, rate = v.between(9, 11);
+      const d = Math.round(v.between(3, 7)) / rate + 0.3;
+      const trem = (at, a, harm) => v.tone(out, at, d, [f * 0.98, f * 1.03, f * 1.01, f * 0.96], a,
+        { harm, am: [rate, 0.85], vib: [rate, f * 0.04], atk: 0.12, rel: 0.25, shape: [0.6, 1, 0.9, 0.7] });
+      trem(t, lvl, [1, 0.3, 0.08]);
+      trem(t + v.between(0.45, 0.7), lvl * 0.2, [1, 0.06]);
+      return d + 0.7;
     },
   },
 
