@@ -30,6 +30,8 @@ Sound starts off; tap the speaker to turn it on.
 
 <script>
 document.querySelector('.driftglass-start')?.addEventListener('click', (e) => {
+  // Driftglass has its own sound; hold the site's ambient sound while it runs
+  window.dispatchEvent(new Event('marsh:ambient-hold'));
   const iframe = document.createElement('iframe');
   iframe.src = '/driftglass/';
   iframe.title = 'Driftglass - procedural aerial scenes';

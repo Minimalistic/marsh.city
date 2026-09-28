@@ -11,10 +11,13 @@ const AMBIENT_URL = '/ambient.js';
   try { wanted = localStorage.getItem('ambient') === 'on'; } catch {}
   let ctx = null;
   let engine = null;
+  // a page that brings its own audio (an embedded app) holds the site sound
+  // for this page view; the saved preference is untouched
+  let held = false;
 
   function updateUI() {
-    btn.setAttribute('aria-pressed', String(wanted));
-    if (label) label.textContent = wanted ? 'on' : 'off';
+    btn.setAttribute('aria-pressed', String(wanted && !held));
+    if (label) label.textContent = !wanted ? 'off' : held ? 'paused' : 'on';
   }
   updateUI();
 
@@ -36,13 +39,15 @@ const AMBIENT_URL = '/ambient.js';
         const mod = await import(/* @vite-ignore */ AMBIENT_URL);
         engine = mod.createAmbient(ctx);
       }
-      if (wanted) engine.start(window.__isDark());
+      if (wanted && !held) engine.start(window.__isDark());
     } catch (err) {
       console.error('[ambient] failed to start:', err);
     }
   }
 
   btn.addEventListener('click', () => {
+    // tapping a held toggle means "play anyway", not "turn it off"
+    if (held && wanted) { held = false; updateUI(); start(); return; }
     wanted = !wanted;
     try { localStorage.setItem('ambient', wanted ? 'on' : 'off'); } catch {}
     updateUI();
@@ -55,10 +60,16 @@ const AMBIENT_URL = '/ambient.js';
   if (wanted) {
     const kick = () => {
       ['pointerdown', 'keydown'].forEach(t => removeEventListener(t, kick, true));
-      if (wanted && !engine) start();
+      if (wanted && !held && !engine) start();
     };
     ['pointerdown', 'keydown'].forEach(t => addEventListener(t, kick, true));
   }
+
+  window.addEventListener('marsh:ambient-hold', () => {
+    held = true;
+    updateUI();
+    if (engine) engine.stop();
+  });
 
   window.addEventListener('marsh:theme', () => {
     if (engine && wanted) engine.setNight(window.__isDark());
