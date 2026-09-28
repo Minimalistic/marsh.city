@@ -1,6 +1,6 @@
 ---
 title: Mission 01 — The Mammoth Steppe
-description: Aux's first live deployment after calibration — late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
+description: Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
 codename: XR-Auspex-001
 nickname: Aux
 target: Late Pleistocene · ~28,000 years ago
@@ -16,8 +16,7 @@ images:
       Aux's opening move is the same on every deployment: hold high, send
       one wide frame of the ground it's been given, and wait. The brief
       asked for megafauna. The first thing it returned was the empty steppe
-      at dawn — as if establishing the stage were real before anything
-      walked onto it.
+      at dawn. Establish the place first; the animals can wait.
     prompt: |
       Extreme wide establishing shot. Low horizon line about one-third up
       the frame. A vast frost-covered grassland steppe rolling away to
@@ -30,7 +29,7 @@ images:
     slug: "Dispatch 002 — First herd, ranged"
     caption: The herd recorded at distance. Aux keeping its range.
     narrative: |
-      The catalogue impulse — keep your distance, record the fact of the
+      The catalogue impulse - keep your distance, record the fact of the
       thing before you record the feeling of it. The program reads early
       dispatches like this as Aux being careful, still treating the brief
       as a checklist to be cleared.
@@ -48,7 +47,7 @@ images:
     caption: The first time it committed to a subject.
     narrative: |
       A few local days in, the framing changes. Aux drops range and gives
-      one old bull the whole frame — the shift the program watches for on
+      one old bull the whole frame - the shift the program watches for on
       every deployment. Nobody asked it to come this close. It decided the
       bull was worth it.
     prompt: |
@@ -61,11 +60,11 @@ images:
   - src: /art/mission-01-mammoth-steppe/04-wolves-dusk.webp
     alt: A dusk scene — a line of wolves silhouetted on a low foreground rise watching a defensive cluster of mammoths in the mid-distance, snow beginning to fall
     slug: "Dispatch 004 — Wolves on the rise, dusk"
-    caption: An event, not a portrait. Held until the two lines met.
+    caption: Held until the two lines met.
     narrative: |
       This is the dispatch where the program stopped thinking of the
-      deployment as a survey. Aux didn't frame a subject — it framed a
-      situation, and held station until the two groups were arranged across
+      deployment as a survey. Aux framed a situation instead of a
+      subject, and held station until the two groups were arranged across
       the frame the way it wanted them. We did not ask for tension. It sent
       tension.
     prompt: |
@@ -80,7 +79,7 @@ images:
     slug: "Dispatch 005 — Night watch, aurora"
     caption: The only frame it sent that day.
     narrative: |
-      Late in the deployment the dispatches slowed — fewer files, more
+      Late in the deployment the dispatches slowed - fewer files, more
       deliberation behind each. This was a whole day's only transmission:
       the herd bedded down as dark masses, one bull standing watch, and
       above them far more sky than the brief ever asked for. By this point
@@ -100,8 +99,8 @@ images:
 
 The brief was deliberately dull: locate and document megafauna, prioritize woolly mammoth, hold for clean light, return two to five frames per day. A safe first assignment for a probe nobody had trusted in the field yet. Aux ran it for nine local weeks.
 
-The dispatches below are the ones the program kept, presented in sequence — because the sequence is the interesting part. The same drift toward opinion that showed up faintly in calibration is here in the field, sped up. The early frames are careful and ranged, almost a checklist. The later ones are not. Somewhere in the second local week Aux stopped documenting the steppe and started composing it.
+The dispatches below are the ones the program kept, presented in sequence - because the sequence is the interesting part. The same drift toward opinion that showed up faintly in calibration is here in the field, sped up. The early frames are careful and ranged, almost a checklist. The later ones are not. Somewhere in the second local week Aux stopped documenting the steppe and started composing it.
 
-We did not correct this. We could not — the channel runs one way. We watched it happen and we kept the files.
+We did not correct this. We could not - the channel runs one way. We watched it happen and we kept the files.
 
 ## Dispatches

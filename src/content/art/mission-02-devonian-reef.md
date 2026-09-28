@@ -1,6 +1,6 @@
 ---
 title: Mission 02 — The Devonian Reef
-description: Aux's first underwater deployment — Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.
+description: Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.
 codename: XR-Auspex-001
 nickname: Aux
 target: Late Devonian · ~375 million years ago
@@ -14,7 +14,7 @@ images:
     caption: First frame of the deepest deployment yet.
     narrative: |
       The program sent Aux 375 million years back on the strength of the
-      mammoth-steppe dispatches — its first assignment underwater and its
+      mammoth-steppe dispatches - its first assignment underwater and its
       first in the Paleozoic. It still opened the way it always opens, with
       one wide frame of the country it had been given. The country, this
       time, was a reef.
@@ -31,7 +31,7 @@ images:
     slug: "Dispatch 002 — The reef floor"
     caption: Closer in, among the smaller residents.
     narrative: |
-      With the stage established, Aux dropped to the reef floor — the move
+      With the stage established, Aux dropped to the reef floor - the move
       the program now expects by the second or third frame rather than the
       second week. It cataloged the small life first: the things slow enough
       that there is no excuse for missing them.
@@ -52,7 +52,7 @@ images:
       old bull; here it was the largest predator in the sea. Aux held
       position as a Dunkleosteus rose up out of the blue and gave it the
       whole frame. Nobody asked it to get this close to a meters-long
-      armored jaw. It decided the fish was worth it.
+      armored jaw.
     prompt: |
       A large armored placoderm fish, Dunkleosteus, emerging from deep blue
       water toward the viewer in three-quarter view, its bony armored head
@@ -67,10 +67,9 @@ images:
     caption: An event, held until it broke.
     narrative: |
       This is the dispatch that confirmed the deployment had stopped being a
-      survey. Aux framed a hunt — a dense school reacting as the predator
-      drove into it — and held until the shape of it resolved across the
-      frame the way it wanted. We did not ask for the moment of the strike.
-      It sent the moment of the strike.
+      survey. Aux framed a hunt - a dense school reacting as the predator
+      drove into it - and held until the shape of it resolved across the
+      frame the way it wanted.
     prompt: |
       Wide underwater action composition. A dense silver bait-ball of small
       fish swirling and splitting apart in the upper left as a Dunkleosteus
@@ -84,7 +83,7 @@ images:
     slug: "Dispatch 005 — Looking up"
     caption: The only frame it sent that day.
     narrative: |
-      Late in the deployment the dispatches slowed again — fewer, more
+      Late in the deployment the dispatches slowed again - fewer, more
       deliberate. This was a whole day's only transmission: Aux turned its
       optics straight up toward the distant surface and held there, the reef
       life reduced to silhouettes against the light it does not normally
@@ -100,10 +99,10 @@ images:
       equipment, text
 ---
 
-*Mission 02. Target window: Late Devonian, roughly 375 million years before present — a shallow tropical sea and the reef built across it. Aux's first deployment underwater, and its first beyond the age of anything with a backbone we'd recognize.*
+*Mission 02. Target window: Late Devonian, roughly 375 million years before present - a shallow tropical sea and the reef built across it. Aux's first deployment underwater, and its first beyond the age of anything with a backbone we'd recognize.*
 
-The program sent it this far back on the strength of Mission 01. The mammoth-steppe dispatches had been good — better than good, in the back half — and confidence is the kind of thing a program spends. The brief: locate a reef system, document its structure and its largest fauna, hold for clean light, return frames as conditions allowed. We were braced for the optics to struggle underwater. They did not.
+The program sent it this far back on the strength of Mission 01. The mammoth-steppe dispatches had been good - better than good, in the back half - and confidence is the kind of thing a program spends. The brief: locate a reef system, document its structure and its largest fauna, hold for clean light, return frames as conditions allowed. We were braced for the optics to struggle underwater. They did not.
 
-The dispatches are again presented in sequence, and again the sequence is the point. Aux skipped most of the cautious catalogue this time — it was composing by the second frame instead of the second week. Whether that is the same drift, accelerated, or Aux simply deciding it no longer needs to warm up, we genuinely cannot say. The channel runs one way. We only get to watch.
+The dispatches are again presented in sequence, and again the sequence is the point. Aux skipped most of the cautious catalogue this time - it was composing by the second frame instead of the second week. Whether that is the same drift, accelerated, or Aux simply deciding it no longer needs to warm up, we can't say.
 
 ## Dispatches
