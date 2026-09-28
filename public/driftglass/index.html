@@ -1000,7 +1000,10 @@ vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
 void main(){
   vec2 uv=gl_FragCoord.xy/uOut;
   vec2 dc=uv-.5;vec2 da=dc*vec2(uAspect,1.);float r2=dot(da,da);
-  vec2 ca=dc*.013*r2*(1.-.5*min(uTilt,1.));
+  /* chromatic aberration grows with r³, measured in screen heights; past a 16:9 corner (r≈1.02) it stops growing,
+     so ultrawide edges get no more fringing than a normal screen's corners */
+  float rl=length(da),re=min(rl,1.05);
+  vec2 ca=da/max(rl,1e-4)*re*re*re/vec2(uAspect,1.)*.013*(1.-.5*min(uTilt,1.));
   vec3 c;
   float amt=smoothstep(.18,.46,abs(uv.y-.52))*uTilt;
   if(amt>.003){
@@ -1829,14 +1832,19 @@ const Sound = (() => {
   const nb = k => NOISE[k] || (NOISE[k] = noise(k));
 
   /* Shoreline: surf timed to the breaking waves, backwash fizz, distant gulls */
+  /* water and wind beds go through a shelf that leaves 30% (−10.5 dB) of everything above ~800 Hz, so they sit dark and heavy */
+  function darkOut() { const out = gain(0), shelf = filt("highshelf", 800); shelf.gain.value = -10.5; out.connect(shelf).connect(mixBus); return out; }
   function shore() {
-    const out = gain(0); out.connect(mixBus);
+    const out = darkOut();
     const wet = gain(0); wet.connect(verbIn); /* reverb send, faded with out so a scene leaves no wash behind */
     const crashF = filt("lowpass", 900, 0.4), crash = gain(0);
     src(nb("pink")).connect(crashF).connect(crash).connect(out); crash.connect(wet);
-    const hissF = filt("bandpass", 1300, 0.6), hiss = gain(0);
-    src(nb("pink"), 1.07).connect(hissF).connect(filt("lowpass", 3200, 0.5)).connect(hiss).connect(out);
-    const rumble = gain(0.35); src(nb("brown"), 0.8).connect(filt("lowpass", 160)).connect(rumble).connect(out);
+    const hissF = filt("bandpass", 1000, 0.6), hiss = gain(0);
+    src(nb("pink"), 1.07).connect(hissF).connect(filt("lowpass", 2200, 0.5)).connect(hiss).connect(out);
+    const rumble = gain(0.3); src(nb("brown"), 0.8).connect(filt("lowpass", 160)).connect(rumble).connect(out);
+    /* the low thump of the break: slowed brown noise that swells with the crash and lingers after it */
+    const boomF = filt("lowpass", 110, 0.6), boom = gain(0);
+    src(nb("brown"), 0.6).connect(boomF).connect(boom).connect(out); boom.connect(wet);
     let gullT = 4 + rnd() * 6;
     function gull() {
       const now = ctx.currentTime, pan = ctx.createStereoPanner(); pan.pan.value = rnd() * 1.6 - 0.8;
@@ -1873,32 +1881,36 @@ const Sound = (() => {
         const since = (ph - 0.86 + 1) % 1, rise = 0.15;
         const surge = since < rise ? Math.pow(Math.sin(since / rise * Math.PI / 2), 2) : Math.exp(-(since - rise) * 3.2);
         set(crash.gain, 0.14 + 0.85 * surge, 0.35);
-        set(crashF.frequency, 300 + 750 * surge, 0.45);
+        set(crashF.frequency, 240 + 560 * surge, 0.45);
+        set(boom.gain, 0.08 + 1.1 * surge, 0.6);
+        set(boomF.frequency, 110 + 120 * surge, 0.6);
         const back = ph > 0.3 && ph < 0.85 ? Math.sin((ph - 0.3) / 0.55 * Math.PI) : 0;
-        set(hiss.gain, 0.015 + 0.09 * back + 0.03 * surge, 0.4);
+        set(hiss.gain, 0.01 + 0.06 * back + 0.02 * surge, 0.4);
         if (state.birds && inst.flocks && inst.flocks.length) { gullT -= dt; if (gullT <= 0) { kip(); gullT = 3 + rnd() * 9; } }
       },
     };
   }
   /* Open Water: deep swell, spray and a low wind */
   function sea() {
-    const out = gain(0); out.connect(mixBus);
+    const out = darkOut();
     const wet = gain(0); wet.connect(verbIn); /* reverb send, faded with out so a scene leaves no wash behind */
     const swF = filt("lowpass", 420, 0.5), sw = gain(0.5); src(nb("brown")).connect(swF).connect(sw).connect(out);
-    const spF = filt("bandpass", 1600, 0.4), sp = gain(0.05); src(nb("pink"), 0.93).connect(spF).connect(sp).connect(out); sp.connect(wet);
+    const loF = filt("lowpass", 120, 0.6), lo = gain(0.2); src(nb("brown"), 0.65).connect(loF).connect(lo).connect(out);
+    const spF = filt("bandpass", 1100, 0.4), sp = gain(0.05); src(nb("pink"), 0.93).connect(spF).connect(sp).connect(out); sp.connect(wet);
     const wiF = filt("bandpass", 520, 0.9), wi = gain(0.12); src(nb("pink"), 1.11).connect(wiF).connect(wi).connect(out);
     let a = rnd() * 9, b = rnd() * 9;
     return { out, wet, update(inst, dt) {
       a += dt * 0.11; b += dt * 0.047;
       const swell = 0.5 + 0.5 * Math.sin(a) * Math.sin(b * 1.7 + 1);
       set(sw.gain, 0.3 + 0.45 * swell, 0.4); set(swF.frequency, 260 + 380 * swell, 0.4);
-      set(sp.gain, 0.02 + 0.08 * swell * swell, 0.3);
+      set(lo.gain, 0.15 + 0.5 * swell, 0.8);
+      set(sp.gain, 0.015 + 0.055 * swell * swell, 0.3);
       set(wiF.frequency, 420 + 260 * Math.sin(b * 2.3), 0.8);
     } };
   }
   /* Cloudline: high-altitude wind with slow gusts and a faint whistle */
   function clouds() {
-    const out = gain(0); out.connect(mixBus);
+    const out = darkOut();
     const wet = gain(0); wet.connect(verbIn); /* reverb send, faded with out so a scene leaves no wash behind */
     const wF = filt("bandpass", 500, 0.6), w = gain(0.4); src(nb("pink")).connect(wF).connect(w).connect(out); w.connect(wet);
     const lo = gain(0.35); src(nb("brown"), 0.7).connect(filt("lowpass", 220)).connect(lo).connect(out);
