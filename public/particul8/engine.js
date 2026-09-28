@@ -389,7 +389,9 @@ export class Particul8 {
     ctx.clearRect(0, 0, w, h);
     if (!text) return { pts: [], stride: 1 };
     const maxW = w * 0.86, maxH = h * 0.72;
-    const fontFor = (px) => `${s.weight} ${px}px "${s.font}", ${EMOJI_STACK}, sans-serif`;
+    // sans-serif before the emoji fonts: Apple Color Emoji has glyphs for 0-9 # *,
+    // so an unloaded font used to send digits there. Real emoji still fall through.
+    const fontFor = (px) => `${s.weight} ${px}px "${s.font}", sans-serif, ${EMOJI_STACK}`;
     const words = text.split(/\s+/);
     let size = Math.min(maxH, w * 0.5);
     let lines = [text];
