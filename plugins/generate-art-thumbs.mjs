@@ -1,7 +1,8 @@
-// prebuild/predev script: small AVIF thumbnails of every art image for the
-// home page strip, which shows 1200px originals at ~170px. Writes
-// public/_thumbs/art/<series>/<name>-<width>.avif (gitignored, rebuilt in CI);
-// skips thumbs newer than their source so predev stays near-instant.
+// prebuild/predev script: small AVIF thumbnails for images shown as tiles —
+// every art image, plus each image in the home page's Selected Works
+// (src/data/showcase.json), which would otherwise load 1-2.5k px originals
+// at ~200px. Writes public/_thumbs/<path>-<width>.avif (gitignored, rebuilt
+// in CI); skips thumbs newer than their source so predev stays near-instant.
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
@@ -11,8 +12,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, '..', 'public');
 const artDir = path.join(publicDir, 'art');
 const thumbsDir = path.join(publicDir, '_thumbs');
+const showcaseFile = path.join(__dirname, '..', 'src', 'data', 'showcase.json');
 
-// 1x and 2x of the strip tile width; keep in sync with thumbSrcset() in src/pages/index.astro
+// 1x and 2x of the tile width; keep in sync with thumbSrcset() in src/pages/index.astro
 const THUMB_WIDTHS = [240, 480];
 const EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 
@@ -26,9 +28,12 @@ async function mtime(file) {
 
 async function run() {
   const entries = await fs.readdir(artDir, { withFileTypes: true, recursive: true });
-  const files = entries
+  const artFiles = entries
     .filter((e) => e.isFile() && EXTENSIONS.has(path.extname(e.name).toLowerCase()))
     .map((e) => path.join(e.parentPath, e.name));
+  const showcase = JSON.parse(await fs.readFile(showcaseFile, 'utf8'));
+  const showcaseFiles = showcase.map((item) => path.join(publicDir, item.image));
+  const files = [...new Set([...artFiles, ...showcaseFiles])];
 
   let written = 0;
   await Promise.all(files.map(async (src) => {
