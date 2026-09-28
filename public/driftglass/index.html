@@ -1849,7 +1849,9 @@ const Sound = (() => {
   function init() {
     if (ctx) return true;
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
-    try { ctx = new AC(); } catch (e) { return false; }
+    /* latencyHint 0.1 asks for a ~170 ms output buffer instead of the default ~5 ms. Nothing here needs tight timing, and
+       the slack lets the audio thread ride out busy moments (fresh load, crossfades, shader compiles) that otherwise underrun as static */
+    try { ctx = new AC({ latencyHint: 0.1 }); } catch (e) { try { ctx = new AC(); } catch (e2) { return false; } }
     /* mix (metered) → auto-leveler → gentle compressor → hard limiter → volume */
     mixBus = gain(1); agc = gain(1); trimG = gain(1); master = gain(0);
     meter = ctx.createAnalyser(); meter.fftSize = 2048; meterBuf = new Float32Array(meter.fftSize);
@@ -1861,8 +1863,12 @@ const Sound = (() => {
     mixBus.connect(sub).connect(sub2);
     sub2.connect(meter);
     sub2.connect(agc).connect(trimG).connect(comp).connect(lim).connect(master).connect(ctx.destination);
-    const verb = ctx.createConvolver(); verb.buffer = impulse(4.5, 2.6);
-    verbIn = gain(1); const verbOut = gain(0.55); verbIn.connect(verb).connect(verbOut).connect(mixBus);
+    verbIn = gain(1);
+    /* ?verb=0 leaves the reverb out, to A/B whether the 4.5 s convolution is what glitches on a given machine */
+    if (new URLSearchParams(location.search).get("verb") !== "0") {
+      const verb = ctx.createConvolver(); verb.buffer = impulse(4.5, 2.6);
+      const verbOut = gain(0.55); verbIn.connect(verb).connect(verbOut).connect(mixBus);
+    }
     return true;
   }
   const NOISE = {};
