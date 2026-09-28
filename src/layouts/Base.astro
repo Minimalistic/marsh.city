@@ -262,6 +262,21 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">Theme: <span class="theme-label">auto</span></span>
               </button>
+              <button type="button" class="sound-toggle" role="menuitemcheckbox" aria-checked="false" aria-label="Ambient sound">
+                <span class="nav-menu-item-icon">
+                  <svg class="icon-sound-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 5L6 9H3v6h3l5 4z"/>
+                    <line x1="22" y1="9" x2="16" y2="15"/>
+                    <line x1="16" y1="9" x2="22" y2="15"/>
+                  </svg>
+                  <svg class="icon-sound-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 5L6 9H3v6h3l5 4z"/>
+                    <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+                    <path d="M18.8 5.2a9.5 9.5 0 0 1 0 13.6"/>
+                  </svg>
+                </span>
+                <span class="nav-menu-item-label">Sound: <span class="sound-label">off</span></span>
+              </button>
               <button type="button" class="cmdk-trigger" role="menuitem" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K">
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -366,7 +381,7 @@ const paletteItems = [
         });
 
         panel.addEventListener('click', (e) => {
-          if (e.target.closest('.theme-toggle, .cmdk-trigger')) close();
+          if (e.target.closest('.theme-toggle, .sound-toggle, .cmdk-trigger')) close();
         });
 
         document.addEventListener('click', (e) => {
@@ -452,6 +467,79 @@ const paletteItems = [
             ? (mq.matches ? 'dark' : 'light')
             : next;
           setTheme(resolved, true);
+        });
+      })();
+    </script>
+
+    <script is:inline>
+      // ambient sound: opt-in, off by default. The toggle lives here; the
+      // synth engine (/ambient.js) is only fetched once someone turns it on.
+      // The AudioContext is created synchronously inside the user gesture,
+      // before the async import, because iOS Safari only unlocks audio there.
+      (() => {
+        const btn = document.querySelector('.sound-toggle');
+        if (!btn) return;
+        const label = btn.querySelector('.sound-label');
+        let wanted = false;
+        try { wanted = localStorage.getItem('ambient') === 'on'; } catch {}
+        let ctx = null;
+        let engine = null;
+
+        function updateUI() {
+          btn.setAttribute('aria-checked', String(wanted));
+          if (label) label.textContent = wanted ? 'on' : 'off';
+        }
+        updateUI();
+
+        function unlock() {
+          if (!ctx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return false;
+            ctx = new AC();
+          }
+          ctx.resume().catch(() => {});
+          return true;
+        }
+
+        async function start() {
+          if (!unlock()) return;
+          try {
+            if (!engine) {
+              const mod = await import('/ambient.js');
+              engine = mod.createAmbient(ctx);
+            }
+            if (wanted) engine.start(window.__isDark());
+          } catch (err) {
+            console.error('[ambient] failed to start:', err);
+          }
+        }
+
+        btn.addEventListener('click', () => {
+          wanted = !wanted;
+          try { localStorage.setItem('ambient', wanted ? 'on' : 'off'); } catch {}
+          updateUI();
+          if (wanted) start();
+          else if (engine) engine.stop();
+        });
+
+        // Browsers block audio until a gesture, so a saved "on" resumes on
+        // the first tap/key of each page load (with a slow fade-in).
+        if (wanted) {
+          const kick = () => {
+            ['pointerdown', 'keydown'].forEach(t => removeEventListener(t, kick, true));
+            if (wanted && !engine) start();
+          };
+          ['pointerdown', 'keydown'].forEach(t => addEventListener(t, kick, true));
+        }
+
+        window.addEventListener('marsh:theme', () => {
+          if (engine && wanted) engine.setNight(window.__isDark());
+        });
+
+        // stop burning CPU (and playing to an empty room) in background tabs
+        document.addEventListener('visibilitychange', () => {
+          if (!ctx || !wanted) return;
+          document.hidden ? ctx.suspend() : ctx.resume();
         });
       })();
     </script>

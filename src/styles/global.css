@@ -1866,7 +1866,7 @@ nav.site-nav .links .nav-menu-link.nav-show-mobile { display: none; }
 
 /* --- theme toggle (menu item with sun/moon icons) --- */
 
-.theme-toggle {
+.theme-toggle, .sound-toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -1883,7 +1883,7 @@ nav.site-nav .links .nav-menu-link.nav-show-mobile { display: none; }
   cursor: pointer;
   transition: color 0.15s ease, background 0.15s ease;
 }
-.theme-toggle:hover {
+.theme-toggle:hover, .sound-toggle:hover {
   background: color-mix(in srgb, var(--leaf) 15%, transparent);
   color: var(--fg);
 }
@@ -1895,6 +1895,12 @@ nav.site-nav .links .nav-menu-link.nav-show-mobile { display: none; }
 .theme-toggle.is-auto .icon-sun   { display: none; }
 .theme-toggle.is-auto .icon-moon  { display: none; }
 .theme-toggle.is-auto .icon-auto  { display: block; }
+
+/* sound toggle: muted speaker when off, speaker with waves when on */
+.sound-toggle .icon-sound-on { display: none; }
+.sound-toggle[aria-checked="true"] .icon-sound-off { display: none; }
+.sound-toggle[aria-checked="true"] .icon-sound-on  { display: block; }
+.sound-toggle[aria-checked="true"] .nav-menu-item-icon { color: var(--leaf); }
 
 /* --- sky ---
    A fixed, viewport-sized gradient behind everything. Day: a clear summer
