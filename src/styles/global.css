@@ -1622,6 +1622,14 @@ nav.site-nav .links a[aria-current="page"]::after {
 }
 .nav-menu-btn:active { transform: scale(0.94); }
 .nav-menu-btn svg { display: block; }
+/* touch: 40px visible so the nav pill stays slim, plus a transparent ring
+   that stretches the hit area to the 44px minimum (WCAG 2.5.5). */
+@media (pointer: coarse) {
+  .nav-menu-btn { position: relative; width: 40px; height: 40px; }
+  .nav-menu-btn svg { width: 20px; height: 20px; }
+  .nav-menu-btn::before { content: ""; position: absolute; inset: -3px; }
+  .nav-menu-link, .theme-toggle, .sound-toggle, .cmdk-trigger { min-height: 44px; }
+}
 
 .nav-menu-panel {
   position: absolute;
