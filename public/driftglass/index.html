@@ -460,6 +460,8 @@ void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Posit
 const COMMON = `#version 300 es
 precision highp float;
 uniform vec2 uRes; uniform float uTime; uniform vec2 uCam; uniform float uRot; uniform float uZoom; uniform vec2 uOff;
+/* octaves to skip: below full resolution the finest ones are sub-pixel and get blurred away anyway */
+uniform float uDetailDrop;
 out vec4 fragColor;
 #define PI 3.14159265
 #define TAU 6.2831853
@@ -469,8 +471,8 @@ vec2 gr(vec2 i){return hash22(i)*2.-1.;}
 float gn(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*f*(f*(f*6.-15.)+10.);
  return 2.*mix(mix(dot(gr(i),f),dot(gr(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(gr(i+vec2(0,1)),f-vec2(0,1)),dot(gr(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}
 const mat2 M2=mat2(.8,-.6,.6,.8);
-float fbm(vec2 p,int o){float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;s+=a*gn(p);p=M2*p*2.03+vec2(3.1,1.7);a*=.5;}return s;}
-float ridged(vec2 p,int o){float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;float n=1.-abs(gn(p));s+=a*n*n;p=M2*p*2.03+vec2(1.3,7.1);a*=.5;}return s;}
+float fbm(vec2 p,int o){o=max(2,o-int(uDetailDrop));float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;s+=a*gn(p);p=M2*p*2.03+vec2(3.1,1.7);a*=.5;}return s;}
+float ridged(vec2 p,int o){o=max(2,o-int(uDetailDrop));float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;float n=1.-abs(gn(p));s+=a*n*n;p=M2*p*2.03+vec2(1.3,7.1);a*=.5;}return s;}
 mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
 vec2 screenUV(){return (gl_FragCoord.xy-.5*uRes)/uRes.y;}
 `;
@@ -999,7 +1001,7 @@ c+=(texture(uSrc,uv+uDir*3.2307692308)+texture(uSrc,uv-uDir*3.2307692308))*.0702
 fragColor=c;}`;
 
 const POST = POST_COMMON + `
-uniform sampler2D uB4,uB8,uM8,uM16;uniform float uExposure,uTime,uFade,uBloom,uTilt,uGlow,uTaps;
+uniform sampler2D uB4,uB8,uM8,uM16;uniform float uExposure,uTime,uFade,uBloom,uTilt,uGlow,uTaps,uSharp;uniform vec2 uSrcTexel;
 vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
 void main(){
   vec2 uv=gl_FragCoord.xy/uOut;
@@ -1019,6 +1021,14 @@ void main(){
   }else{
     vec3 s0=sceneAt(uv-ca),s1=sceneAt(uv-ca*.5),s2=sceneAt(uv),s3=sceneAt(uv+ca*.5),s4=sceneAt(uv+ca);
     c=vec3(s0.r*.6+s1.r*.4,s2.g*.6+(s1.g+s3.g)*.2,s4.b*.6+s3.b*.4);
+  }
+  /* the scene is rendered below native size and upscaled; a light sharpen restores edge contrast, clamped to the
+     neighbours' range so it can't ring. Off at full resolution, and faded out inside the tilt-shift bands */
+  float sk=uSharp*(1.-min(amt*4.,1.));
+  if(sk>.001){
+    vec3 m0=sceneAt(uv),n1=sceneAt(uv+vec2(uSrcTexel.x,0.)),n2=sceneAt(uv-vec2(uSrcTexel.x,0.)),n3=sceneAt(uv+vec2(0.,uSrcTexel.y)),n4=sceneAt(uv-vec2(0.,uSrcTexel.y));
+    vec3 mn=min(m0,min(min(n1,n2),min(n3,n4))),mx=max(m0,max(max(n1,n2),max(n3,n4)));
+    c=clamp(c+sk*(m0-(n1+n2+n3+n4)*.25)*2.,mn,mx);
   }
   c+=(texture(uB4,uv).rgb*.5+texture(uB8,uv).rgb*.8)*uBloom;
   vec3 mist=texture(uM8,uv).rgb*.45+texture(uM16,uv).rgb*.55;
@@ -1290,6 +1300,7 @@ function renderScene(inst, rt) {
   setU(p, "uRot", c.rot); setU(p, "uZoom", c.zoom); setU(p, "uOff", inst.off);
   for (const k in inst.uniforms) setU(p, k, inst.uniforms[k]);
   setU(p, "uWindOff", inst.windOff);
+  setU(p, "uDetailDrop", detailDrop());
   if (inst.wave !== undefined) setU(p, "uWave", inst.wave);
   draw(rt.fb, rt.w, rt.h);
   drawBirds(inst, rt);
@@ -2062,7 +2073,7 @@ function frame(now) {
     tex(p, "uA", 0, T.A.t); tex(p, "uB", 1, (next ? T.B : T.A).t); tex(p, "uB4", 2, T.q1.t); tex(p, "uB8", 3, T.e1.t); tex(p, "uM8", 4, T.m1.t); tex(p, "uM16", 5, T.n1.t); setU(p, "uGlow", glowAmt * sc.glow);
     setU(p, "uMix", m); setU(p, "uAspect", aspect); setU(p, "uOut", [W, H]);
     setU(p, "uExposure", sc.exposure); setU(p, "uTilt", tiltAmt * state.tiltLevel); setU(p, "uBloom", sc.bloom); setU(p, "uTime", now / 1000); setU(p, "uFade", easeInOut(fade));
-    setU(p, "uTaps", tiltTaps());
+    setU(p, "uTaps", tiltTaps()); setU(p, "uSharp", sharpAmount()); setU(p, "uSrcTexel", [1 / T.A.w, 1 / T.A.h]);
     draw(null, W, H);
   }
 
@@ -2093,12 +2104,30 @@ function tiltTaps() {
   const t = capScale > 0.3 ? Math.min(1, Math.max(0, (scale - 0.3) / (capScale - 0.3))) : 1;
   return Math.round(8 + 20 * t);
 }
+/* Octaves to skip, from the resolution ceiling rather than the current scale so detail doesn't flicker as the scaler
+   hunts: each octave halves feature size, so one goes below half resolution, two below a quarter. */
+let lodDrop = 0;
+function detailDrop() {
+  const want = Math.max(0, Math.floor(Math.log2(capScale / Math.max(maxScale, 0.01)) + 1e-6));
+  /* put an octave back only with 15% headroom past its threshold, so a ceiling hovering at the line can't toggle it */
+  if (want > lodDrop || maxScale > capScale / 2 ** lodDrop * 1.15) lodDrop = want;
+  return lodDrop;
+}
+/* sharpen strength grows as the image is upscaled further; zero at the device's full resolution */
+function sharpAmount() {
+  return capScale > 0 ? Math.min(0.35, Math.max(0, (1 - scale / capScale) * 0.5)) : 0;
+}
 const easeInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 
 /* Keep the frame rate near 60 fps by trading internal resolution. The goal is absolute: judging frames against the
    scene's own fastest ones read a steadily slow scene as healthy, so heavy scenes chugged along at full resolution.
    60 even on 120 Hz screens: chasing 120 would halve the resolution for no visible gain in these slow scenes. */
 const TARGET_FT = 1 / 60;
+/* A GPU whose ceiling settles under 70% of full resolution at 60 fps trades frame rate for pixels, down to 45 fps;
+   it returns to 60 once it holds 60 at 85% or better, so capable hardware never leaves 60. On a 60 Hz screen 45 fps
+   paces unevenly (frames alternate 16.7 / 33.3 ms); if that reads as judder on these slow scenes, set this to TARGET_FT. */
+const RELAXED_FT = 1 / 45;
+let relaxed = false;
 function adapt(dt, now, rawDt) {
   if (document.hidden) return;
   frames++;
@@ -2119,7 +2148,8 @@ function adapt(dt, now, rawDt) {
   if (maxScale < capScale && now - lastDrop > 30000) { maxScale = Math.min(capScale, maxScale * 1.1); lastDrop = now - 20000; }
   /* some devices cap the frame rate below 60 whatever we draw (an iPhone in Low Power Mode runs at 30); once that's
      proven, that frame time is the goal for a while */
-  const goal = now < capUntil ? capFt : TARGET_FT;
+  if (!relaxed && !fading && maxScale < 0.7 * capScale) relaxed = true;
+  const goal = now < capUntil ? capFt : relaxed ? RELAXED_FT : TARGET_FT;
   const avg = acc.reduce((a, b) => a + b, 0) / acc.length;
   /* a narrow band: 50 fps on a 60 Hz screen shows as judder, so settle between ~53 and ~58 */
   if (avg > goal * 1.12 && scale > 0.3) {
@@ -2134,6 +2164,7 @@ function adapt(dt, now, rawDt) {
     scale = Math.max(0.3, scale * (avg > goal * 2 ? 0.75 : 0.86)); acc = []; allocate();
   } else {
     probe = null;
+    if (relaxed && scale >= 0.85 * capScale && avg < TARGET_FT * 1.04) relaxed = false;
     if (!fading && avg < goal * 1.04 && now > cooldown && scale < maxScale) {
       scale = Math.min(maxScale, scale * 1.06); acc = []; cooldown = now + (now < fastClimbUntil ? 800 : 2500); allocate();
     }
