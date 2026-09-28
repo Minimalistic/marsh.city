@@ -154,11 +154,15 @@ export function createAmbient(ctx) {
   }
 
   const SONGS = [
-    // two-note "fee-bee", falling
+    // "fee-bee-bee": one high whistle, then two or four lower ones
     (t, out, lvl) => {
       const hi = between(3300, 3900);
+      const lows = rnd() < 0.5 ? 2 : 4;
       note(t, 0.32, hi, hi * 0.97, lvl, out);
-      note(t + 0.42, 0.36, hi * 0.86, hi * 0.83, lvl * 0.9, out);
+      for (let k = 0; k < lows; k++) {
+        const at = t + 0.42 + k * 0.34;
+        note(at, 0.26, hi * 0.86, hi * 0.83, lvl * (0.9 - k * 0.06), out);
+      }
     },
     // dry trill: a quick run of identical chips
     (t, out, lvl) => {
