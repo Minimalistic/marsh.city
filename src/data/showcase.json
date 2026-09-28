@@ -3,5 +3,5 @@
   { "collection": "projects", "id": "whatcanhelp", "image": "/images/whatcanhelp/landing.webp", "focus": "top" },
   { "collection": "playground", "id": "the-shallows", "image": "/images/the-shallows/tile.webp" },
   { "collection": "projects", "id": "radiogridxl", "image": "/images/radiogridxl/grid-dark.webp", "focus": "top" },
-  { "collection": "playground", "id": "particul8", "image": "/images/particul8/world.webp" }
+  { "collection": "playground", "id": "particul8", "image": "/images/particul8/tile.webp" }
 ]
