@@ -60,6 +60,7 @@ const showcase = await Promise.all(showcaseList.map(async (item, i) => {
     <h2>Selected Works</h2>
     <a href="/art/">View art</a>
   </div>
+  <p class="showcase-intro">A handful of my favorites.</p>
   <div class="showcase">
     {showcase.map((it) => (
       <a class="showcase-card" href={it.url}>
@@ -155,7 +156,19 @@ const showcase = await Promise.all(showcaseList.map(async (item, i) => {
       .showcase-cover img { transition: transform 0.4s ease; }
       .showcase-card:hover .showcase-cover img { transform: scale(1.03); }
     }
-    /* frosted plaque: the label sits straight over the foliage */
+    /* frosted plaque: the intro and labels sit straight over the foliage */
+    .showcase-intro {
+      display: inline-block;
+      margin: 0 0 0.9rem;
+      padding: 0.25em 0.7em;
+      font-size: 0.9rem;
+      color: var(--fg-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--bg-elev) var(--glass-wash), transparent);
+      backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+    }
     .showcase-label {
       display: inline-flex;
       flex-direction: column;
