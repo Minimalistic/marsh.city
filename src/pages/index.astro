@@ -13,19 +13,22 @@ const projects = (await getCollection('projects'))
 // so fail the build rather than silently dropping a tile. An item can
 // override its title and url (the art tile opens the whole /art/ index).
 const KIND = { projects: 'Project', playground: 'Playground', art: 'Art' } as const;
-// tiles show at ~200px, so they load the AVIF thumbs that
-// plugins/generate-art-thumbs.mjs writes (240w and 480w) instead of the originals
-const thumbSrcset = (src: string) => [240, 480]
+// tiles show at ~150-360px, so they load the AVIF thumbs that
+// plugins/generate-art-thumbs.mjs writes (240w, 480w, and 960w for the
+// double-size first tile) instead of the originals
+const thumbSrcset = (src: string, widths = [240, 480]) => widths
   .map((w) => `/_thumbs${src.replace(/\.\w+$/, '')}-${w}.avif ${w}w`)
   .join(', ');
-const showcase = await Promise.all(showcaseList.map(async (item) => {
+const showcase = await Promise.all(showcaseList.map(async (item, i) => {
   const entry = await getEntry(item.collection as keyof typeof KIND, item.id);
   if (!entry) throw new Error(`showcase.json: no ${item.collection} entry "${item.id}"`);
   return {
     title: item.title ?? entry.data.title,
     kind: KIND[item.collection as keyof typeof KIND],
     url: item.url ?? `/${item.collection}/${item.id}/`,
-    srcset: thumbSrcset(item.image),
+    // the first tile is the featured one: twice the size, so a bigger thumb
+    srcset: i === 0 ? thumbSrcset(item.image, [480, 960]) : thumbSrcset(item.image),
+    sizes: i === 0 ? '(max-width: 600px) 92vw, 330px' : '(max-width: 600px) 45vw, 160px',
     focus: item.focus ?? 'center',
   };
 }));
@@ -55,12 +58,13 @@ const showcase = await Promise.all(showcaseList.map(async (item) => {
 
   <div class="section-header">
     <h2>Selected Works</h2>
+    <a href="/art/">View art</a>
   </div>
   <div class="showcase">
     {showcase.map((it) => (
       <a class="showcase-card" href={it.url}>
         <div class="showcase-cover">
-          <img srcset={it.srcset} sizes="(max-width: 600px) 45vw, 200px" alt="" loading="lazy" decoding="async" style={`object-position: ${it.focus}`} />
+          <img srcset={it.srcset} sizes={it.sizes} alt="" loading="lazy" decoding="async" style={`object-position: ${it.focus}`} />
         </div>
         <span class="showcase-label">
           <span class="showcase-title">{it.title}</span>
@@ -113,27 +117,39 @@ const showcase = await Promise.all(showcaseList.map(async (item) => {
   )}
 
   <style>
+    /* 4 columns: the first (featured) tile spans a 2x2 block, the other
+       four fill the 2x2 block beside it. Phones: featured full width on top,
+       the rest in a 2x2 grid below. */
     .showcase {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 1rem;
       margin: 0 0 0.5rem;
     }
-    @media (max-width: 600px) {
-      .showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    .showcase-card { display: block; min-width: 0; text-decoration: none; }
+    .showcase-card { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; text-decoration: none; }
+    .showcase-card:first-child { grid-column: span 2; grid-row: span 2; }
     .showcase-cover {
+      position: relative;
+      width: 100%;
       aspect-ratio: 3 / 2;
       border-radius: 6px;
       overflow: hidden;
       background: var(--bg-soft, rgba(0, 0, 0, 0.04));
     }
+    /* featured cover stretches to fill its two rows; the image is absolutely
+       positioned so its intrinsic size can't inflate the row heights */
+    .showcase-card:first-child .showcase-cover { aspect-ratio: auto; flex: 1; }
     .showcase-cover img {
-      display: block;
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+    @media (max-width: 600px) {
+      .showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .showcase-card:first-child { grid-row: auto; }
+      .showcase-card:first-child .showcase-cover { aspect-ratio: 3 / 2; flex: none; }
     }
     @media (prefers-reduced-motion: no-preference) {
       .showcase-cover img { transition: transform 0.4s ease; }
@@ -153,6 +169,7 @@ const showcase = await Promise.all(showcaseList.map(async (item) => {
       backdrop-filter: blur(var(--glass-blur)) saturate(130%);
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
     }
+    .showcase-card:first-child .showcase-title { font-size: 1rem; }
     .showcase-title {
       font-size: 0.85rem;
       font-weight: 500;

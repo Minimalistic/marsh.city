@@ -14,8 +14,10 @@ const artDir = path.join(publicDir, 'art');
 const thumbsDir = path.join(publicDir, '_thumbs');
 const showcaseFile = path.join(__dirname, '..', 'src', 'data', 'showcase.json');
 
-// 1x and 2x of the tile width; keep in sync with thumbSrcset() in src/pages/index.astro
+// 1x and 2x of the tile width; keep in sync with thumbSrcset() in src/pages/index.astro.
+// Showcase images also get 960w, since whichever one is listed first shows at double size.
 const THUMB_WIDTHS = [240, 480];
+const SHOWCASE_WIDTHS = [240, 480, 960];
 const EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 
 async function mtime(file) {
@@ -33,13 +35,16 @@ async function run() {
     .map((e) => path.join(e.parentPath, e.name));
   const showcase = JSON.parse(await fs.readFile(showcaseFile, 'utf8'));
   const showcaseFiles = showcase.map((item) => path.join(publicDir, item.image));
-  const files = [...new Set([...artFiles, ...showcaseFiles])];
+  const jobs = new Map(artFiles.map((f) => [f, THUMB_WIDTHS]));
+  for (const f of showcaseFiles) jobs.set(f, SHOWCASE_WIDTHS);
 
   let written = 0;
-  await Promise.all(files.map(async (src) => {
+  let total = 0;
+  await Promise.all([...jobs].map(async ([src, widths]) => {
     const rel = path.relative(publicDir, src).replace(/\.\w+$/, '');
     const srcTime = await mtime(src);
-    for (const width of THUMB_WIDTHS) {
+    total += widths.length;
+    for (const width of widths) {
       const out = path.join(thumbsDir, `${rel}-${width}.avif`);
       if ((await mtime(out)) > srcTime) continue;
       await fs.mkdir(path.dirname(out), { recursive: true });
@@ -47,7 +52,7 @@ async function run() {
       written++;
     }
   }));
-  console.info(`thumbs: ${written} written, ${files.length * THUMB_WIDTHS.length - written} up to date`);
+  console.info(`thumbs: ${written} written, ${total - written} up to date`);
 }
 
 run();
