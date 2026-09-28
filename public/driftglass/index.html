@@ -460,8 +460,6 @@ void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Posit
 const COMMON = `#version 300 es
 precision highp float;
 uniform vec2 uRes; uniform float uTime; uniform vec2 uCam; uniform float uRot; uniform float uZoom; uniform vec2 uOff;
-/* octaves to skip: below full resolution the finest ones are sub-pixel and get blurred away anyway */
-uniform float uDetailDrop;
 out vec4 fragColor;
 #define PI 3.14159265
 #define TAU 6.2831853
@@ -471,8 +469,8 @@ vec2 gr(vec2 i){return hash22(i)*2.-1.;}
 float gn(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*f*(f*(f*6.-15.)+10.);
  return 2.*mix(mix(dot(gr(i),f),dot(gr(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(gr(i+vec2(0,1)),f-vec2(0,1)),dot(gr(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}
 const mat2 M2=mat2(.8,-.6,.6,.8);
-float fbm(vec2 p,int o){o=max(2,o-int(uDetailDrop));float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;s+=a*gn(p);p=M2*p*2.03+vec2(3.1,1.7);a*=.5;}return s;}
-float ridged(vec2 p,int o){o=max(2,o-int(uDetailDrop));float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;float n=1.-abs(gn(p));s+=a*n*n;p=M2*p*2.03+vec2(1.3,7.1);a*=.5;}return s;}
+float fbm(vec2 p,int o){float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;s+=a*gn(p);p=M2*p*2.03+vec2(3.1,1.7);a*=.5;}return s;}
+float ridged(vec2 p,int o){float s=0.,a=.5;for(int i=0;i<8;i++){if(i>=o)break;float n=1.-abs(gn(p));s+=a*n*n;p=M2*p*2.03+vec2(1.3,7.1);a*=.5;}return s;}
 mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
 vec2 screenUV(){return (gl_FragCoord.xy-.5*uRes)/uRes.y;}
 `;
@@ -1163,15 +1161,25 @@ function setU(p, name, v) {
 }
 function tex(p, name, unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(p.u(name), unit); }
 
+/* ?diag: shows shader compile times and the first frames' durations, for chasing stalls on hardware we can't test.
+   program() checks COMPILE_STATUS straight away, which forces a synchronous compile, so the timings are real. */
+const diag = new URLSearchParams(location.search).has("diag");
+const diagCompile = [], diagFrames = [];
+function timed(name, build) {
+  const t0 = performance.now(); const p = build();
+  diagCompile.push(`${name} ${Math.round(performance.now() - t0)} ms`);
+  return p;
+}
 const progs = {};
 try {
   /* scenes can share a shader (Cloudline and Open Water); compile each source once */
   const bySource = new Map();
   SCENES.forEach(s => {
-    if (!bySource.has(s.frag)) bySource.set(s.frag, program(s.frag));
+    if (!bySource.has(s.frag)) bySource.set(s.frag, timed(s.id, () => program(s.frag)));
     progs[s.id] = bySource.get(s.frag);
   });
-  progs.bird = program(BIRD_FS, BIRD_VS); progs.fish = program(FISH_FS, FISH_VS); progs.pre = program(PREFILTER); progs.down = program(DOWN); progs.blur = program(BLUR); progs.post = program(POST);
+  progs.bird = timed("bird", () => program(BIRD_FS, BIRD_VS)); progs.fish = timed("fish", () => program(FISH_FS, FISH_VS));
+  progs.pre = program(PREFILTER); progs.down = program(DOWN); progs.blur = program(BLUR); progs.post = timed("post", () => program(POST));
 } catch (e) {
   document.body.insertAdjacentHTML("beforeend", '<div class="fail">The renderer could not start on this device.</div>');
   return;
@@ -1300,7 +1308,6 @@ function renderScene(inst, rt) {
   setU(p, "uRot", c.rot); setU(p, "uZoom", c.zoom); setU(p, "uOff", inst.off);
   for (const k in inst.uniforms) setU(p, k, inst.uniforms[k]);
   setU(p, "uWindOff", inst.windOff);
-  setU(p, "uDetailDrop", detailDrop());
   if (inst.wave !== undefined) setU(p, "uWave", inst.wave);
   draw(rt.fb, rt.w, rt.h);
   drawBirds(inst, rt);
@@ -2034,6 +2041,7 @@ let wasFading = false, fastClimbUntil = 0, probe = null, capFt = 0, capUntil = 0
 function frame(now) {
   if (lost) return;
   const rawDt = (now - last) / 1000;
+  if (diag && diagFrames.length < 12) { diagFrames.push(Math.max(0, Math.round(rawDt * 1000))); if (diagFrames.length % 3 === 0) showDiag(); }
   const dt = Math.min(0.1, rawDt); last = now;
   const sdt = Math.min(dt, 0.05) * (state.paused ? 0 : state.speed);
   const bdt = state.paused ? 0 : Math.min(dt, 0.05) * Math.min(1, 0.4 + state.speed);
@@ -2104,15 +2112,6 @@ function tiltTaps() {
   const t = capScale > 0.3 ? Math.min(1, Math.max(0, (scale - 0.3) / (capScale - 0.3))) : 1;
   return Math.round(8 + 20 * t);
 }
-/* Octaves to skip, from the resolution ceiling rather than the current scale so detail doesn't flicker as the scaler
-   hunts: each octave halves feature size, so one goes below half resolution, two below a quarter. */
-let lodDrop = 0;
-function detailDrop() {
-  const want = Math.max(0, Math.floor(Math.log2(capScale / Math.max(maxScale, 0.01)) + 1e-6));
-  /* put an octave back only with 15% headroom past its threshold, so a ceiling hovering at the line can't toggle it */
-  if (want > lodDrop || maxScale > capScale / 2 ** lodDrop * 1.15) lodDrop = want;
-  return lodDrop;
-}
 /* sharpen strength grows as the image is upscaled further; zero at the device's full resolution */
 function sharpAmount() {
   return capScale > 0 ? Math.min(0.35, Math.max(0, (1 - scale / capScale) * 0.5)) : 0;
@@ -2169,6 +2168,17 @@ function adapt(dt, now, rawDt) {
       scale = Math.min(maxScale, scale * 1.06); acc = []; cooldown = now + (now < fastClimbUntil ? 800 : 2500); allocate();
     }
   }
+}
+function showDiag() {
+  let el = document.getElementById("diag");
+  if (!el) {
+    el = document.createElement("pre"); el.id = "diag";
+    el.style.cssText = "position:fixed;top:12px;left:12px;z-index:99;margin:0;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.7);color:#fff;font:12px/1.5 ui-monospace,monospace;pointer-events:none";
+    document.body.appendChild(el);
+  }
+  const info = gl.getExtension("WEBGL_debug_renderer_info");
+  const gpu = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : "unknown GPU";
+  el.textContent = `${gpu}\ncanvas ${W}×${H}  internal ${T.A ? T.A.w + "×" + T.A.h : "-"}\ncompile: ${diagCompile.join(", ")}\nfirst frames (ms): ${diagFrames.join(" ")}`;
 }
 function resLabel() {
   const el = document.getElementById("res");
