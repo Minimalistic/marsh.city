@@ -10,7 +10,7 @@
     "github": "https://github.com/Minimalistic",
     "githubLabel": "github.com/Minimalistic"
   },
-  "summary": "Director of Technology with 13+ years across IT, assistive technology services, and team leadership. Designs, ships, and operates production software by directing AI coding agents (Claude Code) - owning the product decisions, specification, testing, deployment, and users - including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. Restructured AT billing at a nonprofit, growing annual service revenue from $17K to over $200K within a year. ATACP-certified in assistive technology assessment.",
+  "summary": "Director of Technology with 13+ years across IT, assistive technology services, and team leadership. Designs, ships, and operates production software by directing AI coding agents (Claude Code) - owning the product decisions, specification, testing, deployment, and users - including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. Restructured AT billing at a nonprofit, growing annual service revenue from $17K to over $200K within a year. ATACP-certified in assistive technology assessment. Sets the organization's guidance on safe staff use of AI.",
   "projects": [
     {
       "id": "whatcanhelp",
@@ -18,6 +18,11 @@
       "href": "https://whatcanhelp.com",
       "featured": true,
       "desc": " (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep a catalog of thousands of products affordable to maintain, with schema checks against fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted. Operated in production."
+    },
+    {
+      "id": "mcp-servers",
+      "name": "MCP Servers",
+      "desc": " - custom Model Context Protocol servers connecting Claude agents to self-hosted apps and everyday tools, with guardrails: hooks, sandboxing, approval gates on actions with side effects, and prompt-injection containment. Built with AI coding agents; in daily use."
     },
     {
       "id": "mealdeck",
@@ -86,7 +91,15 @@
         },
         {
           "id": "copilot",
-          "text": "Evaluated Microsoft 365 Copilot and ran a small licensed rollout - onboarded and supported the first staff cohort"
+          "text": "Evaluated Microsoft 365 Copilot and ran a three-person licensed pilot - onboarded and supported the cohort"
+        },
+        {
+          "id": "ai-guidance",
+          "text": "Set staff guidance on generative AI use - what AI tools are for and what client or health information never goes into them - through written guidance and staff meetings; developing an organization-wide AI safety training"
+        },
+        {
+          "id": "hipaa-policy",
+          "text": "Key contributor to the rewrite of the organization's HIPAA policy; run internal IT audits of systems, access, and devices as needed"
         },
         {
           "id": "embed-clients",
@@ -162,7 +175,7 @@
   "skills": [
     {
       "label": "AI Delivery",
-      "items": "Claude Code and AI coding agents - specification, code review, testing, and deployment of AI-built software; Claude API features in production (tool use, Batch API, prompt caching, structured outputs); Ollama local models, OpenAI Whisper, retrieval and embeddings"
+      "items": "Claude Code and AI coding agents - specification, code review, testing, and deployment of AI-built software; MCP servers, agent guardrails (hooks, sandboxing, prompt-injection containment); Claude API features in production (tool use, Batch API, prompt caching, structured outputs); Ollama local models, OpenAI Whisper, retrieval and embeddings"
     },
     {
       "label": "Microsoft 365 & Automation",
