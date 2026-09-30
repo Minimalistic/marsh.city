@@ -178,6 +178,10 @@
       "items": "Claude Code and AI coding agents - specification, code review, testing, and deployment of AI-built software; MCP servers, agent guardrails (hooks, sandboxing, prompt-injection containment); Claude API features in production (tool use, Batch API, prompt caching, structured outputs); Ollama local models, OpenAI Whisper, retrieval and embeddings"
     },
     {
+      "label": "Assistive Technology",
+      "items": "AT assessment and fitting, screen readers, magnifiers, wearable AT, MN STAR lending library, WCAG AA"
+    },
+    {
       "label": "Microsoft 365 & Automation",
       "items": "Microsoft 365 tenant administration, Entra ID / Azure AD, Microsoft 365 Copilot, Power Automate, SharePoint, Teams, Microsoft Intune, IBM MaaS360"
     },
