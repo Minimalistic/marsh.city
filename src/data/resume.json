@@ -104,6 +104,10 @@
         {
           "id": "embed-clients",
           "text": "Embed with clients to assess needs and recommend assistive-technology solutions, and act as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use"
+        },
+        {
+          "id": "accessible-docs-training",
+          "text": "Train staff on accessible documents - alt text, and how headings and document structure work for screen reader users"
         }
       ]
     },
