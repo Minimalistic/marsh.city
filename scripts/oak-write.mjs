@@ -8,7 +8,7 @@
 //   node scripts/oak-write.mjs --type update --prompt "WhatCanHelp: added 30 new products from AbleNet"
 //   node scripts/oak-write.mjs --type rewrite --file src/content/projects/mealdeck.md
 //
-// Reads ANTHROPIC_API_KEY from env or ../.env files.
+// Reads ANTHROPIC_API_KEY from env or marsh.city/.env.
 // Output goes to stdout — pipe or paste into the target file.
 
 import Anthropic from '@anthropic-ai/sdk'
@@ -22,13 +22,12 @@ const root = resolve(__dirname, '..')
 // --- load API key from env or .env files ---
 function loadKey() {
   if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY
-  for (const p of [resolve(root, '.env'), resolve(root, '../GutCheck-AI/.env')]) {
-    if (existsSync(p)) {
-      const match = readFileSync(p, 'utf8').match(/ANTHROPIC_API_KEY=(.+)/)
-      if (match) return match[1].trim()
-    }
+  const envPath = resolve(root, '.env')
+  if (existsSync(envPath)) {
+    const match = readFileSync(envPath, 'utf8').match(/ANTHROPIC_API_KEY=(.+)/)
+    if (match) return match[1].trim()
   }
-  process.stderr.write('Error: ANTHROPIC_API_KEY not found in env or .env files\n')
+  process.stderr.write('Error: ANTHROPIC_API_KEY not found in env or marsh.city/.env\n')
   process.exit(1)
 }
 
