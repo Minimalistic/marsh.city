@@ -12,7 +12,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "resume:pdf": "node scripts/resume-pdf.mjs"
+    "resume:pdf": "node scripts/resume-pdf.mjs",
+    "test": "npm run build && npm run test:smoke",
+    "test:smoke": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.1",
@@ -28,5 +30,8 @@
     "postcss": ">=8.5.10",
     "devalue": "^5.9.4",
     "esbuild": ">=0.28.1"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
   }
 }
