@@ -1,6 +1,6 @@
 # marsh.city smoke test in CI
 
-Status: approved
+Status: shipped
 
 Intent: do 3 in CI. A broken page on marsh.city (resume included) fails the deploy instead of reaching the public.
 
