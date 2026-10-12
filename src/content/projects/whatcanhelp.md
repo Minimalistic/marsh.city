@@ -22,7 +22,7 @@ It's a free site with thousands of assistive technology products from hundreds o
 
 The main button on the home page is "Describe the situation." It opens Match, which is still marked Beta. Match is one text box: who it's for, what they're trying to do, what's in the way, any constraints. An AT specialist might write "58yo post-CVA, R-hemiparesis, returning to work; needs one-handed Windows input and voice control." A parent might write "my 8-year-old has trouble communicating at school." Both go through the same matching, and both get a shortlist with a note on why each product is on it.
 
-I tried a structured checkbox flow first. It looked tidy, but the situations people brought me never fit the boxes. Now people write it the way they'd say it, and Claude pulls out the structure on the backend. What they type goes to Anthropic's API and isn't stored on the server.
+I tried a structured checkbox flow first. It looked tidy, but the situations people brought me never fit the boxes. Now people write it the way they'd say it, and Claude pulls out the structure on the backend. What they type goes to Anthropic's API, which doesn't train on it, and isn't stored on the server.
 
 ## The catalog
 
