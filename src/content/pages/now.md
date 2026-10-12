@@ -1,24 +1,28 @@
 ---
 title: Now
 description: What I'm working on right now.
-updated: September 2026
+updated: October 2026
 ---
 
 ## Building
 
-**WhatCanHelp** - a free assistive technology discovery tool. Thousands of
-products from hundreds of manufacturers, freeform AI intake, plain-language guidance,
-state-by-state borrow and funding directories, and exportable PDF reports for
-funding meetings and IEP appendices. It's the main thing I'm building right now.
+**[WhatCanHelp](/projects/whatcanhelp/)** is a free site for finding assistive
+technology. Most of my building time goes here. In September every state and
+territory got its own funding page, opening with the state's AT Act program.
+Lately the work has been accuracy: fixing program details, rewriting product
+descriptions in plainer language, and making the PDF report work with screen
+readers.
 
-**marsh.city** - this site, still growing into a living portfolio.
-Astro, GitHub Pages, content as conversation.
+**marsh.city** is this site. I'm rewriting the older pages so they read like
+me.
 
 ## Working
 
-Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit in Duluth, MN.
-Assistive technology evaluation, infrastructure, and keeping everything running.
+Director of Technology at Lighthouse Center for Vital Living, an assistive
+technology and older adult services nonprofit in Duluth, MN. I handle assistive
+technology evaluation and the infrastructure, and keep everything running.
 
 ## Exploring
 
-AI integration and assistive technology roles. Looking for teams building real products with LLMs.
+AI integration and assistive technology roles, on teams building real products
+with LLMs.

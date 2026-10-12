@@ -9,16 +9,12 @@ technology services, and run an AT lending library. The people we serve are olde
 adults, people with disabilities, and anyone who needs help navigating technology.
 I hold an Assistive Technology Applications Certificate from CSUN.
 
-I also build and maintain production software outside of that role.
-[A meal planning app](/projects/mealdeck/) with AI-powered
-recipe adaptation, now winding down. [An AT discovery tool](/projects/whatcanhelp/)
-that matches people with assistive technology.
-[An automated pet feeder](/projects/petfeedr/)
-on a Raspberry Pi. [A radio streaming app](/projects/radiogridxl/)
-built for accessibility and piloted with older adults at my organization.
-[A voice-to-notes pipeline](/projects/echoetcher/) that turns
-spoken memos into structured Markdown. Node.js, SQLite, and vanilla JavaScript
-for most of it, Python for machine learning and automation.
+Outside that job I build software on my own time. The biggest is
+[WhatCanHelp](/projects/whatcanhelp/), a free tool for finding assistive
+technology. Smaller ones: a [radio app](/projects/radiogridxl/) we piloted with
+older adults at Lighthouse, a [Raspberry Pi pet feeder](/projects/petfeedr/),
+and a [voice-memo-to-notes pipeline](/projects/echoetcher/). Most of it is Node,
+SQLite and plain JavaScript, with Python for machine learning and automation.
 
 I've been fascinated with computers since I was a kid - learned to fix them
 because I broke them. Art and design started in my teens, which led to a

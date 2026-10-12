@@ -1,11 +1,11 @@
 ---
 title: WhatCanHelp
-description: A free assistive technology discovery tool with thousands of products from hundreds of manufacturers, freeform AI intake, complexity-tier guidance, plain-language descriptions, state-by-state borrow and funding directories, and exportable PDF reports for funding meetings and IEP appendices.
+description: A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
 status: shipped
 url: https://whatcanhelp.com
 tags: [node, sqlite, express, vanilla-js, claude-api, accessibility, at]
 started: 2026-03-01
-updated: 2026-08-24
+updated: 2026-10-11
 image: /images/whatcanhelp/landing.webp
 imageAlt: WhatCanHelp landing page - wordmark, Find what actually helps tagline, Describe the situation button, and How it works steps
 ---
@@ -115,6 +115,9 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-09-17
+Every state and territory now has its own funding page, 56 in all. Each one opens with the state's AT Act program, because that is the one call most people should make first: the staff lend devices, demonstrate them, and know which of the other programs fit. Medicaid, Vocational Rehabilitation, AT financing loans and ABLE come after, each with a short plain-language summary, a phone number, TTY where the program publishes one, and the questions worth asking. I filled the summaries from each program's official site and gave every listing a "verified" date. The index is at [whatcanhelp.com/funding](https://whatcanhelp.com/funding).
 
 ### 2026-06-15
 Three additions around the core recommendation: borrowing, funding, and guided journeys. A borrow directory maps all 56 state and territory AT Act lending programs, so people can try a device before buying it. A funding directory maps the Medicaid, Vocational Rehabilitation, AT Act loan, and ABLE routes for the same 56 jurisdictions, and now drives "How to fund this" panels on products and a funding section in every PDF report. Step-by-step journey guides walk one kind of need (communication, vision, hearing, mobility) through the whole sequence, linking the glossary, lending programs, intake, funding, and report. The catalog grew to 5,502 products across 350+ manufacturers. Under the hood: an accessibility axe-gate across two dozen surfaces, 'unsafe-inline' dropped from the script CSP, an SSRF guard on scraped images, an AI kill switch with per-pool budgets, and daily database backups with a tested restore.
