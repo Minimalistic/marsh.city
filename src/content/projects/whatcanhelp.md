@@ -14,19 +14,19 @@ I'm the Director of Technology at Lighthouse Center for Vital Living, a nonprofi
 
 It's a free site with thousands of assistive technology products from hundreds of manufacturers in one place. You can browse the catalog, or describe a situation and get a shortlist. It also points you to the free programs in your state that lend devices and help pay for them. No account, no cookies, no ads, no affiliate links.
 
-![WhatCanHelp landing page with the wordmark, a Find what actually helps tagline, a Describe the situation primary button, and a three-step How it works section](/images/whatcanhelp/landing.webp)
+![WhatCanHelp home page with the wordmark, a Find what actually helps tagline, a search box, a Describe your situation link, browse-by-need buttons, and cards for borrowing and funding](/images/whatcanhelp/landing.webp)
 
 ## Describe the situation
 
-![WhatCanHelp intake page showing a freeform Describe the situation textarea with an example placeholder mixing clinical and plain language](/images/whatcanhelp/intake.webp)
+![Match, step one of three: a Describe the situation text box with one clinical and one plain-language example, and a privacy note below it](/images/whatcanhelp/intake.webp)
 
-The main button on the home page is "Describe the situation." It opens Match, which is still marked Beta. Match is one text box: who it's for, what they're trying to do, what's in the way, any constraints. An AT specialist might write "58yo post-CVA, R-hemiparesis, returning to work; needs one-handed Windows input and voice control." A parent might write "my 8-year-old has trouble communicating at school." Both go through the same matching, and both get a shortlist with a note on why each product is on it.
+The home page leads with a search box. Under it, "Not sure? Describe your situation instead" opens Match, which is still marked Beta. Match starts with one text box: who it's for, what they're trying to do, what's in the way, any constraints. An AT specialist might write "58yo post-CVA, R-hemiparesis, returning to work; needs one-handed Windows input and voice control." A parent might write "my 8-year-old has trouble communicating at school." Both go through the same matching, and both get a shortlist with a note on why each product is on it.
 
 I tried a structured checkbox flow first. It looked tidy, but the situations people brought me never fit the boxes. Now people write it the way they'd say it, and Claude pulls out the structure on the backend. What they type goes to Anthropic's API, which doesn't train on it, and isn't stored on the server.
 
 ## The catalog
 
-![WhatCanHelp catalog with thousands of products, faceted sidebar filters, a Recently Added thumbnail row, and a dense product table with complexity badges](/images/whatcanhelp/browse.webp)
+![WhatCanHelp catalog with filters for challenges, product type, platform and ease of setup, a Recently Added row, and product cards with setup-tier badges](/images/whatcanhelp/browse.webp)
 
 The catalog filters by what a product helps with, product type, platform, how hard it is to set up, price, age group, manufacturer and funding source. Search understands plain descriptions as well as product names, so "help hearing the TV" finds TV listening systems. Results show as a table or as cards, and a filtered view can be shared as a link or exported as CSV.
 
@@ -45,13 +45,13 @@ Whether someone, or the people around them, can set a device up and keep it work
 
 ## Product pages
 
-![BIGmack product detail page with price, shortlist and share buttons, a Professional guidance recommended callout with finder links, and a summary section](/images/whatcanhelp/detail.webp)
+![BIGmack product page with price, a Professional guidance helps badge, shortlist and share buttons, a callout linking to professional finders, and an AI-generated summary](/images/whatcanhelp/detail.webp)
 
 Each product page leads with price, manufacturer, setup tier and when the entry was last checked. Where a manufacturer doesn't publish a price, the page shows an estimated range and says so. The summary is written by Claude from the manufacturer's published material and stored, not generated on each visit, and it's labeled as AI-generated. Descriptions aim for about an 8th-grade reading level, and AT terms link to the glossary.
 
 ## Glossary
 
-![WhatCanHelp glossary peek drawer open over the term index, showing the screen reader definition with also-known-as aliases and related-term chips like JAWS, NVDA, and DAISY](/images/whatcanhelp/glossary.webp)
+![WhatCanHelp glossary peek drawer open over the term index, showing the screen reader definition with also-known-as aliases and related-term chips like DAISY, JAWS, and NVDA](/images/whatcanhelp/glossary.webp)
 
 The glossary has more than 130 plain-language definitions, from AAC and switch access to funding programs and credentials like ATP and CLVT. Clicking a term opens a side drawer instead of a new page, and the link to an open term can be shared. Each term page also lists catalog products that use the term. That lookup matches whole words, so OT doesn't match "robot," and it ranks products named for the term above ones that only mention it.
 
@@ -61,13 +61,13 @@ The glossary has more than 130 plain-language definitions, from AAC and switch a
 
 Every US state and territory has a federally funded AT Act program, and most lend devices for a few weeks, free or close to it. Trying a device for a month is a much better basis for a decision than a product listing. The borrow directory lists all 56 programs with a phone number, a website and the date each listing was last verified.
 
-![WhatCanHelp funding directory titled Find Assistive Technology Funding Programs in Your State, with a state selector and a grid of all 56 states and territories](/images/whatcanhelp/funding.webp)
+![WhatCanHelp funding directory titled Find Assistive Technology Funding Programs in Your State, with a state selector and links to all 56 states and territories](/images/whatcanhelp/funding.webp)
 
 The funding pages cover the same 56. Each one opens with the AT Act program, then Medicaid, Vocational Rehabilitation, AT financing loans and ABLE accounts, with what each program does and questions to ask when you call. They're starting points, not coverage advice. The same data feeds the "How to fund this" panels on product pages and the funding section of the PDF report.
 
 ## Guides and reports
 
-![WhatCanHelp step-by-step guides index with four cards: getting a communication device, low vision and blindness, hearing loss, and mobility equipment](/images/whatcanhelp/journeys.webp)
+![WhatCanHelp step-by-step guides index with nine cards, from getting a communication device to sensory regulation](/images/whatcanhelp/journeys.webp)
 
 Getting AT is usually a sequence: understand the options, borrow before buying, narrow the list, line up funding, and bring it to the right meeting. The guides walk that sequence for one kind of need at a time. There are nine now, from communication devices to sensory regulation.
 
@@ -75,7 +75,7 @@ The PDF report collects a summary of the situation, the matched products with ex
 
 ## Accessibility
 
-![The header settings dropdown with theme toggle, text size, line spacing, and reduce motion controls](/images/whatcanhelp/accessibility.webp)
+![The header settings menu open, with theme, increase contrast, text size, line spacing, your state, reduce motion, and keyboard shortcut controls](/images/whatcanhelp/accessibility.webp)
 
 The settings menu covers theme, an increased-contrast mode, text size, line spacing and reduced motion. The site aims for WCAG 2.2 AA, and automated accessibility checks run on key pages with every change. Screen-reader testing is the main open item: VoiceOver testing of the core flows is under way, with NVDA, JAWS and TalkBack after that. The [accessibility statement](https://whatcanhelp.com/accessibility) lists what's still open.
 
