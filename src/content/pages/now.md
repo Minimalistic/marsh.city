@@ -7,11 +7,11 @@ updated: October 2026
 ## Building
 
 **[WhatCanHelp](/projects/whatcanhelp/)** is a free site for finding assistive
-technology. Most of my building time goes here. In September every state and
-territory got its own funding page, opening with the state's AT Act program.
-Lately the work has been accuracy: fixing program details, rewriting product
-descriptions in plainer language, and making the PDF report work with screen
-readers.
+technology. Most of my building time goes here. In September I reworked the
+state funding pages so each one opens with the state's AT Act program.
+Lately the work has been accuracy and accessibility: keeping program details
+current, tagging the PDF report for screen readers, and testing the core pages
+with VoiceOver.
 
 **marsh.city** is this site. I'm rewriting the older pages so they read like
 me.
