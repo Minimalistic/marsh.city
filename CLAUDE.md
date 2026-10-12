@@ -149,6 +149,7 @@ Posts use the same first-person voice as project pages. Practical, direct, conve
 - No performative humility ("I'm no expert, but...")
 - Don't brand the process "vibe coding" — the term is curdling into a sellout/slop label that undercuts the orchestration framing. Name the method as orchestration or building through conversation; "coding by eye" is fine for a visual/creative piece.
 - No emoji in prose
+- Public site: nothing private or confidential that Claude knows from memory, notes, files, databases or tool access (work-internal events, job plans, home or family details, infrastructure). Facts come from public sources or from Jason for that piece; ask when unsure.
 - 500-1500 words typically. Say what needs saying, stop when it's said.
 - When referencing Jason's AT work or people with disabilities, be accurate and professional. Don't invent scenarios. Don't frame users as helpless. Don't overstate Jason's role. Use the facts from his resume and what he tells you.
 
