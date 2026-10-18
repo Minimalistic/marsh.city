@@ -8,9 +8,13 @@
 const CACHE_VERSION = 'rgxl-shell-7.5.5';
 
 /* Shell assets, relative to the SW scope (the directory it's served from).
-   start_url is "." so the HTML is reachable both as "./" and by filename. */
+   start_url is "." so the HTML is reachable both as "./" and by filename.
+   The filename differs by host: Docker serves RadioGridXL.html (and "/"),
+   marsh.city/radio ships it as index.html. Precache both; whichever 404s is
+   dropped by the per-asset catch below. */
 const SHELL_ASSETS = [
   './',
+  './index.html',
   './RadioGridXL.html',
   './manifest.json',
   './icon.svg',
@@ -68,9 +72,16 @@ self.addEventListener('fetch', (event) => {
         return res;
       }).catch(() =>
         // Offline and not cached: last-ditch fall back to the cached shell HTML
-        // for navigations so the app still opens.
-        req.mode === 'navigate' ? caches.match('./RadioGridXL.html') : undefined
+        // for navigations so the app still opens. Try each name the shell may
+        // be cached under (see SHELL_ASSETS).
+        req.mode === 'navigate' ? matchShell() : undefined
       );
     })
   );
 });
+
+function matchShell() {
+  return caches.match('./')
+    .then((res) => res || caches.match('./index.html'))
+    .then((res) => res || caches.match('./RadioGridXL.html'));
+}

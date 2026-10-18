@@ -3915,14 +3915,37 @@ function renderBrowserResults(stations) {
     const tags = [s.country, s.tags ? s.tags.split(',')[0] : '', s.bitrate ? s.bitrate + 'kbps' : '']
       .filter(Boolean).join(' · ');
 
-    div.innerHTML =
-      '<button class="sb-result-play" onclick="event.stopPropagation();toggleSbPreview(\'' + escAttr(s.url_resolved) + '\',this)" aria-label="Preview ' + escAttr(s.name) + '" title="Preview">&#9654;</button>' +
-      '<div class="sb-result-info" aria-hidden="true">' +
-        '<div class="sb-result-name">' + escHtml(s.name) + '</div>' +
-        '<div class="sb-result-meta">' + escHtml(tags) + '</div>' +
-      '</div>' +
-      '<button class="sb-result-add" onclick="event.stopPropagation();addFromBrowser(' + i + ')" aria-label="Add ' + escAttr(s.name) + '">+ Add</button>';
+    // Station name/URL are third-party (anyone can submit to Radio Browser).
+    // Buttons are built with DOM APIs + closures, never an inline onclick
+    // string: escAttr() is undone by the HTML parser before an inline handler's
+    // JS runs, so a URL containing ' could break out and execute.
+    const playBtn = document.createElement('button');
+    playBtn.className = 'sb-result-play';
+    playBtn.setAttribute('aria-label', 'Preview ' + s.name);
+    playBtn.title = 'Preview';
+    playBtn.innerHTML = '&#9654;';
+    playBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleSbPreview(s.url_resolved, playBtn);
+    });
 
+    const info = document.createElement('div');
+    info.className = 'sb-result-info';
+    info.setAttribute('aria-hidden', 'true');
+    info.innerHTML =
+      '<div class="sb-result-name">' + escHtml(s.name) + '</div>' +
+      '<div class="sb-result-meta">' + escHtml(tags) + '</div>';
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'sb-result-add';
+    addBtn.setAttribute('aria-label', 'Add ' + s.name);
+    addBtn.textContent = '+ Add';
+    addBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      addFromBrowser(i);
+    });
+
+    div.append(playBtn, info, addBtn);
     div.dataset.stationIdx = i;
     results.appendChild(div);
   });
@@ -3932,6 +3955,7 @@ function renderBrowserResults(stations) {
 }
 
 function toggleSbPreview(url, btn) {
+  if (typeof url !== 'string' || !url || !isValidStreamUrl(url)) return;
   if (sbPreviewAudio && sbPreviewAudio.src === url) {
     stopSbPreview();
     return;
@@ -3973,6 +3997,9 @@ function addFromBrowser(idx) {
   readStreamEditor();
 
   const s = stations[idx];
+  // Third-party URL — same http(s)-only rule applySettings() enforces, checked
+  // here so a bad scheme never reaches the live preview before Apply.
+  if (typeof s.url_resolved !== 'string' || !s.url_resolved || !isValidStreamUrl(s.url_resolved)) return;
   const colorIdx = cfg.streams.length % PALETTE.length;
   cfg.streams.push({
     id: 's' + Date.now(),
