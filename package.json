@@ -6,10 +6,8 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "predev": "node plugins/generate-art-thumbs.mjs",
-    "prebuild": "node plugins/generate-lqip.mjs && node plugins/generate-art-thumbs.mjs",
-    "build": "astro build",
+    "dev": "node plugins/generate-art-thumbs.mjs && astro dev",
+    "build": "node plugins/generate-lqip.mjs && node plugins/generate-art-thumbs.mjs && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "resume:pdf": "node scripts/resume-pdf.mjs",
