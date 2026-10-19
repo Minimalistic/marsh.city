@@ -504,14 +504,20 @@ footer.site-foot {
   --foliage-h: 70vh;
   display: contents;
 }
-/* One clipping frame per layer, pinned to viewport bottom — never leaves the
-   bottom of the screen. Width is capped by the stage so the art stops scaling
-   up on ultrawide viewports; beyond --stage-max the sides become the frame. */
+/* One clipping frame per layer, its bottom on the bottom of the tallest
+   viewport (100lvh, toolbar collapsed). Anchored by top, not bottom: on iOS a
+   bottom: 0 frame rides the browser toolbar as it slides in and out, which
+   shook the whole scene; this way a showing toolbar just covers the floor.
+   --frame-bottom lowers the frame below that line (short desktop viewports).
+   Width is capped by the stage so the art stops scaling up on ultrawide
+   viewports; beyond --stage-max the sides become the frame. */
 .foliage-frame {
+  --frame-bottom: 0px;
   position: fixed;
   left: var(--stage-inset);
   width: var(--stage-width);
-  bottom: 0;
+  top: calc(100vh - var(--foliage-h) - var(--frame-bottom));
+  top: calc(100lvh - var(--foliage-h) - var(--frame-bottom));
   height: var(--foliage-h);
   z-index: 0;
   overflow: hidden;
@@ -629,7 +635,7 @@ footer.site-foot {
   /* html prefix outranks the later min-width: 900px short-viewport rule,
      which wide landscape phones (e.g. 932x430) would otherwise also match */
   html .site-foot-foliage { --foliage-h: 100vh; }
-  html .foliage-frame { bottom: 0; }
+  html .foliage-frame { --frame-bottom: 0px; }
   .foliage-frame--forest .foliage-layer { --layer-img: url(/foliage/forest.avif); }
   .foliage-frame--back .foliage-layer { --layer-img: url(/foliage/back.avif); }
   .foliage-frame--mid .foliage-layer { --layer-img: url(/foliage/mid.avif); }
@@ -751,7 +757,7 @@ footer.site-foot {
     --foliage-h: max(70vh, 560px);
   }
   .foliage-frame {
-    bottom: min(0px, calc(100vh - 800px));
+    --frame-bottom: min(0px, calc(100vh - 800px));
   }
 }
 .site-foot-inner {
