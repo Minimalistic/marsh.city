@@ -1,18 +1,18 @@
-# marsh.city smoke test in CI
+# View background
 
-Status: shipped
+Status: approved
 
-Intent: do 3 in CI. A broken page on marsh.city (resume included) fails the deploy instead of reaching the public.
+Intent: marsh.city should have a "view background" control you can click or tap to hide everything else, with the audio option suggested too.
 
 ## Done when
-- [test] A page linking to an internal path or asset that isn't in the build fails `npm run test:smoke` and names the page and the bad link.
-- [test] A page that throws a JS error, logs a console error, or gets a failed or 4xx/5xx same-origin request fails the test.
-- [test] The current site passes: all pages, no errors.
-- [smoke] In GitHub Actions, a failing smoke test stops the deploy job; a passing one deploys as before.
-- [test] Inside the Claude Code sandbox the browser check is reported as skipped with a reason, never hangs, and the link check still runs.
+- [smoke] "View background" in the nav menu hides the nav, page content and footer text; the foliage, stars and fireflies stay, and scrolling still pans the scene.
+- [smoke] While viewing, a small control bar offers "Back to page" and the site sound toggle; turning sound on there is the same setting as the menu's Sound item.
+- [test] Esc, or "Back to page", restores the page at the same scroll position, with focus returned to the menu button.
+- [test] While viewing, the hidden page can't be tabbed into or read by a screen reader (inert); the control bar can.
+- [test] Unhappy path: on a page too short to scroll, entering and leaving still works and nothing throws (smoke test console check).
+- [manual] On the phone it looks good and is easy to get out of.
 
 ## Out of scope
-- Visual or layout regression checks (screenshots, diffs).
-- Checking external links or third-party hosts (CDN Mermaid, fonts).
-- Any change to site content, layout or design tokens.
-- The pre-existing smol-toml advisory (separate dependency PR).
+- Remembering "viewing" across page loads or links.
+- Auto-hiding the control bar, a fullscreen API call, or a keyboard shortcut.
+- Any change to the scene itself (layers, parallax math, change 2).
