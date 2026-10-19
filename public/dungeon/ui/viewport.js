@@ -1,0 +1,1 @@
+export const KEYBOARD_SETTLE_MS=[150,400];export function pageShifted({scrollX,scrollY,viewport}){if(scrollX!==0||scrollY!==0)return true;return Boolean(viewport)&&(Math.abs(viewport.offsetTop)>=1||Math.abs(viewport.offsetLeft)>=1)}

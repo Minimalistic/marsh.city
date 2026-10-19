@@ -1,0 +1,1 @@
+export function registerServiceWorker(){if(!("serviceWorker"in navigator)){return}const register=()=>{navigator.serviceWorker.register("sw.js").catch(err=>{console.error("[pwa] service worker registration failed; the game will not work offline:",err)})};if(document.readyState==="complete"){register()}else{window.addEventListener("load",register,{once:true})}}
