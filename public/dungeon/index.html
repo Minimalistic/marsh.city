@@ -56,13 +56,6 @@
       </filter>
     </svg>
 
-    <div class="screen" id="plate" aria-hidden="true">
-      <div>
-        <img id="logo" alt="">
-        <p>Daily<br/>Dungeon</p>
-      </div>
-    </div>
-
     <div id="title" class="screen">
       <h1 class="visually-hidden game-title-text">DailyDungeon</h1>
       <div class="game-title-animation">
@@ -85,7 +78,7 @@
       <div id="options">
         <nav id="menu" class="nes-container is-rounded is-dark" aria-label="Main menu">
           <ul>
-            <li><button type="button" class="menu-item" data-screen="instructions">Instructions</button></li>
+            <li><button type="button" class="menu-item" data-screen="instructions">How to play</button></li>
             <li><button type="button" class="menu-item" data-screen="settings">Settings</button></li>
             <li><button type="button" class="menu-item" data-screen="credits">Credits</button></li>
           </ul>
@@ -157,7 +150,7 @@
           <span class="setting-label">Controls</span>
           <span class="setting-state" aria-hidden="true">Tap to move</span>
         </button>
-        <p class="setting-note">Tap a tile to walk there, tap a monster to fight it, hold to look. Tap yourself to wait a turn, or swipe from yourself to take one step. D-pad adds arrow buttons too, and folds down to one button.</p>
+        <p class="setting-note">Tap yourself to wait a turn, or swipe from yourself to take one step. D-pad adds arrow buttons that fold away to one. Tapping and swiping work either way.</p>
         <button type="button" id="textsize-toggle" class="nes-btn setting-toggle">
           <span class="setting-label">Text size</span>
           <span class="setting-state" aria-hidden="true">Medium</span>
@@ -179,7 +172,7 @@
           <span class="setting-label">Minimap</span>
           <span class="setting-state" aria-hidden="true">On</span>
         </button>
-        <p class="setting-note">A small map of where you've been, in the corner. Tap it for a bigger one, and tap that to walk there.</p>
+        <p class="setting-note">A small map of where you've been. Tap it for a big one, then tap a spot to walk there.</p>
         <button type="button" id="crt-toggle" class="nes-btn setting-toggle"
                 role="switch" aria-checked="true">
           <span class="setting-label">CRT filter</span>
@@ -197,9 +190,9 @@
           <span class="setting-state" aria-hidden="true">Dim</span>
         </button>
         <p class="setting-note">How dark the shadows look. It never changes what you can see.</p>
-        <p class="setting-note"><span data-solo-text="Seed:">Practice seed:</span> <span class="seed-stat">none yet</span></p>
+        <p class="setting-note">Seed: <span class="seed-stat">none yet</span></p>
       </div>
-      <button class="nes-btn is-success action">Ok</button>
+      <button class="nes-btn is-success action">OK</button>
     </div>
 
     <div id="credits" class="screen modal">
@@ -222,7 +215,7 @@
                target="_blank" rel="noopener">sfxr.me</a></li>
         </ul>
       </div>
-      <button class="nes-btn is-success action">Ok</button>
+      <button class="nes-btn is-success action">OK</button>
     </div>    
 
     <div id="checks" class="screen modal">
@@ -243,31 +236,77 @@
     </div>
 
     <div id="instructions" class="screen modal">
-      <h2 class="screen-title" tabindex="-1">Instructions</h2>
-      <div class="nes-container is-rounded is-dark">
-        <p>Find the ladder down. Rats and bats live here, and the floor has teeth.</p>
-        <p>Tap a tile to walk there. Tap a monster next to you to fight it. Touch and hold anything to see what it is.</p>
-        <p>Walk onto a chest to look in it. Items opens your pack. The Log button shows past messages.</p>
-        <p>HP doesn't come back on its own. Draughts, bandages and food mend you, and so does the Ember Ring.</p>
-        <p>Next to a trap you've found, a Disarm button shows its odds. It takes a turn, and a miss sets the trap off on you.</p>
-        <p>Most floors have an omen, named in the status line by your HP. Tap it to see what it changes.</p>
-        <p data-solo-text="Die and Continue? plays the floor again from its start, with a mark on you. What the floor gave you waits in a grave sack where you fell. Die again before you reach it and it's gone.">Die in practice and Continue? plays the floor again from its start, with a mark on you. What the floor gave you waits in a grave sack where you fell. Die again before you reach it and it's gone.</p>
-        <p class="duo-only">The daily floor is one attempt. Die there and the floor keeps what it gave you, most of its XP too.</p>
-        <p>Tap yourself to wait a turn (on the ladder it asks first: climb down or wait). Swipe from yourself to take one step, diagonals too. Arrow keys, W A S D, the numpad or the D-pad (Settings &gt; Controls) step too, with Q E Z C or Home, PgUp, End and PgDn for diagonals, but never past a wall's corner. Space, the period key or numpad 5 waits a turn.</p>
+      <h2 class="screen-title" tabindex="-1">How to play</h2>
+      <div class="nes-container is-rounded is-dark howto">
+        <section>
+          <img class="howto-icon" data-sprite="props:exit_ladder" alt="" width="32" height="32">
+          <h3>Get down</h3>
+          <p>Every floor has a ladder. Find it and climb down. The locals have other plans.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="player" alt="" width="32" height="32">
+          <h3>Move</h3>
+          <p>Tap a tile to walk there. Tap yourself to wait a turn. Swipe from yourself to take one step, diagonals too, but never around a wall's corner.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="enemies:cellar_rat" alt="" width="32" height="32">
+          <h3>Fight</h3>
+          <p>Tap a monster beside you to hit it. Let them come to you: whoever stands their ground swings better.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="items:lantern" alt="" width="32" height="32">
+          <h3>Look</h3>
+          <p>Touch and hold anything to look at it: what it is, how hard it hits, what it's up to. Rude to stare, but it beats guessing.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="props:chest" alt="" width="32" height="32">
+          <h3>Loot</h3>
+          <p>Walk into a chest to open it. Walk into urns, springs and shrines to see what they do. Some charge for it.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="items:bandage_roll" alt="" width="32" height="32">
+          <h3>Use things</h3>
+          <p>Pack opens what you carry. Tap anything there to use it, wear it or drop it. Log shows what just happened, in case it happened fast.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="items:healing_draught" alt="" width="32" height="32">
+          <h3>Heal</h3>
+          <p>HP doesn't come back on its own. Health potions, bandages and food mend you, and so does the Ember Ring. Ration accordingly.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="traps:spike_plate" alt="" width="32" height="32">
+          <h3>Traps</h3>
+          <p>Stand beside a trap you've spotted and a Disarm button shows your odds. It takes a turn. Miss, and it goes off. On you.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="props:shrine" alt="" width="32" height="32">
+          <h3>Omens</h3>
+          <p>Most floors have one, named next to your HP. Tap it to find out what kind of day it is.</p>
+        </section>
+        <section>
+          <img class="howto-icon" data-sprite="tomb" alt="" width="32" height="32">
+          <h3>Dying</h3>
+          <p data-solo-text="Die and Continue? starts the floor over, with a mark on you. What the floor gave you waits in a grave sack where you fell. Die again before you reach it and it's gone.">Die in practice and Continue? starts the floor over, with a mark on you. What the floor gave you waits in a grave sack where you fell. Die again before you reach it and it's gone.</p>
+          <p class="duo-only">Today's floor is one try. Die there and the floor keeps what it gave you, most of its XP too.</p>
+        </section>
+        <details class="howto-keys">
+          <summary>Playing with a keyboard?</summary>
+          <p>Arrow keys, W A S D or the numpad step. Q E Z C or Home, PgUp, End and PgDn go diagonal. Space, the period key or numpad 5 waits a turn. Want buttons on screen? Settings &gt; Controls &gt; D-pad.</p>
+        </details>
       </div>
-      <button class="nes-btn is-success action">Ok</button>
+      <button class="nes-btn is-success action">OK</button>
     </div>
 
     <div id="win" class="screen modal">
-      <h2 class="nes-container is-rounded is-dark screen-title" tabindex="-1">Floor <span class="floor-stat"></span> cleared</h2>
+      <h2 class="nes-container is-rounded is-dark screen-title" tabindex="-1">Floor <span class="floor-stat"></span> survived</h2>
       <div class="nes-container is-rounded is-dark">
         <p>You climb down the ladder in <span class="turns-stat"></span> turns.</p>
         <p>Level <span class="level-stat"></span>, <span class="xp-stat"></span> XP, <span class="gold-stat"></span> gold. Your pack comes with you.</p>
         <p class="carry-stat"></p>
-        <p class="setting-note practice-only"><span data-solo-text="Seed">Practice seed</span> <span class="seed-stat"></span></p>
-        <p class="setting-note daily-only" hidden>Your run goes to the server to be checked. The next floor opens at 9:00 a.m. Chicago time once you've both finished.</p>
+        <p class="setting-note practice-only">Seed <span class="seed-stat"></span></p>
+        <p class="setting-note daily-only" hidden>Your run is in. The next floor opens at 9:00 a.m. Chicago time once you've both finished.</p>
       </div>
-      <button type="button" id="next-floor" class="nes-btn is-success end-btn practice-only">Floor <span class="next-floor-stat"></span></button>
+      <button type="button" id="next-floor" class="nes-btn is-success end-btn practice-only">Down to floor <span class="next-floor-stat"></span></button>
       <button type="button" class="nes-btn is-success end-btn daily-only daily-done" hidden>Back to today's floor</button>
       <button type="button" class="nes-btn is-success end-btn check-only check-answer-open" aria-haspopup="dialog" hidden>How did it go?</button>
       <button type="button" class="nes-btn end-btn bugnote-open" aria-haspopup="dialog">Bug note</button>
@@ -277,15 +316,15 @@
     <div id="lose" class="screen modal">
       <h2 class="screen-title visually-hidden" tabindex="-1">You died</h2>
       <dialog id="death-stats" class="nes-container is-rounded is-dark game-dialog" aria-labelledby="death-stats-title">
-        <p id="death-stats-title">Statistics</p>
+        <p id="death-stats-title">Stats</p>
         <div class="death-stats-body" tabindex="0" aria-labelledby="death-stats-title">
           <div id="death-cause"></div>
           <section id="last-moments" hidden></section>
-          <p>You died on floor <span class="floor-stat"></span> after <span class="turns-stat"></span> turns, with <span class="kills-stat"></span> kills.</p>
+          <p>You died on floor <span class="floor-stat"></span> after <span class="turns-stat"></span> turns, with <span class="kills-stat"></span>.</p>
           <p>Level <span class="level-stat"></span>, <span class="xp-stat"></span> XP, <span class="gold-stat"></span> gold.</p>
           <div id="continue-lines"></div>
-          <p class="setting-note practice-only"><span data-solo-text="Seed">Practice seed</span> <span class="seed-stat"></span></p>
-          <p class="setting-note daily-only" hidden>One attempt a floor: your run goes to the server as it is. The next floor opens at 9:00 a.m. Chicago time once you've both finished.</p>
+          <p class="setting-note practice-only">Seed <span class="seed-stat"></span></p>
+          <p class="setting-note daily-only" hidden>One try a floor, so this one counts. The next floor opens at 9:00 a.m. Chicago time once you've both finished.</p>
         </div>
         <div class="dialog-buttons">
           <button type="button" id="stats-close" class="nes-btn">Close</button>
@@ -295,12 +334,12 @@
       <p id="death-cost" class="continue-line" hidden></p>
       <div class="end-buttons">
         <button type="button" id="continue-btn" class="nes-btn is-success end-btn" hidden>Continue?</button>
-        <button type="button" id="new-game" class="nes-btn end-btn practice-only">New game</button>
+        <button type="button" id="new-game" class="nes-btn end-btn practice-only" data-solo-text="New game">New practice</button>
         <button type="button" id="same-seed" class="nes-btn end-btn practice-only">Same seed again</button>
         <button type="button" class="nes-btn is-success end-btn daily-only daily-done" hidden>Back to today's floor</button>
         <button type="button" class="nes-btn is-success end-btn check-only check-answer-open" aria-haspopup="dialog" hidden>How did it go?</button>
         <div class="end-row">
-          <button type="button" id="stats-open" class="nes-btn end-btn" aria-haspopup="dialog">Statistics</button>
+          <button type="button" id="stats-open" class="nes-btn end-btn" aria-haspopup="dialog">Stats</button>
           <button type="button" class="nes-btn end-btn bugnote-open" aria-haspopup="dialog">Bug note</button>
         </div>
       </div>
@@ -310,21 +349,21 @@
 
     <div id="game" class="screen">
       <div id="canvas" tabindex="-1" role="img"
-           aria-label="Dungeon map. Tap a tile to walk there, tap a monster to fight it, touch and hold to inspect."></div>
+           aria-label="Dungeon map. Tap a tile to walk there, tap a monster to fight it, touch and hold to look."></div>
       <div id="dying-vignette" aria-hidden="true"></div>
       <div id="death-banner" aria-hidden="true"><span>YOU DIED</span></div>
       <div class="crt-depth crt-depth-soft" aria-hidden="true"></div>
       <div class="crt-depth crt-depth-strong" aria-hidden="true"></div>
       <div id="minimap" aria-hidden="true" hidden><canvas width="64" height="100"></canvas></div>
       <div id="message" class="nes-container is-rounded is-dark hide" aria-hidden="true"></div>
-      <div id="side-log" class="nes-container is-rounded is-dark" role="region" aria-label="Message history"></div>
+      <div id="side-log" class="nes-container is-rounded is-dark" role="region" aria-label="Message log"></div>
 
       <div id="dock">
         <div id="inventory" class="nes-container is-rounded is-dark" hidden>
           <p id="inventory-title">Pack</p>
           <ul aria-labelledby="inventory-title"></ul>
           <button type="button" id="inventory-close" class="nes-container is-rounded is-dark dock-btn"
-                  aria-label="Close inventory"><span aria-hidden="true">X</span></button>
+                  aria-label="Close pack"><span aria-hidden="true">X</span></button>
         </div>
         <div id="aim-bar" class="nes-container is-rounded is-dark" hidden>
           <p id="aim-text" role="status" aria-live="polite"></p>
@@ -342,9 +381,9 @@
         <div id="disarm-bar" role="group" aria-label="Disarm" hidden></div>
         <div id="dock-row">
           <div id="dock-buttons">
-            <button type="button" id="leave-game" class="nes-container is-rounded is-dark dock-btn">Title</button>
+            <button type="button" id="leave-game" class="nes-container is-rounded is-dark dock-btn">Menu</button>
             <button type="button" id="inventory-toggle" class="nes-container is-rounded is-dark dock-btn"
-                    aria-expanded="false" aria-controls="inventory">Items</button>
+                    aria-expanded="false" aria-controls="inventory">Pack</button>
             <button type="button" id="log-open" class="nes-container is-rounded is-dark dock-btn"
                     aria-haspopup="dialog">Log</button>
             <button type="button" id="aim-open" class="nes-container is-rounded is-dark dock-btn" hidden>Aim</button>
@@ -412,10 +451,11 @@
       </dialog>
 
       <dialog id="inspect" class="nes-container is-rounded is-dark game-dialog"
-              aria-labelledby="inspect-name" aria-describedby="inspect-rules inspect-text">
+              aria-labelledby="inspect-name" aria-describedby="inspect-rules inspect-text inspect-notes">
         <p id="inspect-name"></p>
         <p id="inspect-rules"></p>
         <p id="inspect-text"></p>
+        <div id="inspect-notes" hidden></div>
         <div class="dialog-buttons">
           <button type="button" id="inspect-action" class="nes-btn is-primary" hidden></button>
           <button type="button" id="inspect-close" class="nes-btn">Close</button>
@@ -423,7 +463,7 @@
       </dialog>
     </div>
 
-    <div id="log-live" class="visually-hidden" role="log" aria-live="polite" aria-label="Messages"></div>
+    <div id="log-live" class="visually-hidden" role="log" aria-live="polite" aria-label="Message log"></div>
 
     <dialog id="confirm-new" class="nes-container is-rounded is-dark game-dialog" aria-labelledby="confirm-new-text">
       <p id="confirm-new-text"></p>
@@ -469,7 +509,7 @@
 
     <dialog id="bugnote" class="nes-container is-rounded is-dark game-dialog" aria-labelledby="bugnote-title">
       <p id="bugnote-title">Bug note</p>
-      <label for="bugnote-text" class="setting-note">What looks wrong? The run so far goes with it, so you don't need to say how you got here.</label>
+      <label for="bugnote-text" class="setting-note">What looks wrong? Your run is attached, so skip how you got here.</label>
       <textarea id="bugnote-text" rows="4" maxlength="500"></textarea>
       <p id="bugnote-status" class="setting-note" role="status"></p>
       <div class="dialog-buttons">
