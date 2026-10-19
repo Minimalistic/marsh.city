@@ -21,7 +21,7 @@
   });
 
   panel.addEventListener('click', (e) => {
-    if (e.target.closest('.theme-toggle, .sound-toggle, .cmdk-trigger')) close();
+    if (e.target.closest('.theme-toggle, .sound-toggle, .scene-toggle, .cmdk-trigger')) close();
   });
 
   document.addEventListener('click', (e) => {

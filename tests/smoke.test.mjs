@@ -135,3 +135,92 @@ test('every page loads without JS errors or failed same-origin requests', { skip
   }
   assert.deepEqual(problems, [], problems.join('\n'))
 })
+
+// "View background" (src/scripts/scene-view.js): hides the page, keeps the scroll
+// position, keeps the hidden page out of reach, and Esc / "Back to page" restore it.
+async function enterSceneView(page) {
+  await page.click('.nav-menu-btn')
+  await page.click('.scene-toggle')
+  await page.waitForTimeout(500) // the fade, then visibility flips
+}
+const sceneState = (page) => page.evaluate(() => ({
+  viewing: document.documentElement.classList.contains('is-viewing-scene'),
+  layoutVisibility: getComputedStyle(document.querySelector('.layout')).visibility,
+  layoutInert: document.querySelector('.layout').inert,
+  footInert: document.querySelector('.site-foot-inner').inert,
+  barHidden: document.querySelector('.scene-bar').hidden,
+  scrollY: Math.round(window.scrollY),
+  focus: document.activeElement?.className ?? '',
+  focusInBar: !!document.activeElement?.closest('.scene-bar'),
+}))
+
+test('view background hides the page and Esc brings it back where it was', { skip: browserSkip }, async () => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 750 } })
+  const errors = []
+  page.on('pageerror', (err) => errors.push(err.message))
+  await page.goto(origin + '/playground/dailydungeon/', { waitUntil: 'load' })
+  await page.evaluate(() => window.scrollTo(0, 600))
+  await enterSceneView(page)
+  let s = await sceneState(page)
+  assert.equal(s.viewing, true)
+  assert.equal(s.layoutVisibility, 'hidden')
+  assert.equal(s.layoutInert, true)
+  assert.equal(s.footInert, true)
+  assert.equal(s.barHidden, false)
+  assert.equal(s.focusInBar, true, 'focus moves to the bar')
+  // Tab cycles within what's reachable: only the bar's buttons
+  for (let i = 0; i < 4; i++) {
+    await page.keyboard.press('Tab')
+    const inBar = await page.evaluate(() => !document.activeElement || document.activeElement === document.body || !!document.activeElement.closest('.scene-bar'))
+    assert.ok(inBar, 'Tab never lands in the hidden page')
+  }
+  // scrolling still pans the scene while viewing
+  await page.mouse.wheel(0, 300)
+  await page.waitForTimeout(200)
+  const scrolled = (await sceneState(page)).scrollY
+  assert.ok(scrolled > 600, 'the page still scrolls while viewing')
+  await page.keyboard.press('Escape')
+  s = await sceneState(page)
+  assert.equal(s.viewing, false)
+  assert.equal(s.layoutInert, false)
+  assert.equal(s.barHidden, true)
+  assert.equal(s.scrollY, scrolled, 'leaving keeps the scroll position')
+  assert.match(s.focus, /nav-menu-btn/, 'focus returns to the menu button')
+  assert.deepEqual(errors, [])
+  await page.close()
+})
+
+test('the bar sound button is the same setting as the menu Sound item', { skip: browserSkip }, async () => {
+  const page = await browser.newPage()
+  await page.goto(origin + '/', { waitUntil: 'load' })
+  await enterSceneView(page)
+  await page.click('.scene-sound')
+  const state = await page.evaluate(() => ({
+    menu: document.querySelector('.sound-toggle').getAttribute('aria-pressed'),
+    bar: document.querySelector('.scene-sound').getAttribute('aria-pressed'),
+    label: document.querySelector('.scene-sound-label').textContent,
+    saved: localStorage.getItem('ambient'),
+  }))
+  assert.deepEqual(state, { menu: 'true', bar: 'true', label: 'on', saved: 'on' })
+  await page.close()
+})
+
+test('view background on a page too short to scroll: Back to page works, nothing throws', { skip: browserSkip }, async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 6000 } })
+  const errors = []
+  page.on('pageerror', (err) => errors.push(err.message))
+  page.on('console', (msg) => { if (msg.type() === 'error' && msg.location().url.startsWith(origin)) errors.push(msg.text()) })
+  await page.route((url) => !url.href.startsWith(origin), (route) => route.abort())
+  await page.goto(origin + '/now/', { waitUntil: 'load' })
+  const scrollable = await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight)
+  assert.equal(scrollable, false, 'precondition: the page fits the viewport')
+  await enterSceneView(page)
+  assert.equal((await sceneState(page)).viewing, true)
+  await page.click('.scene-back')
+  const s = await sceneState(page)
+  assert.equal(s.viewing, false)
+  assert.equal(s.barHidden, true)
+  assert.match(s.focus, /nav-menu-btn/)
+  assert.deepEqual(errors, [])
+  await page.close()
+})

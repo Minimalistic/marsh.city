@@ -213,6 +213,15 @@ const paletteItems = [
                 </span>
                 <span class="nav-menu-item-label">Sound: <span class="sound-label">off</span></span>
               </button>
+              <button type="button" class="scene-toggle">
+                <span class="nav-menu-item-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </span>
+                <span class="nav-menu-item-label">View background</span>
+              </button>
               <button type="button" class="cmdk-trigger" aria-keyshortcuts="Meta+K Control+K">
                 <span class="nav-menu-item-icon">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -266,6 +275,30 @@ const paletteItems = [
       </div>
     </footer>
 
+    <!-- shown while "View background" hides the page; scene-view.js -->
+    <div class="scene-bar" role="group" aria-label="Background view" hidden>
+      <button type="button" class="scene-back">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to page
+      </button>
+      <button type="button" class="scene-sound" aria-pressed="false">
+        <svg class="icon-sound-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5L6 9H3v6h3l5 4z"/>
+          <line x1="22" y1="9" x2="16" y2="15"/>
+          <line x1="16" y1="9" x2="22" y2="15"/>
+        </svg>
+        <svg class="icon-sound-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5L6 9H3v6h3l5 4z"/>
+          <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+          <path d="M18.8 5.2a9.5 9.5 0 0 1 0 13.6"/>
+        </svg>
+        <span>Sound: <span class="scene-sound-label">off</span></span>
+      </button>
+    </div>
+
     <script is:inline set:html={fadeInScript} />
     <!-- index data stays per-page; `<` is escaped so a title can't close the tag -->
     <script type="application/json" id="cmdk-items" set:html={JSON.stringify(paletteItems).replace(/</g, '\\u003c')} />
@@ -277,6 +310,7 @@ const paletteItems = [
       import '../scripts/nav-menu.js';
       import '../scripts/theme-toggle.js';
       import '../scripts/ambient-toggle.js';
+      import '../scripts/scene-view.js';
       import '../scripts/starfield.js';
       import '../scripts/fireflies.js';
       import '../scripts/foliage.js';
