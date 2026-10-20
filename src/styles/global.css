@@ -104,7 +104,14 @@
      the cap, the side margins become a deep-forest "frame" around the scene. */
   --stage-max: 1200px;
   --stage-width: min(100vw, var(--stage-max));
-  --stage-inset: max(0px, calc((100vw - var(--stage-max)) / 2));
+  /* Box geometry for the fixed stage elements is in %, not vw: on a fixed box
+     % is the viewport *without* a classic scrollbar, while 100vw includes it,
+     which shoved the art ~15px into the right frame on Windows / mouse Macs.
+     Only use these two in left/width of fixed elements (or children of a
+     full-viewport fixed box); --stage-width stays vw for the layers' size
+     math, where % would resolve against height. */
+  --stage-inset: max(0px, calc((100% - var(--stage-max)) / 2));
+  --stage-box-width: min(100%, var(--stage-max));
   /* frosted-glass opacity for cards, pills and title panels. 62%: the looming
      forest shows through the glass right behind text, and thinner washes let
      its dark crowns drop body text below WCAG AA (measured 2.7:1 at 35%;
@@ -515,7 +522,7 @@ footer.site-foot {
   --frame-bottom: 0px;
   position: fixed;
   left: var(--stage-inset);
-  width: var(--stage-width);
+  width: var(--stage-box-width);
   top: calc(100vh - var(--foliage-h) - var(--frame-bottom));
   top: calc(100lvh - var(--foliage-h) - var(--frame-bottom));
   height: var(--foliage-h);
@@ -2022,7 +2029,7 @@ body::before {
   position: fixed;
   top: 0;
   left: var(--stage-inset);
-  width: var(--stage-width);
+  width: var(--stage-box-width);
   height: 100vh;
   z-index: 0;
   pointer-events: none;
@@ -2057,7 +2064,7 @@ html.theme-animating body::before {
   position: fixed;
   top: 0;
   left: var(--stage-inset);
-  width: var(--stage-width);
+  width: var(--stage-box-width);
   height: 55vh;
   pointer-events: none;
   /* same z-index as foliage/fireflies; canvas is prepended to <body> so DOM order

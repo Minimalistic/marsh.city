@@ -130,7 +130,7 @@
     // stage bounds — fireflies get clamped here so they can't drift
     // into the side frame on ultrawide viewports
     const STAGE_MAX = 1200;
-    const vw = window.innerWidth;
+    const vw = document.documentElement.clientWidth;  // excludes a classic scrollbar, like the CSS stage
     const stageLeft = Math.max(0, (vw - STAGE_MAX) / 2);
     const stageRight = vw - stageLeft;
     const MARGIN = 8;
@@ -230,7 +230,7 @@
     // spawn within the stage bounds (see --stage-max in global.css) so
     // flies don't drift into the side frame on ultrawide viewports.
     const STAGE_MAX = 1200;
-    const vw = window.innerWidth;
+    const vw = document.documentElement.clientWidth;  // excludes a classic scrollbar, like the CSS stage
     const stageW = Math.min(vw, STAGE_MAX);
     const stageInset = Math.max(0, (vw - STAGE_MAX) / 2);
     const x = stageInset + Math.random() * stageW;
