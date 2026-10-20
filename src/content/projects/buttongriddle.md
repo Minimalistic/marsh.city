@@ -8,6 +8,7 @@ started: 2026-07-16
 updated: 2026-07-18
 image: /images/buttongriddle/meals-board.webp
 imageAlt: ButtonGriddle Meals board - a 4x2 grid of colored choice buttons with a Check button
+hideTagline: true
 ---
 
 ButtonGriddle turns a tablet into a set of choice boards - one per context (meals, activities, clothing) - where each button is a photo and a phrase. Tap a button and the tablet speaks it aloud. A Yes / No / Not sure check screen helps staff confirm understanding in the moment.
