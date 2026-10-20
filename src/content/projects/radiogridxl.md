@@ -1,6 +1,6 @@
 ---
 title: RadioGridXL
-description: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, WCAG AA accessible, deployed at a nonprofit.
+description: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, deployed at a nonprofit.
 status: shipped
 repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio/
@@ -11,7 +11,7 @@ image: /images/radiogridxl/grid-dark.webp
 imageAlt: RadioGridXL — two large station buttons filling a dark screen
 ---
 
-RadioGridXL is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where I'm the Director of Technology, in the hands of people who just want to listen to music without fighting the interface.
+RadioGridXL is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where I'm the Director of Technology, for people who just want to listen to something without fighting the interface.
 
 [Try the live demo](/radio/)
 
@@ -51,7 +51,7 @@ The stream browser searches the Radio Browser API by name, country, or genre. Pr
 
 I designed for older adults and people with disabilities from the start, and it shaped the architecture:
 
-- WCAG AA verified contrast across all eight color palettes plus high-contrast monochrome modes (shown above)
+- Eight color palettes picked with WCAG AA contrast as the target, plus high-contrast monochrome modes (shown above)
 - Full screen reader support - ARIA roles, labels, and live regions throughout
 - Optional text-to-speech that announces playback actions via the Web Speech API
 - Audio chimes on play/pause using Web Audio API oscillators
