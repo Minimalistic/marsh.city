@@ -1437,6 +1437,58 @@ html.is-desktop #device-section { display: none; }
   align-items: center;
   justify-content: center;
 }
+/* How-to guide overlay — near full screen so the guide's screenshots stay legible */
+.help-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.help-overlay.open { display: flex; }
+.help-sheet {
+  background: var(--settings-bg);
+  border-radius: 14px;
+  width: min(720px, 96vw);
+  height: 94vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px 10px 16px;
+  border-bottom: 1px solid var(--settings-border);
+}
+#help-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--settings-text);
+}
+#help-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background: var(--settings-border);
+  color: var(--settings-text);
+  font-size: 22px;
+  cursor: pointer;
+}
+#help-body { flex: 1; display: flex; }
+#help-body iframe { flex: 1; width: 100%; border: 0; background: var(--settings-bg); }
+.help-offline {
+  margin: auto;
+  padding: 20px;
+  text-align: center;
+  color: var(--settings-text);
+  font-size: 14px;
+}
+
 .stream-browser-actions {
   display: flex;
   gap: 8px;
@@ -1743,7 +1795,12 @@ html.is-desktop #device-section { display: none; }
       <button id="settings-close" onclick="closeSettings()" aria-label="Close settings">&#215;</button>
     </div>
 
-    <div class="s-section">
+    <!-- Shown only when hosted and the profile names a guide — see helpAvailable() -->
+    <div class="s-section" id="help-section" hidden>
+      <button class="device-btn" id="help-btn" onclick="openHelp()">&#10067; How to use this app</button>
+    </div>
+
+    <div class="s-section" id="preset-section">
       <div class="s-section-title" id="preset-label">Accessibility Preset</div>
       <div class="chip-grid" id="preset-chips" role="radiogroup" aria-labelledby="preset-label"></div>
       <div class="s-hint">Quick starting points for common needs. Pick one, then fine-tune any setting below — your changes mark the preset as Custom.</div>
@@ -1757,7 +1814,7 @@ html.is-desktop #device-section { display: none; }
       </div>
     </div>
 
-    <div class="s-section">
+    <div class="s-section" id="theme-section">
       <div class="s-section-title" id="theme-label">Theme</div>
       <div class="theme-group-label">Default</div>
       <div class="chip-grid" role="radiogroup" aria-labelledby="theme-label">
@@ -1773,7 +1830,7 @@ html.is-desktop #device-section { display: none; }
       </div>
     </div>
 
-    <div class="s-section">
+    <div class="s-section" id="size-section">
       <div class="s-section-title" id="size-label">Text Size</div>
       <div class="chip-grid chip-grid-4" role="radiogroup" aria-labelledby="size-label">
         <button class="chip" onclick="selectChip(this,'size','normal')" data-group="size" data-val="normal" role="radio" aria-checked="false">Normal</button>
@@ -1874,7 +1931,7 @@ html.is-desktop #device-section { display: none; }
       <div class="s-hint">Live Caption transcribes audio playing on the device in real time — enable it in Accessibility settings. OS Settings gives access to everything else: Wi-Fi, text-to-speech voice, display brightness, and more.</div>
     </div>
 
-    <div class="s-section">
+    <div class="s-section" id="pin-section">
       <div class="s-section-title">Setup PIN</div>
       <div class="s-row">
         <label class="s-label" for="in-pin">Current PIN — 4 digits, or blank to disable (tap logo 5&times; to access settings)</label>
@@ -1893,7 +1950,7 @@ html.is-desktop #device-section { display: none; }
 
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.5.5</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.6.0</div>
   </aside>
 
   <!-- ========== STREAM BROWSER POPUP ========== -->
@@ -1966,6 +2023,17 @@ html.is-desktop #device-section { display: none; }
     </div>
   </div>
 
+  <!-- ========== HOW-TO GUIDE POPUP ========== -->
+  <div id="help-overlay" class="help-overlay" role="dialog" aria-labelledby="help-title" aria-modal="true">
+    <div class="help-sheet">
+      <div class="help-header">
+        <span id="help-title">How to use this app</span>
+        <button id="help-close" onclick="closeHelp()" aria-label="Close guide">&#215;</button>
+      </div>
+      <div id="help-body"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ========== RESET CONFIRM OVERLAY (outside #app so it covers entire viewport) ========== -->
@@ -2033,6 +2101,7 @@ const PROFILE = {
   "pin": "",
   "logoSvg": "<circle class=\"logo-body\" cx=\"50\" cy=\"50\" r=\"14\"/><path class=\"logo-cyan\" fill=\"none\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M 26,50 a 24,24 0 0 1 48,0\" opacity=\"0.5\"/><path class=\"logo-cyan\" fill=\"none\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M 14,50 a 36,36 0 0 1 72,0\" opacity=\"0.35\"/><path class=\"logo-cyan\" fill=\"none\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M 74,50 a 24,24 0 0 1 -48,0\" opacity=\"0.5\"/><path class=\"logo-cyan\" fill=\"none\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M 86,50 a 36,36 0 0 1 -72,0\" opacity=\"0.35\"/>",
   "logoViewBox": "0 0 100 100",
+  "helpUrl": "https://marsh.city/embed/guides/radiogridxl/",
   "streams": [
     {
       "id": "s1",
@@ -2168,6 +2237,8 @@ function init() {
     svg.innerHTML = PROFILE.logoSvg;
     if (PROFILE.logoViewBox) svg.setAttribute('viewBox', PROFILE.logoViewBox);
   }
+
+  document.getElementById('help-section').hidden = !helpAvailable();
 
   sanitizeStoredPin();
   loadSettings();
@@ -3160,6 +3231,11 @@ function hideOverlay(el) {
 
 /** Find the topmost visible overlay and close it. Returns true if one was closed. */
 function closeTopmostOverlay() {
+  var helpOverlay = document.getElementById('help-overlay');
+  if (helpOverlay.classList.contains('open')) {
+    closeHelp();
+    return true;
+  }
   // Emoji picker has highest z-index
   var emojiOverlay = document.getElementById('emoji-picker-overlay');
   if (emojiOverlay.classList.contains('open')) {
@@ -3832,6 +3908,60 @@ async function getRadioBrowserBase() {
     }
   } catch (e) { /* fall through to default */ }
   return 'https://de1.api.radio-browser.info';
+}
+
+/* ================================================================
+   HOW-TO GUIDE
+   The hosted build opens its guide (PROFILE.helpUrl, on marsh.city) in
+   an overlay. Hidden on file:// — the Android WebView blocks outside
+   pages, so the button would be dead there — and when the profile
+   names no guide (the Lighthouse build). The frame is only created on
+   tap, so nothing loads from the guide's site until someone asks.
+   ================================================================ */
+
+function helpAvailable() {
+  return /^https?:$/.test(location.protocol) &&
+    typeof PROFILE.helpUrl === 'string' && /^https:\/\//.test(PROFILE.helpUrl);
+}
+
+function openHelp() {
+  if (!helpAvailable()) return;
+  var overlay = document.getElementById('help-overlay');
+  var body = document.getElementById('help-body');
+  if (!body.firstChild) {
+    if (navigator.onLine === false) {
+      var msg = document.createElement('p');
+      msg.className = 'help-offline';
+      msg.textContent = 'The guide needs an internet connection. Connect and try again.';
+      body.appendChild(msg);
+    } else {
+      var frame = document.createElement('iframe');
+      frame.title = 'How to use this app';
+      // Empty sandbox: the guide is a static page, so it gets no scripts,
+      // forms, popups or same-origin access to this app's storage.
+      frame.setAttribute('sandbox', '');
+      frame.setAttribute('referrerpolicy', 'no-referrer');
+      frame.src = PROFILE.helpUrl;
+      body.appendChild(frame);
+    }
+  }
+  overlay.classList.add('open');
+  overlay._focusTrap = function(e) { trapFocus(e, overlay); };
+  overlay.addEventListener('keydown', overlay._focusTrap);
+  document.getElementById('help-close').focus();
+}
+
+function closeHelp() {
+  var overlay = document.getElementById('help-overlay');
+  if (overlay._focusTrap) {
+    overlay.removeEventListener('keydown', overlay._focusTrap);
+    overlay._focusTrap = null;
+  }
+  overlay.classList.remove('open');
+  // Drop the frame (or offline notice) so every open starts fresh at the guide,
+  // even if a link inside it navigated the frame somewhere else.
+  document.getElementById('help-body').innerHTML = '';
+  document.getElementById('help-btn').focus();
 }
 
 function openStreamBrowser() {
