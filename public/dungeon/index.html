@@ -298,18 +298,22 @@
     </div>
 
     <div id="win" class="screen modal">
-      <h2 class="nes-container is-rounded is-dark screen-title" tabindex="-1">Floor <span class="floor-stat"></span> survived</h2>
-      <div class="nes-container is-rounded is-dark">
-        <p>You climb down the ladder in <span class="turns-stat"></span> turns.</p>
-        <p>Level <span class="level-stat"></span>, <span class="xp-stat"></span> XP, <span class="gold-stat"></span> gold. Your pack comes with you.</p>
-        <p class="carry-stat"></p>
-        <p class="setting-note practice-only">Seed <span class="seed-stat"></span></p>
-        <p class="setting-note daily-only" hidden>Your run is in. The next floor opens at 9:00 a.m. Chicago time once you've both finished.</p>
+      <div id="floor-scroll" class="scroll">
+        <div class="scroll-roller" aria-hidden="true"></div>
+        <div class="scroll-sheet">
+          <h2 class="screen-title" tabindex="-1">Floor <span class="floor-stat"></span> survived</h2>
+          <p>You climb down the ladder in <span class="turns-stat"></span> turns.</p>
+          <p>Level <span class="level-stat"></span>, <span class="xp-stat"></span> XP, <span class="gold-stat"></span> gold. Your pack comes with you.</p>
+          <p class="carry-stat"></p>
+          <p class="setting-note practice-only">Seed <span class="seed-stat"></span></p>
+          <p class="setting-note daily-only" hidden>Your run is in. The next floor opens at 9:00 a.m. Chicago time once you've both finished.</p>
+          <button type="button" id="next-floor" class="nes-btn is-success end-btn practice-only">Down to floor <span class="next-floor-stat"></span></button>
+          <button type="button" class="nes-btn is-success end-btn daily-only daily-done" hidden>Back to today's floor</button>
+          <button type="button" class="nes-btn is-success end-btn check-only check-answer-open" aria-haspopup="dialog" hidden>How did it go?</button>
+          <button type="button" class="nes-btn end-btn bugnote-open" aria-haspopup="dialog">Bug note</button>
+        </div>
+        <div class="scroll-roller" aria-hidden="true"></div>
       </div>
-      <button type="button" id="next-floor" class="nes-btn is-success end-btn practice-only">Down to floor <span class="next-floor-stat"></span></button>
-      <button type="button" class="nes-btn is-success end-btn daily-only daily-done" hidden>Back to today's floor</button>
-      <button type="button" class="nes-btn is-success end-btn check-only check-answer-open" aria-haspopup="dialog" hidden>How did it go?</button>
-      <button type="button" class="nes-btn end-btn bugnote-open" aria-haspopup="dialog">Bug note</button>
       <p class="screen-message bugnote-result" role="status"></p>
     </div>
 
@@ -450,6 +454,17 @@
         </div>
       </dialog>
 
+      <dialog id="feature" class="nes-container is-rounded is-dark game-dialog"
+              aria-labelledby="feature-name" aria-describedby="feature-text feature-purse">
+        <p id="feature-name"></p>
+        <p id="feature-text"></p>
+        <p id="feature-purse"></p>
+        <div id="feature-offers"></div>
+        <div class="dialog-buttons">
+          <button type="button" id="feature-close" class="nes-btn">Close</button>
+        </div>
+      </dialog>
+
       <dialog id="stone-view" class="nes-container is-rounded is-dark game-dialog"
               aria-labelledby="stone-view-title" aria-describedby="stone-view-stone stone-view-under">
         <p id="stone-view-title">Your tombstone</p>
@@ -476,6 +491,17 @@
 
     <div id="log-live" class="visually-hidden" role="log" aria-live="polite" aria-label="Message log"></div>
 
+    <div id="descent-fade" aria-hidden="true" hidden></div>
+
+    <div id="rest-scene" aria-hidden="true" hidden>
+      <div class="rest-card">
+        <p class="rest-hp"><span class="rest-hp-label">HP</span> <span class="rest-hp-now"></span><span class="rest-hp-max"></span></p>
+        <div class="rest-bar"><div class="rest-bar-fill"></div></div>
+        <p class="rest-gain"></p>
+        <p class="rest-ended"></p>
+      </div>
+    </div>
+
     <dialog id="confirm-new" class="nes-container is-rounded is-dark game-dialog" aria-labelledby="confirm-new-text">
       <p id="confirm-new-text"></p>
       <div class="dialog-buttons">
@@ -499,6 +525,7 @@
       <p id="check-brief-problem" class="setting-note" hidden></p>
       <div class="dialog-buttons">
         <button type="button" id="check-brief-start" class="nes-btn is-primary">Start</button>
+        <button type="button" id="check-brief-continue" class="nes-btn" hidden>Continue</button>
         <button type="button" id="check-brief-skip" class="nes-btn" hidden>Skip</button>
         <button type="button" id="check-brief-back" class="nes-btn">Back</button>
       </div>
