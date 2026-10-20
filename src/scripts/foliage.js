@@ -3,6 +3,32 @@
 // itself is a CSS scroll-driven animation (global.css, .foliage-layer);
 // this script only covers what CSS can't.
 (() => {
+  // Edge on iOS hosts the page in an app web view that really resizes as its
+  // toolbar slides away, so every vh in the scene changed mid-scroll and the
+  // layers jumped and flashed. On touch screens, pin --scene-h (global.css) to
+  // the tallest 100vh seen at this width. Safari's 100vh never changes, so
+  // the pin is a no-op there; desktop skips it so window resizes still work.
+  const root = document.documentElement;
+  let pinnedHeight = 0;
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;width:0;height:100vh;visibility:hidden;pointer-events:none';
+    document.body.append(probe);
+    let pinnedWidth = 0;
+    const pinSceneHeight = () => {
+      const width = window.innerWidth;
+      const height = probe.offsetHeight;
+      // a width change is a rotation or split view: start over at this size
+      const next = width === pinnedWidth ? Math.max(pinnedHeight, height) : height;
+      pinnedWidth = width;
+      if (next === pinnedHeight) return;
+      pinnedHeight = next;
+      root.style.setProperty('--scene-h', `${next}px`);
+    };
+    pinSceneHeight();
+    window.addEventListener('resize', pinSceneHeight);
+  }
+
   const frame = document.querySelector('.site-foot-foliage');
   if (!frame) return;
   const layers = frame.querySelectorAll('.foliage-layer');
@@ -33,14 +59,14 @@
       const frameH = l.parentElement.getBoundingClientRect().height;
       const endBand = parseFloat(cs.getPropertyValue('--end-band')) || 1;
       const endCanvas = parseFloat(cs.getPropertyValue('--end-canvas')) || 1;
-      const startVh = parseFloat(cs.getPropertyValue('--layer-start')) || 0;
+      const startFraction = parseFloat(cs.getPropertyValue('--layer-start')) || 0;
       const rangeStart = (parseFloat(cs.getPropertyValue('--layer-range-start')) || 0) / 100;
       // the box covers only the painted rows; recover the full canvas height
       const contentTop = parseFloat(cs.getPropertyValue('--content-top')) || 0;
       const contentBottom = parseFloat(cs.getPropertyValue('--content-bottom')) || 1;
       const fullH = l.getBoundingClientRect().height / (contentBottom - contentTop);
       return {
-        from: startVh * window.innerHeight / 100,
+        from: startFraction * (pinnedHeight || window.innerHeight),
         to: frameH * endBand - fullH * endCanvas,
         rangeStart,
       };

@@ -52,6 +52,10 @@
 }
 
 :root {
+  /* height of the fixed background scene (sky, stars, foliage, firefly
+     planes). foliage.js pins it in px on touch screens so a browser that
+     resizes the page as its toolbar slides (Edge on iOS) can't move it. */
+  --scene-h: 100vh;
   /* palette — soft shaded-garden light, not bright-paper white */
   --cream: #e8e6d2;
   --cream-soft: #ddd9c2;
@@ -508,11 +512,11 @@ footer.site-foot {
    forest → far flies → back → mid flies → mid → near flies → front →
    ground → fore flies. */
 .site-foot-foliage {
-  --foliage-h: 70vh;
+  --foliage-h: calc(var(--scene-h) * 0.7);
   display: contents;
 }
 /* One clipping frame per layer, its bottom on the bottom of the tallest
-   viewport (100lvh, toolbar collapsed). Anchored by top, not bottom: on iOS a
+   viewport (--scene-h, toolbar collapsed). Anchored by top, not bottom: on iOS a
    bottom: 0 frame rides the browser toolbar as it slides in and out, which
    shook the whole scene; this way a showing toolbar just covers the floor.
    --frame-bottom lowers the frame below that line (short desktop viewports).
@@ -523,8 +527,7 @@ footer.site-foot {
   position: fixed;
   left: var(--stage-inset);
   width: var(--stage-box-width);
-  top: calc(100vh - var(--foliage-h) - var(--frame-bottom));
-  top: calc(100lvh - var(--foliage-h) - var(--frame-bottom));
+  top: calc(var(--scene-h) - var(--foliage-h) - var(--frame-bottom));
   height: var(--foliage-h);
   z-index: 0;
   overflow: hidden;
@@ -557,7 +560,7 @@ footer.site-foot {
    [--content-top, --content-bottom] of that canvas — transparent sky costs
    as much memory as paint, so the images are cropped to match. */
 .foliage-layer {
-  --layer-w: max(var(--stage-width), 150vh);
+  --layer-w: max(var(--stage-width), calc(var(--scene-h) * 1.5));
   --layer-hw: 0.6667;
   --end-band: 1;
   --end-canvas: var(--content-bottom);
@@ -570,7 +573,7 @@ footer.site-foot {
   width: var(--layer-w);
   height: calc(var(--full-h) * (var(--content-bottom) - var(--content-top)));
   background: var(--layer-img) center / 100% 100% no-repeat;
-  transform: translate(-50%, var(--layer-start, 0px));
+  transform: translate(-50%, calc(var(--scene-h) * var(--layer-start, 0)));
   will-change: transform;
 }
 /* The art is drawn ~1270–2400 device px wide on phones and retina screens, so
@@ -597,7 +600,7 @@ footer.site-foot {
    (--layer-range-start), so the ground comes up to meet you near the end. */
 .foliage-frame--front .foliage-layer {
   --end-band: 1;
-  --layer-start: 35vh;
+  --layer-start: 0.35;  /* × --scene-h */
   --layer-range-start: 40%;
   --layer-img: image-set(url(/foliage/front.avif) 1x, url(/foliage/front@2x.avif) 2x);
 }
@@ -606,7 +609,7 @@ footer.site-foot {
      below the band tucks the fringe off-screen instead of showing the
      layers behind through its gaps */
   --end-band: 1.05;
-  --layer-start: 45vh;
+  --layer-start: 0.45;
   --layer-range-start: 60%;
   --layer-img: image-set(url(/foliage/ground.avif) 1x, url(/foliage/ground@2x.avif) 2x);
 }
@@ -628,10 +631,10 @@ footer.site-foot {
    band, so the treeline can tower behind the marsh. Drawn a little larger
    than the frame so its (small, depth 0.3) pan still has room to travel. */
 .foliage-frame--forest {
-  --foliage-h: 100vh;
+  --foliage-h: var(--scene-h);
 }
 .foliage-frame--forest .foliage-layer {
-  --layer-w: max(var(--stage-width), 180vh);
+  --layer-w: max(var(--stage-width), calc(var(--scene-h) * 1.8));
 }
 /* Phones on their side get the wide layout but only the 1x files: the 2x set
    decodes to ~60MB, the same memory cliff that crashed iOS Safari. 1400px
@@ -641,7 +644,7 @@ footer.site-foot {
      painted top stays inside the band instead of being sliced by its edge */
   /* html prefix outranks the later min-width: 900px short-viewport rule,
      which wide landscape phones (e.g. 932x430) would otherwise also match */
-  html .site-foot-foliage { --foliage-h: 100vh; }
+  html .site-foot-foliage { --foliage-h: var(--scene-h); }
   html .foliage-frame { --frame-bottom: 0px; }
   .foliage-frame--forest .foliage-layer { --layer-img: url(/foliage/forest.avif); }
   .foliage-frame--back .foliage-layer { --layer-img: url(/foliage/back.avif); }
@@ -715,7 +718,7 @@ footer.site-foot {
 /* pan from sky (layer top at frame top) toward the floor; at depth 1 the
    layer bottom meets the frame bottom, shallower depths stop proportionally */
 @keyframes foliage-pan {
-  from { transform: translate(-50%, var(--layer-start, 0px)); }
+  from { transform: translate(-50%, calc(var(--scene-h) * var(--layer-start, 0))); }
   to   { transform: translate(-50%, calc(var(--foliage-h) * var(--end-band) - var(--full-h) * var(--end-canvas))); }
 }
 /* max scroll-darken is 30% — keeps the cue subtle instead of heavy-handed */
@@ -761,10 +764,10 @@ footer.site-foot {
    pan-driven top clipping. Mobile keeps its normal 70vh-hugs-bottom flow. */
 @media (min-width: 900px) {
   .site-foot-foliage {
-    --foliage-h: max(70vh, 560px);
+    --foliage-h: max(calc(var(--scene-h) * 0.7), 560px);
   }
   .foliage-frame {
-    --frame-bottom: min(0px, calc(100vh - 800px));
+    --frame-bottom: min(0px, calc(var(--scene-h) - 800px));
   }
 }
 .site-foot-inner {
@@ -2030,7 +2033,7 @@ body::before {
   top: 0;
   left: var(--stage-inset);
   width: var(--stage-box-width);
-  height: 100vh;
+  height: var(--scene-h);
   z-index: 0;
   pointer-events: none;
   --sky-top: #4e8cc2;
@@ -2065,7 +2068,7 @@ html.theme-animating body::before {
   top: 0;
   left: var(--stage-inset);
   width: var(--stage-box-width);
-  height: 55vh;
+  height: calc(var(--scene-h) * 0.55);
   pointer-events: none;
   /* same z-index as foliage/fireflies; canvas is prepended to <body> so DOM order
      puts it behind the foliage, while fireflies (appended last) stay in front. */
@@ -2111,10 +2114,10 @@ html.theme-animating *::after {
   z-index: 0;
   will-change: transform;
 }
-.firefly-plane--far  { --plane-travel: 10vh; }
-.firefly-plane--mid  { --plane-travel: 20vh; }
-.firefly-plane--near { --plane-travel: 30vh; }
-.firefly-plane--fore { --plane-travel: 40vh; }
+.firefly-plane--far  { --plane-travel: calc(var(--scene-h) * 0.1); }
+.firefly-plane--mid  { --plane-travel: calc(var(--scene-h) * 0.2); }
+.firefly-plane--near { --plane-travel: calc(var(--scene-h) * 0.3); }
+.firefly-plane--fore { --plane-travel: calc(var(--scene-h) * 0.4); }
 @keyframes firefly-plane-pan {
   from { transform: translateY(0); }
   to   { transform: translateY(calc(-1 * var(--plane-travel))); }
@@ -2206,7 +2209,7 @@ html.theme-animating *::after {
     padding: 0.5rem 1rem 1rem;
   }
   .site-foot-foliage {
-    --foliage-h: 55vh;
+    --foliage-h: calc(var(--scene-h) * 0.55);
   }
   .site-foot-inner {
     padding: 0.6rem 0.9rem;
