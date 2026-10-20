@@ -14,6 +14,7 @@ const projects = defineCollection({
     updated: z.coerce.date().optional(),
     image: z.string().optional(),     // root-relative path used as the social-share card
     imageAlt: z.string().optional(),
+    hideTagline: z.boolean().default(false),   // page opens by restating the description; still used for cards/meta
   }),
 });
 
