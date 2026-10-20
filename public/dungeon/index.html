@@ -39,20 +39,13 @@
         <feBlend in="split" in2="glow" mode="screen"/>
       </filter>
       <filter id="crt-filter-soft" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-        <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/>
-        <feOffset in="red" dx="-0.5" dy="0" result="redShift"/>
-        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green"/>
-        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/>
-        <feOffset in="blue" dx="0.5" dy="0" result="blueShift"/>
-        <feBlend in="redShift" in2="green" mode="screen" result="redGreen"/>
-        <feBlend in="redGreen" in2="blueShift" mode="screen" result="split"/>
-        <feGaussianBlur in="split" stdDeviation="3" result="blur"/>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
         <feComponentTransfer in="blur" result="glow">
           <feFuncR type="linear" slope="0.7" intercept="-0.2"/>
           <feFuncG type="linear" slope="0.7" intercept="-0.2"/>
           <feFuncB type="linear" slope="0.7" intercept="-0.2"/>
         </feComponentTransfer>
-        <feBlend in="split" in2="glow" mode="screen"/>
+        <feBlend in="SourceGraphic" in2="glow" mode="screen"/>
       </filter>
     </svg>
 
@@ -241,7 +234,7 @@
         <section>
           <img class="howto-icon" data-sprite="props:exit_ladder" alt="" width="32" height="32">
           <h3>Get down</h3>
-          <p>Every floor has a ladder. Find it and climb down. The locals have other plans.</p>
+          <p>Every floor has stairs going down. Find them. The locals have other plans.</p>
         </section>
         <section>
           <img class="howto-icon" data-sprite="player" alt="" width="32" height="32">
@@ -266,7 +259,7 @@
         <section>
           <img class="howto-icon" data-sprite="items:bandage_roll" alt="" width="32" height="32">
           <h3>Use things</h3>
-          <p>Pack opens what you carry. Tap anything there to use it, wear it or drop it. Log shows what just happened, in case it happened fast.</p>
+          <p>Pack opens what you carry. Tap anything there to use it, wear it or drop it. Journal shows what just happened, in case it happened fast, and what you've learned.</p>
         </section>
         <section>
           <img class="howto-icon" data-sprite="items:healing_draught" alt="" width="32" height="32">
@@ -302,7 +295,7 @@
         <div class="scroll-roller" aria-hidden="true"></div>
         <div class="scroll-sheet">
           <h2 class="screen-title" tabindex="-1">Floor <span class="floor-stat"></span> survived</h2>
-          <p>You climb down the ladder in <span class="turns-stat"></span> turns.</p>
+          <p>You go down the stairs in <span class="turns-stat"></span> turns.</p>
           <p>Level <span class="level-stat"></span>, <span class="xp-stat"></span> XP, <span class="gold-stat"></span> gold. Your pack comes with you.</p>
           <p class="carry-stat"></p>
           <p class="setting-note practice-only">Seed <span class="seed-stat"></span></p>
@@ -377,7 +370,7 @@
             <button type="button" id="aim-cancel" class="nes-btn">Cancel</button>
           </div>
         </div>
-        <button type="button" id="descend-btn" class="nes-container is-rounded is-dark dock-btn" hidden>Climb down</button>
+        <button type="button" id="descend-btn" class="nes-container is-rounded is-dark dock-btn" hidden>Go down</button>
         <div id="check-bar" role="group" aria-label="Check" hidden>
           <button type="button" id="check-brief-open" class="nes-container is-rounded is-dark dock-btn" aria-haspopup="dialog">Brief</button>
           <button type="button" id="check-done" class="nes-container is-rounded is-dark dock-btn" aria-haspopup="dialog">Done</button>
@@ -388,8 +381,8 @@
             <button type="button" id="leave-game" class="nes-container is-rounded is-dark dock-btn">Menu</button>
             <button type="button" id="inventory-toggle" class="nes-container is-rounded is-dark dock-btn"
                     aria-expanded="false" aria-controls="inventory">Pack</button>
-            <button type="button" id="log-open" class="nes-container is-rounded is-dark dock-btn"
-                    aria-haspopup="dialog">Log</button>
+            <button type="button" id="journal-open" class="nes-container is-rounded is-dark dock-btn"
+                    aria-haspopup="dialog">Journal<span class="journal-count" hidden></span></button>
             <button type="button" id="aim-open" class="nes-container is-rounded is-dark dock-btn" hidden>Aim</button>
             <button type="button" id="dock-bugnote" class="nes-container is-rounded is-dark dock-btn bugnote-open"
                     aria-haspopup="dialog">Bug note</button>
@@ -411,9 +404,28 @@
         <div id="hud" class="nes-container is-rounded is-dark"></div>
       </div>
 
-      <dialog id="log-history" class="nes-container is-rounded is-dark game-dialog" aria-labelledby="log-history-title">
-        <p id="log-history-title">Message log</p>
-        <ol id="log-history-list" tabindex="0" aria-labelledby="log-history-title"></ol>
+      <dialog id="journal" class="nes-container is-rounded is-dark game-dialog" aria-labelledby="journal-title">
+        <p id="journal-title">Journal</p>
+        <div class="journal-sections" role="group" aria-label="Sections">
+          <button type="button" class="nes-btn journal-section-btn" data-section="log" aria-pressed="true">Log</button>
+          <button type="button" class="nes-btn journal-section-btn" data-section="creatures" aria-pressed="false">Creatures<span class="journal-count" hidden></span></button>
+          <button type="button" class="nes-btn journal-section-btn" data-section="items" aria-pressed="false">Items<span class="journal-count" hidden></span></button>
+        </div>
+        <section id="journal-log" class="journal-section" aria-label="Log">
+          <ol id="log-history-list" tabindex="0" aria-label="Message log"></ol>
+          <button type="button" id="side-log-keep" class="nes-btn setting-toggle" role="switch" aria-checked="false" hidden>
+            <span class="setting-label">Keep beside the map</span>
+            <span class="setting-state" aria-hidden="true">Off</span>
+          </button>
+        </section>
+        <section id="journal-creatures" class="journal-section" aria-label="Creatures" hidden>
+          <div id="journal-creature-list" class="journal-list"></div>
+          <div id="journal-creature-entry" class="journal-entry" hidden></div>
+        </section>
+        <section id="journal-items" class="journal-section" aria-label="Items" hidden>
+          <div id="journal-item-list" class="journal-list"></div>
+          <div id="journal-item-entry" class="journal-entry" hidden></div>
+        </section>
         <div class="dialog-buttons">
           <button type="button" id="log-bugnote" class="nes-btn bugnote-open" aria-haspopup="dialog">Bug note</button>
           <button type="button" id="log-close" class="nes-btn">Close</button>
@@ -425,6 +437,7 @@
         <p class="item-card-head"><img id="item-card-icon" class="item-icon" alt="" width="32" height="32"><span id="item-card-name"></span></p>
         <p id="item-card-rules"></p>
         <p id="item-card-text"></p>
+        <div id="item-card-notes" hidden></div>
         <p id="item-card-detail"></p>
         <div class="dialog-buttons">
           <span id="item-card-buttons" class="dialog-buttons"></span>
