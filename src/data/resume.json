@@ -34,7 +34,7 @@
       "id": "radiogridxl",
       "name": "RadioGridXL",
       "href": "/projects/radiogridxl/",
-      "desc": " - internet radio for older adults and people with disabilities: large buttons, no accounts or ads, screen-reader support, WCAG AA contrast. Designed a technician-only settings panel so staff can configure a device without exposing that complexity to the listener. Deployed at my organization and piloted with older adults."
+      "desc": " - internet radio for older adults and people with disabilities: large buttons, no accounts or ads, screen-reader support, color palettes designed to WCAG AA contrast targets. Designed a technician-only settings panel so staff can configure a device without exposing that complexity to the listener. Deployed at my organization and piloted with older adults."
     },
     {
       "id": "petfeedr",
