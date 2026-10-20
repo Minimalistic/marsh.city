@@ -1,0 +1,83 @@
+---
+// Bare guide for apps to show inside their own help overlay (RadioGridXL's
+// settings → "How to use this app"). The app frames it with an empty sandbox
+// (no scripts), so this page is static HTML + CSS only: no site chrome, no JS,
+// and light/dark follows the system through prefers-color-scheme.
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const guides = await getCollection('guides');
+  return guides.map((g) => ({ params: { slug: g.id }, props: { guide: g } }));
+}
+
+const { guide } = Astro.props;
+const { Content } = await render(guide);
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href={new URL(`/projects/${guide.id}/guide/`, Astro.site).href} />
+  <title>{guide.data.title}</title>
+  <style is:global>
+    @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 400 600;
+      font-display: swap;
+      src: url(/fonts/inter-latin.woff2) format('woff2');
+    }
+    :root {
+      color-scheme: light dark;
+      --bg: #e8e6d2;
+      --bg-elev: #f0ecda;
+      --fg: #243626;
+      --fg-soft: #33453a;
+      --accent: #2d5016;
+      --border: rgba(27, 42, 31, 0.14);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0c150f;
+        --bg-elev: #13201a;
+        --fg: #ddd9ca;
+        --fg-soft: #b8b8a8;
+        --accent: #8db860;
+        --border: rgba(168, 204, 133, 0.16);
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1.25rem 1rem 3rem;
+      background: var(--bg);
+      color: var(--fg);
+      font: 1.0625rem/1.65 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    main { max-width: 40rem; margin: 0 auto; }
+    h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 1rem; }
+    h2 { font-size: 1.3rem; margin: 2.5rem 0 0.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+    h3 { font-size: 1.1rem; margin: 1.75rem 0 0.5rem; }
+    p, li { color: var(--fg-soft); }
+    strong { color: var(--fg); }
+    a { color: var(--accent); }
+    code { font-size: 0.9em; padding: 0.1em 0.35em; border-radius: 4px; background: var(--bg-elev); }
+    img {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      margin: 1.25rem auto;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>{guide.data.title}</h1>
+    <Content />
+  </main>
+</body>
+</html>

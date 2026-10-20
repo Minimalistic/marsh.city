@@ -82,4 +82,15 @@ const art = defineCollection({
   }),
 });
 
-export const collections = { projects, posts, playground, pages, art };
+// how-to guides, one per project (file name = project slug). Synced in from
+// each app's repo (RadioGridXL: npm run sync:radio) — edit them there, not here.
+const guides = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/guides' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    appVersion: z.string(),   // app version the screenshots were captured at
+  }),
+});
+
+export const collections = { projects, posts, playground, pages, art, guides };

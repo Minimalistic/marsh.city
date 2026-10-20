@@ -1,6 +1,6 @@
 ---
 import Post from '../../layouts/Post.astro';
-import { getCollection, render } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -9,6 +9,8 @@ export async function getStaticPaths() {
 
 const { project } = Astro.props;
 const { Content } = await render(project);
+// a how-to guide with the same slug gets a button beside the live link
+const guide = await getEntry('guides', project.id);
 ---
 <Post title={project.data.title} description={project.data.description} image={project.data.image} imageAlt={project.data.imageAlt} wide>
   <div class="project-meta">
@@ -17,8 +19,11 @@ const { Content } = await render(project);
     {project.data.updated && <span class="meta">Updated {project.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>}
     <span class="byline">Written by <a href="/resume/">Jason Marsh</a></span>
   </div>
-  {project.data.url && (
-    <a href={project.data.url} class="live-demo-btn">Visit the live site</a>
+  {(project.data.url || guide) && (
+    <div class="project-actions">
+      {project.data.url && <a href={project.data.url} class="live-demo-btn">Visit the live site</a>}
+      {guide && <a href={`/projects/${project.id}/guide/`} class="live-demo-btn live-demo-btn--secondary">How to use it</a>}
+    </div>
   )}
   <p class="tagline">{project.data.description}</p>
   <Content />

@@ -1,0 +1,26 @@
+---
+import Post from '../../../layouts/Post.astro';
+import { getCollection, getEntry, render } from 'astro:content';
+
+// one page per guide; a guide's file name is its project's slug
+export async function getStaticPaths() {
+  const guides = await getCollection('guides');
+  return guides.map((g) => ({ params: { slug: g.id }, props: { guide: g } }));
+}
+
+const { guide } = Astro.props;
+const project = await getEntry('projects', guide.id);
+const { Content } = await render(guide);
+---
+<Post title={guide.data.title} description={guide.data.description} image={project?.data.image} imageAlt={project?.data.imageAlt} wide>
+  <div class="project-meta">
+    {project && <a href={`/projects/${guide.id}/`} class="project-link">← {project.data.title}</a>}
+    <span class="meta">Screenshots from v{guide.data.appVersion}</span>
+  </div>
+  {project?.data.url && (
+    <a href={project.data.url} class="live-demo-btn">Open the app</a>
+  )}
+  <div class="guide">
+    <Content />
+  </div>
+</Post>
