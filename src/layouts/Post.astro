@@ -30,6 +30,8 @@ const { title, description, date, wide, image, imageAlt } = Astro.props;
       <slot />
     </div>
   </article>
+  <!-- for position: fixed controls — .prose's backdrop-filter would pin them to the article -->
+  <slot name="outside" />
 
   <script is:inline>
     (() => {

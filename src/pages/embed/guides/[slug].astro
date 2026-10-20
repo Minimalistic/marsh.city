@@ -4,6 +4,8 @@
 // (no scripts), so this page is static HTML + CSS only: no site chrome, no JS,
 // and light/dark follows the system through prefers-color-scheme.
 import { getCollection, render } from 'astro:content';
+import GuideContents from '../../../components/GuideContents.astro';
+import BackToTop from '../../../components/BackToTop.astro';
 
 export async function getStaticPaths() {
   const guides = await getCollection('guides');
@@ -11,7 +13,7 @@ export async function getStaticPaths() {
 }
 
 const { guide } = Astro.props;
-const { Content } = await render(guide);
+const { Content, headings } = await render(guide);
 ---
 <html lang="en">
 <head>
@@ -77,7 +79,9 @@ const { Content } = await render(guide);
 <body>
   <main>
     <h1>{guide.data.title}</h1>
+    <GuideContents headings={headings} />
     <Content />
   </main>
+  <BackToTop target="guide-top" />
 </body>
 </html>

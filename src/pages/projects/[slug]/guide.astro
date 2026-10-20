@@ -1,6 +1,8 @@
 ---
 import Post from '../../../layouts/Post.astro';
 import { getCollection, getEntry, render } from 'astro:content';
+import GuideContents from '../../../components/GuideContents.astro';
+import BackToTop from '../../../components/BackToTop.astro';
 
 // one page per guide; a guide's file name is its project's slug
 export async function getStaticPaths() {
@@ -10,7 +12,7 @@ export async function getStaticPaths() {
 
 const { guide } = Astro.props;
 const project = await getEntry('projects', guide.id);
-const { Content } = await render(guide);
+const { Content, headings } = await render(guide);
 ---
 <Post title={guide.data.title} description={guide.data.description} image={project?.data.image} imageAlt={project?.data.imageAlt} wide>
   <div class="project-meta">
@@ -21,6 +23,8 @@ const { Content } = await render(guide);
     <a href={project.data.url} class="live-demo-btn">Open the app</a>
   )}
   <div class="guide">
+    <GuideContents headings={headings} />
     <Content />
   </div>
+  <BackToTop slot="outside" target="guide-top" />
 </Post>

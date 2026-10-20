@@ -1033,8 +1033,10 @@ footer.site-foot a:hover {
   color: var(--accent);
 }
 
-/* guide screenshots are phone-sized: keep them phone-sized, centered */
-.guide img {
+/* guide screenshots are phone-sized: keep them phone-sized, centered.
+   .prose-qualified to outrank .prose img, and lqip.js wraps each image in an
+   inline-block span, so the wrapper gets the centering and the margin. */
+.prose .guide img {
   display: block;
   width: 100%;
   max-width: 320px;
@@ -1044,6 +1046,14 @@ footer.site-foot a:hover {
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
+.prose .guide .lqip-wrap {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1.5rem auto;
+  border-radius: var(--radius-lg);
+}
+.prose .guide .lqip-wrap img { margin: 0; }
 
 /* hit-area extension so a pointer on the bottom edge doesn't lose hover
    when the button lifts */

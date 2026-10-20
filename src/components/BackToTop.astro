@@ -1,0 +1,45 @@
+---
+// Fixed "Back to top" link to an anchor near the top of the page. Works with
+// no JavaScript (the guide embed is sandboxed); fades in on scroll only where
+// CSS scroll-driven animations exist, otherwise it just stays visible.
+// Render it outside any ancestor with a transform, filter or backdrop-filter
+// (e.g. .prose) — those turn position: fixed into "fixed to that box".
+interface Props {
+  target: string;   // id of the element to jump back to
+}
+const { target } = Astro.props;
+---
+<a href={`#${target}`} class="back-to-top">↑ Back to top</a>
+
+<style>
+  .back-to-top {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 50;
+    padding: 0.55em 1em;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--accent);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.35);
+  }
+  .back-to-top:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @supports (animation-timeline: scroll()) {
+    .back-to-top {
+      animation: back-to-top-reveal linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 40vh;
+    }
+    @keyframes back-to-top-reveal {
+      from { opacity: 0; visibility: hidden; }
+      to { opacity: 1; visibility: visible; }
+    }
+  }
+</style>

@@ -1,0 +1,42 @@
+---
+// Contents list for a how-to guide, built from its ## sections. Shared by the
+// site guide page and the bare embed an app frames in its help overlay, so it
+// is plain anchor links (the embed is sandboxed: no JavaScript). Its id is the
+// "Back to top" target on both pages.
+import type { MarkdownHeading } from 'astro';
+interface Props {
+  headings: MarkdownHeading[];
+}
+const sections = Astro.props.headings.filter((h) => h.depth === 2);
+---
+<nav class="guide-toc" id="guide-top" aria-labelledby="guide-toc-title">
+  <p class="guide-toc-title" id="guide-toc-title">Contents</p>
+  <ol>
+    {sections.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}
+  </ol>
+</nav>
+
+<style>
+  .guide-toc {
+    margin: 1.25rem 0 2rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-elev);
+  }
+  .guide-toc-title {
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .guide-toc ol {
+    margin: 0;
+    padding-left: 1.4rem;
+    columns: 2 14rem;
+    column-gap: 2rem;
+  }
+  .guide-toc li {
+    margin: 0.2rem 0;
+    break-inside: avoid;
+  }
+</style>
