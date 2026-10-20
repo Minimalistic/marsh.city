@@ -13,8 +13,6 @@ imageAlt: RadioGridXL — two large station buttons filling a dark screen
 
 RadioGridXL is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where I'm the Director of Technology, for people who just want to listen to something without fighting the interface.
 
-[Try the live demo](/radio/)
-
 ## The interface
 
 ![RadioGridXL default view showing two large station buttons filling the screen](/images/radiogridxl/grid-dark.webp)

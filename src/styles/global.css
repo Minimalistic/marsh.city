@@ -1019,7 +1019,7 @@ footer.site-foot a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 2rem;
 }
 .project-actions .live-demo-btn { margin-bottom: 0; }
 
