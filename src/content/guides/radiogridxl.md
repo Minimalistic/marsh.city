@@ -6,7 +6,7 @@ appVersion: 7.6.0
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
 
-**Your changes are saved in this browser, on this device only.** Nothing is sent anywhere, and there's no account. If you clear this site's data, or open the app on another phone or computer, you'll see the starting stations again. To move a setup between devices, use [Backup and restore](#backup-and-restore).
+**RadioGridXL saves your stations and settings inside the web browser you're using, on this device only.** Nothing is sent anywhere, and there's no account. If you open RadioGridXL on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for marsh.city, the website RadioGridXL runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore).
 
 ## Listening
 
@@ -139,7 +139,7 @@ Under **Advanced Controls**:
 
 To keep anyone else out of settings, type a 4-digit PIN in **Setup PIN** and tap **Apply & Close**. From then on, five taps on the logo bring up the keypad. To remove the PIN, clear the field and apply.
 
-Write the PIN down somewhere. If you forget it, the only way back into settings is to clear this site's data in your browser, which also erases your stations.
+Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser's saved data for marsh.city, which also erases your RadioGridXL stations and settings.
 
 ## Backup and restore
 
