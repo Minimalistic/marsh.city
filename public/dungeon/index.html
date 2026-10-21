@@ -356,6 +356,7 @@
       <div id="side-log" class="nes-container is-rounded is-dark" role="region" aria-label="Message log"></div>
 
       <div id="dock">
+        <div id="news-stack"></div>
         <div id="inventory" class="nes-container is-rounded is-dark" hidden>
           <p id="inventory-title">Pack</p>
           <ul aria-labelledby="inventory-title"></ul>
@@ -407,10 +408,15 @@
       <dialog id="journal" class="nes-container is-rounded is-dark game-dialog" aria-labelledby="journal-title">
         <p id="journal-title">Journal</p>
         <div class="journal-sections" role="group" aria-label="Sections">
+          <button type="button" class="nes-btn journal-section-btn" data-section="recent" aria-pressed="false" hidden>Recent<span class="journal-count" hidden></span></button>
           <button type="button" class="nes-btn journal-section-btn" data-section="log" aria-pressed="true">Log</button>
           <button type="button" class="nes-btn journal-section-btn" data-section="creatures" aria-pressed="false">Creatures<span class="journal-count" hidden></span></button>
           <button type="button" class="nes-btn journal-section-btn" data-section="items" aria-pressed="false">Items<span class="journal-count" hidden></span></button>
+          <button type="button" class="nes-btn journal-section-btn" data-section="people" aria-pressed="false">People<span class="journal-count" hidden></span></button>
         </div>
+        <section id="journal-recent" class="journal-section" aria-label="Recent" hidden>
+          <div id="journal-recent-list" class="journal-list"></div>
+        </section>
         <section id="journal-log" class="journal-section" aria-label="Log">
           <ol id="log-history-list" tabindex="0" aria-label="Message log"></ol>
           <button type="button" id="side-log-keep" class="nes-btn setting-toggle" role="switch" aria-checked="false" hidden>
@@ -425,6 +431,10 @@
         <section id="journal-items" class="journal-section" aria-label="Items" hidden>
           <div id="journal-item-list" class="journal-list"></div>
           <div id="journal-item-entry" class="journal-entry" hidden></div>
+        </section>
+        <section id="journal-people" class="journal-section" aria-label="People" hidden>
+          <div id="journal-person-list" class="journal-list"></div>
+          <div id="journal-person-entry" class="journal-entry" hidden></div>
         </section>
         <div class="dialog-buttons">
           <button type="button" id="log-bugnote" class="nes-btn bugnote-open" aria-haspopup="dialog">Bug note</button>
