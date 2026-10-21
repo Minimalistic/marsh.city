@@ -1,0 +1,256 @@
+/* Accessible text version of the STAR Advisory Council talk.
+   Colors and fonts mirror whatcanhelp.com's tokens (public/css/style.css
+   there), so the page reads as part of the same project. No scripts: theme
+   and contrast follow the visitor's OS settings. */
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/fraunces-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('fonts/source-serif-4-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter Tight';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('fonts/inter-tight-var.woff2') format('woff2');
+}
+
+:root {
+  color-scheme: light dark;
+  --color-bg: #f5f1ea;
+  --color-surface: #fbf8f1;
+  --color-text: #1f1a14;
+  --color-text-secondary: #3a342b;
+  --color-text-muted: #6b6357;
+  --color-primary: #a8522f;
+  --color-primary-dark: #7a3d25;
+  --color-border: rgba(31,26,20,0.14);
+  --color-focus: #a8522f;
+  --color-focus-halo: transparent;
+  --focus-ring-width: 3px;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Source Serif 4', Georgia, serif;
+  --font-ui: 'Inter Tight', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1712;
+    --color-surface: #262119;
+    --color-text: #ede8df;
+    --color-text-secondary: #c5bfb6;
+    --color-text-muted: #a39b90;
+    --color-primary: oklch(0.72 0.15 40);
+    --color-primary-dark: oklch(0.80 0.11 40);
+    --color-border: rgba(237,232,223,0.18);
+    --color-focus: oklch(0.72 0.15 40);
+  }
+}
+
+/* High contrast follows the OS setting, with the same values the site uses. */
+@media (prefers-contrast: more) {
+  :root {
+    --color-bg: #ffffff;
+    --color-surface: #ffffff;
+    --color-text: #000000;
+    --color-text-secondary: #1a1a1a;
+    --color-text-muted: #333333;
+    --color-primary: #8a2f0f;
+    --color-primary-dark: #5c1f0a;
+    --color-border: #000000;
+    --color-focus: #000000;
+    --color-focus-halo: #ffffff;
+    --focus-ring-width: 4px;
+  }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0a0a0a;
+    --color-surface: #141414;
+    --color-text: #ffffff;
+    --color-text-secondary: #f2f2f2;
+    --color-text-muted: #d9d9d9;
+    --color-primary: oklch(0.80 0.13 50);
+    --color-primary-dark: oklch(0.88 0.09 50);
+    --color-border: #ffffff;
+    --color-focus: #ffd400;
+    --color-focus-halo: #000000;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover { color: var(--color-primary-dark); text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 calc(var(--focus-ring-width) + 4px) var(--color-focus-halo);
+}
+#main:focus { outline: none; }
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -10rem;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid var(--color-text);
+  font-family: var(--font-ui);
+  font-weight: 600;
+}
+.skip-link:focus { top: 1rem; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.wrap {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+header.site {
+  border-bottom: 1px solid var(--color-border);
+  padding: 2.5rem 0 2rem;
+}
+.eyebrow {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.eyebrow a { color: inherit; }
+h1, h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+h1 { font-size: clamp(1.9rem, 1.4rem + 2vw, 2.6rem); margin: 0 0 1rem; }
+h2 { font-size: clamp(1.5rem, 1.25rem + 1vw, 1.9rem); margin: 0 0 1rem; }
+.intro { margin: 0; color: var(--color-text-secondary); }
+
+nav.toc { padding: 2rem 0 1rem; }
+nav.toc h2 { font-size: 1.3rem; }
+nav.toc ol { margin: 0; padding-left: 1.75rem; }
+nav.toc li { margin: 0.35rem 0; }
+
+section.slide {
+  border-top: 1px solid var(--color-border);
+  padding: 2.5rem 0;
+}
+.slide-num {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.on-slide {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+}
+.label {
+  font-family: var(--font-ui);
+  font-weight: 700;
+}
+
+figure { margin: 0 0 2rem; }
+figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+/* Phone and tablet screenshots are tall; cap their width so the whole
+   screenshot fits in a reasonable scroll without cropping any of it. */
+figure.phone img { max-width: 24rem; margin: 0 auto; }
+figure.tablet img { max-width: 34rem; margin: 0 auto; }
+figcaption {
+  margin-top: 0.75rem;
+  color: var(--color-text-secondary);
+}
+.full-size {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+}
+
+.said { margin: 0; }
+
+footer.site {
+  border-top: 1px solid var(--color-border);
+  padding: 2rem 0 3rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+}
+footer.site p { margin: 0.4rem 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .skip-link, nav.toc, .full-size { display: none; }
+  section.slide { break-inside: avoid-page; }
+}
