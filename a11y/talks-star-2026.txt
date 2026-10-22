@@ -1,0 +1,240 @@
+# a11y-smoke transcript
+# target: public/talks/star-2026/index.html
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to the slides
+2. [banner] link: marsh.city
+3. / talks
+4. heading level 1: WhatCanHelp: Finding assistive technology, what it costs, and how to pay for it
+5. A talk for the Minnesota STAR Program Advisory Council, October 27, 2026. Jason Marsh, a personal project.
+6. link: Animated version (contains motion)
+7. . It needs JavaScript and is built for a large screen. This page has everything in it.
+8. [navigation "Slides"] heading level 2: Slides
+9. [list, 9 items] link: WhatCanHelp
+10. link: A free, current catalog of assistive technology.
+11. link: Not sure where to start? Match asks a few questions.
+12. link: Every state has its own page, starting with where to borrow.
+13. link: More than 4,500 products, updated nightly from vendors.
+14. link: Every product gets a plain-language summary.
+15. link: 135 terms, explained where they appear.
+16. link: Tagged by need, type, platform, age, complexity, price and funding.
+17. link: Questions?
+18. [main] heading level 2: Slide 1 of 9: WhatCanHelp
+19. On the slide: Finding assistive technology, what it costs, and how to pay for it. Jason Marsh, a personal project.
+20. link: https://whatcanhelp.com
+21. . Scan to follow along.
+22. What Jason said: Thanks for having me. I'm Jason Marsh, Director of Technology at the Lighthouse in Duluth. WhatCanHelp is a personal project, built on my own time. It came from seeing how hard it is for families, and the professionals helping them, to work out what exists, what it costs, and how to pay for it.
+23. heading level 2: Slide 2 of 9: A free, current catalog of assistive technology.
+24. On the slide:
+25. link: whatcanhelp.com
+26. image: In a desktop browser: WhatCanHelp home page with the wordmark, a search box, a 'describe your situation' option and buttons to browse by need.
+27. link: Full-size image: home page , slide 2 (PNG)
+28. What Jason said: It's a free catalog of assistive tech, pulled from vendors and kept current automatically. There are no ads, no affiliate links, and no accounts.
+29. heading level 2: Slide 3 of 9: Not sure where to start? Match asks a few questions.
+30. On the slide:
+31. link: whatcanhelp.com/intake
+32. image: On a phone: the first step of the Match form, with an example typed in: an 82-year-old dad who has a hard time following conversations at the dinner table and hearing the TV, isn't ready for hearing aids, and needs something simple to use at home.
+33. link: Full-size image: Match form , slide 3 (PNG)
+34. image: On a phone: the top Match result, the Response Personal Amplifier, with its photo, a one-line reason it fits, a Ready to use complexity rating, the price of $69.95 and a plain-language explanation.
+35. link: Full-size image: Match result , slide 3 (PNG)
+36. What Jason said: If you don't know where to start, Match asks a few questions about the situation. Here, someone's dad is 82, has trouble following conversations at dinner and hearing the TV, and isn't ready for hearing aids. Each result has a plain-language description, a complexity rating, and the price.
+37. heading level 2: Slide 4 of 9: Every state has its own page, starting with where to borrow.
+38. On the slide:
+39. link: whatcanhelp.com/funding
+40. and
+41. link: whatcanhelp.com/borrow
+42. image: On a phone: the Borrow before you buy page at Minnesota, showing the Minnesota STAR Program with its link to browse the loan inventory, and PACER Simon Technology Center as an independent lending library.
+43. link: Full-size image: Borrow before you buy , slide 4 (PNG)
+44. What Jason said: Every state has its own page: where to try, borrow and get help paying. Before anyone buys anything, it points them to their state's loan program. For Minnesota that's STAR, with its online loan library, plus PACER in Bloomington. The STAR entry was confirmed with the program this month.
+45. heading level 2: Slide 5 of 9: More than 4,500 products, updated nightly from vendors.
+46. On the slide:
+47. link: whatcanhelp.com/browse
+48. image: On a tablet: the catalog filtered to Vision and sight, showing 24 of 3,302 products as a grid of tiles. The first rows are the Daylight Smart Clip-on Lamp ($37.50, Ready to use), the Google Pixel 11 Pro (estimated $999 to $1,299, Setup with instructions), the Beecher Mirage 6x30 Binocular for Distance Viewing ($695.00, Setup with instructions) and the Complete Braille Sudoku Set ($49.95, Ready to use).
+49. link: Full-size image: catalog , slide 5 (PNG)
+50. What Jason said: Everything is browsable by need. This is Vision & sight, about 3,300 of them on its own. Every card shows the maker, the current price and how much setup it takes.
+51. heading level 2: Slide 6 of 9: Every product gets a plain-language summary.
+52. image: On a tablet: the product page for the Pocketalker 2.0 by Williams Sound, with its photo, the price of $250.00 and a Ready to use complexity rating.
+53. link: Full-size image: product page , slide 6 (PNG)
+54. image: On a phone: the Pocketalker's plain-language summary, labeled AI-generated from vendor-published content and dated, with glossary links for personal amplifier, hearing aids and telecoil.
+55. link: Full-size image: product summary , slide 6 (PNG)
+56. What Jason said: Vendor pages are written to sell. Each summary is generated from the vendor's own published content and rewritten in plain language: what it is, who it helps, and how it's used. It's labeled AI-generated and dated, and technical terms like telecoil link to the glossary.
+57. heading level 2: Slide 7 of 9: 135 terms, explained where they appear.
+58. image: On a tablet: the Glossary of Assistive Technology, with plain-language definitions for 135 terms, a filter box, buttons for each topic group, and the first Communication and AAC terms with short definitions.
+59. link: Full-size image: glossary , slide 7 (PNG)
+60. image: On a phone: the Pocketalker product page with the glossary popover for telecoil open, explaining it as a small wire coil inside a hearing aid or cochlear implant that picks up audio from hearing loops, with a link to the full glossary.
+61. link: Full-size image: glossary popover , slide 7 (PNG)
+62. What Jason said: Jargon is its own barrier. The glossary has 135 terms in 13 groups, from AAC to funding and policy. On product pages, terms like telecoil are underlined, and tapping one explains it right there, without leaving the page.
+63. heading level 2: Slide 8 of 9: Tagged by need, type, platform, age, complexity, price and funding.
+64. image: On a tablet: the Pocketalker's quick facts. Type: assistive listening systems. Addresses: hearing. Platform: dedicated device. Age range: all ages. Complexity: ready to use. Price: $250.00. Funding: AT Act lending, out of pocket, vocational rehab.
+65. link: Full-size image: quick facts , slide 8 (PNG)
+66. image: Close-up of the Sources and fine print box: vendor facts sourced from LS&S, last checked October 21, 2026, and classification AI-generated from vendor content with high confidence, with a reminder to verify before clinical or funding use.
+67. link: Full-size image: sources and fine print , slide 8 (PNG)
+68. What Jason said: Each product is classified across the same dimensions professionals think in, so a search for a hearing need finds hearing products. The complexity rating says up front whether it's ready to use or needs setup with instructions. Every page says where its facts came from, when they were last checked, and how confident the classification is, with a reminder to verify before clinical or funding use. Corrections from people like you are how it gets better.
+69. heading level 2: Slide 9 of 9: Questions?
+70. On the slide:
+71. link: https://whatcanhelp.com
+72. and
+73. link: jason@marsh.city
+74. What Jason said: I'd love to hear what's missing or wrong, and I mean that. Email me anytime at
+75. link: jason@marsh.city
+76. . Happy to take questions.
+77. [contentinfo] WhatCanHelp:
+78. link: https://whatcanhelp.com
+79. Email:
+80. link: jason@marsh.city
+81. link: Back to the list of slides
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to the slides":
+  - /url: "#main"
+- banner:
+  - paragraph:
+    - link "marsh.city":
+      - /url: https://marsh.city/
+    - text: / talks
+  - 'heading "WhatCanHelp: Finding assistive technology, what it costs, and how to pay for it" [level=1]'
+  - paragraph: A talk for the Minnesota STAR Program Advisory Council, October 27, 2026. Jason Marsh, a personal project.
+  - paragraph:
+    - link "Animated version (contains motion)":
+      - /url: deck.html
+    - text: . It needs JavaScript and is built for a large screen. This page has everything in it.
+- navigation "Slides":
+  - heading "Slides" [level=2]
+  - list:
+    - listitem:
+      - link "WhatCanHelp":
+        - /url: "#slide-1"
+    - listitem:
+      - link "A free, current catalog of assistive technology.":
+        - /url: "#slide-2"
+    - listitem:
+      - link "Not sure where to start? Match asks a few questions.":
+        - /url: "#slide-3"
+    - listitem:
+      - link "Every state has its own page, starting with where to borrow.":
+        - /url: "#slide-4"
+    - listitem:
+      - link "More than 4,500 products, updated nightly from vendors.":
+        - /url: "#slide-5"
+    - listitem:
+      - link "Every product gets a plain-language summary.":
+        - /url: "#slide-6"
+    - listitem:
+      - link "135 terms, explained where they appear.":
+        - /url: "#slide-7"
+    - listitem:
+      - link "Tagged by need, type, platform, age, complexity, price and funding.":
+        - /url: "#slide-8"
+    - listitem:
+      - link "Questions?":
+        - /url: "#slide-9"
+- main:
+  - 'heading "Slide 1 of 9: WhatCanHelp" [level=2]': Slide 1 of 9 WhatCanHelp
+  - paragraph:
+    - text: "On the slide: Finding assistive technology, what it costs, and how to pay for it. Jason Marsh, a personal project."
+    - link "https://whatcanhelp.com":
+      - /url: https://whatcanhelp.com
+    - text: . Scan to follow along.
+  - paragraph: "What Jason said: Thanks for having me. I'm Jason Marsh, Director of Technology at the Lighthouse in Duluth. WhatCanHelp is a personal project, built on my own time. It came from seeing how hard it is for families, and the professionals helping them, to work out what exists, what it costs, and how to pay for it."
+  - 'heading "Slide 2 of 9: A free, current catalog of assistive technology." [level=2]': Slide 2 of 9 A free, current catalog of assistive technology.
+  - paragraph:
+    - text: "On the slide:"
+    - link "whatcanhelp.com":
+      - /url: https://whatcanhelp.com
+  - 'figure "Full-size image: home page , slide 2 (PNG)"':
+    - 'img "In a desktop browser: WhatCanHelp home page with the wordmark, a search box, a ''describe your situation'' option and buttons to browse by need."'
+    - 'link "Full-size image: home page , slide 2 (PNG)"':
+      - /url: images/02-home-desktop.png
+  - paragraph: "What Jason said: It's a free catalog of assistive tech, pulled from vendors and kept current automatically. There are no ads, no affiliate links, and no accounts."
+  - 'heading "Slide 3 of 9: Not sure where to start? Match asks a few questions." [level=2]': Slide 3 of 9 Not sure where to start? Match asks a few questions.
+  - paragraph:
+    - text: "On the slide:"
+    - link "whatcanhelp.com/intake":
+      - /url: https://whatcanhelp.com/intake
+  - 'figure "Full-size image: Match form , slide 3 (PNG)"':
+    - 'img "On a phone: the first step of the Match form, with an example typed in: an 82-year-old dad who has a hard time following conversations at the dinner table and hearing the TV, isn''t ready for hearing aids, and needs something simple to use at home."'
+    - 'link "Full-size image: Match form , slide 3 (PNG)"':
+      - /url: images/03-match-form-iphone.png
+  - 'figure "Full-size image: Match result , slide 3 (PNG)"':
+    - 'img "On a phone: the top Match result, the Response Personal Amplifier, with its photo, a one-line reason it fits, a Ready to use complexity rating, the price of $69.95 and a plain-language explanation."'
+    - 'link "Full-size image: Match result , slide 3 (PNG)"':
+      - /url: images/03-match-result-iphone.png
+  - paragraph: "What Jason said: If you don't know where to start, Match asks a few questions about the situation. Here, someone's dad is 82, has trouble following conversations at dinner and hearing the TV, and isn't ready for hearing aids. Each result has a plain-language description, a complexity rating, and the price."
+  - 'heading "Slide 4 of 9: Every state has its own page, starting with where to borrow." [level=2]': Slide 4 of 9 Every state has its own page, starting with where to borrow.
+  - paragraph:
+    - text: "On the slide:"
+    - link "whatcanhelp.com/funding":
+      - /url: https://whatcanhelp.com/funding
+    - text: and
+    - link "whatcanhelp.com/borrow":
+      - /url: https://whatcanhelp.com/borrow
+  - 'figure "Full-size image: Borrow before you buy , slide 4 (PNG)"':
+    - 'img "On a phone: the Borrow before you buy page at Minnesota, showing the Minnesota STAR Program with its link to browse the loan inventory, and PACER Simon Technology Center as an independent lending library."'
+    - 'link "Full-size image: Borrow before you buy , slide 4 (PNG)"':
+      - /url: images/05-borrow-iphone.png
+  - paragraph: "What Jason said: Every state has its own page: where to try, borrow and get help paying. Before anyone buys anything, it points them to their state's loan program. For Minnesota that's STAR, with its online loan library, plus PACER in Bloomington. The STAR entry was confirmed with the program this month."
+  - 'heading "Slide 5 of 9: More than 4,500 products, updated nightly from vendors." [level=2]': Slide 5 of 9 More than 4,500 products, updated nightly from vendors.
+  - paragraph:
+    - text: "On the slide:"
+    - link "whatcanhelp.com/browse":
+      - /url: https://whatcanhelp.com/browse
+  - 'figure "Full-size image: catalog , slide 5 (PNG)"':
+    - 'img "On a tablet: the catalog filtered to Vision and sight, showing 24 of 3,302 products as a grid of tiles. The first rows are the Daylight Smart Clip-on Lamp ($37.50, Ready to use), the Google Pixel 11 Pro (estimated $999 to $1,299, Setup with instructions), the Beecher Mirage 6x30 Binocular for Distance Viewing ($695.00, Setup with instructions) and the Complete Braille Sudoku Set ($49.95, Ready to use)."'
+    - 'link "Full-size image: catalog , slide 5 (PNG)"':
+      - /url: images/06-catalog-grid-ipad.png
+  - paragraph: "What Jason said: Everything is browsable by need. This is Vision & sight, about 3,300 of them on its own. Every card shows the maker, the current price and how much setup it takes."
+  - 'heading "Slide 6 of 9: Every product gets a plain-language summary." [level=2]': Slide 6 of 9 Every product gets a plain-language summary.
+  - 'figure "Full-size image: product page , slide 6 (PNG)"':
+    - 'img "On a tablet: the product page for the Pocketalker 2.0 by Williams Sound, with its photo, the price of $250.00 and a Ready to use complexity rating."'
+    - 'link "Full-size image: product page , slide 6 (PNG)"':
+      - /url: images/07-product-ipad.png
+  - 'figure "Full-size image: product summary , slide 6 (PNG)"':
+    - 'img "On a phone: the Pocketalker''s plain-language summary, labeled AI-generated from vendor-published content and dated, with glossary links for personal amplifier, hearing aids and telecoil."'
+    - 'link "Full-size image: product summary , slide 6 (PNG)"':
+      - /url: images/08-product-summary-iphone.png
+  - paragraph: "What Jason said: Vendor pages are written to sell. Each summary is generated from the vendor's own published content and rewritten in plain language: what it is, who it helps, and how it's used. It's labeled AI-generated and dated, and technical terms like telecoil link to the glossary."
+  - 'heading "Slide 7 of 9: 135 terms, explained where they appear." [level=2]': Slide 7 of 9 135 terms, explained where they appear.
+  - 'figure "Full-size image: glossary , slide 7 (PNG)"':
+    - 'img "On a tablet: the Glossary of Assistive Technology, with plain-language definitions for 135 terms, a filter box, buttons for each topic group, and the first Communication and AAC terms with short definitions."'
+    - 'link "Full-size image: glossary , slide 7 (PNG)"':
+      - /url: images/12-glossary-ipad.png
+  - 'figure "Full-size image: glossary popover , slide 7 (PNG)"':
+    - 'img "On a phone: the Pocketalker product page with the glossary popover for telecoil open, explaining it as a small wire coil inside a hearing aid or cochlear implant that picks up audio from hearing loops, with a link to the full glossary."'
+    - 'link "Full-size image: glossary popover , slide 7 (PNG)"':
+      - /url: images/13-glossary-term-iphone.png
+  - paragraph: "What Jason said: Jargon is its own barrier. The glossary has 135 terms in 13 groups, from AAC to funding and policy. On product pages, terms like telecoil are underlined, and tapping one explains it right there, without leaving the page."
+  - 'heading "Slide 8 of 9: Tagged by need, type, platform, age, complexity, price and funding." [level=2]': Slide 8 of 9 Tagged by need, type, platform, age, complexity, price and funding.
+  - 'figure "Full-size image: quick facts , slide 8 (PNG)"':
+    - 'img "On a tablet: the Pocketalker''s quick facts. Type: assistive listening systems. Addresses: hearing. Platform: dedicated device. Age range: all ages. Complexity: ready to use. Price: $250.00. Funding: AT Act lending, out of pocket, vocational rehab."'
+    - 'link "Full-size image: quick facts , slide 8 (PNG)"':
+      - /url: images/10-product-facts-ipad.png
+  - 'figure "Full-size image: sources and fine print , slide 8 (PNG)"':
+    - 'img "Close-up of the Sources and fine print box: vendor facts sourced from LS&S, last checked October 21, 2026, and classification AI-generated from vendor content with high confidence, with a reminder to verify before clinical or funding use."'
+    - 'link "Full-size image: sources and fine print , slide 8 (PNG)"':
+      - /url: images/11-product-sources-ipad.png
+  - paragraph: "What Jason said: Each product is classified across the same dimensions professionals think in, so a search for a hearing need finds hearing products. The complexity rating says up front whether it's ready to use or needs setup with instructions. Every page says where its facts came from, when they were last checked, and how confident the classification is, with a reminder to verify before clinical or funding use. Corrections from people like you are how it gets better."
+  - 'heading "Slide 9 of 9: Questions?" [level=2]': Slide 9 of 9 Questions?
+  - paragraph:
+    - text: "On the slide:"
+    - link "https://whatcanhelp.com":
+      - /url: https://whatcanhelp.com
+    - text: and
+    - link "jason@marsh.city":
+      - /url: mailto:jason@marsh.city
+  - paragraph:
+    - text: "What Jason said: I'd love to hear what's missing or wrong, and I mean that. Email me anytime at"
+    - link "jason@marsh.city":
+      - /url: mailto:jason@marsh.city
+    - text: . Happy to take questions.
+- contentinfo:
+  - paragraph:
+    - text: "WhatCanHelp:"
+    - link "https://whatcanhelp.com":
+      - /url: https://whatcanhelp.com
+  - paragraph:
+    - text: "Email:"
+    - link "jason@marsh.city":
+      - /url: mailto:jason@marsh.city
+  - paragraph:
+    - link "Back to the list of slides":
+      - /url: "#toc-heading"
