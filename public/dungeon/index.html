@@ -74,6 +74,7 @@
             <li><button type="button" class="menu-item" data-screen="instructions">How to play</button></li>
             <li><button type="button" class="menu-item" data-screen="settings">Settings</button></li>
             <li><button type="button" class="menu-item" data-screen="credits">Credits</button></li>
+            <li id="debug-menu-item" hidden><button type="button" class="menu-item" data-screen="debug">Debug</button></li>
           </ul>
         </nav>
       </div>
@@ -188,6 +189,23 @@
       <button class="nes-btn is-success action">OK</button>
     </div>
 
+    <div id="debug" class="screen modal">
+      <h2 class="screen-title" tabindex="-1">Debug</h2>
+      <div class="nes-container is-rounded is-dark">
+        <button type="button" id="debug-fresh" class="nes-btn is-error">Start a fresh game</button>
+        <p class="setting-note">Wipes this device's journal, runs and levels. Settings, pairing, check answers, bug notes and today's floor stay.</p>
+        <div id="debug-fresh-confirm" role="group" aria-labelledby="debug-fresh-question" hidden>
+          <p id="debug-fresh-question">Start over from nothing on this device? Your journal, runs and levels go.</p>
+          <div class="dialog-buttons">
+            <button type="button" id="debug-fresh-yes" class="nes-btn is-error">Start over</button>
+            <button type="button" id="debug-fresh-no" class="nes-btn">Cancel</button>
+          </div>
+        </div>
+        <p id="debug-status" role="status" aria-live="polite"></p>
+      </div>
+      <button class="nes-btn is-success action">Back</button>
+    </div>
+
     <div id="credits" class="screen modal">
       <h2 class="screen-title" tabindex="-1">Credits</h2>
       <div class="nes-container is-rounded is-dark">
@@ -259,7 +277,7 @@
         <section>
           <img class="howto-icon" data-sprite="items:bandage_roll" alt="" width="32" height="32">
           <h3>Use things</h3>
-          <p>Pack opens what you carry. Tap anything there to use it, wear it or drop it. Journal shows what just happened, in case it happened fast, and what you've learned.</p>
+          <p><img class="inline-icon" data-sprite="icons:pack" alt="" width="16" height="16"> Pack opens what you carry. Tap anything there to use it, wear it or drop it. <img class="inline-icon" data-sprite="icons:journal" alt="" width="16" height="16"> Journal shows what just happened, in case it happened fast, and what you've learned.</p>
         </section>
         <section>
           <img class="howto-icon" data-sprite="items:healing_draught" alt="" width="32" height="32">
@@ -379,14 +397,14 @@
         <div id="disarm-bar" role="group" aria-label="Disarm" hidden></div>
         <div id="dock-row">
           <div id="dock-buttons">
-            <button type="button" id="leave-game" class="nes-container is-rounded is-dark dock-btn">Menu</button>
-            <button type="button" id="inventory-toggle" class="nes-container is-rounded is-dark dock-btn"
-                    aria-expanded="false" aria-controls="inventory">Pack</button>
-            <button type="button" id="journal-open" class="nes-container is-rounded is-dark dock-btn"
-                    aria-haspopup="dialog">Journal<span class="journal-count" hidden></span></button>
-            <button type="button" id="aim-open" class="nes-container is-rounded is-dark dock-btn" hidden>Aim</button>
-            <button type="button" id="dock-bugnote" class="nes-container is-rounded is-dark dock-btn bugnote-open"
-                    aria-haspopup="dialog">Bug note</button>
+            <button type="button" id="leave-game" class="nes-container is-rounded is-dark dock-btn dock-icon-btn"><img class="dock-icon" data-sprite="icons:menu" alt="" width="32" height="32"><span class="visually-hidden">Menu</span></button>
+            <button type="button" id="inventory-toggle" class="nes-container is-rounded is-dark dock-btn dock-icon-btn"
+                    aria-expanded="false" aria-controls="inventory"><img class="dock-icon" data-sprite="icons:pack" alt="" width="32" height="32"><span class="visually-hidden">Pack</span></button>
+            <button type="button" id="journal-open" class="nes-container is-rounded is-dark dock-btn dock-icon-btn"
+                    aria-haspopup="dialog"><img class="dock-icon" data-sprite="icons:journal" alt="" width="32" height="32"><span class="visually-hidden">Journal</span><span class="journal-count" hidden></span></button>
+            <button type="button" id="aim-open" class="nes-container is-rounded is-dark dock-btn dock-icon-btn" hidden><img class="dock-icon" data-sprite="icons:aim" alt="" width="32" height="32"><span class="visually-hidden">Aim</span></button>
+            <button type="button" id="dock-bugnote" class="nes-container is-rounded is-dark dock-btn dock-icon-btn bugnote-open"
+                    aria-haspopup="dialog"><img class="dock-icon" data-sprite="icons:bug" alt="" width="32" height="32"><span class="visually-hidden">Bug note</span></button>
           </div>
           <div id="arrows" class="nes-container is-rounded is-dark" hidden>
             <button type="button" id="dpad-fold" class="nes-container is-rounded is-dark" aria-label="Hide D-pad"><span aria-hidden="true">&lt;</span></button>

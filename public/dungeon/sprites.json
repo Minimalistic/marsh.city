@@ -89,9 +89,9 @@
     "walls.face": [["mmmmmmmm","mmmmmmmm","........","tttttttt","ttmmtttt","tttttttt","sttsmmts","ssssssss"]],
     "walls.top": [["........","........","........","........","........","........","........","........"]],
     "dressing.flagstone": [["...k....","...k....","...k....","kkkkkkkk","......k.","......k.","......k.","kkkkkkkk"]],
-    "dressing.planks": [["bbbkbbbb","bbbkbbbb","kkkkkkkk","bbbbbbkb","bbbbbbkb","bbbbbbkb","kkkkkkkk","bkbbbbbb"]],
+    "dressing.planks": [["kkk.kkkk","kskkkkkk","........","kkkkkk.k","kkkskkkk","........","k.kkkkkk","........"]],
     "dressing.cracked_stone": [["........",".k....s.","..k.....","..kk....","....k...",".....kk.","..s....k","........"]],
-    "dressing.mossy_stone": [["........",".o......",".qo.....","......q.","....k...","....o...","...o..o.",".k......"]],
+    "dressing.mossy_stone": [["........","........",".qo.....","......q.","....k...","....o...","...o..o.",".k......"]],
     "dressing.mossy_wall": [["mmmmmmmm","mmmmmmmm","........","totttttt","tqmmtttt","ottttqtt","sttsmmos","ssssssss"]],
     "dressing.cracked_brick": [["mmtmmmmm","mmmtmmmm","....t...","ttt.kttt","ttm.sttt","tttt.ttt","sttm.kts","ssssmsks"]],
     "dressing.cracked_brick_2": [["mmmmmmtm","mmmmmtmm",".....t..","tttt.ktt","ttm.kttt","tt.ktttt","s.ksmmts","smksssss"]],
@@ -119,7 +119,12 @@
     "scenery.crew_cast": [[".......g","..kkkk.w",".kkkkkkk",".k.ww.kk",".kwwwwkk","wkppppk.",".ssssss.",".p....p."]],
     "scenery.crew_rest": [["........","..kkkk..",".kkkkkk.",".k.ww.k.",".kwwwwk.","kkppppkk","wssssssw",".p....p."]],
     "floor": [["......k.",".k......",".....s..","...k....","s.......","......k.","..s.....","....k..."]],
-    "icons.journal_new": [[".mmmm...","m.w..m..","mw...m..","m....m..","m....m..",".mmmma..",".....aa.","......aa"]]
+    "icons.journal_new": [[".mmmm...","m.w..m..","mw...m..","m....m..","m....m..",".mmmma..",".....aa.","......aa"]],
+    "icons.menu": [["........",".wwwwww.","........",".wwwwww.","........",".wwwwww.","........","........"]],
+    "icons.pack": [["...bb...","..b..b..",".aaaaaa.",".aaaaaa.",".bbbbbb.",".ahhhha.",".ahhhha.",".aaaaaa."]],
+    "icons.journal": [[".bbbbbb.",".bccccbw",".bcggcbw",".bccccbw",".bccccbw",".bccccbw",".bbbbbbw","..wwwwww"]],
+    "icons.aim": [["...e....","...e....","........","ee.e.ee.","........","...e....","...e....","........"]],
+    "icons.bug": [["..w..w..","...ww...",".wllllw.","..llll..",".wllllw.","..llll..",".w.ll.w.","........"]]
   },
   "views": {
     "player": {"down":["..pppp..",".pppppp.",".pyhhyp.","..hhhh..",".bbhhpb.","hbbbpbbh","..pppp..","..p..p.."],"up":["..pppp..",".pppppp.",".pppppp.","..hhhh..",".bpbbbb.","hbbpbbbh","..pppp..","..p..p.."],"right":["..pppp..",".pppppp.",".pphyh..",".pphhh..","..pbbb..","..bpbh..","..pppp..","..p..p.."],"left":["..pppp..",".pppppp.","..hyhpp.","..hhhpp.","..bbbp..","..hbpb..","..pppp..","..p..p.."]},
