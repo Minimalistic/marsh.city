@@ -12,7 +12,7 @@
 
 // The line below is rewritten by `npm run sw-manifest` so this file's own bytes
 // change whenever the app does (see tools/sw-manifest.js for why).
-// shell version: a50d1124c1ce
+// shell version: dc924ab400f2
 
 importScripts("sw-assets.js");
 

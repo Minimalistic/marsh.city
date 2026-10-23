@@ -202,6 +202,8 @@
           </div>
         </div>
         <p id="debug-status" role="status" aria-live="polite"></p>
+        <p class="setting-note">Hear the stings (Sound on):</p>
+        <div id="debug-stings" class="dialog-buttons" role="group" aria-label="Moment stings"></div>
       </div>
       <button class="nes-btn is-success action">Back</button>
     </div>
@@ -371,6 +373,7 @@
       <div class="crt-depth crt-depth-strong" aria-hidden="true"></div>
       <div id="minimap" aria-hidden="true" hidden><canvas width="64" height="100"></canvas></div>
       <div id="message" class="nes-container is-rounded is-dark hide" aria-hidden="true"></div>
+      <div id="moment" class="nes-container is-rounded is-dark" aria-hidden="true" hidden></div>
       <div id="side-log" class="nes-container is-rounded is-dark" role="region" aria-label="Message log"></div>
 
       <div id="dock">
@@ -597,6 +600,7 @@
       </div>
     </dialog>
     <div id="notice-live" class="visually-hidden" role="status" aria-live="polite"></div>
+    <div id="moment-live" class="visually-hidden" role="alert"></div>
 
     <div id="crt-glass" popover="manual" aria-hidden="true"></div>
 
