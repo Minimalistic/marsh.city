@@ -134,10 +134,9 @@
     <div id="settings" class="screen modal">
       <h2 class="screen-title" tabindex="-1">Settings</h2>
       <div class="nes-container is-rounded is-dark">
-        <button type="button" id="sound-toggle" class="nes-btn setting-toggle"
-                role="switch" aria-checked="true">
+        <button type="button" id="sound-toggle" class="nes-btn setting-toggle">
           <span class="setting-label">Sound</span>
-          <span class="setting-state" aria-hidden="true">On</span>
+          <span class="setting-state" aria-hidden="true">Medium</span>
         </button>
         <p class="setting-note">Every sound also shows on screen, so playing muted loses nothing.</p>
         <button type="button" id="controls-toggle" class="nes-btn setting-toggle">
@@ -202,8 +201,8 @@
           </div>
         </div>
         <p id="debug-status" role="status" aria-live="polite"></p>
-        <p class="setting-note">Hear the stings (Sound on):</p>
-        <div id="debug-stings" class="dialog-buttons" role="group" aria-label="Moment stings"></div>
+        <p class="setting-note">Sound board (Sound on): every sound at its level in the mix.</p>
+        <div id="debug-sounds" role="group" aria-label="Sound board"></div>
       </div>
       <button class="nes-btn is-success action">Back</button>
     </div>
