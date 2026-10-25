@@ -189,26 +189,24 @@
     const next = all[index + 1]
     const nextSlide = next ? `Next → new slide: ${headingOf(next)}` : 'Last slide.'
     const showScript = scriptHeld
-    // Past lines stay, dimmed, for context; later ones stay hidden until their zoom.
+    // Only the current step's line: what to say now, nothing already said or still to come.
     // In cue mode, the step's script shows under its cue only while S is held.
-    $('notes').replaceChildren(...segs.slice(0, step + 1).flatMap((text, i) => {
-      const p = document.createElement('p')
-      const cue = cues[i]
-      p.textContent = cue || text || '(nothing to say here)'
-      p.className = (cue ? 'cue ' : '') + (i < step ? 'done' : 'now')
-      if (i !== step) return [p]
-      const out = [p]
-      if (cue && showScript) {
-        const script = document.createElement('p')
-        script.className = 'script'
-        script.textContent = text
-        out.push(script)
-      }
-      const press = document.createElement('p')
-      press.className = 'press'
-      press.textContent = i < steps ? `Next → zooms in (${i + 1} of ${steps})` : nextSlide
-      return [...out, press]
-    }))
+    const text = segs[step] ?? ''
+    const cue = cues[step]
+    const line = document.createElement('p')
+    line.textContent = cue || text || '(nothing to say here)'
+    line.className = (cue ? 'cue ' : '') + 'now'
+    const shown = [line]
+    if (cue && showScript) {
+      const script = document.createElement('p')
+      script.className = 'script'
+      script.textContent = text
+      shown.push(script)
+    }
+    const press = document.createElement('p')
+    press.className = 'press'
+    press.textContent = step < steps ? `Next → zooms in (${step + 1} of ${steps})` : nextSlide
+    $('notes').replaceChildren(...shown, press)
     if (editing && slideChanged) fillEditor(slide)
   }
 
