@@ -6,21 +6,33 @@
 <meta name="robots" content="noindex">
 <title>STAR talk: presenter view</title>
 <style>
-  :root { --bg: #1f1a14; --fg: #fbf8f1; --dim: #b9ad9c; --accent: #e08a5f; --panel: #2a241c; }
+  :root { --bg: #1f1a14; --fg: #fbf8f1; --dim: #b9ad9c; --faint: #7d7365; --accent: #e08a5f; --panel: #2a241c; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--fg); font: 18px/1.5 system-ui, sans-serif; }
   main { max-width: 1100px; margin: 0 auto; padding: 24px; display: grid; gap: 20px; }
   header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
   button { font: inherit; background: var(--panel); color: var(--fg); border: 1px solid var(--dim); border-radius: 8px; padding: 10px 16px; cursor: pointer; }
-  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
   #timer { font: 600 40px/1 ui-monospace, monospace; }
   #timer.over { color: var(--accent); }
-  #where { color: var(--dim); }
+  #where { color: var(--dim); margin: 0; }
   h1 { margin: 0; font-size: 34px; line-height: 1.2; }
   #cue { font-size: 40px; line-height: 1.25; font-weight: 600; color: var(--accent); margin: 0; }
-  #notes { font-size: 24px; line-height: 1.45; background: var(--panel); border-radius: 12px; padding: 20px 24px; margin: 0; }
+  #notes { background: var(--panel); border-radius: 12px; padding: 20px 24px; margin: 0; display: grid; gap: 12px; }
+  #notes p { margin: 0; font-size: 22px; line-height: 1.45; color: var(--faint); }
+  #notes p.now { font-size: 28px; color: var(--fg); }
+  #notes p.done { color: var(--faint); text-decoration: none; }
+  #notes .press { font-size: 18px; color: var(--accent); font-weight: 600; }
   #next { color: var(--dim); font-size: 20px; margin: 0; }
   .help { color: var(--dim); font-size: 15px; margin: 0; }
+  #editor { display: grid; gap: 12px; background: var(--panel); border: 1px dashed var(--dim); border-radius: 12px; padding: 20px 24px; }
+  #editor[hidden] { display: none; }
+  #editor label { display: grid; gap: 4px; color: var(--dim); font-size: 15px; }
+  #editor textarea, #editor input { font: inherit; font-size: 18px; color: var(--fg); background: var(--bg); border: 1px solid var(--faint); border-radius: 6px; padding: 8px 10px; width: 100%; }
+  #editor textarea { min-height: 4.5em; resize: vertical; }
+  #editor .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  #export { min-height: 8em; font: 14px/1.4 ui-monospace, monospace; }
 </style>
 </head>
 <body>
@@ -33,18 +45,35 @@
     </span>
     <span id="timer" aria-live="off">0:00</span>
     <button id="reset" type="button">Reset timer</button>
+    <button id="edit" type="button" aria-pressed="false">Edit notes</button>
   </header>
   <p id="where">Open the deck, then share only that window in Teams or Zoom.</p>
   <h1 id="title"></h1>
   <p id="cue"></p>
-  <p id="notes"></p>
+  <div id="notes"></div>
   <p id="next"></p>
-  <p class="help">Keys here drive the deck: → or Space next, ← back. Slides with zooms take 2–3 presses; the notes change when the slide does. Target about 7 minutes; the timer turns orange at 8.</p>
+  <section id="editor" hidden aria-label="Edit this slide's notes">
+    <p class="help">Edits stay in this browser and show here right away. They don't change the deck. When you're happy, copy them and paste them to Claude to make them permanent.</p>
+    <label>Cue <input id="edit-cue" type="text"></label>
+    <div id="edit-segments"></div>
+    <div class="row">
+      <button id="copy" type="button">Copy edits for Claude</button>
+      <button id="clear" type="button">Undo edits on this slide</button>
+      <span id="edit-status" class="help" aria-live="polite"></span>
+    </div>
+    <textarea id="export" readonly hidden aria-label="Edits to paste to Claude"></textarea>
+  </section>
+  <p class="help">Keys here drive the deck: → or Space next, ← back. The bright line is what to say now; the orange line under it says what Next will do. Target about 7 minutes; the timer turns orange at 8.</p>
 </main>
 <script type="module">
-  // The deck records its slide in location.hash (#1, #2, ...). Same origin, so
-  // this window can read the hash and the slides' notes straight from the deck.
+  // The deck records its slide in location.hash (#1, #2, ...) and its zoom step in
+  // the slide's data-step. Same origin, so this window can read both, and the
+  // slides' notes, straight from the deck.
   const TARGET_SECONDS = 8 * 60
+  // Notes are split per zoom step with " | ": segment 0 is said on the overview,
+  // segment N while zoom step N shows.
+  const SEGMENT_SEPARATOR = ' | '
+  const EDITS_KEY = 'star-presenter-edits'
   // One-line cues per slide, keyed by the deck's data-label. Presenter-only;
   // the full notes below stay the source of truth.
   const CUES = {
@@ -61,11 +90,20 @@
   const $ = id => document.getElementById(id)
   let deck = null
   let startedAt = null
-  let shownIndex = -1
+  let shownKey = ''
+  let editing = false
+
+  function loadEdits() {
+    try { return JSON.parse(localStorage.getItem(EDITS_KEY)) || {} } catch { return {} }
+  }
+  function saveEdits(edits) {
+    try { localStorage.setItem(EDITS_KEY, JSON.stringify(edits)) } catch (err) { console.error('[presenter] could not save edits', err); $('edit-status').textContent = 'Could not save edits in this browser.' }
+  }
+  let edits = loadEdits()
 
   $('open').addEventListener('click', () => {
     deck = window.open('deck.html', 'star-deck', 'popup,width=1280,height=760')
-    shownIndex = -1
+    shownKey = ''
     // Leave focus on the page, not the button, so Space can't reopen (and reload) the deck.
     document.activeElement.blur()
   })
@@ -74,22 +112,127 @@
   function slides() {
     try { return [...deck.document.querySelectorAll('deck-stage > section')] } catch { return [] }
   }
-
-  function render() {
-    const all = slides()
-    if (!all.length) return
-    const index = Math.max(0, (parseInt((deck.location.hash || '#1').slice(1), 10) || 1) - 1)
-    if (index === shownIndex) return
-    shownIndex = index
-    if (index > 0 && startedAt === null) startedAt = Date.now()
-    const slide = all[index]
-    $('where').textContent = `Slide ${index + 1} of ${all.length}`
-    $('title').textContent = slide.querySelector('h1, h2')?.textContent.trim() || slide.dataset.label || ''
-    $('cue').textContent = CUES[slide.dataset.label] || ''
-    $('notes').textContent = slide.dataset.speakerNotes || '(no notes)'
-    const next = all[index + 1]
-    $('next').textContent = next ? `Next: ${next.querySelector('h1, h2')?.textContent.trim() || next.dataset.label}` : 'Last slide.'
+  function headingOf(slide) {
+    return slide.querySelector('h1, h2')?.textContent.trim() || slide.dataset.label || ''
   }
+  function stepCount(slide) {
+    return slide.dataset.steps ? slide.dataset.steps.split(';').length : 0
+  }
+  // The deck's notes, or this browser's edits of them, padded to one segment per state.
+  function segmentsFor(slide) {
+    const label = slide.dataset.label
+    const base = (slide.dataset.speakerNotes || '').split(SEGMENT_SEPARATOR)
+    const segs = edits[label]?.segments || base
+    const want = stepCount(slide) + 1
+    if (segs.length !== want) console.error(`[presenter] "${label}" has ${segs.length} note segments for ${want} states`)
+    return Array.from({ length: want }, (_, i) => segs[i] ?? '')
+  }
+  function cueFor(slide) {
+    const label = slide.dataset.label
+    return edits[label]?.cue ?? CUES[label] ?? ''
+  }
+
+  function current() {
+    const all = slides()
+    if (!all.length) return null
+    const index = Math.min(all.length - 1, Math.max(0, (parseInt((deck.location.hash || '#1').slice(1), 10) || 1) - 1))
+    const slide = all[index]
+    const step = parseInt(slide.dataset.step || '0', 10) || 0
+    return { all, index, slide, step }
+  }
+
+  function render(force = false) {
+    const at = current()
+    if (!at) return
+    const { all, index, slide, step } = at
+    const key = `${index}.${step}`
+    if (key === shownKey && !force) return
+    const slideChanged = shownKey.split('.')[0] !== String(index)
+    shownKey = key
+    if ((index > 0 || step > 0) && startedAt === null) startedAt = Date.now()
+
+    const steps = stepCount(slide)
+    $('where').textContent = `Slide ${index + 1} of ${all.length}` + (steps ? ` · ${step === 0 ? 'overview' : `zoom ${step} of ${steps}`}` : '')
+    $('title').textContent = headingOf(slide)
+    $('cue').textContent = cueFor(slide)
+
+    const segs = segmentsFor(slide)
+    const next = all[index + 1]
+    const nextSlide = next ? `Next → new slide: ${headingOf(next)}` : 'Last slide.'
+    $('notes').replaceChildren(...segs.flatMap((text, i) => {
+      const p = document.createElement('p')
+      p.textContent = text || '(nothing to say here)'
+      p.className = i < step ? 'done' : i === step ? 'now' : 'later'
+      if (i !== step) return [p]
+      const press = document.createElement('p')
+      press.className = 'press'
+      press.textContent = i < steps ? `Next → zooms in (${i + 1} of ${steps})` : nextSlide
+      return [p, press]
+    }))
+    $('next').textContent = next ? `Then: ${headingOf(next)}` : ''
+    if (editing && slideChanged) fillEditor(slide)
+  }
+
+  // Editor: edits this slide's cue and per-step notes, kept in localStorage.
+  function fillEditor(slide) {
+    const label = slide.dataset.label
+    $('edit-cue').value = cueFor(slide)
+    $('edit-segments').replaceChildren(...segmentsFor(slide).map((text, i) => {
+      const wrap = document.createElement('label')
+      wrap.append(i === 0 ? 'Overview (before any zoom)' : `Zoom ${i}`)
+      const area = document.createElement('textarea')
+      area.value = text
+      area.dataset.index = i
+      wrap.append(area)
+      return wrap
+    }))
+    $('editor').dataset.label = label
+    $('edit-status').textContent = edits[label] ? 'This slide has edits.' : ''
+  }
+  function saveFromEditor() {
+    const label = $('editor').dataset.label
+    if (!label) return
+    edits[label] = {
+      cue: $('edit-cue').value,
+      segments: [...$('edit-segments').querySelectorAll('textarea')].map(a => a.value.trim()),
+    }
+    saveEdits(edits)
+    $('edit-status').textContent = 'Saved in this browser.'
+    render(true)
+  }
+  $('editor').addEventListener('input', e => { if (e.target.id !== 'export') saveFromEditor() })
+  $('edit').addEventListener('click', e => {
+    editing = !editing
+    e.currentTarget.setAttribute('aria-pressed', String(editing))
+    $('editor').hidden = !editing
+    const at = deck && !deck.closed ? current() : null
+    if (editing && at) fillEditor(at.slide)
+    else if (editing) $('edit-status').textContent = 'Open the deck window first.'
+  })
+  $('clear').addEventListener('click', () => {
+    const label = $('editor').dataset.label
+    if (!label) return
+    delete edits[label]
+    saveEdits(edits)
+    const at = current()
+    if (at) { fillEditor(at.slide); render(true) }
+    $('edit-status').textContent = 'Back to the deck’s notes.'
+  })
+  $('copy').addEventListener('click', async () => {
+    const changed = Object.keys(edits)
+    if (!changed.length) { $('edit-status').textContent = 'No edits yet.'; return }
+    const text = 'STAR deck presenter edits (cue + notes per zoom step, keyed by slide label):\n' + JSON.stringify(edits, null, 2)
+    $('export').value = text
+    $('export').hidden = false
+    try {
+      await navigator.clipboard.writeText(text)
+      $('edit-status').textContent = `Copied edits for ${changed.length} slide${changed.length === 1 ? '' : 's'}.`
+    } catch (err) {
+      console.error('[presenter] clipboard write failed', err)
+      $('export').select()
+      $('edit-status').textContent = 'Couldn’t copy automatically. The text below is selected; press ⌘C.'
+    }
+  })
 
   function tick() {
     if (deck && !deck.closed) render()
@@ -111,6 +254,8 @@
     stage._advance(dir, 'keyboard')
   }
   window.addEventListener('keydown', e => {
+    // Typing in the editor shouldn't move the slides.
+    if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return
     const dir = DIRECTION[e.key]
     if (!dir || !deck || deck.closed) return
     e.preventDefault()
