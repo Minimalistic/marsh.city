@@ -26,6 +26,10 @@
 <main>
   <header>
     <button id="open" type="button">Open the deck window</button>
+    <span>
+      <button id="back" type="button">← Back</button>
+      <button id="next-btn" type="button">Next →</button>
+    </span>
     <span id="timer" aria-live="off">0:00</span>
     <button id="reset" type="button">Reset timer</button>
   </header>
@@ -84,14 +88,21 @@
   // Drive the deck from here so this window can keep focus. _advance is the
   // deck's single advance path, which the zoom steps hook, so steps play first.
   const DIRECTION = { ArrowRight: 1, ArrowDown: 1, PageDown: 1, ' ': 1, ArrowLeft: -1, ArrowUp: -1, PageUp: -1 }
+  function advance(dir) {
+    if (!deck || deck.closed) return
+    const stage = deck.document.querySelector('deck-stage')
+    if (typeof stage?._advance !== 'function') { console.error('[presenter] deck-stage._advance missing; click the deck window and use its keys'); return }
+    stage._advance(dir, 'keyboard')
+  }
   window.addEventListener('keydown', e => {
     const dir = DIRECTION[e.key]
     if (!dir || !deck || deck.closed) return
     e.preventDefault()
-    const stage = deck.document.querySelector('deck-stage')
-    if (typeof stage?._advance !== 'function') { console.error('[presenter] deck-stage._advance missing; click the deck window and use its keys'); return }
-    stage._advance(dir, 'keyboard')
+    advance(dir)
   })
+  // Blur after a click so a later Space press can't also activate the button.
+  $('back').addEventListener('click', e => { advance(-1); e.currentTarget.blur() })
+  $('next-btn').addEventListener('click', e => { advance(1); e.currentTarget.blur() })
 </script>
 </body>
 </html>
