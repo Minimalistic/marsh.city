@@ -18,6 +18,9 @@ You pick a Warden or a Lamplighter and head down. Tap a tile to walk there, tap 
   background:rgba(0,0,0,.6); font-size:1.05rem; transition:background .2s; }
 .dungeon-start:hover span, .dungeon-start:focus-visible span { background:rgba(0,0,0,.8); }
 .dungeon-start:focus-visible { outline:3px solid var(--leaf, #fff); outline-offset:-6px; }
+/* the way out of the frame, to the page a phone can add to its home screen */
+.dungeon-open { text-align:center; margin:0 0 1rem; }
+.dungeon-open .live-demo-btn { margin:0; padding:.85em 1.5em; min-height:44px; box-sizing:border-box; }
 .dungeon-shots { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1rem; align-items:start; margin:1.5rem 0; }
 .dungeon-shots img { width:100%; height:auto; border-radius:var(--radius); display:block; }
 @media (max-width: 600px) { .dungeon-shots { grid-template-columns:1fr; } }
@@ -40,7 +43,9 @@ document.querySelector('.dungeon-start')?.addEventListener('click', (e) => {
 });
 </script>
 
-[Open DailyDungeon full screen](/dungeon/). It's made for phones: open it there and use Add to Home Screen, and it plays like an app, offline too, with your saved game kept safer than in a browser tab.
+<p class="dungeon-open"><a class="live-demo-btn" href="/dungeon/">Open DailyDungeon full screen</a></p>
+
+It's made for phones: open it full screen and use Add to Home Screen, and it plays like an app, offline too, with your saved game kept safer than in a browser tab.
 
 ## The daily version
 
