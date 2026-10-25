@@ -80,6 +80,8 @@
     "cover.water": [["qqqqqqqq","qyyqqqqq","yqqyqqqq","qqqqqyyq","qqqqyqqy","qqqqqqqq","qqyyqqqq","qyqqyqqq"]],
     "cover.straw": [["........",".a...g..","..a.a..a","g..aa.a.",".a.ga.a.","..a..ag.",".g.a...a","........"]],
     "cover.scorch": [["........","..k..k..",".kskkk..","..kkskk.",".kkskk..","..k.kk..","....k...","........"]],
+    "cover.reeds": [["..p...p.","..p.l.p.",".lo.o.o.",".o.lo.ol","lo.o.lo.",".ooo.o.o","oo.ooooo","oooooooo"]],
+    "cover.hay": [["........","...ag...","..gaagh.",".aghaaga","gaaghaah","ahagaaga","aaahagaa",".a.a..a."]],
     "props.chest.used": [[".hhhhhh.","bbbhhbbb","bppppppb","bppppppb","bppppppb","baappaab","bbbbbbbb","........"]],
     "props.locked_door.used": [["tttttttt","tb.....t","tk.....t","tb.....t","tb.....t","tk.....t","tb.....t","tb.....t"]],
     "props.urn.used": [["........","........","......a.",".b......","..bb....",".k...b..","..b...k.","........"]],
