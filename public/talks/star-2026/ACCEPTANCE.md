@@ -1,6 +1,6 @@
 # STAR presenter practice run
 
-Status: approved
+Status: shipped
 
 Intent: A practice mode in the STAR presenter that times a full run of the deck by slide and zoom step, optionally records audio on the device, and produces something to paste to Claude to check the timing against the script.
 

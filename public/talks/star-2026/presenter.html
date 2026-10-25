@@ -22,6 +22,8 @@
   #notes p { margin: 0; font-size: 22px; line-height: 1.45; color: var(--faint); }
   #notes p.now { font-size: 28px; color: var(--fg); }
   #notes .press { font-size: 18px; color: var(--accent); font-weight: 600; }
+  #notes p.cue.now { font-size: 40px; line-height: 1.25; font-weight: 600; }
+  #notes p.script { font-size: 22px; color: var(--dim); border-left: 3px solid var(--faint); padding-left: 14px; }
   .help { color: var(--dim); font-size: 15px; margin: 0; }
   #editor { display: grid; gap: 12px; background: var(--panel); border: 1px dashed var(--dim); border-radius: 12px; padding: 20px 24px; }
   #editor[hidden] { display: none; }
@@ -30,6 +32,12 @@
   #editor textarea { min-height: 3em; resize: vertical; overflow: hidden; line-height: 1.45; }
   #editor .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
   #export { min-height: 8em; font: 14px/1.4 ui-monospace, monospace; }
+  #practice { display: grid; gap: 12px; border-top: 1px solid var(--faint); padding-top: 16px; }
+  #practice .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  #practice label { color: var(--dim); }
+  #practice a { color: var(--accent); }
+  #practice-report[hidden], #practice-save[hidden] { display: none; }
+  #practice-export { width: 100%; min-height: 16em; font: 14px/1.4 ui-monospace, monospace; color: var(--fg); background: var(--panel); border: 1px solid var(--faint); border-radius: 6px; padding: 8px 10px; }
 </style>
 </head>
 <body>
@@ -42,6 +50,7 @@
     </span>
     <span id="timer" aria-live="off">0:00</span>
     <button id="reset" type="button">Reset timer</button>
+    <button id="cue-mode" type="button" aria-pressed="false">Cue mode</button>
     <button id="edit" type="button" aria-pressed="false">Edit notes</button>
   </header>
   <p id="where">Open the deck, then share only that window in Teams or Zoom.</p>
@@ -57,9 +66,25 @@
     </div>
     <textarea id="export" readonly hidden aria-label="Edits to paste to Claude"></textarea>
   </section>
-  <p class="help">Keys here drive the deck: → or Space next, ← back. The bright line is what to say now; the orange line under it says what Next will do. Lines for later zooms stay hidden until you get there. Target about 7 minutes; the timer turns orange at 8.</p>
+  <p class="help">Keys here drive the deck: → or Space next, ← back. The bright line is the script for this step. Cue mode swaps it for a few words to talk from, with the opening and closing still in full; hold S there to peek at the script. The orange line says what Next will do. Target about 7 minutes; the timer turns orange at 8.</p>
+  <section id="practice" aria-label="Practice run">
+    <div class="row">
+      <button id="practice-toggle" type="button" aria-pressed="false">Start practice run</button>
+      <label><input id="practice-audio" type="checkbox" checked> Record audio</label>
+      <span id="practice-status" class="help" aria-live="polite"></span>
+    </div>
+    <p class="help">Times every slide and zoom from the start of the run. Audio stays on this computer; at the end you can save it as a file.</p>
+    <div id="practice-report" hidden>
+      <div class="row">
+        <button id="practice-copy" type="button">Copy run for Claude</button>
+        <a id="practice-save" hidden>Save recording</a>
+      </div>
+      <textarea id="practice-export" readonly aria-label="Practice run report"></textarea>
+    </div>
+  </section>
 </main>
 <script type="module">
+  import { createPractice, wordCount } from './practice.js'
   // The deck records its slide in location.hash (#1, #2, ...) and its zoom step in
   // the slide's data-step. Same origin, so this window can read both, and the
   // slides' notes, straight from the deck.
@@ -69,11 +94,29 @@
   const SEGMENT_SEPARATOR = ' | '
   // Versioned: bump when edits are folded into the deck, so old local edits stop masking it.
   const EDITS_KEY = 'star-presenter-edits-v3'
+  // A few words per zoom step to talk from, keyed by the deck's data-label, one per
+  // state like the notes. The full notes stay as the script behind S.
+  const CUES = {
+    'Home page': ['Free AT catalog · from vendors everywhere', 'Search: a product, or what you need', 'Browse by need · no ads, affiliate links or accounts'],
+    'Match': ['Don’t know where to start? → Match', 'Dad, 82 · dinner + TV · not ready for hearing aids → amplifier', 'Plain language · complexity · price'],
+    'Borrow first: STAR': ['Point to local resources · borrow before buying', 'Every state + territory · MN: STAR, PACER, lending libraries', 'Funding: a where-to-start page per state'],
+    'Catalog': ['The catalog · browse by need', 'Mobility & movement · about 500', 'Everyday things · maker, price, setup, last checked'],
+    'Product summary': ['Vendor pages sell → neutral, plain-language summary', 'BIGmack, AbleNet', 'Inform, not sell · written by AI, labeled', '“switch” underlined → glossary'],
+    'Glossary': ['Glossary · 135 terms, 13 groups', 'AAC, access methods … funding, policy', 'Tap a term → explained in place'],
+    'Classification': ['Tagged the way professionals think', 'Complexity up front · funding avenues', 'Sources · last checked · verify · Report issue'],
+  }
+  // Said as written: the opening and the closing ask. These show the full script, no cue.
+  const VERBATIM = new Set(['Title', 'Questions'])
   const $ = id => document.getElementById(id)
   let deck = null
   let startedAt = null
   let shownKey = ''
   let editing = false
+  // Script by default; cue mode is remembered in this browser between visits.
+  const CUE_MODE_KEY = 'star-presenter-cue-mode'
+  let cueMode = false
+  try { cueMode = localStorage.getItem(CUE_MODE_KEY) === 'on' } catch {}
+  let scriptHeld = false
 
   function loadEdits() {
     try { return JSON.parse(localStorage.getItem(EDITS_KEY)) || {} } catch { return {} }
@@ -109,6 +152,15 @@
     if (segs.length !== want) console.error(`[presenter] "${label}" has ${segs.length} note segments for ${want} states`)
     return Array.from({ length: want }, (_, i) => segs[i] ?? '')
   }
+  // Cues, or this browser's edits of them; empty for slides read as written.
+  function cuesFor(slide) {
+    const label = slide.dataset.label
+    if (VERBATIM.has(label)) return []
+    const cues = edits[label]?.cues || CUES[label] || []
+    const want = stepCount(slide) + 1
+    if (cues.length !== want) console.error(`[presenter] "${label}" has ${cues.length} cues for ${want} states`)
+    return Array.from({ length: want }, (_, i) => cues[i] ?? '')
+  }
   function current() {
     const all = slides()
     if (!all.length) return null
@@ -133,18 +185,29 @@
     $('title').textContent = headingOf(slide)
 
     const segs = segmentsFor(slide)
+    const cues = cueMode ? cuesFor(slide) : []
     const next = all[index + 1]
     const nextSlide = next ? `Next → new slide: ${headingOf(next)}` : 'Last slide.'
+    const showScript = scriptHeld
     // Past lines stay, dimmed, for context; later ones stay hidden until their zoom.
+    // In cue mode, the step's script shows under its cue only while S is held.
     $('notes').replaceChildren(...segs.slice(0, step + 1).flatMap((text, i) => {
       const p = document.createElement('p')
-      p.textContent = text || '(nothing to say here)'
-      p.className = i < step ? 'done' : 'now'
+      const cue = cues[i]
+      p.textContent = cue || text || '(nothing to say here)'
+      p.className = (cue ? 'cue ' : '') + (i < step ? 'done' : 'now')
       if (i !== step) return [p]
+      const out = [p]
+      if (cue && showScript) {
+        const script = document.createElement('p')
+        script.className = 'script'
+        script.textContent = text
+        out.push(script)
+      }
       const press = document.createElement('p')
       press.className = 'press'
       press.textContent = i < steps ? `Next → zooms in (${i + 1} of ${steps})` : nextSlide
-      return [p, press]
+      return [...out, press]
     }))
     if (editing && slideChanged) fillEditor(slide)
   }
@@ -152,15 +215,28 @@
   // Editor: edits this slide's per-step notes, kept in localStorage.
   function fillEditor(slide) {
     const label = slide.dataset.label
-    $('edit-segments').replaceChildren(...segmentsFor(slide).map((text, i) => {
+    const cues = cuesFor(slide)
+    $('edit-segments').replaceChildren(...segmentsFor(slide).flatMap((text, i) => {
+      const name = i === 0 ? 'Overview (before any zoom)' : `Zoom ${i}`
+      const fields = []
+      if (cues.length) {
+        const cueLabel = document.createElement('label')
+        cueLabel.append(`${name}: cue`)
+        const input = document.createElement('input')
+        input.type = 'text'
+        input.value = cues[i]
+        input.dataset.cue = i
+        cueLabel.append(input)
+        fields.push(cueLabel)
+      }
       const wrap = document.createElement('label')
-      wrap.append(i === 0 ? 'Overview (before any zoom)' : `Zoom ${i}`)
+      wrap.append(cues.length ? `${name}: script` : name)
       const area = document.createElement('textarea')
       area.value = text
       area.dataset.index = i
       wrap.append(area)
       requestAnimationFrame(() => fitHeight(area))
-      return wrap
+      return [...fields, wrap]
     }))
     $('editor').dataset.label = label
     $('edit-status').textContent = edits[label] ? 'This slide has edits.' : ''
@@ -173,8 +249,10 @@
   function saveFromEditor() {
     const label = $('editor').dataset.label
     if (!label) return
+    const cueInputs = [...$('edit-segments').querySelectorAll('input[data-cue]')]
     edits[label] = {
       segments: [...$('edit-segments').querySelectorAll('textarea')].map(a => a.value.trim()),
+      ...(cueInputs.length && { cues: cueInputs.map(input => input.value.trim()) }),
     }
     saveEdits(edits)
     $('edit-status').textContent = 'Saved in this browser.'
@@ -205,7 +283,7 @@
   $('copy').addEventListener('click', async () => {
     const changed = Object.keys(edits)
     if (!changed.length) { $('edit-status').textContent = 'No edits yet.'; return }
-    const text = 'STAR deck presenter edits (notes per zoom step, keyed by slide label):\n' + JSON.stringify(edits, null, 2)
+    const text = 'STAR deck presenter edits (cues and script per zoom step, keyed by slide label):\n' + JSON.stringify(edits, null, 2)
     $('export').value = text
     $('export').hidden = false
     try {
@@ -218,8 +296,20 @@
     }
   })
 
+  const practice = createPractice({
+    deckOpen: () => !!deck && !deck.closed,
+    getState: () => {
+      const at = current()
+      if (!at) return null
+      const { index, slide, step } = at
+      return { slide: index + 1, step, steps: stepCount(slide), label: slide.dataset.label, words: wordCount(segmentsFor(slide)[step] || '') }
+    },
+    resetTimer: now => { startedAt = now; $('timer').classList.remove('over') },
+  })
+
   function tick() {
     if (deck && !deck.closed) render()
+    practice.observe()
     if (startedAt !== null) {
       const s = Math.floor((Date.now() - startedAt) / 1000)
       $('timer').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
@@ -237,9 +327,27 @@
     if (typeof stage?._advance !== 'function') { console.error('[presenter] deck-stage._advance missing; click the deck window and use its keys'); return }
     stage._advance(dir, 'keyboard')
   }
+  // Cue mode: a few words per step instead of the script; hold S to peek at the script.
+  function setCueMode(on) {
+    cueMode = on
+    $('cue-mode').setAttribute('aria-pressed', String(on))
+    try { localStorage.setItem(CUE_MODE_KEY, on ? 'on' : 'off') } catch {}
+    render(true)
+  }
+  setCueMode(cueMode)
+  $('cue-mode').addEventListener('click', e => { e.currentTarget.blur(); setCueMode(!cueMode) })
+  window.addEventListener('keyup', e => {
+    if ((e.key === 's' || e.key === 'S') && scriptHeld) { scriptHeld = false; render(true) }
+  })
+  // Leaving the window while S is down would otherwise leave the script stuck on.
+  window.addEventListener('blur', () => { if (scriptHeld) { scriptHeld = false; render(true) } })
   window.addEventListener('keydown', e => {
     // Typing in the editor shouldn't move the slides.
     if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return
+    if ((e.key === 's' || e.key === 'S') && !e.metaKey && !e.ctrlKey) {
+      if (!scriptHeld) { scriptHeld = true; render(true) }
+      return
+    }
     const dir = DIRECTION[e.key]
     if (!dir || !deck || deck.closed) return
     e.preventDefault()
