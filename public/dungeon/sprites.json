@@ -129,7 +129,7 @@
     "icons.journal": [[".bbbbbb.",".bccccbw",".bcggcbw",".bccccbw",".bccccbw",".bccccbw",".bbbbbbw","..wwwwww"]],
     "icons.aim": [["...e....","...e....","........","ee.e.ee.","........","...e....","...e....","........"]],
     "icons.bug": [["..w..w..","...ww...",".wllllw.","..llll..",".wllllw.","..llll..",".w.ll.w.","........"]],
-    "icons.hidden": [["........","........","........","........","..mmmm..",".mmmmmm.","mwwzzwwm",".wwzzww."]]
+    "icons.hidden": [["........","........","........","........","........","..wwww..","...mm...","........"]]
   },
   "views": {
     "player": {"down":["..pppp..",".pppppp.",".pyhhyp.","..hhhh..",".bbhhpb.","hbbbpbbh","..pppp..","..p..p.."],"up":["..pppp..",".pppppp.",".pppppp.","..hhhh..",".bpbbbb.","hbbpbbbh","..pppp..","..p..p.."],"right":["..pppp..",".pppppp.",".pphyh..",".pphhh..","..pbbb..","..bpbh..","..pppp..","..p..p.."],"left":["..pppp..",".pppppp.","..hyhpp.","..hhhpp.","..bbbp..","..hbpb..","..pppp..","..p..p.."]},
