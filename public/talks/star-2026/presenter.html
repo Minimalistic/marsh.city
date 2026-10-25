@@ -17,7 +17,8 @@
   #timer.over { color: var(--accent); }
   #where { color: var(--dim); }
   h1 { margin: 0; font-size: 34px; line-height: 1.2; }
-  #notes { font-size: 30px; line-height: 1.45; background: var(--panel); border-radius: 12px; padding: 24px 28px; margin: 0; }
+  #cue { font-size: 40px; line-height: 1.25; font-weight: 600; color: var(--accent); margin: 0; }
+  #notes { font-size: 24px; line-height: 1.45; background: var(--panel); border-radius: 12px; padding: 20px 24px; margin: 0; }
   #next { color: var(--dim); font-size: 20px; margin: 0; }
   .help { color: var(--dim); font-size: 15px; margin: 0; }
 </style>
@@ -35,6 +36,7 @@
   </header>
   <p id="where">Open the deck, then share only that window in Teams or Zoom.</p>
   <h1 id="title"></h1>
+  <p id="cue"></p>
   <p id="notes"></p>
   <p id="next"></p>
   <p class="help">Keys here drive the deck: → or Space next, ← back. Slides with zooms take 2–3 presses; the notes change when the slide does. Target about 7 minutes; the timer turns orange at 8.</p>
@@ -43,6 +45,19 @@
   // The deck records its slide in location.hash (#1, #2, ...). Same origin, so
   // this window can read the hash and the slides' notes straight from the deck.
   const TARGET_SECONDS = 8 * 60
+  // One-line cues per slide, keyed by the deck's data-label. Presenter-only;
+  // the full notes below stay the source of truth.
+  const CUES = {
+    'Title': 'Who I am, own time → the problem: scattered, written to sell',
+    'Home page': 'Free · no accounts, ads or affiliate links',
+    'Match': 'Dad, 82 → plain words, complexity, price',
+    'Borrow first: STAR': 'Borrow first · every state · Minnesota is the example',
+    'Catalog': '4,500+ · by need · mobility 520, everyday things',
+    'Product summary': 'Vendor pages sell → plain language · AI-labeled · BIGmack',
+    'Glossary': '135 terms, 13 groups · tap “switch”',
+    'Classification': 'Same tags pros use · sources, last checked · verify',
+    'Questions': 'The ask: tell me what’s wrong → questions',
+  }
   const $ = id => document.getElementById(id)
   let deck = null
   let startedAt = null
@@ -70,6 +85,7 @@
     const slide = all[index]
     $('where').textContent = `Slide ${index + 1} of ${all.length}`
     $('title').textContent = slide.querySelector('h1, h2')?.textContent.trim() || slide.dataset.label || ''
+    $('cue').textContent = CUES[slide.dataset.label] || ''
     $('notes').textContent = slide.dataset.speakerNotes || '(no notes)'
     const next = all[index + 1]
     $('next').textContent = next ? `Next: ${next.querySelector('h1, h2')?.textContent.trim() || next.dataset.label}` : 'Last slide.'
