@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.9.0
+appVersion: 7.10.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -98,7 +98,9 @@ Each station block has small buttons in its top corner:
 Under **Theme**, pick one:
 
 - **Dark** or **Light**, or **Auto** to follow your device's own light or dark setting.
-- **MonoRadio**: black-and-white versions of the same three, with the most contrast. Good for low vision.
+- **MonoRadio**: quieter grey versions of the same three, with every station the same color.
+- **High Contrast**: black, white and yellow, with the most contrast and the station that's playing filled solid yellow. Good for low vision. Dark, Light or Auto.
+- **Night**: dim amber on black, with no blue, for a radio by the bed. It keeps the screen from lighting up the room.
 
 The screen behind the panel changes as soon as you tap, so you can compare. Tap **Apply & Close** to keep it.
 
@@ -111,7 +113,7 @@ The screen behind the panel changes as soon as you tap, so you can compare. Tap 
 **Accessibility Preset** at the top of settings sets several options in one tap:
 
 - **Standard**: Auto theme, Large text, with tones and vibration on.
-- **Low Vision**: the high-contrast MonoRadio Dark theme, Ultra text, and spoken announcements. If you use VoiceOver or TalkBack, turn **Voice Announcements** off afterwards, so the app doesn't talk over your screen reader.
+- **Low Vision**: the High Contrast Dark theme, Ultra text, and spoken announcements. If you use VoiceOver or TalkBack, turn **Voice Announcements** off afterwards, so the app doesn't talk over your screen reader.
 - **Simplest**: X-Large text with no tones, vibration or announcements.
 
 All three use Simple controls.

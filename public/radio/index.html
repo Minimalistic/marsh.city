@@ -364,6 +364,68 @@ html.theme-contrast-light {
   --hc-chip-chosen-text: #ffffff;
 }
 
+/* -- Night -- for a radio by the bed: black, with dim warm amber and no blue
+   anywhere (every colour's blue channel is at or below its red and green).
+   Text sits just over WCAG AA 4.5:1 rather than far above it: dim on
+   purpose. Station colours are ignored. A page can't dim the backlight, so
+   this only lowers what the pixels emit. tests/contrast.test.mjs holds the
+   numbers and the no-blue rule. */
+html.theme-night {
+  /* Native pop-ups (select lists) and scrollbars draw dark, not white. */
+  color-scheme: dark;
+  --accent: #d09440;
+  --btn-mark: #d09440;
+  --btn-failed-bg: #0e0904;
+  --btn-failed-text: #987654;
+  --accent-text: #d09440;
+  --danger: #d05a34;
+
+  --header-bg: #000000;
+  --header-text: #d09440;
+  --header-sub: #a07438;
+
+  --screen-bg: #000000;
+  --status-bg: #000000;
+  --status-text: #a07438;
+  --status-border: #2a1a0a;
+
+  --settings-bg: #0c0703;
+  --settings-text: #d09440;
+  --settings-label: #a07438;
+  --settings-border: #3a2610;
+  --settings-input-bg: #000000;
+
+  --pill-bg: #000000;
+  --pill-text: #a8a040;
+
+  --stop-idle-bg: #000000;
+  --stop-idle-text: #a07030;
+  --stop-idle-border: #2a1a0a;
+  --stop-active-bg: #1a0f05;
+  --stop-active-text: #d05a34;
+  --stop-active-border: #4a2a10;
+  --stop-paused-bg: #120b04;
+  --stop-paused-text: #d09440;
+  --stop-paused-border: #4a3010;
+
+  --overlay-bg: rgba(0, 0, 0, 0.94);
+  --overlay-text: #d09440;
+  --overlay-sub: #a07438;
+  --overlay-btn-bg: #a8702c;
+  --overlay-btn-text: #000000;
+
+  --conn-good: #8a9a3a;
+  --conn-buf: #d09440;
+  --conn-bad: #d05a34;
+  --conn-idle: #3a2a18;
+
+  --night-btn-bg: #0e0904;
+  --night-btn-edge: #805626;
+  --night-btn-text: #d09440;
+  --night-btn-sub: #b47c36;
+  --night-btn-active-bg: #24160a;
+}
+
 
 /* --- ACCESSIBILITY --- */
 
@@ -804,6 +866,49 @@ html[class*="theme-contrast"] .reset-confirm-yes { background: #8b0000; }
 
 html.is-desktop.theme-contrast-dark body { background: #000000; }
 html.is-desktop.theme-contrast-light body { background: #c0c0c0; }
+
+/* -- Night button overrides -- every station alike in dim amber; the edge
+   (3:1 against the page) shows where a button is, playing warms the
+   background and rings it, paused dashes it. */
+html.theme-night .stream-btn {
+  background: var(--night-btn-bg) !important;
+  border: 2px solid var(--night-btn-edge);
+}
+html.theme-night .stream-btn.active {
+  background: var(--night-btn-active-bg) !important;
+  box-shadow: inset 0 0 0 3px var(--accent);
+  filter: none;
+}
+html.theme-night .stream-btn.paused {
+  background: var(--night-btn-bg) !important;
+  border: 2px dashed var(--accent);
+  filter: none;
+}
+html.theme-night .stream-btn.failed { filter: none; }
+html.theme-night .btn-label { color: var(--night-btn-text); }
+html.theme-night .btn-sublabel { color: var(--night-btn-sub); }
+html.theme-night .btn-state { color: var(--accent); }
+/* Emoji turned to dim amber: a bright, blue-ish picture is the brightest
+   thing on a black screen. The edge-coloured halo keeps a black glyph (🎵)
+   from vanishing. */
+html.theme-night .btn-emoji,
+html.theme-night #buttons.compact-mode .btn-emoji,
+html.theme-night .overlay-icon {
+  filter: grayscale(1) sepia(1) brightness(0.6) drop-shadow(0 0 1px #805626);
+  opacity: 0.85;
+}
+html.theme-night .logo-body { fill: #d09440; }
+html.theme-night .logo-cyan { fill: #a07438; stroke: #a07438; opacity: 0.6; }
+/* The flash on a tap is white everywhere else. */
+html.theme-night .tap-flash { background: #d09440; }
+html.theme-night #skip-toast { color: var(--overlay-text); }
+html.theme-night .reset-confirm-yes { background: #4a1006; color: #d09440; }
+/* Red on a red tint fell under 4.5:1 on the dark bars: plain amber instead. */
+html.theme-night #adv-live-badge { color: #d09440; background: rgba(0, 0, 0, 0); border-color: #805626; }
+html.theme-night .color-chip { filter: grayscale(1) sepia(1) brightness(0.6); }
+html.theme-night .stream-action-btn,
+html.theme-night #settings-version { opacity: 1; }
+html.is-desktop.theme-night body { background: #000000; }
 
 
 /* --- TEXT SIZE SCALING --- */
@@ -1293,7 +1398,8 @@ html.is-desktop .overlay-body { font-size: 20px; }
 .s-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* -- Selection chips (theme, size, etc.) -- */
-.theme-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--settings-label); margin-bottom: 4px; opacity: 0.7; }
+/* No fade: at 70% this 10px text fell under 4.5:1 (4.4 in Dark, 2.9 in Night). */
+.theme-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--settings-label); margin-bottom: 4px; }
 .chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .chip-grid-4 { grid-template-columns: repeat(4, 1fr); }
 .chip-row { display: flex; gap: 6px; }
@@ -1869,7 +1975,7 @@ html.is-ios .ios-hide { display: none; }
   font-size: 10px;
   font-weight: 600;
   color: var(--settings-label);
-  opacity: 0.5;
+  /* No fade: at 50% the version read at 2.2-2.9:1. */
 }
 
 
@@ -2120,6 +2226,10 @@ html.is-ios .ios-hide { display: none; }
         <button class="chip" onclick="selectChip(this,'theme','contrast-light')" data-group="theme" data-val="contrast-light" role="radio" aria-checked="false">Light</button>
         <button class="chip" onclick="selectChip(this,'theme','contrast-auto')" data-group="theme" data-val="contrast-auto" role="radio" aria-checked="false">Auto<br><small>System</small></button>
       </div>
+      <div class="theme-group-label" style="margin-top:8px;" id="theme-night-label">Bedside</div>
+      <div class="chip-grid" role="radiogroup" aria-labelledby="theme-night-label">
+        <button class="chip" onclick="selectChip(this,'theme','night')" data-group="theme" data-val="night" role="radio" aria-checked="false">Night<br><small>Dim, warm</small></button>
+      </div>
     </div>
 
     <div class="s-section" id="size-section">
@@ -2252,7 +2362,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.9.0</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.10.0</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -2743,7 +2853,7 @@ function validateConfig(s) {
   // const ver = typeof s.v === 'number' ? s.v : 0;
 
   if (typeof s.orgName === 'string' && s.orgName.trim()) out.orgName = clip(s.orgName, ORG_NAME_MAX);
-  if (['dark', 'light', 'auto', 'mono-dark', 'mono-light', 'mono-auto', 'contrast-dark', 'contrast-light', 'contrast-auto'].includes(s.theme)) out.theme = s.theme;
+  if (['dark', 'light', 'auto', 'mono-dark', 'mono-light', 'mono-auto', 'contrast-dark', 'contrast-light', 'contrast-auto', 'night'].includes(s.theme)) out.theme = s.theme;
   if (['normal', 'large', 'xlarge', 'ultra'].includes(s.size)) out.size = s.size;
   if (['on', 'off'].includes(s.fillview))               out.fillview = s.fillview;
   if (['on', 'off'].includes(s.advanced))               out.advanced = s.advanced;
@@ -2864,6 +2974,9 @@ function saveSettings() {
    appropriate CSS classes and re-renders buttons with new colors.
    ================================================================ */
 
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+const DEFAULT_THEME_COLOR = themeColorMeta ? themeColorMeta.getAttribute('content') : null;
+
 /** The theme to paint: an Auto choice resolved to its dark or light half by the system preference. */
 function resolveTheme() {
   var t = cfg.theme;
@@ -2884,6 +2997,8 @@ function applyTheme() {
   const fill = (platform.isDesktop && cfg.fillview === 'on') ? ' fill-view' : '';
   const orient = cfg.orientation !== 'auto' ? ' force-' + cfg.orientation : '';
   document.documentElement.className = base + fill + orient + ' theme-' + resolved;
+  // The browser bar / Android status bar: black in Night, which has no blue.
+  if (themeColorMeta) themeColorMeta.setAttribute('content', resolved === 'night' ? '#000000' : DEFAULT_THEME_COLOR);
   document.documentElement.setAttribute('data-size', cfg.size);
   renderButtons();
 }
