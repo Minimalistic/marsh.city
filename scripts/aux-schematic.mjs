@@ -25,7 +25,7 @@ const root = resolve(__dirname, '..')
 
 // ---- CONFIG ----------------------------------------------------------
 
-const PROBE_PATH = resolve(root, 'public/art/the-chronoscope-program/_probe-only.png')
+const PROBE_PATH = resolve(root, 'art-src/the-chronoscope-program/_probe-only.png')
 const OUTPUT_PATH = resolve(root, 'public/art/the-chronoscope-program/00-schematic.png')
 
 const PAGE = { w: 1024, h: 1620 }
