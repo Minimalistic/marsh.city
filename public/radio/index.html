@@ -742,7 +742,9 @@ html.theme-light .btn-emoji { filter: grayscale(1) contrast(2) brightness(0.8); 
 /* Hide secondary text when buttons are tight (a trouble status stays) */
 #buttons.hide-sub .btn-sublabel:not(.btn-status) { display: none; }
 #buttons.hide-sub .btn-state { display: none; }
-#buttons.hide-sub .btn-emoji { display: none; }
+/* The icon stays where it fits beside the name (renderButtons sets keep-icon):
+   it's how someone who doesn't read finds a station. */
+#buttons.hide-sub:not(.keep-icon) .btn-emoji { display: none; }
 
 /* Compact mode: emoji-only buttons for dense grids */
 #buttons.compact-mode .btn-emoji {
@@ -2362,7 +2364,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.10.1</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.11.0</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -3303,6 +3305,18 @@ function renderButtons() {
     }
     return fits;
   }
+  // Names-only rows keep the station's icon where it fits: where adding it
+  // costs the name no more than 15% of its size. The fit is worked out both
+  // ways and the title sizes compared, so a wide button whose title is held
+  // by its longest word keeps the icon for free.
+  var keepIcon = false;
+  if (hideSub && !compact) {
+    var plainTitle = titleAt(fitScale());
+    baseEmoji = sizes.emoji * grow;
+    keepIcon = titleAt(fitScale()) >= 0.85 * plainTitle;
+    if (!keepIcon) baseEmoji = 0;
+  }
+  buttonsEl.classList.toggle('keep-icon', keepIcon);
   var scale = fitScale();
 
   // A status gets the room it needs on its own button, so the other stations

@@ -84,6 +84,8 @@ flowchart TD
 ## Updates
 
 ### 2026-10-26
+Released v7.11.0. When a row has room for a station's name but not its description, as on a phone turned sideways, the button keeps its icon as long as the icon costs the name no more than 15% of its size. The icon is how someone who doesn't read finds a station.
+
 Released v7.10.1. Six to eight stations used to drop their names and show only their icons on every screen, a large tablet included. Now they show names wherever a row has the room, and fall back to icons only on a screen too small for words.
 
 Released v7.10.0 with a Night theme for a radio by the bed: black and dim amber with no blue anywhere, text just over the WCAG AA line so it reads without lighting the room. The flash on a tap, the emoji and the overlay icons dim with it. A web page can't turn down the backlight, so on an LCD the black still glows a little.
