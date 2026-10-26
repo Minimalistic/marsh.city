@@ -27,7 +27,17 @@ jobs:
       - run: npm run build
       # Smoke test the built site before it can deploy: broken internal
       # links/assets, JS errors, failed same-origin requests (tests/smoke.test.mjs).
+      # The browser download is cached per Playwright version, and the install
+      # step times out: it has hung for 5+ minutes on runs where it usually
+      # takes 20 seconds, and a rerun goes through.
+      - id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - run: npx playwright install --with-deps chromium
+        timeout-minutes: 3
       - run: npm run test:smoke
       - uses: actions/upload-pages-artifact@v5
         with:
