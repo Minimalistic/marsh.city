@@ -6,7 +6,7 @@ repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-05-29
+updated: 2026-10-26
 image: /images/radiogridxl/grid-dark.webp
 imageAlt: RadioGridXL — two large station buttons filling a dark screen
 hideTagline: true
@@ -80,6 +80,12 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-10-26
+Released v7.7.0, the result of an audit of the whole app. A paused or stopped radio now stays silent through Wi-Fi drops, retries and relaunches, because a station coming back on its own at night could wake someone. Auto-Resume only restarts a station that was playing when the app closed. Playing, paused and failed stations meet WCAG AA contrast in every theme, the sleep timer stops chattering to screen readers, and Ultra is now the largest text size on every screen. When a live station drops or stalls, the app reconnects quietly and fades back in. On the web, the station browser only lists stations it can play.
+
+### 2026-10-20
+Added a how-to guide (v7.6.0). Its steps run as tests against the real app, so a change that breaks a step fails the build, and its screenshots are captured from the app itself. The app's settings open it in an overlay, and this page links to it.
 
 ### 2026-05-29
 Synced the live demo to v7.5.5, which adds the Pause/Stop split in Advanced mode and the inline SVG transport icons. v7.5.2 re-centered the logo and regenerated the maskable PWA icons, since the home-screen mark was getting cropped off-center on add-to-home-screen.
