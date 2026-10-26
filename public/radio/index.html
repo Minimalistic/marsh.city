@@ -2554,7 +2554,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.15.0</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.15.1</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -5333,37 +5333,68 @@ const MOODS = [
 ];
 var sbMood = ''; // the chosen mood's id, or '' for none
 
-/* Smart add: a station from the browser arrives ready to use. Its icon is
-   guessed from its genre tags, read in the directory's order (the first is
-   usually the main genre); the first tag any rule matches wins. */
+/* Smart add: a station from the browser arrives ready to use. Its genre (an
+   icon and a plain label) is read from its tags in the directory's order;
+   the first tag a rule matches wins. Tags are free text, and the first is
+   often a city or a year ("1930", "minneapolis"), so a tag only counts when
+   it names a genre. Words match whole ("rap" never matches "grand rapids");
+   a trailing * matches the start of a word ("symphon*" → "symphonic"). */
 const DEFAULT_STATION_ICON = '🎵';
-const GENRE_ICONS = [
-  [['classical', 'opera', 'baroque', 'symphon', 'chamber'], '🎻'],
-  [['jazz', 'swing', 'blues', 'big band'], '🎷'],
-  [['news', 'talk', 'public radio', 'npr', 'information'], '🗞️'],
-  [['oldies', '50s', '60s', '40s', 'retro', 'golden', 'nostalgi'], '📻'],
-  [['country', 'bluegrass', 'americana'], '🤠'],
-  [['sleep', 'meditation'], '🌙'],
-  [['ambient', 'relax', 'chill', 'lounge', 'easy listening', 'calm'], '🌿'],
-  [['sport'], '🏟️'],
-  [['christian', 'gospel', 'religio', 'worship', 'spiritual'], '🕊️'],
-  [['rock', 'metal'], '🎸'],
-  [['folk', 'acoustic'], '🪕'],
-  [['electronic', 'house', 'techno', 'dance'], '🎧'],
-  [['pop', 'hits', 'top 40', 'soul'], '🎤'],
+const GENRES = [
+  [['classical', 'opera', 'baroque', 'symphon*', 'chamber'], '🎻', 'Classical'],
+  [['jazz', 'swing', 'big band'], '🎷', 'Jazz'],
+  [['blues'], '🎷', 'Blues'],
+  [['news', 'information'], '🗞️', 'News'],
+  [['talk'], '🗞️', 'Talk'],
+  [['public radio', 'npr'], '🗞️', 'Public radio'],
+  [['oldies', '40s', '50s', '60s', '70s', 'retro', 'golden', 'nostalgi*'], '📻', 'Oldies'],
+  [['country', 'americana'], '🤠', 'Country'],
+  [['bluegrass'], '🤠', 'Bluegrass'],
+  [['sleep', 'meditation'], '🌙', 'Sleep'],
+  [['easy listening'], '🌿', 'Easy listening'],
+  [['lounge'], '🌿', 'Lounge'],
+  [['ambient'], '🌿', 'Ambient'],
+  [['relax*', 'chill*', 'calm'], '🌿', 'Relaxing'],
+  [['sport*'], '🏟️', 'Sports'],
+  [['christian', 'gospel', 'religio*', 'worship', 'spiritual'], '🕊️', 'Faith'],
+  [['rock', 'metal'], '🎸', 'Rock'],
+  [['folk', 'acoustic'], '🪕', 'Folk'],
+  [['hip hop', 'hiphop', 'rap'], '🎧', 'Hip hop'],
+  [['electronic', 'house', 'techno', 'dance', 'edm'], '🎧', 'Electronic'],
+  [['r&b', 'rnb'], '🎤', 'R&B'],
+  [['soul'], '🎤', 'Soul'],
+  [['pop', 'hits', 'top 40'], '🎤', 'Pop'],
+  [['reggae'], '🎵', 'Reggae'],
+  [['latin*', 'salsa'], '🎵', 'Latin'],
+  [['world'], '🎵', 'World'],
 ];
 
-/** The icon a directory station's tags suggest ("jazz,blues" → 🎷), or ''. */
-function guessIcon(tags) {
-  if (typeof tags !== 'string') return '';
+/** Whether a lower-case tag names `word` (see GENRES for the rules). */
+function tagNames(tag, word) {
+  if (word.includes(' ')) return (' ' + tag.replace(/[^a-z0-9&]+/g, ' ') + ' ').includes(' ' + word + ' ');
+  const words = tag.split(/[^a-z0-9&]+/);
+  return word.endsWith('*')
+    ? words.some(w => w.startsWith(word.slice(0, -1)))
+    : words.includes(word);
+}
+
+/** The genre a directory station's tags name, as { icon, label }, or null. */
+function genreOf(tags) {
+  if (typeof tags !== 'string') return null;
   for (const raw of tags.toLowerCase().split(',')) {
     const tag = raw.trim();
     if (!tag) continue;
-    for (const [words, icon] of GENRE_ICONS) {
-      if (words.some(w => tag.includes(w))) return icon;
+    for (const [words, icon, label] of GENRES) {
+      if (words.some(w => tagNames(tag, w))) return { icon, label };
     }
   }
-  return '';
+  return null;
+}
+
+/** The icon a directory station's tags suggest ("jazz,blues" → 🎷), or ''. */
+function guessIcon(tags) {
+  const genre = genreOf(tags);
+  return genre ? genre.icon : '';
 }
 
 /** A directory name without its clutter: "KNOW 91.1 MPR News - Minneapolis,
@@ -5790,7 +5821,7 @@ function playableHere(stations) {
 
 const HTTP_ONLY_RESULTS_MESSAGE = 'No stations found that can play on this website. Some use http:// addresses, which browsers block here.';
 
-/** The first entry of a directory list field ("jazz,blues" → "Jazz"). */
+/** The first entry of a directory list field ("english,french" → "English"). */
 function firstListed(field) {
   const first = typeof field === 'string' ? field.split(',')[0].trim() : '';
   return first ? first.charAt(0).toUpperCase() + first.slice(1) : '';
@@ -5799,7 +5830,8 @@ function firstListed(field) {
 /** One plain line about a directory station: "Jazz · Minnesota · English". */
 function stationLine(s) {
   const place = (typeof s.state === 'string' && s.state.trim()) || s.country || '';
-  return [firstListed(s.tags), place, firstListed(s.language)].filter(Boolean).join(' · ');
+  const genre = genreOf(s.tags);
+  return [genre ? genre.label : '', place, firstListed(s.language)].filter(Boolean).join(' · ');
 }
 
 /** One entry per station. The directory lists many stations several times

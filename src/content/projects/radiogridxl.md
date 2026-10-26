@@ -84,6 +84,8 @@ flowchart TD
 ## Updates
 
 ### 2026-10-26
+Released v7.15.1. The plain line under a station named whatever tag the directory listed first, which could be a year or a city, so a swing station read "1930 · New York NY". Now it names the first tag that is a genre, "Jazz · New York NY", and leaves the genre out when no tag is one.
+
 Released v7.15.0. A station added from the browser used to arrive with no icon, a description like "US — jazz", the directory's full name and the next color in line. Now it gets an icon guessed from its genre, the plain line the browser showed, its name without the clutter, so "KNOW 91.1 Minnesota Public Radio News - Minneapolis-St. Paul, MN" becomes "KNOW 91.1 Minnesota Public Radio News", and a color no other station uses. Mood chips replace the genre dropdown, and each searches a few related tags at once. I also fixed the Search, Add and Apply buttons in MonoRadio Light and High Contrast Light, where their dark text sat on a dark fill and could barely be read. The contrast test now covers those buttons.
 
 Released v7.14.0. The station browser used to open on an empty search box, so finding something meant knowing a station's name or guessing at genre tags. Now it opens on six shelves of hand-picked stations, from Calm & easy to Sleep, and a script plays each one before a release. After a country, you can pick a state or region from the directory, so United States then Minnesota lists Minnesota stations. Results list each station once, leave out ones failing the directory's own check, and describe each in one plain line, like "Jazz · Minnesota · English". A station already on the radio says Added. In High Contrast, the browser's preview and Close buttons drew white on white; they're outlined now.
