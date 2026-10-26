@@ -7,7 +7,7 @@ url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
 updated: 2026-10-26
-image: /images/radiogridxl/grid-dark.webp
+image: /images/radiogridxl/page/grid.webp
 imageAlt: RadioGridXL — two large station buttons filling a dark screen
 hideTagline: true
 ---
@@ -16,41 +16,43 @@ RadioGridXL is an internet radio app built for older adults and people with disa
 
 ## The interface
 
-![RadioGridXL default view showing two large station buttons filling the screen](/images/radiogridxl/grid-dark.webp)
+![RadioGridXL: two large station buttons filling a dark screen](/images/radiogridxl/page/grid.webp)
 
 Big buttons, one per station. Tap to play, tap again to pause. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there's one station or eight.
 
-![Six stations arranged in a responsive grid with distinct emoji icons and color palettes](/images/radiogridxl/grid-full.webp)
+![Five stations in a grid, each with its own emoji and color, the first spanning the top](/images/radiogridxl/page/grid-full.webp)
 
-Add more stations and the layout shifts to a responsive grid - two columns here on mobile, scaling up to four on desktop. Each station gets its own color from eight palettes. No media query breakpoints - the grid math is pure viewport calculation.
+Add more stations and the layout shifts to a grid: two columns on a phone, up to four on a wide screen, with the first station spanning the top row when the count is odd. Each station gets its own color from eight palettes. No media query breakpoints - the grid math is pure viewport calculation.
 
-![RadioGridXL on a phone screen - the same interface adapts to fill a narrow viewport with stacked buttons](/images/radiogridxl/grid-mobile.webp)
+![RadioGridXL on a phone: the same stations stacked to fill a narrow screen](/images/radiogridxl/page/phone.webp)
 
 ## Playback and controls
 
-![Active playback state with advanced transport controls, connection indicator, and sleep timer](/images/radiogridxl/now-playing.webp)
+![A station playing: a yellow ring and pause mark on its button, Advanced controls, and a sleep timer counting down](/images/radiogridxl/page/now-playing.webp)
 
 When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. There are two control modes. Simple gives you a single stop button. Advanced adds station skip and a sleep timer, and splits stopping into two actions - a soft Pause that holds the stream so you can resume where you left off, and a full Stop. The transport icons are inline SVG rather than unicode glyphs, so iOS can't swap in its own skeuomorphic emoji versions. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
 
 ## Technician settings
 
-![The settings panel showing theme selection, text size, desktop view, volume cap, and control mode options](/images/radiogridxl/settings.webp)
+![The settings panel: presets, organization name and themes](/images/radiogridxl/page/settings.webp)
 
 Five taps on the logo opens a PIN-protected settings panel - hidden enough that no one's found it by accident yet. A technician can configure everything without exposing that complexity to the end user - theme, text size, volume cap, control mode, accessibility features, and the station list itself. Lockout escalates after failed PIN attempts.
 
 ## Stream browser
 
-![The stream browser overlay with search field, country and genre filters](/images/radiogridxl/stream-browser.webp)
+![The station browser: search the Radio Browser directory by name, country or genre](/images/radiogridxl/page/stream-browser.webp)
 
 The stream browser searches the Radio Browser API by name, country, or genre. Preview a station before adding it. Pick an emoji icon and color theme per station.
 
 ## Accessibility
 
-![High-contrast monochrome theme for maximum readability](/images/radiogridxl/grid-mono.webp)
+![High Contrast Dark at the largest text size: black buttons with white edges, the playing station solid yellow](/images/radiogridxl/page/high-contrast.webp)
 
 I designed for older adults and people with disabilities from the start, and it shaped the architecture:
 
-- Eight color palettes picked with WCAG AA contrast as the target, plus high-contrast monochrome modes (shown above)
+- Eight color palettes held to WCAG AA contrast in every state, checked by a test that reads the colors straight from the app
+- A High Contrast theme (shown above) held to AAA: black, white and yellow, text at 7:1, and a playing station filled solid yellow. The Low Vision preset uses it
+- MonoRadio, a quieter greyscale theme
 - Full screen reader support - ARIA roles, labels, and live regions throughout
 - Optional text-to-speech that announces playback actions via the Web Speech API
 - Audio chimes on play/pause using Web Audio API oscillators
@@ -61,7 +63,7 @@ I designed for older adults and people with disabilities from the start, and it 
 
 ## How it's built
 
-One HTML file. Around 4,600 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
+One HTML file. Around 6,000 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
 
 A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
 
@@ -82,6 +84,8 @@ flowchart TD
 ## Updates
 
 ### 2026-10-26
+Released v7.9.0 with a High Contrast theme for low vision: black, white and yellow, every word at 7:1 contrast (WCAG AAA), and a playing station filled solid yellow. The Low Vision preset now uses it. MonoRadio buttons got a visible edge, since every station there shares one background. Earlier the same day, v7.8.0 added a Preview button to settings, so on a phone you can see a theme or station change before applying it, and v7.8.1 added a note to listen to a station before setting it up for someone else. The screenshots on this page now come from the app itself, retaken with each release.
+
 Released v7.7.0, the result of an audit of the whole app. A paused or stopped radio now stays silent through Wi-Fi drops, retries and relaunches, because a station coming back on its own at night could wake someone. Auto-Resume only restarts a station that was playing when the app closed. Playing, paused and failed stations meet WCAG AA contrast in every theme, the sleep timer stops chattering to screen readers, and Ultra is now the largest text size on every screen. When a live station drops or stalls, the app reconnects quietly and fades back in. On the web, the station browser only lists stations it can play.
 
 ### 2026-10-20

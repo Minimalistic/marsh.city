@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.8.1
+appVersion: 7.9.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -10,7 +10,7 @@ RadioGridXL is built for the person listening: big buttons, one per station, not
 
 ## Listening
 
-![The main screen with two large station buttons](/images/radiogridxl/guide/home.jpg)
+![The main screen with two large station buttons](/images/radiogridxl/guide/home.webp)
 
 Tap a station to play it, and tap it again to pause. The dot next to the name at the top turns green while a station is playing. At the bottom of the screen there's a Stop button.
 
@@ -18,23 +18,23 @@ Tap a station to play it, and tap it again to pause. The dot next to the name at
 
 Settings are hidden on purpose. To open them, **tap the logo in the top corner 5 times quickly**, within about two seconds. The logo is outlined on the screenshot above.
 
-![The settings panel, open over the station buttons](/images/radiogridxl/guide/settings-open.jpg)
+![The settings panel, open over the station buttons](/images/radiogridxl/guide/settings-open.webp)
 
 The panel slides in from the side. Scroll down to see everything. Most changes show up behind the panel right away, so you can see what they'll look like.
 
 **Nothing is saved until you tap Apply & Close** at the bottom. If you close the panel with the × instead, the app asks whether to throw your changes away.
 
-![The Apply & Close button at the bottom of settings](/images/radiogridxl/guide/apply.jpg)
+![The Apply & Close button at the bottom of settings](/images/radiogridxl/guide/apply.webp)
 
 ### If it asks for a PIN
 
-![The PIN keypad](/images/radiogridxl/guide/pin-pad.jpg)
+![The PIN keypad](/images/radiogridxl/guide/pin-pad.webp)
 
 If someone has set a PIN, five taps on the logo bring up a keypad instead. Enter the 4-digit PIN to get in. After 5 wrong tries the keypad locks for a little while, and the wait gets longer each time. See [Lock settings with a PIN](#lock-settings-with-a-pin) to set or remove one.
 
 ## Change a station's stream URL
 
-![A station's Stream URL field in settings](/images/radiogridxl/guide/stream-url.jpg)
+![A station's Stream URL field in settings](/images/radiogridxl/guide/stream-url.webp)
 
 Each station has its own block under **Audio Streams** in settings. To point a button at a different station:
 
@@ -57,7 +57,7 @@ Stations are run by other people, and this app has no control over what they pla
 
 ### Search for a station
 
-![The station browser with a search box and country and genre filters](/images/radiogridxl/guide/browse.jpg)
+![The station browser with a search box and country and genre filters](/images/radiogridxl/guide/browse.webp)
 
 1. In settings, under **Audio Streams**, tap **Browse**.
 2. Search by name, or pick a country and a genre.
@@ -68,7 +68,7 @@ The station browser searches the free, community-run [Radio Browser](https://www
 
 ### Type one in
 
-![A new station block with a label and stream URL filled in](/images/radiogridxl/guide/add-blank.jpg)
+![A new station block with a label and stream URL filled in](/images/radiogridxl/guide/add-blank.webp)
 
 1. Under **Audio Streams**, tap **+ Add Blank**. A new block called "New Stream" appears at the bottom.
 2. Fill in the **Label**, **Description** and **Stream URL**.
@@ -78,13 +78,13 @@ With 5 stations the button text gets smaller to fit. With 6 or more, buttons sho
 
 ## Change a station's icon and color
 
-![The row of color choices for a station](/images/radiogridxl/guide/station-look.jpg)
+![The row of color choices for a station](/images/radiogridxl/guide/station-look.webp)
 
 In a station's block, tap the **Icon** box to pick an emoji, and tap a swatch under **Button Color** to color its button. There are eight colors, and all of them are readable in both light and dark themes.
 
 ## Reorder or remove stations
 
-![The arrow and remove buttons at the top of a station's block](/images/radiogridxl/guide/reorder.jpg)
+![The arrow and remove buttons at the top of a station's block](/images/radiogridxl/guide/reorder.webp)
 
 Each station block has small buttons in its top corner:
 
@@ -93,7 +93,7 @@ Each station block has small buttons in its top corner:
 
 ## Change the theme
 
-![The theme choices in settings](/images/radiogridxl/guide/theme.jpg)
+![The theme choices in settings](/images/radiogridxl/guide/theme.webp)
 
 Under **Theme**, pick one:
 
@@ -106,7 +106,7 @@ The screen behind the panel changes as soon as you tap, so you can compare. Tap 
 
 ### Accessibility presets
 
-![The accessibility preset choices](/images/radiogridxl/guide/presets.jpg)
+![The accessibility preset choices](/images/radiogridxl/guide/presets.webp)
 
 **Accessibility Preset** at the top of settings sets several options in one tap:
 
@@ -120,7 +120,7 @@ Pick the closest one, then fine-tune anything below it. Once you change somethin
 
 ### Text size
 
-![The text size choices](/images/radiogridxl/guide/text-size.jpg)
+![The text size choices](/images/radiogridxl/guide/text-size.webp)
 
 **Text Size** has Normal, Large, X-Large and Ultra. Ultra is the largest, which suits a tablet across the room.
 
@@ -128,7 +128,7 @@ Further down there are more options: **Voice Announcements** (speaks "Now playin
 
 ## Simple or Advanced controls
 
-![The Advanced controls bar at the bottom of the screen](/images/radiogridxl/guide/controls.jpg)
+![The Advanced controls bar at the bottom of the screen](/images/radiogridxl/guide/controls.webp)
 
 Under **Advanced Controls**:
 
@@ -137,7 +137,7 @@ Under **Advanced Controls**:
 
 ## Lock settings with a PIN
 
-![The Setup PIN field in settings](/images/radiogridxl/guide/set-pin.jpg)
+![The Setup PIN field in settings](/images/radiogridxl/guide/set-pin.webp)
 
 To keep anyone else out of settings, type a 4-digit PIN in **Setup PIN** and tap **Apply & Close**. From then on, five taps on the logo bring up the keypad. To remove the PIN, clear the field and apply.
 
@@ -145,7 +145,7 @@ Write the PIN down somewhere. If you forget it, the only way back into settings 
 
 ## Backup and restore
 
-![The Backup and Restore section](/images/radiogridxl/guide/backup.jpg)
+![The Backup and Restore section](/images/radiogridxl/guide/backup.webp)
 
 - **Export Backup** saves your stations and settings to a file.
 - **Import Backup** loads a backup file, on this device or another one.

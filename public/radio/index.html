@@ -176,11 +176,11 @@ html.theme-mono-dark {
   --conn-idle: #2a2a30;
 
   --mono-btn-bg: #16161a;
-  --mono-btn-border: #2a2a30;
+  --mono-btn-border: #6a6a72;
   --mono-btn-text: #d0d0d0;
   --mono-btn-sub: #909090;
   --mono-btn-active-bg: #22222a;
-  --mono-btn-active-border: #505058;
+  --mono-btn-active-border: #909098;
   --mono-btn-glow: rgba(255, 255, 255, 0.04);
   --btn-failed-text: var(--mono-btn-sub);
 }
@@ -230,13 +230,138 @@ html.theme-mono-light {
   --conn-idle: #c0c0c0;
 
   --mono-btn-bg: #ffffff;
-  --mono-btn-border: #d0cec8;
+  --mono-btn-border: #858585;
   --mono-btn-text: #1a1a1a;
   --mono-btn-sub: #606060;
   --mono-btn-active-bg: #f0eeeb;
-  --mono-btn-active-border: #808080;
+  --mono-btn-active-border: #505050;
   --mono-btn-glow: rgba(0, 0, 0, 0.03);
   --btn-failed-text: var(--mono-btn-sub);
+}
+
+/* -- High Contrast Dark --
+   Built for low vision, not looks: black, white and yellow, every text 7:1
+   (WCAG AAA). Station colours are ignored; a playing station turns solid
+   yellow, the strongest "this one is on" a screen can show.
+   tests/contrast.test.mjs holds the numbers. */
+html.theme-contrast-dark {
+  --accent: #ffff00;
+  --btn-mark: #ffff00;
+  --btn-failed-bg: #000000;
+  --btn-failed-text: #a6a6a6;
+  --accent-text: #ffff00;
+  --danger: #ff9999;
+
+  --header-bg: #000000;
+  --header-text: #ffffff;
+  --header-sub: #e6e6e6;
+
+  --screen-bg: #000000;
+  --status-bg: #000000;
+  --status-text: #ffffff;
+  --status-border: #ffffff;
+
+  --settings-bg: #000000;
+  --settings-text: #ffffff;
+  --settings-label: #e6e6e6;
+  --settings-border: #ffffff;
+  --settings-input-bg: #000000;
+
+  --pill-bg: #000000;
+  --pill-text: #80ff80;
+
+  --stop-idle-bg: #000000;
+  --stop-idle-text: #ffffff;
+  --stop-idle-border: #ffffff;
+  --stop-active-bg: #ffff00;
+  --stop-active-text: #000000;
+  --stop-active-border: #ffff00;
+  --stop-paused-bg: #000000;
+  --stop-paused-text: #ffff00;
+  --stop-paused-border: #ffff00;
+
+  --overlay-bg: rgba(0, 0, 0, 0.96);
+  --overlay-text: #ffffff;
+  --overlay-sub: #e6e6e6;
+  --overlay-btn-bg: #ffff00;
+  --overlay-btn-text: #000000;
+
+  --conn-good: #80ff80;
+  --conn-buf: #ffff00;
+  --conn-bad: #ff9999;
+  --conn-idle: #808080;
+
+  --hc-btn-bg: #000000;
+  --hc-btn-edge: #ffffff;
+  --hc-btn-text: #ffffff;
+  --hc-btn-active-bg: #ffff00;
+  --hc-btn-active-text: #000000;
+  /* Two bands on the yellow: white shows against the black page, black
+     against the yellow. */
+  --hc-btn-ring-outer: #ffffff;
+  --hc-btn-ring-inner: #000000;
+  --hc-emoji-halo: #ffffff;
+  --hc-chip-chosen-text: #000000;
+}
+
+/* -- High Contrast Light -- yellow can't show on white, so the accent is a
+   deep blue; playing is still solid yellow, with black text and a black ring. */
+html.theme-contrast-light {
+  --accent: #0000b0;
+  --btn-mark: #000000;
+  --btn-failed-bg: #ffffff;
+  --btn-failed-text: #4a4a4a;
+  --accent-text: #0000b0;
+  --danger: #a00000;
+
+  --header-bg: #ffffff;
+  --header-text: #000000;
+  --header-sub: #1a1a1a;
+
+  --screen-bg: #ffffff;
+  --status-bg: #ffffff;
+  --status-text: #000000;
+  --status-border: #000000;
+
+  --settings-bg: #ffffff;
+  --settings-text: #000000;
+  --settings-label: #1a1a1a;
+  --settings-border: #000000;
+  --settings-input-bg: #ffffff;
+
+  --pill-bg: #ffffff;
+  --pill-text: #006000;
+
+  --stop-idle-bg: #ffffff;
+  --stop-idle-text: #000000;
+  --stop-idle-border: #000000;
+  --stop-active-bg: #ffff00;
+  --stop-active-text: #000000;
+  --stop-active-border: #000000;
+  --stop-paused-bg: #ffffff;
+  --stop-paused-text: #0000b0;
+  --stop-paused-border: #0000b0;
+
+  --overlay-bg: rgba(255, 255, 255, 0.97);
+  --overlay-text: #000000;
+  --overlay-sub: #1a1a1a;
+  --overlay-btn-bg: #000000;
+  --overlay-btn-text: #ffffff;
+
+  --conn-good: #006000;
+  --conn-buf: #0000b0;
+  --conn-bad: #a00000;
+  --conn-idle: #808080;
+
+  --hc-btn-bg: #ffffff;
+  --hc-btn-edge: #000000;
+  --hc-btn-text: #000000;
+  --hc-btn-active-bg: #ffff00;
+  --hc-btn-active-text: #000000;
+  --hc-btn-ring-outer: #000000;
+  --hc-btn-ring-inner: #000000;
+  --hc-emoji-halo: #000000;
+  --hc-chip-chosen-text: #ffffff;
 }
 
 
@@ -580,9 +705,11 @@ html.theme-light .btn-emoji { filter: grayscale(1) contrast(2) brightness(0.8); 
 .stream-btn.paused .btn-state { opacity: 1; }
 
 /* -- MonoRadio button overrides -- */
+/* One background for every station, so the edge is what shows where a
+   button is: 2px at 3:1 against the page (WCAG 1.4.11). */
 html[class*="theme-mono"] .stream-btn {
   background: var(--mono-btn-bg) !important;
-  border: 1px solid var(--mono-btn-border);
+  border: 2px solid var(--mono-btn-border);
   box-shadow: 0 1px 3px var(--mono-btn-glow);
 }
 html[class*="theme-mono"] .stream-btn.active {
@@ -599,8 +726,10 @@ html[class*="theme-mono"] .stream-btn.paused {
 html[class*="theme-mono"] .btn-label { color: var(--mono-btn-text); }
 /* No fade on top of --mono-btn-sub: at 55% it was about 2:1. */
 html[class*="theme-mono"] .btn-sublabel { color: var(--mono-btn-sub); }
-html[class*="theme-mono"] .btn-emoji { filter: grayscale(1) contrast(3) brightness(1.4); opacity: 0.35; }
-html.theme-mono-light .btn-emoji { filter: grayscale(1) contrast(3) brightness(0.3); opacity: 0.3; }
+/* The emoji is how a non-reader finds a station: grey like the other
+   themes, never faded. At 30-35% it all but vanished. */
+html[class*="theme-mono"] .btn-emoji { filter: grayscale(1) contrast(3) brightness(1.4); opacity: 0.9; }
+html.theme-mono-light .btn-emoji { filter: grayscale(1) contrast(3) brightness(0.3); opacity: 0.85; }
 html[class*="theme-mono"] .btn-state { color: var(--accent); }
 
 /* MonoRadio logo — pure black/white, no color */
@@ -620,6 +749,61 @@ html[class*="theme-mono"] .color-chip.selected { opacity: 0.8; }
 /* MonoRadio desktop bg */
 html.is-desktop.theme-mono-dark body { background: #050508; }
 html.is-desktop.theme-mono-light body { background: #d8d6d2; }
+
+/* -- High Contrast button overrides -- every station alike, told apart by
+   name and emoji; the state shows by fill and shape: idle a solid 3px
+   edge, playing solid yellow in a two-band ring, paused dashes, failed a
+   grey edge and name. Every state keeps the 3px border, so nothing shifts. */
+html[class*="theme-contrast"] .stream-btn {
+  background: var(--hc-btn-bg) !important;
+  border: 3px solid var(--hc-btn-edge);
+}
+html[class*="theme-contrast"] .stream-btn.active {
+  background: var(--hc-btn-active-bg) !important;
+  border-color: var(--hc-btn-ring-outer);
+  box-shadow: inset 0 0 0 4px var(--hc-btn-ring-inner);
+  filter: none;
+}
+html[class*="theme-contrast"] .stream-btn.paused {
+  background: var(--hc-btn-bg) !important;
+  border: 3px dashed var(--accent);
+  filter: none;
+}
+html[class*="theme-contrast"] .stream-btn.failed { border-color: var(--btn-failed-text); filter: none; }
+html[class*="theme-contrast"] .btn-label,
+html[class*="theme-contrast"] .btn-sublabel { color: var(--hc-btn-text); font-weight: 800; }
+html[class*="theme-contrast"] .stream-btn.active .btn-label,
+html[class*="theme-contrast"] .stream-btn.active .btn-sublabel,
+html[class*="theme-contrast"] .stream-btn.active .btn-state { color: var(--hc-btn-active-text); }
+html[class*="theme-contrast"] .btn-state { color: var(--accent); }
+/* Emoji keep their colour, with a halo so a black glyph (🎵) shows on black
+   and a pale one on white. Compact mode drops the usual filter, not this. */
+html[class*="theme-contrast"] .btn-emoji,
+html[class*="theme-contrast"] #buttons.compact-mode .btn-emoji {
+  filter: drop-shadow(0 0 1px var(--hc-emoji-halo)) drop-shadow(0 0 1px var(--hc-emoji-halo));
+  opacity: 1;
+}
+
+html.theme-contrast-dark .logo-body { fill: #ffffff; }
+html.theme-contrast-dark .logo-cyan { fill: #ffff00; stroke: #ffff00; }
+html.theme-contrast-light .logo-body { fill: #000000; }
+html.theme-contrast-light .logo-cyan { fill: #000000; stroke: #000000; }
+
+html[class*="theme-contrast"] #header { border-bottom-width: 2px; }
+/* A chosen chip is filled, not just outlined, as a playing station is. */
+html[class*="theme-contrast"] .chip.selected { border-width: 3px; background: var(--accent); color: var(--hc-chip-chosen-text); }
+/* No faded settings text in High Contrast. */
+html[class*="theme-contrast"] .theme-group-label,
+html[class*="theme-contrast"] .stream-action-btn,
+html[class*="theme-contrast"] #settings-version { opacity: 1; }
+/* LIVE sits on a stop bar that turns yellow while playing: its own yellow
+   chip with black text reads on either bar. */
+html[class*="theme-contrast"] #adv-live-badge { color: #000000; background: #ffff00; border: 2px solid #000000; }
+/* The Reset/Discard red, deepened so white holds 7:1. */
+html[class*="theme-contrast"] .reset-confirm-yes { background: #8b0000; }
+
+html.is-desktop.theme-contrast-dark body { background: #000000; }
+html.is-desktop.theme-contrast-light body { background: #c0c0c0; }
 
 
 /* --- TEXT SIZE SCALING --- */
@@ -1930,6 +2114,12 @@ html.is-ios .ios-hide { display: none; }
         <button class="chip" onclick="selectChip(this,'theme','mono-light')" data-group="theme" data-val="mono-light" role="radio" aria-checked="false">Light</button>
         <button class="chip" onclick="selectChip(this,'theme','mono-auto')" data-group="theme" data-val="mono-auto" role="radio" aria-checked="false">Auto<br><small>System</small></button>
       </div>
+      <div class="theme-group-label" style="margin-top:8px;" id="theme-contrast-label">High Contrast</div>
+      <div class="chip-grid" role="radiogroup" aria-labelledby="theme-contrast-label">
+        <button class="chip" onclick="selectChip(this,'theme','contrast-dark')" data-group="theme" data-val="contrast-dark" role="radio" aria-checked="false">Dark</button>
+        <button class="chip" onclick="selectChip(this,'theme','contrast-light')" data-group="theme" data-val="contrast-light" role="radio" aria-checked="false">Light</button>
+        <button class="chip" onclick="selectChip(this,'theme','contrast-auto')" data-group="theme" data-val="contrast-auto" role="radio" aria-checked="false">Auto<br><small>System</small></button>
+      </div>
     </div>
 
     <div class="s-section" id="size-section">
@@ -2062,7 +2252,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.8.1</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.9.0</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -2271,7 +2461,7 @@ const PRESETS = [
   {
     name: 'Low Vision',
     label: 'Low Vision',
-    apply: { theme: 'mono-dark', size: 'ultra', advanced: 'off', haptics: 'on', tts: 'on', chime: 'on', fillview: 'on' }
+    apply: { theme: 'contrast-dark', size: 'ultra', advanced: 'off', haptics: 'on', tts: 'on', chime: 'on', fillview: 'on' }
   },
   {
     name: 'Simplest',
@@ -2427,7 +2617,7 @@ function init() {
 
 // Re-apply theme when system dark/light preference changes (for "auto" mode)
   window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-    if (cfg.theme === 'auto' || cfg.theme === 'mono-auto') applyTheme();
+    if (cfg.theme.endsWith('auto')) applyTheme();
   });
 
   // Sync initial aria-checked state for settings chips
@@ -2553,7 +2743,7 @@ function validateConfig(s) {
   // const ver = typeof s.v === 'number' ? s.v : 0;
 
   if (typeof s.orgName === 'string' && s.orgName.trim()) out.orgName = clip(s.orgName, ORG_NAME_MAX);
-  if (['dark', 'light', 'auto', 'mono-dark', 'mono-light', 'mono-auto'].includes(s.theme)) out.theme = s.theme;
+  if (['dark', 'light', 'auto', 'mono-dark', 'mono-light', 'mono-auto', 'contrast-dark', 'contrast-light', 'contrast-auto'].includes(s.theme)) out.theme = s.theme;
   if (['normal', 'large', 'xlarge', 'ultra'].includes(s.size)) out.size = s.size;
   if (['on', 'off'].includes(s.fillview))               out.fillview = s.fillview;
   if (['on', 'off'].includes(s.advanced))               out.advanced = s.advanced;
@@ -2674,14 +2864,15 @@ function saveSettings() {
    appropriate CSS classes and re-renders buttons with new colors.
    ================================================================ */
 
-/** Returns 'light' or 'dark' based on config and system preference. */
+/** The theme to paint: an Auto choice resolved to its dark or light half by the system preference. */
 function resolveTheme() {
   var t = cfg.theme;
   if (t === 'auto') {
     return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
-  if (t === 'mono-auto') {
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'mono-light' : 'mono-dark';
+  if (t === 'mono-auto' || t === 'contrast-auto') {
+    var family = t.slice(0, -'auto'.length);
+    return family + (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   }
   return t;
 }
@@ -2910,16 +3101,17 @@ function renderButtons() {
   var baseState = compact ? 11 : (hideSub ? 0 : 12);
 
   // Width the text in button i has: its share of the grid, less its padding
-  // and a mono theme's 1px border. It assumes the full padding and gaps,
-  // which only shrink. Before the grid has a width (it is hidden), there is
-  // no limit, and text is sized by height alone.
+  // and the border MonoRadio (2px) and High Contrast (3px) draw. It assumes
+  // the full padding and gaps, which only shrink. Before the grid has a width
+  // (it is hidden), there is no limit, and text is sized by height alone.
+  var edge = /theme-contrast/.test(document.documentElement.className) ? 3 : 2;
   var gridW = buttonsEl.clientWidth;
   function textWidthOf(i) {
     if (!(gridW > 0)) return Infinity;
     var btnW = !useGrid ? gridW - 8 // the stack's 4px padding
       : (oddGrid && i === 0) ? gridW - 2 * gap
       : (gridW - (cols + 1) * gap) / cols;
-    return btnW - 2 * basePad - 2;
+    return btnW - 2 * basePad - 2 * edge;
   }
 
   // Titles wrap at spaces, and a word wider than its button is cut off. So
