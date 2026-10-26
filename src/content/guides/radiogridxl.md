@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.8.0
+appVersion: 7.8.1
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -52,6 +52,8 @@ Links that start with `http://` (no "s") won't play on this website, because bro
 ## Add a station
 
 You can have up to 8 stations. There are two ways to add one.
+
+Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it for someone else.
 
 ### Search for a station
 
