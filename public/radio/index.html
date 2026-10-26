@@ -12,7 +12,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="RadioGrid">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
+<!-- Tab icon: the logo's tile R alone, on whole pixels so it stays sharp at 16px (the waves blur
+     at that size). Inline, so the file stays self-contained; the media query picks the dark-tab colours. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22 shape-rendering=%22crispEdges%22%3E%3Cstyle%3E.t0%7Bfill:%230e7490%7D.t1%7Bfill:%231367a8%7D.t2%7Bfill:%23185bc0%7D.t3%7Bfill:%231d4ed8%7D.t4%7Bfill:%233841d8%7D.t5%7Bfill:%235235d9%7D.t6%7Bfill:%236d28d9%7D%40media (prefers-color-scheme:dark)%7B.t0%7Bfill:%2367e8f9%7D.t1%7Bfill:%2358c6f8%7D.t2%7Bfill:%234aa4f7%7D.t3%7Bfill:%233b82f6%7D.t4%7Bfill:%235f85f7%7D.t5%7Bfill:%238388f9%7D.t6%7Bfill:%23a78bfa%7D%7D%3C/style%3E%3Crect class=%22t0%22 x=%221%22 y=%221%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t1%22 x=%225%22 y=%221%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t2%22 x=%229%22 y=%221%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t1%22 x=%221%22 y=%225%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t4%22 x=%2213%22 y=%225%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t2%22 x=%221%22 y=%229%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t3%22 x=%225%22 y=%229%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t4%22 x=%229%22 y=%229%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t3%22 x=%221%22 y=%2213%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t6%22 x=%2213%22 y=%2213%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3C/svg%3E">
 <title>RadioGridXL</title>
 <style>
 
@@ -42,6 +44,13 @@
   --danger: #ff6b6b;
 
   --header-bg: #0d0d1a;
+  --logo-r0: #67e8f9;
+  --logo-r1: #58c6f8;
+  --logo-r2: #4aa4f7;
+  --logo-r3: #3b82f6;
+  --logo-r4: #5f85f7;
+  --logo-r6: #a78bfa;
+  --logo-wave-fade: 0.65;
   --header-text: #ffffff;
   --header-sub: #aaaacc;
 
@@ -93,6 +102,13 @@ html.theme-light {
   --danger: #b71c1c;
 
   --header-bg: #eaeaf4;
+  --logo-r0: #0e7490;
+  --logo-r1: #1367a8;
+  --logo-r2: #185bc0;
+  --logo-r3: #1d4ed8;
+  --logo-r4: #3841d8;
+  --logo-r6: #6d28d9;
+  --logo-wave-fade: 0.8;
   --header-text: #0c2039;
   --header-sub: #555577;
 
@@ -137,6 +153,7 @@ html.theme-mono-dark {
   --accent: #b0b0b0;
 
   --header-bg: #0a0a0c;
+  --logo-wave-fade: 0.55;
   --header-text: #e0e0e0;
   --header-sub: #808080;
 
@@ -191,6 +208,7 @@ html.theme-mono-light {
   --danger: #a03030;
 
   --header-bg: #f0eeeb;
+  --logo-wave-fade: 0.55;
   --header-text: #1a1a1a;
   --header-sub: #707070;
 
@@ -253,6 +271,7 @@ html.theme-contrast-dark {
   --danger: #ff9999;
 
   --header-bg: #000000;
+  --logo-wave-fade: 1;
   --header-text: #ffffff;
   --header-sub: #e6e6e6;
 
@@ -315,6 +334,7 @@ html.theme-contrast-light {
   --danger: #a00000;
 
   --header-bg: #ffffff;
+  --logo-wave-fade: 1;
   --header-text: #000000;
   --header-sub: #1a1a1a;
 
@@ -381,6 +401,7 @@ html.theme-night {
   --danger: #d05a34;
 
   --header-bg: #000000;
+  --logo-wave-fade: 0.6;
   --header-text: #d09440;
   --header-sub: #a07438;
 
@@ -579,6 +600,21 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
 .logo-body { fill: #ffffff; transition: fill 0.3s; }
 html.theme-light .logo-body { fill: #0c2039; }
 .logo-cyan { fill: #59c4e5; stroke: #59c4e5; }
+/* The tile-R mark (default profile): tiles step through a cyan-to-violet ramp
+   (corner to corner; no tile lands on step 5), the left waves take its first
+   colour and the right its last. MonoRadio, High
+   Contrast and Night recolour it below; every colour holds 3:1 on the header. */
+.logo-tile { transition: fill 0.3s; }
+.logo-wave { transition: stroke 0.3s; }
+.logo-r0 { fill: var(--logo-r0); }
+.logo-r1 { fill: var(--logo-r1); }
+.logo-r2 { fill: var(--logo-r2); }
+.logo-r3 { fill: var(--logo-r3); }
+.logo-r4 { fill: var(--logo-r4); }
+.logo-r6 { fill: var(--logo-r6); }
+.logo-wave-l { stroke: var(--logo-r0); }
+.logo-wave-r { stroke: var(--logo-r6); }
+.logo-wave-out { opacity: var(--logo-wave-fade); }
 
 #org-name {
   font-size: 15px;
@@ -801,6 +837,10 @@ html.theme-mono-dark .logo-body { fill: #e0e0e0; }
 html.theme-mono-dark .logo-cyan { fill: #e0e0e0; stroke: #e0e0e0; opacity: 0.3; }
 html.theme-mono-light .logo-body { fill: #1a1a1a; }
 html.theme-mono-light .logo-cyan { fill: #1a1a1a; stroke: #1a1a1a; opacity: 0.3; }
+html.theme-mono-dark .logo-tile { fill: #e0e0e0; }
+html.theme-mono-dark .logo-wave { stroke: #e0e0e0; }
+html.theme-mono-light .logo-tile { fill: #1a1a1a; }
+html.theme-mono-light .logo-wave { stroke: #1a1a1a; }
 
 /* MonoRadio header text */
 html[class*="theme-mono"] #org-name { letter-spacing: 0.04em; }
@@ -852,6 +892,10 @@ html.theme-contrast-dark .logo-body { fill: #ffffff; }
 html.theme-contrast-dark .logo-cyan { fill: #ffff00; stroke: #ffff00; }
 html.theme-contrast-light .logo-body { fill: #000000; }
 html.theme-contrast-light .logo-cyan { fill: #000000; stroke: #000000; }
+html.theme-contrast-dark .logo-tile { fill: #ffffff; }
+html.theme-contrast-dark .logo-wave { stroke: #ffff00; }
+html.theme-contrast-light .logo-tile { fill: #000000; }
+html.theme-contrast-light .logo-wave { stroke: #000000; }
 
 html[class*="theme-contrast"] #header { border-bottom-width: 2px; }
 /* A chosen chip is filled, not just outlined, as a playing station is. */
@@ -901,6 +945,8 @@ html.theme-night .overlay-icon {
 }
 html.theme-night .logo-body { fill: #d09440; }
 html.theme-night .logo-cyan { fill: #a07438; stroke: #a07438; opacity: 0.6; }
+html.theme-night .logo-tile { fill: #d09440; }
+html.theme-night .logo-wave { stroke: #d09440; }
 /* The flash on a tap is white everywhere else. */
 html.theme-night .tap-flash { background: #d09440; }
 html.theme-night #skip-toast { color: var(--overlay-text); }
@@ -2364,7 +2410,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.11.0</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.12.0</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -2528,7 +2574,7 @@ const PALETTE = [
 const PROFILE = {
   "orgName": "RadioGridXL",
   "pin": "",
-  "logoSvg": "<circle class=\"logo-body\" cx=\"50\" cy=\"50\" r=\"14\"/><path class=\"logo-cyan\" fill=\"none\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M 26,50 a 24,24 0 0 1 48,0\" opacity=\"0.5\"/><path class=\"logo-cyan\" fill=\"none\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M 14,50 a 36,36 0 0 1 72,0\" opacity=\"0.35\"/><path class=\"logo-cyan\" fill=\"none\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M 74,50 a 24,24 0 0 1 -48,0\" opacity=\"0.5\"/><path class=\"logo-cyan\" fill=\"none\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M 86,50 a 36,36 0 0 1 -72,0\" opacity=\"0.35\"/>",
+  "logoSvg": "<rect class=\"logo-tile logo-r0\" fill=\"#67e8f9\" x=\"28.75\" y=\"28.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r1\" fill=\"#58c6f8\" x=\"39.75\" y=\"28.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r2\" fill=\"#4aa4f7\" x=\"50.75\" y=\"28.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r1\" fill=\"#58c6f8\" x=\"28.75\" y=\"39.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r4\" fill=\"#5f85f7\" x=\"61.75\" y=\"39.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r2\" fill=\"#4aa4f7\" x=\"28.75\" y=\"50.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r3\" fill=\"#3b82f6\" x=\"39.75\" y=\"50.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r4\" fill=\"#5f85f7\" x=\"50.75\" y=\"50.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r3\" fill=\"#3b82f6\" x=\"28.75\" y=\"61.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r6\" fill=\"#a78bfa\" x=\"61.75\" y=\"61.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><path class=\"logo-wave logo-wave-l\" fill=\"none\" stroke=\"#67e8f9\" stroke-width=\"5.5\" stroke-linecap=\"round\" d=\"M 17.92,33.66 A 36,36 0 0 0 17.92,66.34\"/><path class=\"logo-wave logo-wave-r\" fill=\"none\" stroke=\"#a78bfa\" stroke-width=\"5.5\" stroke-linecap=\"round\" d=\"M 82.08,33.66 A 36,36 0 0 1 82.08,66.34\"/><path class=\"logo-wave logo-wave-l logo-wave-out\" fill=\"none\" stroke=\"#67e8f9\" stroke-width=\"5.5\" stroke-linecap=\"round\" opacity=\"0.65\" d=\"M 8.12,28.66 A 47,47 0 0 0 8.12,71.34\"/><path class=\"logo-wave logo-wave-r logo-wave-out\" fill=\"none\" stroke=\"#a78bfa\" stroke-width=\"5.5\" stroke-linecap=\"round\" opacity=\"0.65\" d=\"M 91.88,28.66 A 47,47 0 0 1 91.88,71.34\"/>",
   "logoViewBox": "0 0 100 100",
   "helpUrl": "https://marsh.city/embed/guides/radiogridxl/",
   "streams": [

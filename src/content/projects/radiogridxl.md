@@ -84,6 +84,8 @@ flowchart TD
 ## Updates
 
 ### 2026-10-26
+Released v7.12.0 with a new logo: an R built from rounded tiles, like the station buttons, shading from cyan to violet, with radio waves on both sides. It follows the theme, turning grey in MonoRadio, white and yellow in High Contrast and amber in Night, and every part of it holds 3:1 contrast against the header. The browser tab shows the R by itself, drawn on whole pixels so it stays sharp at 16px.
+
 Released v7.11.0. When a row has room for a station's name but not its description, as on a phone turned sideways, the button keeps its icon as long as the icon costs the name no more than 15% of its size. The icon is how someone who doesn't read finds a station.
 
 Released v7.10.1. Six to eight stations used to drop their names and show only their icons on every screen, a large tablet included. Now they show names wherever a row has the room, and fall back to icons only on a screen too small for words.
