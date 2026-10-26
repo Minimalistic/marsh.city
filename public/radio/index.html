@@ -1003,6 +1003,11 @@ html.is-desktop .overlay-body { font-size: 20px; }
 /* Closed = hidden from screen readers and Tab, not just slid off-screen.
    .animated stays on through the slide-out, so the panel hides once it ends. */
 #settings-panel:not(.open):not(.animated) { visibility: hidden; }
+/* Preview: the panel slides away so the grid shows, and hides from screen
+   readers once it's gone (visibility waits for the slide). It stays 'open',
+   so the app still treats settings as open. */
+#settings-panel.open.previewing { transform: translateX(100%); visibility: hidden; }
+#settings-panel.animated.previewing { transition: transform 0.3s ease, visibility 0s linear 0.3s; }
 
 #settings-header {
   display: flex;
@@ -1029,6 +1034,28 @@ html.is-desktop .overlay-body { font-size: 20px; }
   font-weight: 300;
   transition: color 0.2s;
 }
+#settings-header-actions { display: flex; align-items: center; gap: 6px; }
+#settings-preview, #preview-back {
+  color: var(--settings-text);
+  background: var(--settings-bg);
+  border: 2px solid var(--settings-border);
+  border-radius: 22px;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+/* Over the header's right end, clear of the station buttons' labels. */
+#preview-back {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  right: 8px;
+  z-index: 101;
+  border-color: var(--settings-text);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+#preview-back[hidden] { display: none; }
 
 /* -- Section layout -- */
 .s-section { padding: 14px 20px; border-bottom: 1px solid var(--settings-border); }
@@ -1739,7 +1766,7 @@ html.is-ios .ios-hide { display: none; }
   }
   #conn-dot.buffering { animation: none; }
   .tap-flash.flash { animation: none; }
-  #settings-panel.animated { transition: none; }
+  #settings-panel.animated, #settings-panel.animated.previewing { transition: none; }
 }
 
 </style>
@@ -1862,7 +1889,10 @@ html.is-ios .ios-hide { display: none; }
   <aside id="settings-panel" role="dialog" aria-labelledby="settings-title" aria-modal="true">
     <div id="settings-header">
       <span id="settings-title">Settings</span>
-      <button id="settings-close" onclick="closeSettings()" aria-label="Close settings">&#215;</button>
+      <div id="settings-header-actions">
+        <button id="settings-preview" onclick="startPreview()">Preview</button>
+        <button id="settings-close" onclick="closeSettings()" aria-label="Close settings">&#215;</button>
+      </div>
     </div>
 
     <!-- Shown only when hosted and the profile names a guide — see helpAvailable() -->
@@ -2031,8 +2061,11 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.7.0</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.8.0</div>
   </aside>
+
+  <!-- Shown only while previewing settings — see startPreview() -->
+  <button id="preview-back" onclick="endPreview()" hidden><span aria-hidden="true">&#8249; </span>Back to settings</button>
 
   <!-- ========== STREAM BROWSER POPUP ========== -->
   <div id="stream-browser-overlay" class="stream-browser-overlay" role="dialog" aria-labelledby="sb-title" aria-modal="true">
@@ -2324,6 +2357,8 @@ let cfgSnapshot = null;
 /* True only between openSettings() and doCloseSettings(). Settings actions check
    it, so a click that still reaches the closed panel does nothing. */
 let settingsOpen = false;
+/* True while settings is slid aside to preview the grid (settingsOpen stays true). */
+let previewing = false;
 
 
 /* ================================================================
@@ -3891,6 +3926,11 @@ function closeTopmostOverlay() {
     hideOverlay(topOverlay);
     return true;
   }
+  // A preview goes back to settings rather than closing it
+  if (previewing) {
+    endPreview();
+    return true;
+  }
   // Then check settings panel
   var settingsPanel = document.getElementById('settings-panel');
   if (settingsPanel.classList.contains('open')) {
@@ -4310,6 +4350,7 @@ function confirmDiscard() {
 
 /** Actually close the settings panel, reverting any unapplied changes. */
 function doCloseSettings() {
+  endPreview(false);
   // Revert to snapshot if settings were not applied
   if (cfgSnapshot) {
     cfg.orgName = cfgSnapshot.orgName;
@@ -4362,6 +4403,40 @@ function previewOrgName() {
   cfg.orgName = document.getElementById('in-org-name').value || PROFILE.orgName;
   applyOrgName();
 }
+
+/* Settings changes already redraw the grid behind the panel, which covers it
+   on a phone. Preview slides the panel aside to show the grid, unapplied
+   changes and all; nothing is saved or reverted. The panel keeps its fields
+   and scroll position, and settings counts as open throughout. */
+function startPreview() {
+  if (!settingsOpen || previewing) return;
+  previewing = true;
+  document.getElementById('settings-panel').classList.add('previewing');
+  var back = document.getElementById('preview-back');
+  back.hidden = false;
+  requestAnimationFrame(() => back.focus());
+}
+
+/** Back to settings from a preview; moveFocus is false when settings is closing. */
+function endPreview(moveFocus = true) {
+  if (!previewing) return;
+  previewing = false;
+  document.getElementById('settings-panel').classList.remove('previewing');
+  document.getElementById('preview-back').hidden = true;
+  if (moveFocus) requestAnimationFrame(() => document.getElementById('settings-preview').focus());
+}
+
+// While previewing, the grid can be looked at and read but not used: a tap
+// (or a screen reader's double-tap, or Enter) on a station, the stop bar,
+// the transport or the logo is stopped here, in the capture phase, before
+// any of their own handlers run.
+document.getElementById('app').addEventListener('click', function (e) {
+  if (!previewing) return;
+  if (e.target.closest('#header, #buttons, #simple-stop, #adv-transport')) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
 
 /** Sync all settings chip selections and aria-checked state. */
 function syncChips() {
