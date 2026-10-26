@@ -62,7 +62,7 @@ You can have up to 8 stations. There are two ways to add one.
 3. Tap a result's play button to hear it first, then tap **+ Add**.
 4. Adjust the label, icon and color if you like, then tap **Apply & Close**.
 
-The station browser searches the free, community-run [Radio Browser](https://www.radio-browser.info/) directory, so it needs an internet connection.
+The station browser searches the free, community-run [Radio Browser](https://www.radio-browser.info/) directory, so it needs an internet connection. On this website it only lists stations with secure (https://) addresses, because browsers block the others here.
 
 ### Type one in
 
