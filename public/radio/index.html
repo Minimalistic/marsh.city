@@ -1410,6 +1410,38 @@ html.is-desktop .overlay-body { font-size: 20px; }
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 #preview-back[hidden] { display: none; }
+/* A tap that preview swallows says why and points at the way back. */
+#preview-hint {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  background: var(--settings-bg);
+  color: var(--settings-text);
+  border: 2px solid var(--settings-text);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 102;
+}
+#preview-hint.visible { opacity: 1; }
+#preview-back.nudge {
+  outline: 3px solid var(--settings-text);
+  outline-offset: 3px;
+  transform-origin: right center; /* it sits 8px from the edge: grow inward */
+  animation: preview-nudge 0.45s ease-in-out 3;
+}
+@keyframes preview-nudge {
+  50% { transform: scale(1.12); }
+}
 
 /* -- Section layout -- */
 .s-section { padding: 14px 20px; border-bottom: 1px solid var(--settings-border); }
@@ -2127,6 +2159,8 @@ html.is-ios .ios-hide { display: none; }
   #conn-dot.buffering { animation: none; }
   .tap-flash.flash { animation: none; }
   #settings-panel.animated, #settings-panel.animated.previewing { transition: none; }
+  /* The outline alone marks Back to settings: no pulse. */
+  #preview-back.nudge { animation: none; }
 }
 
 </style>
@@ -2432,11 +2466,12 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.12.1</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.13.0</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
   <button id="preview-back" onclick="endPreview()" hidden><span aria-hidden="true">&#8249; </span>Back to settings</button>
+  <div id="preview-hint" role="status" aria-live="polite"></div>
 
   <!-- ========== STREAM BROWSER POPUP ========== -->
   <div id="stream-browser-overlay" class="stream-browser-overlay" role="dialog" aria-labelledby="sb-title" aria-modal="true">
@@ -4810,6 +4845,7 @@ function startPreview() {
 function endPreview(moveFocus = true) {
   if (!previewing) return;
   previewing = false;
+  hidePreviewHint();
   document.getElementById('settings-panel').classList.remove('previewing');
   document.getElementById('preview-back').hidden = true;
   if (moveFocus) requestAnimationFrame(() => document.getElementById('settings-preview').focus());
@@ -4824,8 +4860,39 @@ document.getElementById('app').addEventListener('click', function (e) {
   if (e.target.closest('#header, #buttons, #simple-stop, #adv-transport')) {
     e.preventDefault();
     e.stopPropagation();
+    showPreviewHint();
   }
 }, true);
+
+const PREVIEW_HINT = 'Preview only. Tap Back to settings to make changes.';
+let previewHintTimer = null;
+
+/** Says why a tap did nothing and nudges Back to settings, for 3 s; another
+    tap restarts the 3 s. Focus stays put; screen readers hear it once a tap. */
+function showPreviewHint() {
+  var hint = document.getElementById('preview-hint');
+  var back = document.getElementById('preview-back');
+  // Emptied first, so a repeat tap is announced again (same text, new change).
+  hint.textContent = '';
+  back.classList.remove('nudge');
+  requestAnimationFrame(() => {
+    if (!previewing) return;
+    hint.textContent = PREVIEW_HINT;
+    hint.classList.add('visible');
+    back.classList.add('nudge'); // re-added a frame later, so the pulse restarts
+  });
+  clearTimeout(previewHintTimer);
+  previewHintTimer = setTimeout(hidePreviewHint, 3000);
+}
+
+function hidePreviewHint() {
+  clearTimeout(previewHintTimer);
+  previewHintTimer = null;
+  var hint = document.getElementById('preview-hint');
+  hint.classList.remove('visible');
+  hint.textContent = '';
+  document.getElementById('preview-back').classList.remove('nudge');
+}
 
 /** Sync all settings chip selections and aria-checked state. */
 function syncChips() {

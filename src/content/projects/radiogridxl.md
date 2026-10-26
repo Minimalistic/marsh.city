@@ -84,6 +84,8 @@ flowchart TD
 ## Updates
 
 ### 2026-10-26
+Released v7.13.0. In settings, Preview shows the station grid with your changes before you apply them, and the grid can't be used while it's showing, so a tapped station used to do nothing with no sign why. Now that tap brings up "Preview only. Tap Back to settings to make changes." for a few seconds, and the Back to settings button pulses so it's easy to find. Screen readers hear the message too.
+
 Released v7.12.1, fixing the app on iPhones with a notch. Installed on the home screen, the app draws under the status bar, and the top of settings, with its Preview and close buttons, sat under it where a tap couldn't reach. Settings now starts below the status bar and keeps those buttons pinned while it scrolls. The help sheet got the same fix. With the phone sideways, the logo, the outer station buttons and the sleep timer now keep clear of the notch.
 
 Released v7.12.0 with a new logo: an R built from rounded tiles, like the station buttons, shading from cyan to violet, with radio waves on both sides. It follows the theme, turning grey in MonoRadio, white and yellow in High Contrast and amber in Night, and every part of it holds 3:1 contrast against the header. The browser tab shows the R by itself, drawn on whole pixels so it stays sharp at 16px.
