@@ -84,6 +84,8 @@ flowchart TD
 ## Updates
 
 ### 2026-10-26
+Released v7.10.1. Six to eight stations used to drop their names and show only their icons on every screen, a large tablet included. Now they show names wherever a row has the room, and fall back to icons only on a screen too small for words.
+
 Released v7.10.0 with a Night theme for a radio by the bed: black and dim amber with no blue anywhere, text just over the WCAG AA line so it reads without lighting the room. The flash on a tap, the emoji and the overlay icons dim with it. A web page can't turn down the backlight, so on an LCD the black still glows a little.
 
 Released v7.9.0 with a High Contrast theme for low vision: black, white and yellow, every word at 7:1 contrast (WCAG AAA), and a playing station filled solid yellow. The Low Vision preset now uses it. MonoRadio buttons got a visible edge, since every station there shares one background. Earlier the same day, v7.8.0 added a Preview button to settings, so on a phone you can see a theme or station change before applying it, and v7.8.1 added a note to listen to a station before setting it up for someone else. The screenshots on this page now come from the app itself, retaken with each release.

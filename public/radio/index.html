@@ -2362,7 +2362,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.10.0</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.10.1</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -3158,9 +3158,9 @@ function renderButtons() {
   //   Label-only: just the title                     (needs ~60px+)
   //   Compact:    emoji/initial icon only             (any height)
   //
-  // On small portrait screens (phones), 5+ streams in 2-col grid
-  // means 3-4 rows in ~400-550px — never enough for full text.
-  // Use stream count as the primary driver, heightPerRow as refinement.
+  // 1-4 stations never go emoji-only; 5 or more decide by the room a row
+  // has, like any other count. 6-8 used to go emoji-only on every screen,
+  // a large tablet included, so a reader lost every station's name.
   var compact, hideSub;
   if (count <= 3) {
     // 1-3 stacked: always full, plenty of room
@@ -3170,14 +3170,11 @@ function renderButtons() {
     // 2x2 grid: full on tablets, may need label-only on phones
     compact = false;
     hideSub = heightPerRow < 130;
-  } else if (count <= 5) {
-    // 3 rows: label-only on most screens, compact if very tight
+  } else {
+    // 3+ rows: names on most screens, descriptions where rows are tall,
+    // emoji-only only when a row is too short for a name
     compact = heightPerRow < 70;
     hideSub = !compact && heightPerRow < 160;
-  } else {
-    // 6-8 streams: always compact emoji-only
-    compact = true;
-    hideSub = false;
   }
 
   buttonsEl.classList.toggle('compact-mode', compact);
@@ -3248,9 +3245,11 @@ function renderButtons() {
 
   function titleAt(scale) { return Math.min(baseLabel * scale, maxTitle); }
   // The playing/paused glyph is 0.7 x the title, or a third of the icon in
-  // compact, which has no title. Every button keeps room for it, so starting
-  // or pausing a station never overflows its button.
-  function glyphAt(scale) { return compact ? baseEmoji * scale / 3 : (hideSub ? 0 : titleAt(scale) * 0.7); }
+  // compact, which has no title, and never under 12px there: compact only
+  // happens on rows too short for a name, where a third of the icon is tiny.
+  // Every button keeps room for it, so starting or pausing a station never
+  // overflows its button.
+  function glyphAt(scale) { return compact ? Math.max(12, baseEmoji * scale / 3) : (hideSub ? 0 : titleAt(scale) * 0.7); }
   // A station in trouble says so in words where its description goes, in
   // every layout, tight and compact ones included. Compact has room for "Not
   // available" alone; the aria-label always has the full text.
@@ -4923,11 +4922,7 @@ function renderStreamEditor() {
   var hint = document.getElementById('stream-hint');
   if (cfg.streams.length >= 5) {
     hint.style.display = 'block';
-    if (cfg.streams.length >= 6) {
-      hint.textContent = 'With ' + cfg.streams.length + ' streams, buttons show emoji only. Set an icon for each stream for best results.';
-    } else {
-      hint.textContent = 'With 5+ streams, text will shrink to fit. Adding more will switch to emoji-only buttons — set an icon for each stream.';
-    }
+    hint.textContent = 'With 5 or more streams, text shrinks to fit, and on a small screen buttons show only their icon. Set an icon for each stream.';
   } else {
     hint.style.display = 'none';
   }

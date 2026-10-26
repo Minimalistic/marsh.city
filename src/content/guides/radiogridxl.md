@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.10.0
+appVersion: 7.10.1
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -74,7 +74,7 @@ The station browser searches the free, community-run [Radio Browser](https://www
 2. Fill in the **Label**, **Description** and **Stream URL**.
 3. Tap **Apply & Close**.
 
-With 5 stations the button text gets smaller to fit. With 6 or more, buttons show only their icon, so give every station an icon.
+With 5 or more stations the button text gets smaller to fit, and on a small screen buttons may show only their icon, so give every station an icon.
 
 ## Change a station's icon and color
 
