@@ -4668,12 +4668,32 @@ async function searchStations() {
   if (query) params.set('name', query);
   if (country) params.set('countrycode', country);
   if (tag) params.set('tag', tag);
+  // An https page can't play http:// streams (see isMixedContentUrl), so the
+  // hosted app asks only for https stations: a full page of results that play.
+  // The file:// APK plays both and keeps searching everything.
+  const httpsOnly = location.protocol === 'https:';
+  if (httpsOnly) params.set('is_https', 'true');
 
   for (const host of await radioBrowserHosts()) {
     try {
-      const resp = await fetchWithTimeout('https://' + host + '/json/stations/search?' + params.toString(), RB_TIMEOUT_MS);
+      const searchUrl = 'https://' + host + '/json/stations/search?';
+      const resp = await fetchWithTimeout(searchUrl + params.toString(), RB_TIMEOUT_MS);
       if (!resp.ok) throw new Error('API returned ' + resp.status);
-      renderBrowserResults(await resp.json());
+      const stations = await resp.json();
+      // Nothing secure found: look once more without the filter, so the empty
+      // message only blames http:// when http:// stations really did match.
+      let onlyHttpMatches = false;
+      if (httpsOnly && playableHere(stations).length === 0) {
+        params.delete('is_https');
+        try {
+          const all = await fetchWithTimeout(searchUrl + params.toString(), RB_TIMEOUT_MS);
+          const allStations = all.ok ? await all.json() : [];
+          onlyHttpMatches = Array.isArray(allStations) && allStations.length > 0;
+        } catch (err) {
+          console.warn('[stream browser] ' + host + ' recheck failed:', err && err.message);
+        }
+      }
+      renderBrowserResults(stations, onlyHttpMatches);
       return;
     } catch (err) {
       console.warn('[stream browser] ' + host + ' failed:', err && err.message);
@@ -4688,13 +4708,26 @@ async function searchStations() {
   status.textContent = msg;
 }
 
-function renderBrowserResults(stations) {
+/** Directory results this page can play: on the hosted (https) app, a station
+    whose resolved address is http:// would fail silently, so it's left out.
+    The is_https search filter checks the listed address, which can still
+    resolve to http://. */
+function playableHere(stations) {
+  if (!Array.isArray(stations)) return [];
+  return stations.filter(s => s && !(typeof s.url_resolved === 'string' && isMixedContentUrl(s.url_resolved)));
+}
+
+const HTTP_ONLY_RESULTS_MESSAGE = 'No stations found that can play on this website. Some use http:// addresses, which browsers block here.';
+
+function renderBrowserResults(stations, onlyHttpMatches) {
   const results = document.getElementById('sb-results');
   const status = document.getElementById('sb-status');
+  stations = playableHere(stations);
 
-  if (!stations || stations.length === 0) {
-    results.innerHTML = '<div class="stream-browser-empty">No stations found. Try different search terms.</div>';
-    status.textContent = 'No stations found.';
+  if (stations.length === 0) {
+    const msg = onlyHttpMatches ? HTTP_ONLY_RESULTS_MESSAGE : 'No stations found. Try different search terms.';
+    results.innerHTML = '<div class="stream-browser-empty">' + msg + '</div>';
+    status.textContent = onlyHttpMatches ? msg : 'No stations found.';
     return;
   }
 
