@@ -107,6 +107,10 @@ after(async () => {
 })
 
 const browserSkip = SANDBOXED && 'Claude Code sandbox blocks local ports; rerun unsandboxed (CI runs it)'
+// The view-background tests drive the real site's menu. Against a fixture
+// site (SMOKE_DIST) there's no menu, and each would wait out a 30 s timeout;
+// worse, their failures would let a fixture "fail" without the check under test.
+const siteSkip = browserSkip || (process.env.SMOKE_DIST && 'tests the real site\'s UI; fixture sites have none')
 
 test('every page loads without JS errors or failed same-origin requests', { skip: browserSkip }, async () => {
   const problems = []
@@ -154,7 +158,7 @@ const sceneState = (page) => page.evaluate(() => ({
   focusInBar: !!document.activeElement?.closest('.scene-bar'),
 }))
 
-test('view background hides the page and Esc brings it back where it was', { skip: browserSkip }, async () => {
+test('view background hides the page and Esc brings it back where it was', { skip: siteSkip }, async () => {
   const page = await browser.newPage({ viewport: { width: 390, height: 750 } })
   const errors = []
   page.on('pageerror', (err) => errors.push(err.message))
@@ -190,7 +194,7 @@ test('view background hides the page and Esc brings it back where it was', { ski
   await page.close()
 })
 
-test('the bar sound button is the same setting as the menu Sound item', { skip: browserSkip }, async () => {
+test('the bar sound button is the same setting as the menu Sound item', { skip: siteSkip }, async () => {
   const page = await browser.newPage()
   await page.goto(origin + '/', { waitUntil: 'load' })
   await enterSceneView(page)
@@ -205,7 +209,7 @@ test('the bar sound button is the same setting as the menu Sound item', { skip: 
   await page.close()
 })
 
-test('view background on a page too short to scroll: Back to page works, nothing throws', { skip: browserSkip }, async () => {
+test('view background on a page too short to scroll: Back to page works, nothing throws', { skip: siteSkip }, async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 6000 } })
   const errors = []
   page.on('pageerror', (err) => errors.push(err.message))
