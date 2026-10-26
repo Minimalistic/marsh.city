@@ -1,12 +1,12 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.6.0
+appVersion: 7.7.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
 
-**RadioGridXL saves your stations and settings inside the web browser you're using, on this device only.** Nothing is sent anywhere, and there's no account. If you open RadioGridXL on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for marsh.city, the website RadioGridXL runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore).
+**RadioGridXL saves your stations and settings inside the web browser you're using, on this device only.** Nothing is sent anywhere, and there's no account. If you open RadioGridXL on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for marsh.city, the website RadioGridXL runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
 
 ## Listening
 
@@ -45,9 +45,9 @@ Each station has its own block under **Audio Streams** in settings. To point a b
 
 The URL has to be a direct audio stream, usually starting with `https://` and often ending in `.mp3` or `.aac`. A station's website address won't work, and neither will most playlist files (`.pls`, `.m3u`). If all you have is a playlist file, open it in a text editor and copy the web address inside it.
 
-Links that start with `http://` (no "s") won't play on this website, because browsers block them on secure pages. The app shows a warning under the field when that's the case. They do play in the installed Android app.
+Links that start with `http://` (no "s") won't play on this website, because browsers block them on secure pages. That includes RadioGridXL on your home screen, since it's the same website. The app shows a warning under the field when that's the case. Look for an `https://` address for the station instead.
 
-**Volume Trim** evens out a station that's much louder or quieter than the others. 1.0 is normal, and lower numbers make that station quieter. Numbers above 1.0 only make it louder when **Max App Volume** is set below 100%.
+**Volume Trim** evens out a station that's much louder or quieter than the others. 1.0 is normal, and lower numbers make that station quieter. Numbers above 1.0 only make it louder when **Max App Volume** is set below 100%. On iPhone and iPad, Volume Trim and Max App Volume don't appear: Apple doesn't let web apps change the volume, so use the side buttons.
 
 ## Add a station
 
@@ -109,7 +109,7 @@ The screen behind the panel changes as soon as you tap, so you can compare. Tap 
 **Accessibility Preset** at the top of settings sets several options in one tap:
 
 - **Standard**: Auto theme, Large text, with tones and vibration on.
-- **Low Vision**: the high-contrast MonoRadio Dark theme, Ultra text, and spoken announcements.
+- **Low Vision**: the high-contrast MonoRadio Dark theme, Ultra text, and spoken announcements. If you use VoiceOver or TalkBack, turn **Voice Announcements** off afterwards, so the app doesn't talk over your screen reader.
 - **Simplest**: X-Large text with no tones, vibration or announcements.
 
 All three use Simple controls.
@@ -120,9 +120,9 @@ Pick the closest one, then fine-tune anything below it. Once you change somethin
 
 ![The text size choices](/images/radiogridxl/guide/text-size.jpg)
 
-**Text Size** has Normal, Large, X-Large and Ultra. Ultra grows with the screen, which suits a tablet across the room.
+**Text Size** has Normal, Large, X-Large and Ultra. Ultra is the largest, which suits a tablet across the room.
 
-Further down there are more options: **Voice Announcements** (speaks "Now playing…" and so on aloud), **Audio Tones** (a short chime when playback starts or stops), **Haptic Feedback** (a small buzz on tap, on phones that support it), and **Auto-Resume** (starts the last station again when the app opens).
+Further down there are more options: **Voice Announcements** (speaks "Now playing…" and so on aloud), **Audio Tones** (a short chime when playback starts or stops), **Haptic Feedback** (a small buzz on tap, on phones that support it), and **Auto-Resume** (when the app opens, starts the station again if it was playing when the app closed).
 
 ## Simple or Advanced controls
 
@@ -158,4 +158,4 @@ RadioGridXL can sit on your home screen like a regular app and open full screen:
 - **Android (Chrome):** tap the **⋮** menu, then **Add to Home screen** or **Install app**.
 - **Computer (Chrome or Edge):** click the install icon at the right end of the address bar.
 
-The installed app keeps the same stations and settings as the browser you installed it from.
+On Android and on computers, the installed app keeps the same stations and settings as the browser you installed it from. On iPhone and iPad it starts fresh, so set up your stations in the Home Screen app. If you already set them up in Safari, [Backup and restore](#backup-and-restore) moves them across.

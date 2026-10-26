@@ -5,7 +5,7 @@
    it sat at v1 from 7.5.0). Keep it in lockstep with the version-bump routine.
    The server sends sw.js no-cache, so each load refetches this file and the
    install→activate purge cycle kicks in. */
-const CACHE_VERSION = 'rgxl-shell-7.6.0';
+const CACHE_VERSION = 'rgxl-shell-7.7.0-306f0479';
 
 /* Shell assets, relative to the SW scope (the directory it's served from).
    start_url is "." so the HTML is reachable both as "./" and by filename.
@@ -28,19 +28,32 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_VERSION).then((cache) =>
       /* addAll is atomic-ish but a single 404 would reject it; add individually
          and swallow per-asset failures so a missing optional icon can't brick
-         install. The HTML itself is the only truly required entry. */
+         install. cache: 'reload' skips the browser's HTTP cache: GitHub Pages
+         sends max-age=600, so a plain fetch soon after a deploy could store
+         the previous HTML under this new cache name. */
       Promise.all(SHELL_ASSETS.map((url) =>
-        cache.add(url).catch(() => null)
+        cache.add(new Request(url, { cache: 'reload' })).catch(() => null)
       ))
+        /* The HTML is the one required entry. Without it (a weak connection
+           timing out on the big file), fail the install: the previous version
+           stays in charge rather than a worker that can't open offline. */
+        .then(() => matchShell(cache))
+        .then((shell) => {
+          if (!shell) throw new Error('shell HTML not cached; keeping the previous version');
+        })
     )
   );
 });
 
 self.addEventListener('activate', (event) => {
+  /* CacheStorage is shared by the whole origin, not just this worker's scope,
+     so on marsh.city the other apps' caches sit beside ours. Delete only our
+     own old versions. */
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
-        keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))
+        keys.filter((k) => k.startsWith('rgxl-shell-') && k !== CACHE_VERSION)
+          .map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())
   );
@@ -74,14 +87,16 @@ self.addEventListener('fetch', (event) => {
         // Offline and not cached: last-ditch fall back to the cached shell HTML
         // for navigations so the app still opens. Try each name the shell may
         // be cached under (see SHELL_ASSETS).
-        req.mode === 'navigate' ? matchShell() : undefined
+        req.mode === 'navigate' ? matchShell(caches) : undefined
       );
     })
   );
 });
 
-function matchShell() {
-  return caches.match('./')
-    .then((res) => res || caches.match('./index.html'))
-    .then((res) => res || caches.match('./RadioGridXL.html'));
+/** The shell HTML under any name it may be cached as, from `store`: one
+    cache, or all of CacheStorage. */
+function matchShell(store) {
+  return store.match('./')
+    .then((res) => res || store.match('./index.html'))
+    .then((res) => res || store.match('./RadioGridXL.html'));
 }

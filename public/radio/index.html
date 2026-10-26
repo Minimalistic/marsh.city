@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src http: https: blob:; connect-src 'self' https://*.api.radio-browser.info; frame-src https://marsh.city; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <!-- PWA shell: relative manifest href keeps the file fully self-contained (no http URLs). -->
 <link rel="manifest" href="manifest.json">
@@ -28,6 +29,17 @@
 /* -- Dark theme (default) -- */
 :root {
   --accent: #f0c040;
+  /* Marks drawn on a stream button to show its state: the ▮▮/▶ glyph and the
+     paused ring. Light theme swaps in white (see there). */
+  --btn-mark: var(--accent);
+  /* A station that gave up: a grey that sits back from the page, with text
+     that still holds 4.5:1. MonoRadio keeps its own background. */
+  --btn-failed-bg: #22222f;
+  --btn-failed-text: #aaaacc;
+  /* Accent used as small text, and the colour of errors and LIVE. The light
+     themes set darker ones so small text holds 4.5:1. */
+  --accent-text: var(--accent);
+  --danger: #ff6b6b;
 
   --header-bg: #0d0d1a;
   --header-text: #ffffff;
@@ -72,6 +84,13 @@
 /* -- Light theme overrides -- */
 html.theme-light {
   --accent: #b06a00;
+  /* The light accent is too dark to show on the deep button colours (under
+     3:1); white holds 4.5:1 on every one of them. */
+  --btn-mark: #ffffff;
+  --btn-failed-bg: #ccccdd;
+  --btn-failed-text: #444466;
+  --accent-text: #8a5300;
+  --danger: #b71c1c;
 
   --header-bg: #eaeaf4;
   --header-text: #0c2039;
@@ -159,15 +178,17 @@ html.theme-mono-dark {
   --mono-btn-bg: #16161a;
   --mono-btn-border: #2a2a30;
   --mono-btn-text: #d0d0d0;
-  --mono-btn-sub: #808080;
+  --mono-btn-sub: #909090;
   --mono-btn-active-bg: #22222a;
   --mono-btn-active-border: #505058;
   --mono-btn-glow: rgba(255, 255, 255, 0.04);
+  --btn-failed-text: var(--mono-btn-sub);
 }
 
 /* -- MonoRadio Light -- */
 html.theme-mono-light {
   --accent: #404040;
+  --danger: #a03030;
 
   --header-bg: #f0eeeb;
   --header-text: #1a1a1a;
@@ -211,10 +232,11 @@ html.theme-mono-light {
   --mono-btn-bg: #ffffff;
   --mono-btn-border: #d0cec8;
   --mono-btn-text: #1a1a1a;
-  --mono-btn-sub: #707070;
+  --mono-btn-sub: #606060;
   --mono-btn-active-bg: #f0eeeb;
   --mono-btn-active-border: #808080;
   --mono-btn-glow: rgba(0, 0, 0, 0.03);
+  --btn-failed-text: var(--mono-btn-sub);
 }
 
 
@@ -345,7 +367,8 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
   border-bottom: 1px solid var(--settings-border);
   flex-shrink: 0;
   gap: 12px;
-  transition: padding 0.2s;
+  /* No padding transition: renderButtons() measures the header straight after
+     toggling .compact, and mid-transition it would read the old height. */
 }
 
 /* Compact header for tight viewports */
@@ -388,9 +411,6 @@ html.is-desktop #org-name { font-size: 16px; }
   flex-shrink: 0;
   background: var(--conn-idle);
   transition: background 0.3s;
-  font-size: 0;
-  color: transparent;
-  overflow: hidden;
 }
 #conn-dot.good { background: var(--conn-good); }
 #conn-dot.buffering { background: var(--conn-buf); animation: pulse 1.4s ease-in-out infinite; }
@@ -401,7 +421,7 @@ html.is-desktop #org-name { font-size: 16px; }
   display: none;
   font-size: 11px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--accent-text);
   padding: 2px 8px;
   border-radius: 8px;
   background: rgba(240, 192, 64, 0.12);
@@ -451,10 +471,16 @@ html.is-desktop #org-name { font-size: 16px; }
 }
 .stream-btn:active { filter: brightness(1.15); }
 
-/* Active stream styling — bright glow + accent border */
+/* Active stream styling — accent ring. The playing colour is already the
+   brighter c.active; a brightness() filter on top pushed white text below
+   4.5:1. In light theme the accent ring can't hold 3:1 against the deep
+   playing colours, so a white band inside it does (a two-colour ring: the
+   accent stands out from the page, the white from the button). */
 .stream-btn.active {
-  filter: brightness(1.3);
   box-shadow: inset 0 0 0 3px var(--accent);
+}
+html.theme-light .stream-btn.active {
+  box-shadow: inset 0 0 0 3px var(--accent), inset 0 0 0 5px var(--btn-mark);
 }
 
 /* Emoji icon — flattened to solid icon look (grayscale + high contrast) */
@@ -474,17 +500,33 @@ html.theme-light .btn-emoji { filter: grayscale(1) contrast(2) brightness(0.8); 
   text-overflow: ellipsis;
   max-width: 100%;
 }
+/* Full white like the label: at 70% it fell below 4.5:1 on most light-theme
+   colours. Size and weight keep it secondary. */
 .btn-sublabel {
   font-size: var(--btn-sub-size, 15px);
   font-weight: 600;
   text-align: center;
   color: #ffffff;
-  opacity: 0.7;
   transition: transform 0.2s ease, opacity 0.2s ease;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
   white-space: nowrap;
+}
+/* A station's trouble status ("Not available. Tap to try again.") says in
+   words what the grey button means, so it shows in every layout. It wraps to
+   two lines rather than being cut short: renderButtons() gives it its own
+   size and room, and says just "Not available" where the full text needs a
+   third line. It is as strong as the title, not dimmed like a description:
+   on a greyed-out button, dimmed text was close to unreadable. */
+#buttons .btn-status {
+  font-size: var(--btn-status-size, 15px);
+  white-space: normal;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  opacity: 1;
 }
 
 /* "Now Playing" label — only visible on active button */
@@ -495,16 +537,23 @@ html.theme-light .btn-emoji { filter: grayscale(1) contrast(2) brightness(0.8); 
   text-transform: uppercase;
   opacity: 0;
   transition: opacity 0.3s;
-  color: var(--accent);
+  color: var(--btn-mark);
   flex-shrink: 0;
 }
-.stream-btn.active .btn-state { opacity: 1; font-size: calc(var(--btn-label-size, 34px) * 0.7); letter-spacing: 0; }
-.stream-btn.paused .btn-state { opacity: 1; font-size: calc(var(--btn-label-size, 34px) * 0.7); letter-spacing: 0; }
-.stream-btn.failed { opacity: 0.4; filter: grayscale(0.8); }
+/* The playing/paused glyph has its own size: renderButtons() keeps room for
+   it on every button, and compact mode, which has no title, still shows it. */
+.stream-btn.active .btn-state { opacity: 1; font-size: var(--btn-glyph-size, 24px); letter-spacing: 0; }
+.stream-btn.paused .btn-state { opacity: 1; font-size: var(--btn-glyph-size, 24px); letter-spacing: 0; }
+/* A station that gave up: greyed out by colour, not by fading. A fade to 40%
+   took "Not available. Tap to try again." down to about 2:1 with it.
+   !important beats the inline station colour, as MonoRadio's does. */
+.stream-btn.failed { background: var(--btn-failed-bg) !important; filter: grayscale(0.8); }
+.stream-btn.failed .btn-label,
+.stream-btn.failed .btn-sublabel { color: var(--btn-failed-text); }
 .stream-btn.failed .btn-state { opacity: 1; color: var(--conn-bad); }
 
-/* Hide secondary text when buttons are tight */
-#buttons.hide-sub .btn-sublabel { display: none; }
+/* Hide secondary text when buttons are tight (a trouble status stays) */
+#buttons.hide-sub .btn-sublabel:not(.btn-status) { display: none; }
 #buttons.hide-sub .btn-state { display: none; }
 #buttons.hide-sub .btn-emoji { display: none; }
 
@@ -515,18 +564,18 @@ html.theme-light .btn-emoji { filter: grayscale(1) contrast(2) brightness(0.8); 
   opacity: 1;
 }
 #buttons.compact-mode .btn-label,
-#buttons.compact-mode .btn-sublabel { display: none; }
+#buttons.compact-mode .btn-sublabel:not(.btn-status) { display: none; }
 
 /* First-letter fallback styling (when no emoji is set) */
 #buttons.compact-mode .btn-emoji {
   line-height: 1;
 }
 
-/* Paused stream styling — dimmed version of active */
+/* Paused stream styling — a dashed ring, so paused differs from playing by
+   shape as well as colour. It used to fade the whole button to 70%, which
+   took its text below 4.5:1. border-box sizing keeps the button's size. */
 .stream-btn.paused {
-  filter: brightness(1.0);
-  box-shadow: inset 0 0 0 3px var(--accent);
-  opacity: 0.7;
+  border: 3px dashed var(--btn-mark);
 }
 .stream-btn.paused .btn-state { opacity: 1; }
 
@@ -544,12 +593,12 @@ html[class*="theme-mono"] .stream-btn.active {
 }
 html[class*="theme-mono"] .stream-btn.paused {
   background: var(--mono-btn-bg) !important;
-  border-color: var(--mono-btn-active-border);
-  box-shadow: inset 0 0 0 2px var(--accent);
+  border: 2px dashed var(--accent);
   filter: none;
 }
 html[class*="theme-mono"] .btn-label { color: var(--mono-btn-text); }
-html[class*="theme-mono"] .btn-sublabel { color: var(--mono-btn-sub); opacity: 0.55; }
+/* No fade on top of --mono-btn-sub: at 55% it was about 2:1. */
+html[class*="theme-mono"] .btn-sublabel { color: var(--mono-btn-sub); }
 html[class*="theme-mono"] .btn-emoji { filter: grayscale(1) contrast(3) brightness(1.4); opacity: 0.35; }
 html.theme-mono-light .btn-emoji { filter: grayscale(1) contrast(3) brightness(0.3); opacity: 0.3; }
 html[class*="theme-mono"] .btn-state { color: var(--accent); }
@@ -576,21 +625,16 @@ html.is-desktop.theme-mono-light body { background: #d8d6d2; }
 /* --- TEXT SIZE SCALING --- */
 
 html[data-size="large"] .btn-label { font-size: var(--btn-label-size, 40px); }
-html[data-size="large"] .btn-sublabel { font-size: var(--btn-sub-size, 17px); }
+html[data-size="large"] .btn-sublabel { font-size: var(--btn-sub-size, 18px); }
 html[data-size="large"] .btn-emoji { font-size: var(--btn-emoji-size, 38px); }
 
 html[data-size="xlarge"] .btn-label { font-size: var(--btn-label-size, 52px); }
-html[data-size="xlarge"] .btn-sublabel { font-size: var(--btn-sub-size, 21px); }
-html[data-size="xlarge"] .btn-emoji { font-size: var(--btn-emoji-size, 48px); }
+html[data-size="xlarge"] .btn-sublabel { font-size: var(--btn-sub-size, 24px); }
+html[data-size="xlarge"] .btn-emoji { font-size: var(--btn-emoji-size, 50px); }
 
-html[data-size="ultra"] .btn-label { font-size: 11vmin; }
-html[data-size="ultra"] .btn-sublabel { font-size: 4vmin; }
-html[data-size="ultra"] .btn-emoji { font-size: 10vmin; }
-
-/* Ultra in grid mode needs smaller sizing to fit */
-html[data-size="ultra"] #buttons.grid-mode .btn-label { font-size: 7vmin; }
-html[data-size="ultra"] #buttons.grid-mode .btn-sublabel { font-size: 3vmin; }
-html[data-size="ultra"] #buttons.grid-mode .btn-emoji { font-size: 6vmin; }
+html[data-size="ultra"] .btn-label { font-size: var(--btn-label-size, 64px); }
+html[data-size="ultra"] .btn-sublabel { font-size: var(--btn-sub-size, 30px); }
+html[data-size="ultra"] .btn-emoji { font-size: var(--btn-emoji-size, 62px); }
 
 
 /* --- ANIMATIONS --- */
@@ -600,7 +644,8 @@ html[data-size="ultra"] #buttons.grid-mode .btn-emoji { font-size: 6vmin; }
   50% { opacity: 0.4; }
 }
 
-/* Tap feedback — brief white flash overlay on button press */
+/* Tap feedback — brief white flash overlay on button press.
+   Keep 0.25s in step with TAP_FLASH_MS in the script, which ends the flash. */
 @keyframes tapFlash { 0% { opacity: 0.5; } 100% { opacity: 0; } }
 .tap-flash { position: absolute; inset: 0; background: white; opacity: 0; pointer-events: none; }
 .tap-flash.flash { animation: tapFlash 0.25s ease-out; }
@@ -778,7 +823,7 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #ff6b6b;
+  color: var(--danger);
   padding: 3px 10px;
   border-radius: 8px;
   background: rgba(255, 107, 107, 0.15);
@@ -804,10 +849,14 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   gap: 20px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s;
+  /* visibility (not just opacity) takes a closed overlay out of the screen-reader
+     tree and the Tab order on every engine; `inert` would need WebView 102+.
+     The delayed visibility step lets the fade-out finish before it hides. */
+  visibility: hidden;
+  transition: opacity 0.4s, visibility 0s linear 0.4s;
   overflow-y: auto;
 }
-.overlay.visible { opacity: 1; pointer-events: all; }
+.overlay.visible { opacity: 1; pointer-events: all; visibility: visible; transition: opacity 0.4s, visibility 0s; }
 
 .overlay-icon { font-size: 52px; line-height: 1; }
 
@@ -885,7 +934,7 @@ html.is-desktop .overlay-body { font-size: 20px; }
   transition: background 0.15s, border-color 0.15s;
 }
 .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
-.pin-dot.wrong { background: #ff6b6b; border-color: #ff6b6b; }
+.pin-dot.wrong { background: var(--danger); border-color: var(--danger); }
 
 #pin-pad {
   display: grid;
@@ -951,6 +1000,9 @@ html.is-desktop .overlay-body { font-size: 20px; }
 }
 #settings-panel.animated { transition: transform 0.3s ease; }
 #settings-panel.open { transform: translateX(0); }
+/* Closed = hidden from screen readers and Tab, not just slid off-screen.
+   .animated stays on through the slide-out, so the panel hides once it ends. */
+#settings-panel:not(.open):not(.animated) { visibility: hidden; }
 
 #settings-header {
   display: flex;
@@ -988,10 +1040,11 @@ html.is-desktop .overlay-body { font-size: 20px; }
   color: var(--settings-label);
   margin-bottom: 10px;
 }
+/* No fade: at 75% it fell under 4.5:1 outside dark theme. 12px, up from 11,
+   for legibility. */
 .s-hint {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--settings-label);
-  opacity: 0.75;
   margin-top: 8px;
   line-height: 1.4;
 }
@@ -1049,16 +1102,22 @@ html.is-desktop .overlay-body { font-size: 20px; }
   /* Reset button defaults for keyboard accessibility */
   font-family: inherit;
 }
-.chip.selected { border-color: var(--accent); color: var(--accent); }
+.chip.selected { border-color: var(--accent); color: var(--accent-text); }
 .chip:active { filter: brightness(1.2); }
 
 /* Desktop-only view section — hidden on mobile */
 #view-section { display: none; }
 html.is-desktop #view-section { display: block; }
 
-/* Android-only device section — hidden on desktop */
-#device-section { display: block; }
-html.is-desktop #device-section { display: none; }
+/* The Device section's buttons need the APK's AndroidBridge; init() hides
+   them (and, on desktop, the whole section) without it. */
+
+/* iPhone and iPad ignore a volume set by script, so the volume cap and the
+   per-station trims are hidden there. Hidden, not removed: saved values
+   survive an Apply on an iPad. */
+.ios-only { display: none; }
+html.is-ios .ios-only { display: block; }
+html.is-ios .ios-hide { display: none; }
 
 .vol-row { display: flex; align-items: center; gap: 10px; padding: 2px 0; }
 #vol-slider {
@@ -1105,7 +1164,7 @@ html.is-desktop #device-section { display: none; }
 .stream-entry .url-warn {
   font-size: 11px;
   line-height: 1.35;
-  color: var(--accent);
+  color: var(--accent-text);
   background: rgba(240, 192, 64, 0.10);
   border-radius: 6px;
   padding: 6px 8px;
@@ -1131,7 +1190,7 @@ html.is-desktop #device-section { display: none; }
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-text);
   background: rgba(240, 192, 64, 0.12);
   padding: 2px 7px;
   border-radius: 4px;
@@ -1192,7 +1251,7 @@ html.is-desktop #device-section { display: none; }
   padding: 4px 8px;
   white-space: nowrap;
 }
-.emoji-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.emoji-tab.active { color: var(--accent-text); border-bottom-color: var(--accent); }
 .emoji-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -1292,7 +1351,7 @@ html.is-desktop #device-section { display: none; }
   border-radius: 8px;
   background: rgba(240, 192, 64, 0.1);
   border: 1px solid rgba(240, 192, 64, 0.25);
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
@@ -1528,6 +1587,8 @@ html.is-desktop #device-section { display: none; }
   transition: filter 0.2s, transform 0.15s;
 }
 #apply-btn:active { filter: brightness(0.9); }
+/* Shown above Apply & Close when settings couldn't be saved. */
+#apply-status { margin: 12px 20px 0; color: var(--danger, #e66); opacity: 1; }
 
 .device-btn {
   display: flex;
@@ -1560,7 +1621,7 @@ html.is-desktop #device-section { display: none; }
   text-align: center;
   width: calc(100% - 40px);
 }
-#reset-btn:active { border-color: #ff6b6b; color: #ff6b6b; }
+#reset-btn:active { border-color: var(--danger); color: var(--danger); }
 
 #reset-overlay {
   position: fixed;
@@ -1576,8 +1637,10 @@ html.is-desktop #device-section { display: none; }
   font-weight: 900;
   cursor: pointer;
 }
+/* Dark enough for white text in every theme (#ff6b6b was 2.8:1, and 18px
+   bold is still below the large-text size). */
 .reset-confirm-yes {
-  background: #ff6b6b;
+  background: #c62828;
   color: #ffffff;
 }
 .reset-confirm-yes:active { filter: brightness(0.85); }
@@ -1690,8 +1753,15 @@ html.is-desktop #device-section { display: none; }
       <svg id="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
       <h1 id="org-name">RadioGridXL</h1>
     </div>
-    <div id="conn-dot" role="status" aria-live="polite" aria-label="Connection: idle"></div>
-    <span id="sleep-indicator" role="timer" aria-live="polite" aria-label="Sleep timer"></span>
+    <div id="conn-dot" role="status" aria-live="polite" aria-label="Connection: idle"><span id="conn-text" class="sr-only">Connection: idle</span></div>
+    <!-- Not a live region: a screen reader reads the time left when someone
+         swipes to it, from text updated once a minute. The ticking seconds
+         are hidden from it, or it would read them out over the radio. That
+         text is a real text node, not a label: iOS VoiceOver stops on text,
+         and may skip a timer that has none. -->
+    <span id="sleep-indicator" role="timer"><span id="sleep-countdown" aria-hidden="true"></span><span id="sleep-left" class="sr-only"></span></span>
+    <!-- Confirms setting or cancelling the timer, once. Never written when the timer ends. -->
+    <span id="sleep-status" class="sr-only" role="status" aria-live="polite"></span>
     <span id="platform-badge" aria-hidden="true">Desktop Preview</span>
   </header>
 
@@ -1716,7 +1786,7 @@ html.is-desktop #device-section { display: none; }
          simple mode keeps its single resume-labelled button. Icons are inline SVG so
          iOS can't substitute emoji glyphs (the old &#9202; rendered skeuomorphic). -->
     <button class="adv-pause" id="adv-pause" onclick="softStop()" aria-label="Pause" style="display:none"></button>
-    <button class="adv-stop" onclick="stopPlayback()" aria-label="Stop playback"><div class="adv-stop-square" aria-hidden="true"></div></button>
+    <button class="adv-stop" onclick="userStop()" aria-label="Stop playback"><div class="adv-stop-square" aria-hidden="true"></div></button>
     <div id="adv-right">
       <button class="adv-btn" id="adv-skip-fwd" onclick="skipFwd()" aria-label="Skip forward 30 seconds">&#9654;&#9654;</button>
       <button class="adv-sleep-btn" onclick="showSleepOverlay()" aria-label="Sleep timer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><line x1="12" y1="13" x2="12" y2="9.5"/><line x1="9.5" y1="2" x2="14.5" y2="2"/><line x1="18.5" y1="5.5" x2="19.5" y2="4.5"/></svg></button>
@@ -1728,7 +1798,7 @@ html.is-desktop #device-section { display: none; }
   <div id="skip-toast" role="status" aria-live="polite"></div>
 
 <!-- ========== CONNECTION ERROR OVERLAY ========== -->
-  <div class="overlay" id="nonet-overlay" role="alertdialog" aria-modal="true" aria-labelledby="nonet-overlay-title">
+  <div class="overlay" id="nonet-overlay" role="alertdialog" aria-modal="true" aria-labelledby="nonet-overlay-title" aria-describedby="nonet-overlay-body">
     <div class="overlay-icon" aria-hidden="true">&#128246;</div>
     <div class="overlay-title" id="nonet-overlay-title">Having Trouble Connecting</div>
     <div class="overlay-body" id="nonet-overlay-body">Please check that the tablet is connected to Wi-Fi, or ask someone for help.</div>
@@ -1751,10 +1821,10 @@ html.is-desktop #device-section { display: none; }
   </div>
 
   <!-- ========== DISCARD CHANGES OVERLAY ========== -->
-  <div class="overlay" id="discard-overlay" role="alertdialog" aria-modal="true" aria-labelledby="discard-overlay-title">
+  <div class="overlay" id="discard-overlay" role="alertdialog" aria-modal="true" aria-labelledby="discard-overlay-title" aria-describedby="discard-overlay-body">
     <div class="overlay-icon" aria-hidden="true">&#128221;</div>
     <div class="overlay-title" id="discard-overlay-title">Discard Changes?</div>
-    <div class="overlay-body">You have unsaved changes. Close without applying?</div>
+    <div class="overlay-body" id="discard-overlay-body">You have unsaved changes. Close without applying?</div>
     <div style="display:flex; gap:12px; margin-top:8px;">
       <button class="reset-confirm-btn reset-confirm-no" onclick="cancelDiscard()">Go Back</button>
       <button class="reset-confirm-btn reset-confirm-yes" onclick="confirmDiscard()">Discard</button>
@@ -1785,7 +1855,7 @@ html.is-desktop #device-section { display: none; }
       <button class="pin-key" onclick="pinKey('0')" aria-label="0">0</button>
       <button class="pin-key pin-key-wide" onclick="pinBackspace()" aria-label="Delete last digit">&#9003;</button>
     </div>
-    <div id="pin-error" role="alert" aria-live="assertive" style="color:#ff6b6b;font-size:14px;font-weight:700;min-height:20px;margin-top:4px;">&nbsp;</div>
+    <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-top:4px;">&nbsp;</div>
   </div>
 
   <!-- ========== SETTINGS PANEL (technician only) ========== -->
@@ -1804,6 +1874,8 @@ html.is-desktop #device-section { display: none; }
       <div class="s-section-title" id="preset-label">Accessibility Preset</div>
       <div class="chip-grid" id="preset-chips" role="radiogroup" aria-labelledby="preset-label"></div>
       <div class="s-hint">Quick starting points for common needs. Pick one, then fine-tune any setting below — your changes mark the preset as Custom.</div>
+      <!-- The app's own speech talks over a screen reader. -->
+      <div class="s-hint" id="preset-sr-hint">Low Vision turns on Voice Announcements. If you use VoiceOver or TalkBack, turn them off below.</div>
     </div>
 
     <div class="s-section">
@@ -1860,8 +1932,9 @@ html.is-desktop #device-section { display: none; }
 
     <div class="s-section" id="vol-section">
       <div class="s-section-title">Max App Volume</div>
-      <label class="s-label" style="margin-bottom:6px;">Caps the app's audio output. Device volume buttons still work up to this limit.</label>
-      <div class="vol-row">
+      <label class="s-label ios-hide" style="margin-bottom:6px;">Caps the app's audio output. Device volume buttons still work up to this limit.</label>
+      <div class="s-hint ios-only">On iPhone and iPad, use the side volume buttons. Apple doesn't let web apps change the volume.</div>
+      <div class="vol-row ios-hide">
         <span style="font-size:15px;line-height:1;" aria-hidden="true">&#128264;</span>
         <input type="range" id="vol-slider" min="0" max="100" value="100" oninput="setVolume(this.value)" aria-label="Max app volume">
         <span id="vol-val" aria-hidden="true">100%</span>
@@ -1892,7 +1965,7 @@ html.is-desktop #device-section { display: none; }
         <button class="chip" onclick="selectChip(this,'tts','off')" data-group="tts" data-val="off" role="radio" aria-checked="false">Off</button>
         <button class="chip" onclick="selectChip(this,'tts','on')" data-group="tts" data-val="on" role="radio" aria-checked="false">On</button>
       </div>
-      <div class="s-hint">Speaks aloud what is happening — "Now playing…", "Paused", "Stopped" — when a stream button or stop bar is tapped. To change the voice or improve quality, use OS Settings below (Accessibility → Text-to-Speech).</div>
+      <div class="s-hint">Speaks aloud what is happening — "Now playing…", "Paused", "Stopped", or that a station is not available. To change the voice or improve quality, use OS Settings below (Accessibility → Text-to-Speech).</div>
     </div>
 
     <div class="s-section">
@@ -1910,7 +1983,7 @@ html.is-desktop #device-section { display: none; }
         <button class="chip" onclick="selectChip(this,'resume','off')" data-group="resume" data-val="off" role="radio" aria-checked="false">Off</button>
         <button class="chip" onclick="selectChip(this,'resume','on')" data-group="resume" data-val="on" role="radio" aria-checked="false">On</button>
       </div>
-      <div class="s-hint">When the app starts, automatically begin playing the last station that was playing. If that station has since been removed, the app starts stopped.</div>
+      <div class="s-hint">When the app starts, automatically begin playing the station that was playing when the app closed. If the radio was paused or stopped, or that station has since been removed, the app starts stopped.</div>
     </div>
 
 <div class="s-section">
@@ -1925,10 +1998,15 @@ html.is-desktop #device-section { display: none; }
 
     <div class="s-section" id="device-section">
       <div class="s-section-title">Device</div>
-      <button class="device-btn" onclick="openWifiSettings()" aria-label="Open Wi-Fi settings">&#128246; Setup WiFi</button>
-      <button class="device-btn" onclick="openLiveCaptionSettings()" aria-label="Open Live Caption settings">&#128292; Live Caption</button>
-      <button class="device-btn" onclick="openOsSettings()" aria-label="Open OS settings">&#9881;&#65039; OS Settings</button>
-      <div class="s-hint">Live Caption transcribes audio playing on the device in real time — enable it in Accessibility settings. OS Settings gives access to everything else: Wi-Fi, text-to-speech voice, display brightness, and more.</div>
+      <div id="device-buttons">
+        <!-- Each name holds its visible text, which is what voice control matches. -->
+        <button class="device-btn" onclick="openWifiSettings()" aria-label="Setup WiFi">&#128246; Setup WiFi</button>
+        <button class="device-btn" onclick="openLiveCaptionSettings()" aria-label="Open Live Caption settings">&#128292; Live Caption</button>
+        <button class="device-btn" onclick="openOsSettings()" aria-label="Open OS settings">&#9881;&#65039; OS Settings</button>
+        <div class="s-hint">Live Caption transcribes audio playing on the device in real time — enable it in Accessibility settings. OS Settings gives access to everything else: Wi-Fi, text-to-speech voice, display brightness, and more.</div>
+        <div class="s-hint" id="device-status" aria-live="polite"></div>
+      </div>
+      <div class="s-hint" id="device-hint-web" hidden>To change Wi-Fi, captions or the speaking voice, open this device's Settings app.</div>
     </div>
 
     <div class="s-section" id="pin-section">
@@ -1942,15 +2020,18 @@ html.is-desktop #device-section { display: none; }
     <div class="s-section" id="backup-section">
       <div class="s-section-title">Backup &amp; Restore</div>
       <label class="s-check"><input type="checkbox" id="in-backup-pin"> Include PIN in backup file</label>
-      <button class="device-btn" onclick="exportConfig()" aria-label="Export configuration to a file">&#128190; Export Backup</button>
-      <button class="device-btn" onclick="document.getElementById('import-file').click()" aria-label="Import configuration from a file">&#128193; Import Backup</button>
+      <!-- Each name is its visible text, so "tap Export Backup" works by voice
+           control; the label also keeps the icon from being read out. -->
+      <button class="device-btn" onclick="exportConfig()" aria-label="Export Backup">&#128190; Export Backup</button>
+      <button class="device-btn" onclick="document.getElementById('import-file').click()" aria-label="Import Backup">&#128193; Import Backup</button>
       <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importConfig(event)" aria-hidden="true">
       <div class="s-hint" id="backup-status" role="status" aria-live="polite">Export saves all settings and streams to a file. The PIN is only included if you tick the box above &mdash; that file then unlocks settings, so store it securely. Import restores a backup on this or another device.</div>
     </div>
 
+    <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.6.0</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.7.0</div>
   </aside>
 
   <!-- ========== STREAM BROWSER POPUP ========== -->
@@ -2001,7 +2082,10 @@ html.is-desktop #device-section { display: none; }
           <option value="lounge">Lounge</option>
         </select>
       </div>
-      <div class="stream-browser-results" id="sb-results" role="region" aria-label="Search results" aria-live="polite">
+      <!-- One short spoken status per search; the results list itself is not a
+           live region, or a screen reader queues all 40 rows as one announcement. -->
+      <div id="sb-status" class="sr-only" role="status" aria-live="polite"></div>
+      <div class="stream-browser-results" id="sb-results" role="region" aria-label="Search results">
         <div class="stream-browser-empty">Search for stations by name, or pick a country and genre to browse.</div>
       </div>
       <div class="stream-browser-actions">
@@ -2037,10 +2121,10 @@ html.is-desktop #device-section { display: none; }
 </div>
 
 <!-- ========== RESET CONFIRM OVERLAY (outside #app so it covers entire viewport) ========== -->
-<div class="overlay" id="reset-overlay" role="alertdialog" aria-modal="true" aria-labelledby="reset-overlay-title">
+<div class="overlay" id="reset-overlay" role="alertdialog" aria-modal="true" aria-labelledby="reset-overlay-title" aria-describedby="reset-overlay-body">
   <div class="overlay-icon" aria-hidden="true">&#9888;&#65039;</div>
   <div class="overlay-title" id="reset-overlay-title">Reset Everything?</div>
-  <div class="overlay-body">This will restore all settings and streams to factory defaults. Your PIN will not change.</div>
+  <div class="overlay-body" id="reset-overlay-body">This will restore all settings and streams to factory defaults. Your PIN will not change.</div>
   <div style="display:flex; gap:12px; margin-top:8px;">
     <button class="reset-confirm-btn reset-confirm-no" onclick="cancelReset()">Cancel</button>
     <button class="reset-confirm-btn reset-confirm-yes" onclick="executeReset()">Reset</button>
@@ -2059,13 +2143,16 @@ html.is-desktop #device-section { display: none; }
 const platform = (function () {
   const ua = navigator.userAgent || '';
   const isAndroid = /android/i.test(ua);
-  const isIOS = /ipad|iphone|ipod/i.test(ua);
+  // iPadOS asks for desktop sites, so it reports a Mac user agent; a Mac
+  // with multi-touch is an iPad.
+  const isIOS = /ipad|iphone|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
   const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
   const isMobile = isAndroid || isIOS || (navigator.maxTouchPoints > 0 && hasCoarsePointer);
   return { isAndroid, isIOS, isMobile, isDesktop: !isMobile };
 })();
 
 document.documentElement.classList.add(platform.isDesktop ? 'is-desktop' : 'is-android');
+if (platform.isIOS) document.documentElement.classList.add('is-ios');
 
 
 /* ================================================================
@@ -2074,22 +2161,28 @@ document.documentElement.classList.add(platform.isDesktop ? 'is-desktop' : 'is-a
    theme variants with idle (bg) and playing (active) states.
 
    Design goals:
-   - All backgrounds maintain WCAG AA contrast (4.5:1+) with white
-     text, even though buttons use large text (3:1 would suffice)
+   - Every background, idle and playing, holds WCAG AA 4.5:1 with
+     the white label and description, also under the desktop hover
+     tint. The label shrinks to fit small screens, so the large-text
+     3:1 can't be counted on.
+     tests/contrast.test.mjs measures every entry.
    - Hues are well-separated so buttons are visually distinct
    - Active state is noticeably brighter than idle in dark mode,
-     and deeper in light mode, reinforced by CSS brightness filter
+     and deeper in light mode, but colour is never the only cue:
+     playing adds an accent ring and ▮▮, paused a dashed ring and ▶.
+     Dark-mode playing colours stay dark enough for the yellow ring
+     and ▮▮ to hold 3:1 against them.
    - For color blindness: rely on OS accessibility settings (the
      kiosk tablets support system-level color correction filters)
    ================================================================ */
 
 const PALETTE = [
   { id: 'blue',   dark: { bg: '#1a3d6e', active: '#2b6cb0' }, light: { bg: '#2b6cb0', active: '#1a4178' } },
-  { id: 'green',  dark: { bg: '#1a5235', active: '#2d8a5e' }, light: { bg: '#27804a', active: '#1a5535' } },
+  { id: 'green',  dark: { bg: '#1a5235', active: '#277751' }, light: { bg: '#27804a', active: '#1a5535' } },
   { id: 'purple', dark: { bg: '#3f1d70', active: '#6436b5' }, light: { bg: '#5a3aad', active: '#3d2478' } },
-  { id: 'teal',   dark: { bg: '#155858', active: '#22908e' }, light: { bg: '#1f7f7d', active: '#155a58' } },
+  { id: 'teal',   dark: { bg: '#155858', active: '#1c7574' }, light: { bg: '#1e7c7a', active: '#155a58' } },
   { id: 'red',    dark: { bg: '#6d1f1f', active: '#b03636' }, light: { bg: '#a13030', active: '#7a2020' } },
-  { id: 'amber',  dark: { bg: '#6b4d10', active: '#a67c1a' }, light: { bg: '#8f6a18', active: '#664c10' } },
+  { id: 'amber',  dark: { bg: '#6b4d10', active: '#866415' }, light: { bg: '#8f6a18', active: '#664c10' } },
   { id: 'slate',  dark: { bg: '#2a4058', active: '#436a95' }, light: { bg: '#3e6088', active: '#2c4560' } },
   { id: 'rose',   dark: { bg: '#6a1d42', active: '#a83070' }, light: { bg: '#952a60', active: '#701d45' } },
 ];
@@ -2187,14 +2280,19 @@ let retryTimer = null;    // setTimeout handle for auto-retry on error
 let fadeTimer = null;     // setInterval handle for volume fade-in on stream start
 let pendingFade = false;  // true when a new stream start should fade in once playing fires
 let retryCount = 0;       // consecutive errors before marking stream as failed
-let internalAudioOp = false; // true while WE deliberately pause/reset the element,
-                             // so the interruption listener ignores our own pauses
-                             // and only reacts to OS/external pauses (call, focus loss)
 const failedStreams = new Set(); // stream IDs that have exhausted retries
+let streamFault = false;  // the active stream errored and hasn't played since;
+                          // the element can't recover by itself, so resume reloads
+let pausedByFailure = null; // the error the browser paused the element for as the
+                            // stream failed (Chromium does); its 'pause' isn't the
+                            // listener's. Tied to that error, so a reload ends it
+let announceOnPlay = null; // station label to say "Now playing" for once its audio starts
 
 /* Sleep timer state */
 let sleepRemaining = 0;   // seconds remaining until auto-stop
 let sleepTick = null;     // setInterval handle for countdown
+let sleepStatusTimer = null; // clears the spoken confirmation; replaced by each new one
+let connQuiet = false;    // true while the sleep timer stops playback: the dot changes without a word
 
 /* UI timers */
 let skipToastTimer = null; // setTimeout handle for skip action toast
@@ -2202,11 +2300,15 @@ let skipToastTimer = null; // setTimeout handle for skip action toast
 /* Wake lock */
 let wakeLock = null;      // WakeLockSentinel — keeps screen on during playback
 
-/* Focus management — tracks what had focus before an overlay opened */
-let focusBeforeOverlay = null;
+/* Focus management — each overlay and the settings panel keep their own return
+   target (el._returnFocus); one shared global was overwritten by nested overlays. */
 
 /* Settings preview — snapshot of cfg before editing, used to revert on cancel */
 let cfgSnapshot = null;
+
+/* True only between openSettings() and doCloseSettings(). Settings actions check
+   it, so a click that still reaches the closed panel does nothing. */
+let settingsOpen = false;
 
 
 /* ================================================================
@@ -2217,7 +2319,11 @@ let cfgSnapshot = null;
 const audio        = document.getElementById('audio-player');
 const buttonsEl    = document.getElementById('buttons');
 const connDot      = document.getElementById('conn-dot');
+const connText     = document.getElementById('conn-text');
 const sleepInd     = document.getElementById('sleep-indicator');
+const sleepCountdown = document.getElementById('sleep-countdown');
+const sleepLeft    = document.getElementById('sleep-left');
+const sleepStatus  = document.getElementById('sleep-status');
 const simpleStop   = document.getElementById('simple-stop');
 const advTransport = document.getElementById('adv-transport');
 const skipToast    = document.getElementById('skip-toast');
@@ -2239,6 +2345,14 @@ function init() {
   }
 
   document.getElementById('help-section').hidden = !helpAvailable();
+
+  // The Device buttons need the APK's bridge (see openDeviceSettings). A
+  // phone or tablet browser gets a pointer to its Settings app instead, and
+  // a desktop browser gets neither.
+  const hasBridge = !!window.AndroidBridge;
+  document.getElementById('device-section').hidden = !hasBridge && platform.isDesktop;
+  document.getElementById('device-buttons').hidden = !hasBridge;
+  document.getElementById('device-hint-web').hidden = hasBridge;
 
   sanitizeStoredPin();
   loadSettings();
@@ -2272,9 +2386,10 @@ function init() {
   // WebView (no mediaSession) and any platform missing the API.
   registerMediaSessionHandlers();
 
-  // Auto-resume the last-played station (opt-in via cfg.resume). Reads the
-  // separate 'rgxl_last' key; only resumes if that id still exists in the
-  // current streams. Stale/removed ids do nothing — stay stopped, no error.
+  // Auto-resume the station that was playing when the app closed (opt-in via
+  // cfg.resume). Reads the separate 'rgxl_last' key; only resumes if that id
+  // still exists in the current streams. Stale/removed ids do nothing — stay
+  // stopped, no error.
   // Fully guarded so a storage failure or absent key never aborts init().
   maybeAutoResume();
 
@@ -2287,7 +2402,8 @@ function init() {
 }
 
 /**
- * Auto-resume the last-played station on launch, if opted in.
+ * Auto-resume, on launch and if opted in, the station that was playing when
+ * the app closed (see rememberLastStation).
  * No-op unless cfg.resume === 'on'. Reads the top-level 'rgxl_last' key and
  * only starts playback when that id still resolves to a current stream. A
  * missing, stale, or removed id is silently ignored (boots stopped). Returns
@@ -2295,11 +2411,16 @@ function init() {
  */
 function maybeAutoResume() {
   try {
-    if (cfg.resume !== 'on') return null;
+    // Checked first so the flag is always used up. An update reload runs only
+    // while nothing plays, so it forgets the station too (see APP UPDATES).
+    if (isUpdateReload()) { forgetLastStation(); return null; }
+    // Resume is off, so nothing plays now: forget the station too, or turning
+    // Resume on later would restart it at a launch it wasn't playing before.
+    if (cfg.resume !== 'on') { forgetLastStation(); return null; }
     var last = localStorage.getItem('rgxl_last');
     if (!last) return null;
     if (!cfg.streams.some(function(s) { return s.id === last; })) return null;
-    playStream(last, { autoResume: true });
+    playStream(last); // if autoplay policy blocks it, playActive() shows "tap to resume"
     return last;
   } catch (e) {
     /* Storage unavailable or playback failed — stay stopped, never throw */
@@ -2322,6 +2443,43 @@ function maybeAutoResume() {
    migration branch in loadSettings(). */
 const CFG_VERSION = 1;
 
+/* Set by loadSettings() when storage holds a config from a newer version
+   (say a rollback of the hosted app). This version loads what it understands
+   but won't save over it, since that would drop the fields only the newer
+   version knows. Reset to Defaults and importing a backup are explicit
+   choices to replace it, so they clear this. */
+let storedConfigIsNewer = false;
+
+/* Length caps for text from storage or a backup. The organisation name matches
+   its field's maxlength; the stream caps sit well above anything typed in the
+   editor, so they only ever trim a hand-made or tampered file. */
+const ORG_NAME_MAX = 80;
+const LABEL_MAX = 120;
+const SUB_MAX = 200;
+const EMOJI_MAX = 16;
+const ID_MAX = 64; // stream ids; checked with .length, so an emoji counts as 2
+
+/** `text` cut to at most `max` characters, never splitting an emoji. */
+function clip(text, max) {
+  const chars = Array.from(text);
+  return chars.length > max ? chars.slice(0, max).join('') : text;
+}
+
+/** A new id for a station whose `id` an earlier station already has: the
+    same id plus -2, -3 and so on, the first that isn't in `taken`, cut to fit
+    ID_MAX without splitting an emoji. Made from the id, not the clock, so the
+    same saved settings give the same ids on every launch, and rgxl_last
+    still finds the station that was playing. */
+function uniqueStreamId(id, taken) {
+  for (let n = 2; ; n++) {
+    const suffix = '-' + n;
+    const chars = Array.from(id);
+    while (chars.join('').length + suffix.length > ID_MAX) chars.pop();
+    const candidate = chars.join('') + suffix;
+    if (!taken.has(candidate)) return candidate;
+  }
+}
+
 /**
  * Pure validator: given an arbitrary object `s` (parsed from storage OR an
  * imported backup file — both UNTRUSTED), return a sanitized object containing
@@ -2339,10 +2497,11 @@ function validateConfig(s) {
   // Schema version. Configs written before the version field existed have no
   // `v` (treated as 0). No transform is needed yet — every field below is
   // independently validated/allowlisted — but future breaking changes branch
-  // here on `ver` before reading the rest.
+  // here on `ver` before reading the rest. A `v` newer than CFG_VERSION is
+  // handled by the callers: import refuses it, loadSettings won't save over it.
   // const ver = typeof s.v === 'number' ? s.v : 0;
 
-  if (typeof s.orgName === 'string' && s.orgName.trim()) out.orgName = s.orgName;
+  if (typeof s.orgName === 'string' && s.orgName.trim()) out.orgName = clip(s.orgName, ORG_NAME_MAX);
   if (['dark', 'light', 'auto', 'mono-dark', 'mono-light', 'mono-auto'].includes(s.theme)) out.theme = s.theme;
   if (['normal', 'large', 'xlarge', 'ultra'].includes(s.size)) out.size = s.size;
   if (['on', 'off'].includes(s.fillview))               out.fillview = s.fillview;
@@ -2364,20 +2523,43 @@ function validateConfig(s) {
   if (Array.isArray(s.streams) && s.streams.length > 0 && s.streams.length <= 8) {
     // Only accept stream entries that have the required fields
     const streams = s.streams
-      .filter(st => st && typeof st.id === 'string' && typeof st.label === 'string')
+      .filter(st => st && typeof st.id === 'string' && st.id && st.id.length <= ID_MAX && typeof st.label === 'string')
       .slice(0, 8)
       .map(st => {
+        // Rebuilt from an explicit field list, each one type-checked: a backup
+        // or tampered storage can carry any key with any type, and the stream
+        // editor assumes strings (a number as the description used to break
+        // settings until a Reset). Unknown keys and wrong types are dropped.
+        const out = { id: st.id, label: clip(st.label, LABEL_MAX) };
+        if (typeof st.sub === 'string') out.sub = clip(st.sub, SUB_MAX);
         // Defense-in-depth: re-validate URLs the same way we sanitize on save,
         // in case a legacy or tampered/imported config carries a non-http(s)
         // scheme (e.g. javascript:). Blank anything that fails.
-        if (typeof st.url !== 'string' || !isValidStreamUrl(st.url)) st.url = '';
+        out.url = typeof st.url === 'string' && isValidStreamUrl(st.url) ? st.url : '';
+        // An emoji is a few code units; anything longer isn't one.
+        if (typeof st.emoji === 'string' && st.emoji.length <= EMOJI_MAX) out.emoji = st.emoji;
+        if (PALETTE.some(p => p.id === st.color)) out.color = st.color;
         // Optional per-stream gain trim (loudness leveling alternative). A
         // finite multiplier in a sane range; anything else (string, NaN,
         // Infinity, out-of-range) drops the field so it defaults to 1.0.
         const g = sanitizeGain(st.gain);
-        if (g === null) delete st.gain; else st.gain = g;
-        return st;
+        if (g !== null) out.gain = g;
+        return out;
       });
+    // The app finds a station by its id (its button, playStream, rgxl_last,
+    // the retry state), so in a hand-made or tampered file with two stations
+    // sharing one, the second could never play. Keep both: the first keeps
+    // its id and each later one gets a new one. `taken` starts with every id
+    // in the file, so a new id never takes one a later station already has.
+    const taken = new Set(streams.map(st => st.id));
+    const seen = new Set();
+    streams.forEach(st => {
+      if (seen.has(st.id)) {
+        st.id = uniqueStreamId(st.id, taken);
+        taken.add(st.id);
+      }
+      seen.add(st.id);
+    });
     if (streams.length > 0) out.streams = streams;
   }
 
@@ -2392,14 +2574,24 @@ function validateConfig(s) {
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('rgxl_cfg') || '{}');
+    storedConfigIsNewer = !!s && typeof s.v === 'number' && s.v > CFG_VERSION;
     Object.assign(cfg, validateConfig(s));
+    // The preset name is derived, not trusted: a stored one can be stale.
+    cfg.preset = matchingPresetName();
   } catch (e) {
     /* Corrupt storage — use defaults */
   }
 }
 
-/** Save current config to LocalStorage. */
+/** Save current config to LocalStorage. Returns false when storage refuses
+    (full, or blocked in a private or locked-down browser), so callers can
+    say so instead of acting as if it saved. Also false, without writing,
+    while storage holds a newer version's config (storedConfigIsNewer). */
 function saveSettings() {
+  if (storedConfigIsNewer) {
+    console.warn('[settings] stored settings are from a newer version; not overwriting them');
+    return false;
+  }
   try {
     localStorage.setItem('rgxl_cfg', JSON.stringify({
       v: CFG_VERSION,
@@ -2417,8 +2609,10 @@ function saveSettings() {
       orientation: cfg.orientation,
       streams: cfg.streams
     }));
+    return true;
   } catch (e) {
-    /* LocalStorage full or unavailable — silently fail */
+    console.error('[settings] could not save rgxl_cfg:', e && e.name, e && e.message);
+    return false;
   }
 }
 
@@ -2444,7 +2638,7 @@ function resolveTheme() {
 /** Apply the current theme, size, and desktop view mode to the DOM. */
 function applyTheme() {
   const resolved = resolveTheme();
-  const base = platform.isDesktop ? 'is-desktop' : 'is-android';
+  const base = (platform.isDesktop ? 'is-desktop' : 'is-android') + (platform.isIOS ? ' is-ios' : '');
   const fill = (platform.isDesktop && cfg.fillview === 'on') ? ' fill-view' : '';
   const orient = cfg.orientation !== 'auto' ? ' force-' + cfg.orientation : '';
   document.documentElement.className = base + fill + orient + ' theme-' + resolved;
@@ -2481,6 +2675,60 @@ function getColor(colorId, themeKey) {
    Uses grid layout (2 columns) when there are more than 3 streams.
    ================================================================ */
 
+/* Button text sizes in px for each Text Size setting: title, description,
+   emoji, and the emoji on its own in compact mode. These are the sizes when a
+   button has room. renderButtons() scales them down to fit its row, keeps
+   titles to the size at which their longest word fits, and stops a title
+   short of wrapping to a line the row has no room for. That last can hold two
+   settings to the same title size, each with the rest of its button scaled
+   down by as much as its title. So being bigger isn't enough: at each step
+   up, the description and emoji are also bigger next to the title (15/34 <
+   18/40 < 24/52 < 30/64, and 32/34 < 38/40 < 50/52 < 62/64). Then a larger
+   setting never shows a smaller description or emoji, and its title is the
+   same size or bigger. tests/layout.test.mjs checks this on phones and
+   tablets. */
+const BUTTON_TEXT_SIZES = {
+  normal: { label: 34, sub: 15, emoji: 32, compactEmoji: 48 },
+  large:  { label: 40, sub: 18, emoji: 38, compactEmoji: 54 },
+  xlarge: { label: 52, sub: 24, emoji: 50, compactEmoji: 64 },
+  ultra:  { label: 64, sub: 30, emoji: 62, compactEmoji: 76 }
+};
+
+/* Rough width of some button text in em, at the heavy weight titles use.
+   renderButtons() needs it before the buttons exist, to keep each word of a
+   title inside its button. Each group counts as its widest character in SF
+   Pro Black, Helvetica Neue Bold and Arial Bold (measured), so the estimate
+   errs wide by about 5-15%: text sized by it fits, with a little to spare. */
+const TEXT_WIDTH_EM = [
+  [' ', 0.28], ["ijlI.,'|", 0.31], ['frt', 0.42], [':;()[]{}/\\-!', 0.46],
+  ['EFL', 0.67], ['JPSTZ0123456789', 0.71], ['mwM', 0.93], ['W%@', 1.01]
+];
+function textWidthEm(text) {
+  var em = 0;
+  for (const ch of text) {
+    const c = ch.normalize('NFD')[0]; // an accented letter is as wide as its letter
+    const group = TEXT_WIDTH_EM.find(function(g) { return g[0].includes(c); });
+    if (group) em += group[1];
+    else if (c >= 'a' && c <= 'z') em += 0.64;
+    else if (c < '\u0080') em += 0.78; // the other capitals and ASCII symbols
+    else em += 1.1;                    // emoji, CJK and other symbols
+  }
+  return em;
+}
+
+/* How many lines `text` takes at `px` in a box `width` px wide, wrapping at
+   spaces as the buttons do. */
+function textLines(text, px, width) {
+  var space = textWidthEm(' ') * px;
+  var lines = 1, used = 0;
+  text.split(/\s+/).filter(Boolean).forEach(function(word) {
+    var w = textWidthEm(word) * px;
+    if (used > 0 && used + space + w > width) { lines++; used = w; }
+    else used += (used > 0 ? space : 0) + w;
+  });
+  return lines;
+}
+
 function renderButtons() {
   const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
   const count = cfg.streams.length;
@@ -2493,12 +2741,19 @@ function renderButtons() {
   var simpleStop = document.getElementById('simple-stop');
   var advTrans = document.getElementById('adv-transport');
   var appH = appEl.clientHeight;
-  var headerH = headerEl.offsetHeight;
   var transportH = (advTrans && advTrans.classList.contains('visible'))
     ? advTrans.offsetHeight
     : simpleStop.offsetHeight;
-  var availH = appH - headerH - transportH;
-  if (availH < 100) availH = window.innerHeight - 150; // absolute fallback
+  // Height left for the buttons under the header as it is right now.
+  function measureAvailH() {
+    var h = appH - headerEl.offsetHeight - transportH;
+    return h < 100 ? window.innerHeight - 150 : h; // absolute fallback
+  }
+  // Measure under the full header. The last layout may have left it compact
+  // (a landscape phone), and the rows must be sized for the header that ends
+  // up showing, or the bottom row is clipped after a rotation.
+  headerEl.classList.remove('compact');
+  var availH = measureAvailH();
 
 
   // Determine column count based on stream count and aspect ratio.
@@ -2520,11 +2775,26 @@ function renderButtons() {
   // layouts (n=5/6/7); for cols=2 the formulas coincide, so no regression.
   var rows = oddGrid ? 1 + Math.ceil((count - 1) / cols) : Math.ceil(count / cols);
 
+  // The grid is rebuilt from scratch, which destroys the focused button and any
+  // running tap flash. Note both so the replacements get them back: a screen
+  // reader user keeps their place (and hears the new state), and the flash shows.
+  // Only a running flash has the class: doHaptic() takes it off when it ends.
+  const focused = document.activeElement;
+  const focusedId = focused && buttonsEl.contains(focused) ? focused.id : null;
+  const flashingIds = Array.from(buttonsEl.querySelectorAll('.tap-flash.flash'), (f) => f.parentElement.id);
   buttonsEl.innerHTML = '';
   buttonsEl.classList.toggle('grid-mode', useGrid);
   buttonsEl.style.setProperty('--btn-cols', cols);
 
   var heightPerRow = availH / rows;
+
+  // Compact header when rows are very tight. It changes the header's height,
+  // so measure again and work out the tiers below from the space it leaves.
+  if (heightPerRow < 80 && count > 4) {
+    headerEl.classList.add('compact');
+    availH = measureAvailH();
+    heightPerRow = availH / rows;
+  }
 
   // Display mode tiers based on available height per row:
   //   Full:       emoji + label + sublabel + state  (needs ~130px+)
@@ -2554,16 +2824,6 @@ function renderButtons() {
   }
 
   buttonsEl.classList.toggle('compact-mode', compact);
-
-  // Compact header when rows are very tight
-  var useCompactHeader = heightPerRow < 80 && count > 4;
-  headerEl.classList.toggle('compact', useCompactHeader);
-  if (useCompactHeader && !headerEl._wasCompact) {
-    headerH = headerEl.offsetHeight;
-    availH = appH - headerH - transportH;
-    heightPerRow = availH / rows;
-  }
-  headerEl._wasCompact = useCompactHeader;
   buttonsEl.classList.toggle('hide-sub', hideSub);
 
   // Calculate scale from available height.
@@ -2579,38 +2839,145 @@ function renderButtons() {
     buttonsEl.style.removeProperty('--btn-row-h');
   }
 
-  // Base sizes — hideSub removes sublabel/emoji/state, keeping just title
+  // Base sizes for the chosen text size. hideSub removes sublabel/emoji/state,
+  // keeping just the title, so none of those count towards the fit; compact
+  // keeps only the emoji and state.
   var sizeMode = document.documentElement.getAttribute('data-size') || '';
-  var basePad = compact ? 8 : 16;
-  var baseEmoji = compact ? 48 : (hideSub ? 0 : 32);
-  var baseLabel = compact ? 0 : 34;
-  var baseSub = compact ? 0 : (hideSub ? 0 : 15);
-  var baseState = compact ? 11 : (hideSub ? 0 : 12);
-  if (!compact && sizeMode === 'large') { baseLabel = 40; baseSub = 17; baseEmoji = 38; }
-  else if (!compact && sizeMode === 'xlarge') { baseLabel = 52; baseSub = 21; baseEmoji = 48; }
-  if (compact && sizeMode === 'large') baseEmoji = 54;
-  else if (compact && sizeMode === 'xlarge') baseEmoji = 64;
-
-  // Estimate content height at scale=1 and derive scale from that
-  var contentH1 = basePad * 2 + baseEmoji + (compact ? baseState : baseLabel + baseSub + baseState) + 12;
-  var scale = Math.min(1, rowH / contentH1);
-  scale = Math.max(0.3, scale); // floor — never go invisibly small
-
-  // Ultra mode uses vmin units — handled separately via CSS, skip overrides
+  var sizes = BUTTON_TEXT_SIZES[sizeMode] || BUTTON_TEXT_SIZES.normal;
+  var grow = 1;
   if (sizeMode === 'ultra') {
-    ['--btn-label-size','--btn-sub-size','--btn-emoji-size','--btn-state-size',
-     '--btn-pad','--btn-pad-h','--btn-inner-gap','--btn-gap'].forEach(
-      function(p) { buttonsEl.style.removeProperty(p); });
-  } else {
-    buttonsEl.style.setProperty('--btn-label-size', Math.round(baseLabel * scale) + 'px');
-    buttonsEl.style.setProperty('--btn-sub-size', Math.round(baseSub * scale) + 'px');
-    buttonsEl.style.setProperty('--btn-emoji-size', Math.round(baseEmoji * scale) + 'px');
-    buttonsEl.style.setProperty('--btn-state-size', Math.round(baseState * scale) + 'px');
-    buttonsEl.style.setProperty('--btn-pad', Math.round(basePad * scale) + 'px');
-    buttonsEl.style.setProperty('--btn-pad-h', Math.round(basePad * scale) + 'px');
-    buttonsEl.style.setProperty('--btn-inner-gap', Math.round(3 * scale) + 'px');
-    buttonsEl.style.setProperty('--btn-gap', Math.round(gap * Math.max(scale, 0.5)) + 'px');
+    // Ultra also grows with the screen (titles 11% of its short side stacked,
+    // 7% in a grid), so a tablet across the room gets bigger text still. On a
+    // phone that comes out under the base sizes, so they win.
+    var vmin = Math.min(window.innerWidth, window.innerHeight);
+    grow = Math.max(1, vmin * (useGrid ? 0.07 : 0.11) / sizes.label);
   }
+  var basePad = compact ? 8 : 16;
+  var baseEmoji = (compact ? sizes.compactEmoji : (hideSub ? 0 : sizes.emoji)) * grow;
+  var baseLabel = compact ? 0 : sizes.label * grow;
+  var baseSub = compact || hideSub ? 0 : sizes.sub * grow;
+  var baseState = compact ? 11 : (hideSub ? 0 : 12);
+
+  // Width the text in button i has: its share of the grid, less its padding
+  // and a mono theme's 1px border. It assumes the full padding and gaps,
+  // which only shrink. Before the grid has a width (it is hidden), there is
+  // no limit, and text is sized by height alone.
+  var gridW = buttonsEl.clientWidth;
+  function textWidthOf(i) {
+    if (!(gridW > 0)) return Infinity;
+    var btnW = !useGrid ? gridW - 8 // the stack's 4px padding
+      : (oddGrid && i === 0) ? gridW - 2 * gap
+      : (gridW - (cols + 1) * gap) / cols;
+    return btnW - 2 * basePad - 2;
+  }
+
+  // Titles wrap at spaces, and a word wider than its button is cut off. So
+  // titles are no bigger than the size at which every word fits its button,
+  // and the fit counts the lines they wrap to.
+  var titles = compact ? [] : cfg.streams.map(function(s, i) {
+    return { text: s.label, width: textWidthOf(i) };
+  });
+  var maxTitle = Infinity;
+  titles.forEach(function(t) {
+    t.text.split(/\s+/).forEach(function(word) {
+      if (word) maxTitle = Math.min(maxTitle, t.width / textWidthEm(word));
+    });
+  });
+  // Never invisibly small, and the same smallest title at every text size: a
+  // word too long for its button even then is cut off at every size alike,
+  // so a larger size's description and icon stay larger.
+  maxTitle = Math.max(maxTitle, BUTTON_TEXT_SIZES.normal.label * 0.3);
+
+  function titleAt(scale) { return Math.min(baseLabel * scale, maxTitle); }
+  // The playing/paused glyph is 0.7 x the title, or a third of the icon in
+  // compact, which has no title. Every button keeps room for it, so starting
+  // or pausing a station never overflows its button.
+  function glyphAt(scale) { return compact ? baseEmoji * scale / 3 : (hideSub ? 0 : titleAt(scale) * 0.7); }
+  // A station in trouble says so in words where its description goes, in
+  // every layout, tight and compact ones included. Compact has room for "Not
+  // available" alone; the aria-label always has the full text.
+  var statuses = cfg.streams.map(function(s) {
+    if (failedStreams.has(s.id)) return compact ? 'Not available' : 'Not available. Tap to try again.';
+    if (!compact && playing === s.id && !paused && streamFault) return 'Reconnecting…';
+    return '';
+  });
+  // Button i's status is the description's size, but never under 12px: it
+  // says in words what's wrong with the station, so on a tight button the
+  // rest of its text shrinks to make room instead. It is smaller only if
+  // that's what lets its longest word fit the button ("Reconnecting…" can't
+  // wrap).
+  function statusAt(scale, i) {
+    var longest = Math.max.apply(null, statuses[i].split(' ').map(textWidthEm));
+    return Math.min(Math.max(12, sizes.sub * grow * scale), textWidthOf(i) / longest);
+  }
+
+  // Height of a button's content at `scale`: padding, then each line of text
+  // (titles are 1.05em a line, descriptions and the glyph about 1.2em), plus
+  // 12 px for the gaps between them. The tallest title sets it for the grid.
+  // With `i`, it is button i, whose status takes the description's place, in
+  // up to two lines of 1.1em.
+  function contentAt(scale, i) {
+    var title = titleAt(scale);
+    var lines = 1;
+    (i === undefined ? titles : titles.slice(i, i + 1)).forEach(function(t) {
+      lines = Math.max(lines, textLines(t.text, title, t.width));
+    });
+    var second = baseSub * 1.2 * scale;
+    if (i !== undefined) {
+      var status = statusAt(scale, i);
+      second = status * 1.1 * Math.min(2, textLines(statuses[i], status, textWidthOf(i)));
+    }
+    return (basePad * 2 + baseEmoji + 12) * scale + second + title * 1.05 * lines +
+      Math.max(baseState * scale, glyphAt(scale) * 1.2);
+  }
+
+  // The largest scale, up to 1, at which a button's content fits its row.
+  // Content only grows with the scale, so close in on it from both sides,
+  // until the two are a billionth apart. Where a title stops short of
+  // wrapping, several text sizes stop at that same title size, and this close
+  // they land within a millionth of a pixel of it, so they round to the same
+  // size: a larger setting doesn't come out a hair smaller.
+  function fitScale(i) {
+    if (contentAt(1, i) <= rowH) return 1;
+    var fits = 0.3, tooBig = 1; // floor — never go invisibly small
+    while (tooBig - fits > 1e-9) {
+      var mid = (fits + tooBig) / 2;
+      if (contentAt(mid, i) > rowH) tooBig = mid; else fits = mid;
+    }
+    return fits;
+  }
+  var scale = fitScale();
+
+  // A status gets the room it needs on its own button, so the other stations
+  // keep their size while one is in trouble. Where the full "Not available.
+  // Tap to try again." would run to a third line, it says "Not available".
+  var statusScales = statuses.map(function(text, i) {
+    if (!text) return 0;
+    var own = Math.min(scale, fitScale(i));
+    if (textLines(text, statusAt(own, i), textWidthOf(i)) > 2) {
+      statuses[i] = 'Not available';
+      own = Math.min(scale, fitScale(i));
+    }
+    return own;
+  });
+
+  // Text sizes keep two decimals: where the fit squeezes two text sizes to
+  // within a pixel of each other, the larger setting still comes out larger.
+  // Titles held to one size by the same word or line come out the same.
+  function px(n) { return Math.round(n * 100) / 100 + 'px'; }
+  // The sizes for `scale`, on the grid or on one button with a status.
+  function setSizes(el, scale) {
+    el.style.setProperty('--btn-label-size', px(titleAt(scale)));
+    el.style.setProperty('--btn-sub-size', px(baseSub * scale));
+    el.style.setProperty('--btn-emoji-size', px(baseEmoji * scale));
+    el.style.setProperty('--btn-state-size', px(baseState * scale));
+    el.style.setProperty('--btn-glyph-size', px(glyphAt(scale)));
+    el.style.setProperty('--btn-pad', Math.round(basePad * scale) + 'px');
+    el.style.setProperty('--btn-pad-h', Math.round(basePad * scale) + 'px');
+    el.style.setProperty('--btn-inner-gap', Math.round(3 * scale) + 'px');
+  }
+  setSizes(buttonsEl, scale);
+  buttonsEl.style.setProperty('--btn-gap', Math.round(gap * Math.max(scale, 0.5)) + 'px');
 
   cfg.streams.forEach((s, i) => {
     const c = getColor(s.color || PALETTE[i % PALETTE.length].id, themeKey);
@@ -2628,13 +2995,23 @@ function renderButtons() {
     btn.onclick = () => playStream(s.id);
 
     // Accessible label always includes full stream name + description
+    const isReconnecting = isActive && !isPaused && streamFault;
     var label = 'Play ' + s.label;
     if (s.sub) label += ', ' + s.sub;
-    if (isFailed) label = s.label + ' — unavailable, tap to try again';
+    if (isFailed) label = s.label + ', not available. Tap to try again.';
     else if (isPaused) label = 'Paused: ' + s.label + ', tap to resume';
+    else if (isReconnecting) label = 'Reconnecting to ' + s.label;
     else if (isActive) label = 'Now playing: ' + s.label;
     btn.setAttribute('aria-label', label);
     btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+
+    // When there's trouble, the description line says so in words: the
+    // greyed-out button and ⚠ were the only cues before.
+    const status = statuses[i];
+    if (status) {
+      setSizes(btn, statusScales[i]);
+      btn.style.setProperty('--btn-status-size', px(statusAt(statusScales[i], i)));
+    }
 
     // Build inner HTML — all user content is escaped to prevent XSS
     let html = '<div class="tap-flash" aria-hidden="true"></div>';
@@ -2643,18 +3020,26 @@ function renderButtons() {
       // Compact mode: show emoji or first-letter fallback, hide text
       var icon = s.emoji || s.label.charAt(0).toUpperCase();
       html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(icon) + '</div>';
+      if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
       html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
     } else {
       // Full mode: emoji + label + sublabel
       if (s.emoji) html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(s.emoji) + '</div>';
       html += '<div class="btn-label">' + escHtml(s.label) + '</div>';
-      if (s.sub) html += '<div class="btn-sublabel">' + escHtml(s.sub) + '</div>';
+      if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
+      else if (s.sub) html += '<div class="btn-sublabel">' + escHtml(s.sub) + '</div>';
       html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
     }
 
     btn.innerHTML = html;
     buttonsEl.appendChild(btn);
   });
+
+  flashingIds.forEach((id) => {
+    const flash = document.getElementById(id) && document.getElementById(id).querySelector('.tap-flash');
+    if (flash) flash.classList.add('flash');
+  });
+  if (focusedId && document.getElementById(focusedId)) document.getElementById(focusedId).focus();
 }
 
 
@@ -2671,9 +3056,10 @@ function escHtml(t) {
   return d.innerHTML;
 }
 
-/** Escape text for safe insertion into HTML attribute values. */
+/** Escape text for safe insertion into HTML attribute values. Coerces like
+    escHtml does, so a stray non-string value can't throw mid-render. */
 function escAttr(t) {
-  return t
+  return String(t ?? '')
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
@@ -2697,19 +3083,27 @@ function updateMode() {
   updateSkipButtons();
 }
 
-/** Show/hide skip buttons based on whether the stream is seekable. */
+/** Skip is only available for finite-duration (non-live) streams. Live radio
+    has no position to skip to; some engines still report a seekable range for
+    it, and seeking there jumps past the live edge. */
+function canSkip() {
+  return !!playing && isFinite(audio.duration) && audio.duration > 0;
+}
+
+/** Show/hide skip buttons (in the app and on the lock screen) based on whether
+    the stream can be skipped. */
 function updateSkipButtons() {
+  updateMediaSessionSkip();
   if (cfg.advanced !== 'on') return;
 
   const skipBackBtn = document.getElementById('adv-skip-back');
   const skipFwdBtn = document.getElementById('adv-skip-fwd');
   const liveBadge = document.getElementById('adv-live-badge');
 
-  // Skip is only available for finite-duration (non-live) streams
-  const canSkip = playing && isFinite(audio.duration) && audio.duration > 0;
-  skipBackBtn.style.display = canSkip ? '' : 'none';
-  skipFwdBtn.style.display = canSkip ? '' : 'none';
-  liveBadge.classList.toggle('visible', !!playing && !canSkip);
+  const skippable = canSkip();
+  skipBackBtn.style.display = skippable ? '' : 'none';
+  skipFwdBtn.style.display = skippable ? '' : 'none';
+  liveBadge.classList.toggle('visible', !!playing && !skippable);
 }
 
 /** Update simple stop bar appearance and accessibility state. */
@@ -2791,13 +3185,24 @@ function fadeInAudio() {
   }, intervalMs);
 }
 
+/** rgxl_last (a top-level key, not in rgxl_cfg) is the station the next
+    launch auto-resumes when cfg.resume === 'on'. It is set while a station
+    plays and cleared whenever playback stops or pauses, so a launch doesn't
+    restart a radio someone stopped or paused at bedtime (a reboot after a
+    power cut, the browser dropping the tab). Older versions kept it through
+    Stop; see APP UPDATES for that leftover. */
+function rememberLastStation(id) {
+  try { localStorage.setItem('rgxl_last', id); } catch (e) { /* storage full/unavailable — non-fatal */ }
+}
+
+function forgetLastStation() {
+  try { localStorage.removeItem('rgxl_last'); } catch (e) { /* storage unavailable — non-fatal */ }
+}
+
 /** Start playing a stream by its ID. Switches if already playing another.
-    Tapping the active stream toggles pause/resume.
-    opts.autoResume: this start came from boot auto-resume (no user gesture), so
-    if autoplay policy blocks play() we fall back to a paused "tap to resume"
-    state rather than showing a misleading playing/buffering UI with no sound. */
-function playStream(id, opts) {
-  opts = opts || {};
+    Tapping the active stream toggles pause/resume; while it is reconnecting
+    after an error, a tap retries it now instead of pausing silence. */
+function playStream(id) {
   clearTimeout(retryTimer);
   retryCount = 0;
   failedStreams.delete(id);
@@ -2805,17 +3210,13 @@ function playStream(id, opts) {
 
   // Tapping the already-playing stream toggles pause/resume
   if (playing === id) {
-    if (paused) {
-      paused = false;
-      const p = audio.play();
-      if (p) p.catch(() => {});
-      setConnStatus('buffering');
-      requestWakeLock();
-      setMediaPlaybackState('playing');
-      feedback('up', 'Resuming');
+    if (paused || streamFault) {
+      resumeActive();
     } else {
       paused = true;
+      announceOnPlay = null;
       audio.pause();
+      forgetLastStation();
       setConnStatus('idle');
       releaseWakeLock();
       setMediaPlaybackState('paused');
@@ -2834,42 +3235,19 @@ function playStream(id, opts) {
   playing = id;
   paused = false;
 
-  // Remember the last station actually started (separate top-level key, not in
-  // rgxl_cfg) so init() can auto-resume it next launch when cfg.resume === 'on'.
-  // Only set here — on a genuine new-stream start, never on pause/resume toggle.
-  try { localStorage.setItem('rgxl_last', id); } catch (e) { /* storage full/unavailable — non-fatal */ }
+  rememberLastStation(id);
 
-  feedback('up', 'Now playing ' + s.label);
+  announceStart(s.label);
   doHaptic(id);
 
   clearInterval(fadeTimer); fadeTimer = null;
-  // Only arm the suppression flag if the element is actually playing — calling
-  // pause() on an already-paused element fires no 'pause' event, which would
-  // otherwise leave the flag stuck and swallow the next real interruption.
-  if (!audio.paused) internalAudioOp = true;
   audio.pause();
   audio.volume = 0;   // silence until playing event fires and fade begins
   pendingFade = true;
+  streamFault = false;
   audio.src = s.url;
   audio.load();
-  const p = audio.play();
-  if (p && p.catch) {
-    p.catch(() => {
-      // Autoplay was blocked. On a boot auto-resume there is no user gesture to
-      // satisfy the policy, so reflect a paused "tap to resume" state instead of
-      // a phantom playing UI. (For a normal tap, the gesture means this rarely
-      // fires; the existing 'error' handler covers genuine playback failures.)
-      if (opts.autoResume && playing === id && !paused) {
-        paused = true;
-        setConnStatus('idle');
-        releaseWakeLock();
-        setMediaPlaybackState('paused');
-        renderButtons();
-        updateSimpleStop();
-        updateAdvTransport();
-      }
-    });
-  }
+  playActive();
   renderButtons();
   updateSimpleStop();
   updateAdvTransport();
@@ -2886,16 +3264,17 @@ function stopPlayback() {
   clearInterval(fadeTimer); fadeTimer = null;
   pendingFade = false;
   clearTimeout(retryTimer);
-  if (!audio.paused) internalAudioOp = true; // deliberate stop — suppress listener
+  clearTimeout(speakTimer); // a "Now playing" still waiting to be said is stale now
   audio.pause();
   audio.src = '';
+  forgetLastStation();
 
-  const wasPlaying = playing;
   playing = null;
   paused = false;
+  streamFault = false;
+  announceOnPlay = null;
   retryCount = 0;
 
-  doHaptic(wasPlaying);
   renderButtons();
   updateSimpleStop();
   updateAdvTransport();
@@ -2906,6 +3285,18 @@ function stopPlayback() {
   setMediaPlaybackState('none');
 }
 
+/** The listener's own Stop: the advanced Stop button and the lock screen.
+    Every other stop (the sleep timer, settings changes) is stopPlayback()
+    alone, with no chime, voice or buzz: the sleep timer ending must not wake
+    someone who has just fallen asleep. A station giving up says so, except
+    while the sleep timer runs (the audio 'error' listener). */
+function userStop() {
+  if (!playing) return;
+  doHaptic(playing);
+  stopPlayback();
+  feedback('down', 'Stopped');
+}
+
 /** Soft stop — pauses the stream and shows a resume prompt on the stop bar.
     Tapping again resumes. Tapping a different stream clears the paused state. */
 function softStop() {
@@ -2913,17 +3304,13 @@ function softStop() {
 
   if (paused) {
     // Already soft-paused — resume
-    paused = false;
-    const p = audio.play();
-    if (p) p.catch(() => {});
-    setConnStatus('buffering');
-    requestWakeLock();
-    setMediaPlaybackState('playing');
-    feedback('up', 'Resuming');
+    resumeActive();
   } else {
     // Pause and keep playing ID so resume is possible
     paused = true;
+    announceOnPlay = null;
     audio.pause();
+    forgetLastStation();
     setConnStatus('idle');
     releaseWakeLock();
     setMediaPlaybackState('paused');
@@ -2936,10 +3323,64 @@ function softStop() {
   updateAdvTransport();
 }
 
+/** Resume the active stream (station tap, Stop bar, lock screen). After an
+    error a bare play() is a dead end: it doesn't refetch a failed source, and
+    after SRC_NOT_SUPPORTED it rejects outright, with no new 'error' event to
+    restart the retries. So a faulted stream reloads its source first. */
+function resumeActive() {
+  // A fresh attempt, as a station tap is: a retry still pending from before
+  // the pause would load the stream a second time, and the count of failed
+  // tries starts over (after three, the next error would give up at once).
+  clearTimeout(retryTimer);
+  retryCount = 0;
+  paused = false;
+  rememberLastStation(playing);
+  const s = cfg.streams.find(x => x.id === playing);
+  if ((streamFault || audio.error) && s) {
+    audio.src = s.url;
+    audio.load();
+    announceStart(s.label); // a reconnect, announced like a fresh start
+  } else {
+    feedback('up', 'Resuming');
+  }
+  playActive();
+  setConnStatus('buffering');
+  requestWakeLock();
+  setMediaPlaybackState('playing');
+}
+
+/** audio.play() for the active stream. If autoplay policy blocks it (no user
+    gesture, as on a boot auto-resume), show "tap to resume" rather than a
+    playing UI with no sound. AbortError only means a newer load or pause took
+    over; load failures also fire 'error', which runs the retry path. */
+function playActive() {
+  const id = playing;
+  const p = audio.play();
+  if (!p || !p.catch) return;
+  p.catch((e) => {
+    const name = e && e.name;
+    if (name === 'NotAllowedError') {
+      // Not the listener pausing, so rgxl_last stays: the next launch offers
+      // this station again.
+      if (playing === id && !paused) {
+        paused = true;
+        setConnStatus('idle');
+        releaseWakeLock();
+        setMediaPlaybackState('paused');
+        renderButtons();
+        updateSimpleStop();
+        updateAdvTransport();
+      }
+    } else if (name !== 'AbortError') {
+      console.warn('[playback] play() rejected:', name, e && e.message);
+    }
+  });
+}
+
 /** Skip backward 15 seconds (non-live streams only). */
 function skipBack() {
   if (!playing) return;
-  if (!isFinite(audio.duration) && !audio.seekable.length) {
+  if (!canSkip()) {
     showSkipToast('Live stream — cannot skip');
     return;
   }
@@ -2951,11 +3392,11 @@ function skipBack() {
 /** Skip forward 30 seconds (non-live streams only). */
 function skipFwd() {
   if (!playing) return;
-  if (!isFinite(audio.duration) && !audio.seekable.length) {
+  if (!canSkip()) {
     showSkipToast('Live stream — cannot skip');
     return;
   }
-  audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 30);
+  audio.currentTime = Math.min(audio.duration, audio.currentTime + 30);
   doHaptic(playing);
   showSkipToast('⏩ Forward 30s');
 }
@@ -2971,6 +3412,7 @@ function showSkipToast(msg) {
 /** Retry the current stream (called from the error overlay button). */
 function retryStream() {
   hideOverlay(nonetOverlay);
+  clearTimeout(retryTimer); // a pending auto-retry would load the stream a second time
   if (!playing) return;
 
   const s = cfg.streams.find(x => x.id === playing);
@@ -2981,8 +3423,7 @@ function retryStream() {
   retryCount = 0;
   audio.src = s.url;
   audio.load();
-  const p = audio.play();
-  if (p) p.catch(() => {});
+  playActive();
   renderButtons();
   setConnStatus('buffering');
 }
@@ -3040,23 +3481,36 @@ function setMediaPlaybackState(state) {
   try { navigator.mediaSession.playbackState = state; } catch (e) { /* non-fatal */ }
 }
 
-/** Register lock-screen action handlers once. Each is guarded individually
+/** Set or clear (fn = null) one lock-screen action. Guarded individually
     because setActionHandler throws for actions the platform doesn't support. */
+function bindMediaAction(action, fn) {
+  try { navigator.mediaSession.setActionHandler(action, fn); }
+  catch (e) { /* action unsupported on this platform — skip */ }
+}
+
+/** Register lock-screen play/pause/stop once. Skip and seek come and go with
+    the stream (updateMediaSessionSkip). */
 function registerMediaSessionHandlers() {
   if (!mediaSessionOK) return;
   // Lock-screen play/pause routes through softStop's existing toggle so the
   // resume/fade path and UI updates are reused, not duplicated.
-  var bind = function (action, fn) {
-    try { navigator.mediaSession.setActionHandler(action, fn); }
-    catch (e) { /* action unsupported on this platform — skip */ }
-  };
-  bind('play', function () { if (playing && paused) softStop(); });
-  bind('pause', function () { if (playing && !paused) softStop(); });
-  bind('stop', function () { stopPlayback(); });
-  bind('previoustrack', function () { skipBack(); });
-  bind('nexttrack', function () { skipFwd(); });
-  bind('seekbackward', function () { skipBack(); });
-  bind('seekforward', function () { skipFwd(); });
+  bindMediaAction('play', function () { if (playing && paused) softStop(); });
+  bindMediaAction('pause', function () { if (playing && !paused) softStop(); });
+  bindMediaAction('stop', function () { userStop(); });
+  updateMediaSessionSkip();
+}
+
+/** Offer lock-screen skip and seek only when the in-app skip buttons show. On
+    live radio they were dead buttons (or seeked past the live edge), and radio
+    listeners read ⏭ as "next station". The browser hides an action that has
+    no handler. */
+function updateMediaSessionSkip() {
+  if (!mediaSessionOK) return;
+  var skippable = canSkip();
+  bindMediaAction('previoustrack', skippable ? skipBack : null);
+  bindMediaAction('nexttrack', skippable ? skipFwd : null);
+  bindMediaAction('seekbackward', skippable ? skipBack : null);
+  bindMediaAction('seekforward', skippable ? skipFwd : null);
 }
 
 /* ================================================================
@@ -3066,7 +3520,9 @@ function registerMediaSessionHandlers() {
 
 audio.addEventListener('playing', () => {
   retryCount = 0;
+  if (streamFault) { streamFault = false; renderButtons(); } // clears "Reconnecting…"
   if (playing) setConnStatus('good');
+  if (playing && announceOnPlay) { say('Now playing ' + announceOnPlay, SPEAK_AFTER_CHIME_MS); announceOnPlay = null; }
   updateSkipButtons();
   if (pendingFade) { pendingFade = false; fadeInAudio(); }
 });
@@ -3084,12 +3540,24 @@ audio.addEventListener('waiting', () => {
 // own deliberate pauses (stopPlayback sets playing=null first; toggle pauses
 // set paused=true first) are already consistent and are ignored here.
 audio.addEventListener('pause', () => {
-  // Swallow exactly one pause event that WE triggered (new-stream teardown,
-  // stopPlayback). pause events fire asynchronously, so the flag is cleared
-  // here on consumption rather than synchronously at the call site.
-  if (internalAudioOp) { internalAudioOp = false; return; }
+  // Judge by the element's state when the event arrives, not by a flag set
+  // when we paused: switching stations sets src right after pause(), and a new
+  // load discards the queued 'pause' event, so a flag waiting for it stuck and
+  // swallowed the next real interruption. If the element is playing again (a
+  // switch called play()), this pause was ours and is already superseded.
+  if (!audio.paused) return;
+  // Chromium pauses the element itself as a stream fails, whether the source
+  // never loaded or the connection died mid-stream (the spec's failure steps
+  // don't). Recovering is the error handler's job: treating it as the
+  // listener pausing would stop the retries for good. Only that pause,
+  // though: where the element keeps playing after an error (the spec,
+  // WebKit), a pause while the error stands is a call or the lock screen,
+  // and a retry or Wi-Fi coming back must not restart audio after it.
+  if (audio.error && audio.error === pausedByFailure) { pausedByFailure = null; return; }
   if (playing && !paused) {
     paused = true;
+    announceOnPlay = null;
+    forgetLastStation();
     setConnStatus('idle');
     releaseWakeLock();
     setMediaPlaybackState('paused');
@@ -3106,6 +3574,7 @@ audio.addEventListener('pause', () => {
 audio.addEventListener('play', () => {
   if (playing && paused) {
     paused = false;
+    rememberLastStation(playing);
     setConnStatus('buffering');
     requestWakeLock();
     setMediaPlaybackState('playing');
@@ -3121,6 +3590,14 @@ audio.addEventListener('loadedmetadata', () => {
 
 audio.addEventListener('error', () => {
   if (!playing) return;
+  streamFault = true;
+  // Paused by the listener: never restart audio on our own (a radio paused at
+  // bedtime must not come back when the router reboots). Resuming is theirs,
+  // and resumeActive() reloads because of the fault noted above.
+  if (paused) return;
+  // The app expects the element to be playing, so if it is already paused,
+  // the browser paused it as part of this failure and its 'pause' comes next.
+  pausedByFailure = audio.paused ? audio.error : null;
 
   // If the device is offline, retrying the URL won't help and picking a
   // different station won't either — surface the accessible connection-error
@@ -3129,6 +3606,7 @@ audio.addEventListener('error', () => {
   // user can simply try another station.
   if (!navigator.onLine) {
     setConnStatus('error');
+    renderButtons(); // the active button reads "Reconnecting…"
     if (!nonetOverlay.classList.contains('visible')) showOverlay(nonetOverlay);
     return;
   }
@@ -3136,30 +3614,42 @@ audio.addEventListener('error', () => {
   retryCount++;
   setConnStatus('error');
 
-  // After 4 consecutive errors, gray out the button and stop retrying quietly
+  // After 4 consecutive errors, gray out the button, stop retrying, and say so
+  // in every channel: this used to be silent, after "Now playing" at the tap.
+  // While the sleep timer runs someone may be asleep, so the greyed-out button
+  // and the status text say it, with no buzz, flash, chime or voice. Read the
+  // timer before stopPlayback(), which cancels it.
   if (retryCount >= 4) {
-    failedStreams.add(playing);
+    const failedId = playing;
+    const s = cfg.streams.find(x => x.id === failedId);
+    const message = (s ? s.label : 'This station') + ' is not available right now. Try another station.';
+    const sleepTimerRunning = sleepRemaining > 0;
+    failedStreams.add(failedId);
     retryCount = 0;
+    if (!sleepTimerRunning) doHaptic(failedId);
     stopPlayback();
+    setConnStatus('error', message);
+    if (!sleepTimerRunning) feedback('down', message);
     return;
   }
 
+  renderButtons(); // the active button reads "Reconnecting…"
+
   // Auto-retry after 4 seconds
   retryTimer = setTimeout(() => {
-    if (!playing) return;
+    if (!playing || paused) return;
     const s = cfg.streams.find(x => x.id === playing);
     if (!s) return;
     audio.src = s.url;
     audio.load();
-    const p = audio.play();
-    if (p) p.catch(() => {});
+    playActive();
   }, 4000);
 });
 
 
 /* ================================================================
    CONNECTION STATUS
-   Updates the visual dot and its aria-label for screen readers.
+   Updates the visual dot and its live-region text for screen readers.
    ================================================================ */
 
 const CONN_LABELS = {
@@ -3169,11 +3659,18 @@ const CONN_LABELS = {
   error: 'Connection: error'
 };
 
-function setConnStatus(status) {
+/** `message` replaces the standard label, for a sentence worth announcing
+    (a station that has stopped working). The text lives in an .sr-only span:
+    zero-size text inside the 8px dot may never be voiced.
+    While connQuiet is set (the sleep timer ending) the dot stops being a live
+    region before its text changes, so no "Connection: idle" wakes anyone. It
+    stays quiet until the next change, which turns it back on first. */
+function setConnStatus(status, message) {
   connDot.className = status === 'idle' ? '' : status;
-  var label = CONN_LABELS[status] || CONN_LABELS.idle;
+  var label = message || CONN_LABELS[status] || CONN_LABELS.idle;
+  connDot.setAttribute('aria-live', connQuiet ? 'off' : 'polite');
   connDot.setAttribute('aria-label', label);
-  connDot.textContent = label;
+  connText.textContent = label;
 }
 
 
@@ -3205,9 +3702,14 @@ function trapFocus(e, container) {
   }
 }
 
+/** Focus a saved return target if it is still in the page. */
+function restoreFocus(target) {
+  if (target && target.isConnected && typeof target.focus === 'function') target.focus();
+}
+
 /** Show an overlay and move focus to its first focusable element. */
 function showOverlay(el) {
-  focusBeforeOverlay = document.activeElement;
+  el._returnFocus = document.activeElement;
   el.classList.add('visible');
   el._focusTrap = function(e) { trapFocus(e, el); };
   el.addEventListener('keydown', el._focusTrap);
@@ -3216,17 +3718,18 @@ function showOverlay(el) {
   if (firstBtn) requestAnimationFrame(() => firstBtn.focus());
 }
 
-/** Hide an overlay and return focus to what was focused before. */
+/** Hide an overlay and return focus to what was focused before it opened.
+ *  A no-op when it isn't showing: stopPlayback() hides the connection overlay
+ *  on every stop, and that must not move focus. */
 function hideOverlay(el) {
+  if (!el.classList.contains('visible')) return;
   el.classList.remove('visible');
   if (el._focusTrap) {
     el.removeEventListener('keydown', el._focusTrap);
     el._focusTrap = null;
   }
-  if (focusBeforeOverlay && focusBeforeOverlay.focus) {
-    focusBeforeOverlay.focus();
-    focusBeforeOverlay = null;
-  }
+  restoreFocus(el._returnFocus);
+  el._returnFocus = null;
 }
 
 /** Find the topmost visible overlay and close it. Returns true if one was closed. */
@@ -3271,15 +3774,37 @@ function closeTopmostOverlay() {
    Can be disabled by the technician in settings.
    ================================================================ */
 
+const TAP_FLASH_MS = 250; // the tapFlash animation's length in the CSS
+const tapFlashTimers = new Map(); // stream ID -> timer that ends its flash
+
+/** A station button's flash overlay. Found by id, not a '#btn-…' selector:
+    an id from a backup can hold any character, and one like " or [ made
+    querySelector throw, so that station never played. */
+function tapFlashOf(streamId) {
+  const btn = document.getElementById('btn-' + streamId);
+  return btn && btn.querySelector('.tap-flash');
+}
+
 function doHaptic(streamId) {
   if (cfg.haptics !== 'on') return;
 
   // Visual flash on the stream button
-  const el = streamId ? document.querySelector('#btn-' + streamId + ' .tap-flash') : null;
+  const el = streamId ? tapFlashOf(streamId) : null;
   if (el) {
     el.classList.remove('flash');
     void el.offsetWidth; // Force reflow to restart the animation
     el.classList.add('flash');
+    // A tap flashes once. renderButtons() hands a running flash on to the
+    // rebuilt button, so when the flash is over, take the class off whichever
+    // button has it now. Left on, every later rebuild (a reconnect try every
+    // few seconds) flashed white again. A timer, not animationend: with
+    // reduced motion there is no animation, so that event never comes.
+    clearTimeout(tapFlashTimers.get(streamId));
+    tapFlashTimers.set(streamId, setTimeout(() => {
+      tapFlashTimers.delete(streamId);
+      const flash = tapFlashOf(streamId);
+      if (flash) flash.classList.remove('flash');
+    }, TAP_FLASH_MS));
   }
 
   // Device vibration (mobile only, silently ignored on desktop)
@@ -3300,12 +3825,33 @@ function speak(text) {
   speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
+let speakTimer = null; // pending feedback speech; a newer action replaces it
+const SPEAK_AFTER_CHIME_MS = 800;   // so speech doesn't talk over the chime
+const CONNECTING_SPEECH_MS = 3000;  // a start slower than this hears "Connecting to"
+
+/** Speak `text` after `delayMs`. Only the latest line is spoken: an accidental
+    double tap or a quick switch must not announce a station that is no longer
+    playing. */
+function say(text, delayMs) {
+  if (cfg.tts !== 'on' || !window.speechSynthesis) return;
+  clearTimeout(speakTimer);
+  speakTimer = setTimeout(() => speak(text), delayMs);
+}
+
 /** Play chime then speak — ensures TTS doesn't overlap the tone. */
 function feedback(direction, text) {
   chime(direction);
-  if (cfg.tts === 'on' && window.speechSynthesis) {
-    setTimeout(() => speak(text), 800);
-  }
+  say(text, SPEAK_AFTER_CHIME_MS);
+}
+
+/** Chime now; say "Now playing" when the audio really starts (the 'playing'
+    listener) rather than at the tap, so a dead station is never announced as
+    playing. A start slower than CONNECTING_SPEECH_MS hears "Connecting to"
+    first. */
+function announceStart(label) {
+  chime('up');
+  announceOnPlay = label;
+  say('Connecting to ' + label, CONNECTING_SPEECH_MS);
 }
 
 /** Shared AudioContext for chime tones — reused to avoid exhausting the browser limit. */
@@ -3354,8 +3900,12 @@ function chime(direction) {
 /* ================================================================
    SLEEP TIMER
    Automatically stops playback after a set duration.
-   Countdown is shown in the header's sleep indicator.
+   Countdown is shown in the header's sleep indicator. A screen reader hears
+   the listener's own taps once (set, cancelled) and nothing when the timer
+   ends: that must not wake someone who has just fallen asleep.
    ================================================================ */
+
+const SLEEP_STATUS_MS = 5000; // long enough for a screen reader to finish the line
 
 function showSleepOverlay() {
   showOverlay(document.getElementById('sleep-overlay'));
@@ -3369,21 +3919,42 @@ function closeSleepOverlay() {
 function setSleep(minutes) {
   clearSleep();
   closeSleepOverlay();
-  if (minutes <= 0) return;
+  if (minutes <= 0) {
+    confirmSleep('Sleep timer off.');
+    return;
+  }
 
   sleepRemaining = minutes * 60;
   updateSleepDisplay();
   sleepInd.classList.add('visible');
+  confirmSleep('Sleep timer set for ' + durationText(minutes) + '.');
 
   sleepTick = setInterval(() => {
     sleepRemaining--;
     if (sleepRemaining <= 0) {
       clearSleep();
-      stopPlayback();
+      // Silent to a screen reader too: no "Connection: idle" (see userStop()),
+      // and no focus move, which a screen reader reads out like a tap. The
+      // grid rebuild re-focuses a focused station, and closing the offline
+      // overlay hands focus back, so give neither anything to restore.
+      connQuiet = true;
+      if (buttonsEl.contains(document.activeElement)) document.activeElement.blur();
+      nonetOverlay._returnFocus = null;
+      try { stopPlayback(); } finally { connQuiet = false; }
       return;
     }
     updateSleepDisplay();
   }, 1000);
+}
+
+/** Say `text` to a screen reader once, after the overlay has closed (a modal
+    hides the rest of the page from it). Cleared a little later so a swipe
+    through the header doesn't find a stale line, and so the timer ending has
+    nothing left to change. Only the listener's own taps call this. */
+function confirmSleep(text) {
+  sleepStatus.textContent = text;
+  clearTimeout(sleepStatusTimer);
+  sleepStatusTimer = setTimeout(() => { sleepStatus.textContent = ''; }, SLEEP_STATUS_MS);
 }
 
 /** Cancel any active sleep timer and hide the indicator. */
@@ -3391,14 +3962,29 @@ function clearSleep() {
   clearInterval(sleepTick);
   sleepRemaining = 0;
   sleepInd.classList.remove('visible');
-  sleepInd.textContent = '';
+  sleepCountdown.textContent = '';
+  sleepLeft.textContent = '';
 }
 
-/** Update the header's sleep countdown display. */
+/** "30 minutes", "2 hours", "1 hour 59 minutes". */
+function durationText(minutes) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  const parts = [];
+  if (h) parts.push(h + (h === 1 ? ' hour' : ' hours'));
+  if (m || !h) parts.push(m + (m === 1 ? ' minute' : ' minutes'));
+  return parts.join(' ');
+}
+
+/** Update the header's sleep countdown display. The visible seconds are
+    hidden from screen readers; the sr-only line carries the time left in
+    whole minutes, rounded up, so it changes once a minute, not every second. */
 function updateSleepDisplay() {
   const m = Math.floor(sleepRemaining / 60);
   const s = sleepRemaining % 60;
-  sleepInd.textContent = '💤 ' + m + ':' + (s < 10 ? '0' : '') + s;
+  sleepCountdown.textContent = '💤 ' + m + ':' + (s < 10 ? '0' : '') + s;
+  const left = 'Sleep timer, ' + durationText(Math.ceil(sleepRemaining / 60)) + ' left';
+  if (sleepLeft.textContent !== left) sleepLeft.textContent = left;
 }
 
 
@@ -3408,14 +3994,24 @@ function updateSleepDisplay() {
    Automatically re-acquired when the app returns to the foreground.
    ================================================================ */
 
+let wakeLockPending = false; // a request is in flight; don't start a second one
+
+/** Hold one screen lock while audio plays. Every request() creates a separate
+    lock and the screen stays on while any is held, so this never asks twice:
+    an orphaned lock kept the screen on all night after the sleep timer. The
+    request is async, so the state is checked again once it resolves. */
 async function requestWakeLock() {
+  if (wakeLock || wakeLockPending || !('wakeLock' in navigator)) return;
+  wakeLockPending = true;
   try {
-    if ('wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
-    }
+    const sentinel = await navigator.wakeLock.request('screen');
+    if (!playing || paused) { sentinel.release(); return; } // paused or stopped meanwhile
+    wakeLock = sentinel;
+    sentinel.addEventListener('release', () => { if (wakeLock === sentinel) wakeLock = null; });
   } catch (e) {
     /* Wake lock not available or denied — non-critical */
+  } finally {
+    wakeLockPending = false;
   }
 }
 
@@ -3428,21 +4024,25 @@ function releaseWakeLock() {
 
 // Re-acquire wake lock when returning from background (OS may release it)
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && playing) {
+  if (document.visibilityState === 'visible' && playing && !paused) {
     requestWakeLock();
   }
 });
 
 // Network loss / restore. When Wi-Fi drops mid-playback, show the accessible
 // connection-error overlay; when it returns, auto-recover the active stream.
+// Only while actually playing: `playing` stays set through a pause (and the
+// simple-mode Stop bar pauses), and a paused radio must stay silent.
 window.addEventListener('offline', () => {
-  if (playing) {
+  if (playing && !paused) {
     setConnStatus('error');
     if (!nonetOverlay.classList.contains('visible')) showOverlay(nonetOverlay);
   }
 });
 window.addEventListener('online', () => {
-  if (playing && nonetOverlay.classList.contains('visible')) retryStream();
+  if (!nonetOverlay.classList.contains('visible')) return;
+  if (playing && !paused) retryStream();
+  else hideOverlay(nonetOverlay); // paused from the lock screen meanwhile: just clear it
 });
 
 
@@ -3467,33 +4067,30 @@ function setVolume(val) {
    Platform-specific actions available from the settings panel.
    ================================================================ */
 
-/** Open Android OS Wi-Fi settings via native bridge (APK) or intent URI (fallback). */
-function openWifiSettings() {
-  if (window.AndroidBridge && window.AndroidBridge.openWifiSettings) {
-    window.AndroidBridge.openWifiSettings();
-  } else {
-    window.location.href = 'intent:#Intent;action=android.settings.WIFI_SETTINGS;end';
+/** Open an Android Settings screen through the APK's bridge. The buttons only
+    show when the bridge exists (init()): a browser refuses intent: links to
+    Settings (Chrome only launches BROWSABLE activities) or can't open them at
+    all (Safari), and so does the APK's own intent hardening. A Java exception
+    (Settings blocked by device management) arrives here as an Error. */
+function openDeviceSettings(method) {
+  const status = document.getElementById('device-status');
+  status.textContent = '';
+  try {
+    window.AndroidBridge[method]();
+  } catch (e) {
+    console.warn('[device] AndroidBridge.' + method + ' failed:', e && e.message);
+    status.textContent = "Couldn't open Settings. This device may block it.";
   }
 }
 
-/** Open Android OS main settings via native bridge (APK) or intent URI (fallback). */
-function openOsSettings() {
-  if (window.AndroidBridge && window.AndroidBridge.openOsSettings) {
-    window.AndroidBridge.openOsSettings();
-  } else {
-    window.location.href = 'intent:#Intent;action=android.settings.SETTINGS;end';
-  }
-}
+/** Open Android OS Wi-Fi settings. */
+function openWifiSettings() { openDeviceSettings('openWifiSettings'); }
 
-/** Open Live Caption / accessibility settings. Android intent goes directly to
-    the Accessibility screen where Live Caption is found on Android 10+. */
-function openLiveCaptionSettings() {
-  if (window.AndroidBridge && window.AndroidBridge.openAccessibilitySettings) {
-    window.AndroidBridge.openAccessibilitySettings();
-  } else {
-    window.location.href = 'intent:#Intent;action=android.settings.ACCESSIBILITY_SETTINGS;end';
-  }
-}
+/** Open Android OS main settings. */
+function openOsSettings() { openDeviceSettings('openOsSettings'); }
+
+/** Open the Accessibility screen, where Live Caption is found on Android 10+. */
+function openLiveCaptionSettings() { openDeviceSettings('openAccessibilitySettings'); }
 
 
 /* ================================================================
@@ -3504,10 +4101,12 @@ function openLiveCaptionSettings() {
 
 function openSettings() {
   var panel = document.getElementById('settings-panel');
-  focusBeforeOverlay = document.activeElement;
+  panel._returnFocus = document.activeElement;
+  settingsOpen = true;
 
   // Snapshot current config so we can revert on cancel
   cfgSnapshot = JSON.parse(JSON.stringify(cfg));
+  setApplyStatus(''); // a save warning belongs to the visit that hit it
 
   // Reset to a known hidden state (clears stale classes from interrupted animations)
   panel.classList.remove('open', 'animated');
@@ -3523,6 +4122,10 @@ function openSettings() {
 
   // Sync org name textarea
   document.getElementById('in-org-name').value = cfg.orgName;
+
+  // The PIN field always starts from the saved PIN. Apply reads it back, so a
+  // stale or blank field here would silently change (or remove) the PIN.
+  document.getElementById('in-pin').value = getPin();
 
   renderStreamEditor();
   renderPresetChips();
@@ -3541,7 +4144,9 @@ function hasUnsavedChanges() {
   readStreamEditor();
   var orgVal = document.getElementById('in-org-name').value || PROFILE.orgName;
   if (orgVal !== cfgSnapshot.orgName) return true;
-  for (var k of ['theme', 'size', 'fillview', 'advanced', 'haptics', 'tts', 'chime', 'preset', 'orientation']) {
+  // No 'preset': it's derived from the fields compared here, so it can only
+  // differ when they do (or when it's stale, which isn't a change).
+  for (var k of ['theme', 'size', 'fillview', 'advanced', 'haptics', 'tts', 'chime', 'resume', 'orientation']) {
     if (cfg[k] !== cfgSnapshot[k]) return true;
   }
   if (cfg.volume !== cfgSnapshot.volume) return true;
@@ -3583,6 +4188,7 @@ function doCloseSettings() {
     cfg.haptics = cfgSnapshot.haptics;
     cfg.tts = cfgSnapshot.tts;
     cfg.chime = cfgSnapshot.chime;
+    cfg.resume = cfgSnapshot.resume;
     cfg.preset = cfgSnapshot.preset;
     cfg.orientation = cfgSnapshot.orientation;
     cfg.streams = cfgSnapshot.streams;
@@ -3604,6 +4210,9 @@ function doCloseSettings() {
     panel._focusTrap = null;
   }
   panel.classList.remove('open');
+  settingsOpen = false;
+  // Don't leave the PIN sitting in the closed panel's text field.
+  document.getElementById('in-pin').value = '';
   // Remove animated class after slide-out completes (timeout fallback if transitionend doesn't fire)
   var tid = setTimeout(function() { panel.classList.remove('animated'); }, 350);
   panel.addEventListener('transitionend', function handler() {
@@ -3611,10 +4220,8 @@ function doCloseSettings() {
     clearTimeout(tid);
     panel.classList.remove('animated');
   });
-  if (focusBeforeOverlay && focusBeforeOverlay.focus) {
-    focusBeforeOverlay.focus();
-    focusBeforeOverlay = null;
-  }
+  restoreFocus(panel._returnFocus);
+  panel._returnFocus = null;
 }
 
 /** Live-preview the organization name as it's typed. */
@@ -3783,9 +4390,9 @@ function renderStreamEditor() {
       '<div class="s-row"><label class="s-label">Stream URL</label>' +
         '<input class="s-input" data-field="url" data-idx="' + i + '" value="' + escAttr(s.url) + '" aria-label="Stream ' + num + ' URL" oninput="updateUrlWarning(' + i + ')"></div>' +
       '<div class="url-warn" data-warn-idx="' + i + '" role="alert" style="display:' + (isMixedContentUrl(s.url) ? 'block' : 'none') + ';">' +
-        'This stream is HTTP-only. It won\'t play on the hosted (HTTPS) demo site — browsers block mixed content — but it works in the installed app.' +
+        'This address starts with http://, so it won\'t play here, not even from the home screen: browsers block it on secure sites. Look for an https:// address for this station.' +
       '</div>' +
-      '<div class="s-row"><label class="s-label">Volume Trim</label>' +
+      '<div class="s-row ios-hide"><label class="s-label">Volume Trim</label>' +
         '<input class="s-input" type="number" inputmode="decimal" min="0.1" max="4" step="0.1" data-field="gain" data-idx="' + i + '" value="' + escAttr(s.gain != null ? String(s.gain) : '') + '" placeholder="1.0 (normal)" aria-label="Stream ' + num + ' volume trim, 0.1 to 4, 1 is normal"></div>' +
       '<div class="s-row"><label class="s-label">Button Color</label>' + colorChipsHtml + '</div>';
 
@@ -3810,12 +4417,24 @@ function renderStreamEditor() {
   }
 }
 
+/** Focus the first control in the stream editor matching one of the selectors.
+ *  renderStreamEditor() rebuilds the editor with innerHTML, which drops focus,
+ *  so each editor action puts it back on the equivalent control. */
+function refocusStreamEditor(selectors) {
+  var editor = document.getElementById('stream-editor');
+  for (var i = 0; i < selectors.length; i++) {
+    var el = editor.querySelector(selectors[i]);
+    if (el) { el.focus(); return; }
+  }
+}
+
 /** Update a stream's color and re-render the editor + live preview. */
 function selectStreamColor(el, idx, colorId) {
   readStreamEditor();
   cfg.streams[idx].color = colorId;
   renderStreamEditor();
   renderButtons();
+  refocusStreamEditor(['.color-chip[data-idx="' + idx + '"][data-color="' + colorId + '"]']);
 }
 
 /** Swap a stream with its neighbor (dir: -1 = up, 1 = down). */
@@ -3829,6 +4448,12 @@ function moveStream(idx, dir) {
   cfg.streams[target] = temp;
   renderStreamEditor();
   renderButtons();
+  // Follow the moved stream: same direction again if it can, else the other way.
+  const num = target + 1;
+  refocusStreamEditor([
+    '[aria-label="Move stream ' + num + (dir < 0 ? ' up' : ' down') + '"]',
+    '[aria-label="Move stream ' + num + (dir < 0 ? ' down' : ' up') + '"]',
+  ]);
 }
 
 /** Add a new blank stream entry to the editor. */
@@ -3847,6 +4472,8 @@ function addStreamEntry() {
   });
   renderStreamEditor();
   renderButtons();
+  // The new entry's icon button: a button, so no on-screen keyboard pops up.
+  refocusStreamEditor(['.emoji-input[data-idx="' + (cfg.streams.length - 1) + '"]']);
 }
 
 /** Remove a stream entry. Stops playback if that stream is playing. */
@@ -3859,6 +4486,8 @@ function removeStreamEntry(idx) {
   cfg.streams.splice(idx, 1);
   renderStreamEditor();
   renderButtons();
+  // The stream that moved into this slot, or the new last one.
+  refocusStreamEditor(['.emoji-input[data-idx="' + Math.min(idx, cfg.streams.length - 1) + '"]']);
 }
 
 /** Live-preview stream label/description/emoji changes as the user types. */
@@ -3897,17 +4526,44 @@ function readStreamEditor() {
 
 var sbPreviewAudio = null;
 
-/** Pick a random Radio Browser API server for load distribution. */
-async function getRadioBrowserBase() {
+/* Radio Browser runs several mirrors and publishes the list at
+   all.api.radio-browser.info. That list picks which host the search goes to,
+   so only names under api.radio-browser.info are used. A search tries up to
+   three in random order (spreading the load), the long-standing de1 mirror
+   among them, and each request gives up after 8 s so "Searching…" can't hang. */
+const RB_SERVERS_URL = 'https://all.api.radio-browser.info/json/servers';
+const RB_DEFAULT_HOST = 'de1.api.radio-browser.info';
+const RB_HOST_NAME = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.api\.radio-browser\.info$/i;
+const RB_TRIES = 3;
+const RB_TIMEOUT_MS = 8000;
+
+/** fetch() that gives up after `ms`. AbortController + setTimeout rather than
+    AbortSignal.timeout(), which older Android WebViews lack. */
+async function fetchWithTimeout(url, ms) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), ms);
   try {
-    const resp = await fetch('https://all.api.radio-browser.info/json/servers');
-    const servers = await resp.json();
-    if (servers.length > 0) {
-      const pick = servers[Math.floor(Math.random() * servers.length)];
-      return 'https://' + pick.name;
+    return await fetch(url, { signal: ctl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The mirror hosts to try for one search, in order. Never throws. */
+async function radioBrowserHosts() {
+  let names = [];
+  try {
+    const servers = await (await fetchWithTimeout(RB_SERVERS_URL, RB_TIMEOUT_MS)).json();
+    if (Array.isArray(servers)) {
+      names = servers.map(s => s && s.name).filter(n => typeof n === 'string' && RB_HOST_NAME.test(n));
     }
-  } catch (e) { /* fall through to default */ }
-  return 'https://de1.api.radio-browser.info';
+  } catch (e) { /* no list: the default host alone */ }
+  names = [...new Set(names)].filter(n => n !== RB_DEFAULT_HOST);
+  for (let i = names.length - 1; i > 0; i--) { // Fisher–Yates shuffle
+    const j = Math.floor(Math.random() * (i + 1));
+    [names[i], names[j]] = [names[j], names[i]];
+  }
+  return names.slice(0, RB_TRIES - 1).concat(RB_DEFAULT_HOST);
 }
 
 /* ================================================================
@@ -3966,6 +4622,7 @@ function closeHelp() {
 
 function openStreamBrowser() {
   var overlay = document.getElementById('stream-browser-overlay');
+  overlay._returnFocus = document.activeElement;
   overlay.classList.add('open');
   overlay._focusTrap = function(e) { trapFocus(e, overlay); };
   overlay.addEventListener('keydown', overlay._focusTrap);
@@ -3974,6 +4631,7 @@ function openStreamBrowser() {
   document.getElementById('sb-tag').value = '';
   document.getElementById('sb-results').innerHTML =
     '<div class="stream-browser-empty">Search for stations by name, or pick a country and genre to browse.</div>';
+  document.getElementById('sb-status').textContent = '';
   document.getElementById('sb-search').focus();
 }
 
@@ -3985,6 +4643,8 @@ function closeStreamBrowser() {
     overlay._focusTrap = null;
   }
   overlay.classList.remove('open');
+  restoreFocus(overlay._returnFocus);
+  overlay._returnFocus = null;
 }
 
 async function searchStations() {
@@ -3995,37 +4655,46 @@ async function searchStations() {
   if (!query && !country && !tag) return;
 
   const results = document.getElementById('sb-results');
+  const status = document.getElementById('sb-status');
   results.innerHTML = '<div class="sb-loading">Searching...</div>';
+  status.textContent = 'Searching…';
 
-  try {
-    const base = await getRadioBrowserBase();
-    const params = new URLSearchParams({
-      limit: '40',
-      order: 'clickcount',
-      reverse: 'true',
-      hidebroken: 'true'
-    });
-    if (query) params.set('name', query);
-    if (country) params.set('countrycode', country);
-    if (tag) params.set('tag', tag);
+  const params = new URLSearchParams({
+    limit: '40',
+    order: 'clickcount',
+    reverse: 'true',
+    hidebroken: 'true'
+  });
+  if (query) params.set('name', query);
+  if (country) params.set('countrycode', country);
+  if (tag) params.set('tag', tag);
 
-    const resp = await fetch(base + '/json/stations/search?' + params.toString());
-
-    if (!resp.ok) throw new Error('API returned ' + resp.status);
-
-    const stations = await resp.json();
-    renderBrowserResults(stations);
-  } catch (err) {
-    results.innerHTML =
-      '<div class="stream-browser-empty">Search failed. Check your network connection and try again.</div>';
+  for (const host of await radioBrowserHosts()) {
+    try {
+      const resp = await fetchWithTimeout('https://' + host + '/json/stations/search?' + params.toString(), RB_TIMEOUT_MS);
+      if (!resp.ok) throw new Error('API returned ' + resp.status);
+      renderBrowserResults(await resp.json());
+      return;
+    } catch (err) {
+      console.warn('[stream browser] ' + host + ' failed:', err && err.message);
+    }
   }
+
+  // Every mirror failed. Offline, that's the network; online, it's the directory.
+  const msg = navigator.onLine === false
+    ? 'Search failed. Check your network connection and try again.'
+    : "The station directory isn't responding. Try again in a few minutes.";
+  results.innerHTML = '<div class="stream-browser-empty">' + msg + '</div>';
+  status.textContent = msg;
 }
 
 function renderBrowserResults(stations) {
   const results = document.getElementById('sb-results');
+  const status = document.getElementById('sb-status');
 
   if (!stations || stations.length === 0) {
     results.innerHTML = '<div class="stream-browser-empty">No stations found. Try different search terms.</div>';
+    status.textContent = 'No stations found.';
     return;
   }
 
@@ -4082,6 +4751,7 @@ function renderBrowserResults(stations) {
 
   // Stash results for addFromBrowser
   results._stations = unique;
+  status.textContent = unique.length === 1 ? '1 station found.' : unique.length + ' stations found.';
 }
 
 function toggleSbPreview(url, btn) {
@@ -4091,15 +4761,19 @@ function toggleSbPreview(url, btn) {
     return;
   }
   stopSbPreview();
-  sbPreviewAudio = new Audio(url);
-  sbPreviewAudio.volume = 0.5;
-  sbPreviewAudio.play().catch(function() {});
+  var preview = new Audio(url);
+  sbPreviewAudio = preview;
+  preview.volume = 0.5;
+  preview.play().catch(function() {});
   btn.innerHTML = '&#9724;';
   btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Preview', 'Stop preview of'));
   btn.style.background = 'var(--accent)';
   btn.style.color = '#111';
-  sbPreviewAudio.addEventListener('ended', function() { stopSbPreview(); });
-  sbPreviewAudio.addEventListener('error', function() { stopSbPreview(); });
+  // Only this preview may end itself: the one stopSbPreview() just discarded
+  // still fires a late 'error' (clearing its src does that), and must not stop
+  // the preview that replaced it.
+  preview.addEventListener('ended', function() { if (sbPreviewAudio === preview) stopSbPreview(); });
+  preview.addEventListener('error', function() { if (sbPreviewAudio === preview) stopSbPreview(); });
 }
 
 function stopSbPreview() {
@@ -4347,6 +5021,7 @@ function sanitizeGain(v) {
 }
 
 function applySettings() {
+  if (!settingsOpen) return;
   readStreamEditor();
 
   // Read org name (fall back to default if blank)
@@ -4364,10 +5039,6 @@ function applySettings() {
   // technician out of settings entirely. Reject non-conforming input silently
   // (leaves the existing PIN untouched rather than saving an unenterable one).
   var newPin = document.getElementById('in-pin').value.replace(/\D/g, '');
-  if (newPin === '' || newPin.length === 4) setPin(newPin);
-
-  // Clear snapshot so closeSettings() won't revert
-  cfgSnapshot = null;
 
   // Refresh the entire UI
   applyOrgName();
@@ -4376,8 +5047,28 @@ function applySettings() {
   renderButtons();
   updateSimpleStop();
   updateAdvTransport();
-  saveSettings();
+
+  // Config first, then the PIN, so a failed save never leaves a new PIN
+  // guarding old settings. If storage refuses, stay open and say so; the
+  // snapshot stays, so closing still offers to discard back to what's saved.
+  if (!saveSettings() || ((newPin === '' || newPin.length === 4) && !setPin(newPin))) {
+    setApplyStatus(storedConfigIsNewer ? NEWER_CONFIG_MESSAGE : SAVE_FAILED_MESSAGE);
+    return;
+  }
+
+  // Clear snapshot so closeSettings() won't revert
+  cfgSnapshot = null;
   closeSettings();
+}
+
+const SAVE_FAILED_MESSAGE = "Couldn't save on this device, so these settings would be lost when the app restarts. Try Apply again, or close to discard them.";
+const NEWER_CONFIG_MESSAGE = "These settings were saved by a newer version of RadioGridXL, so this version won't change them. Update the app, or use Reset to Defaults to start over.";
+
+/** The line above Apply & Close; an empty message hides it. */
+function setApplyStatus(msg) {
+  var el = document.getElementById('apply-status');
+  el.hidden = !msg;
+  el.textContent = msg || '';
 }
 
 
@@ -4429,6 +5120,7 @@ function buildBackupPayload(includePin) {
 }
 
 function exportConfig() {
+  if (!settingsOpen) return;
   try {
     var pinBox = document.getElementById('in-backup-pin');
     var includePin = !!(pinBox && pinBox.checked);
@@ -4452,22 +5144,37 @@ function exportConfig() {
 /**
  * Apply a parsed, already-validated backup object to the live config and
  * persist it. `sanitized` is the output of validateConfig(); `pin` is the raw
- * PIN value from the file (may be undefined). Returns nothing — caller has
- * already decided the input is acceptable.
+ * PIN value from the file (may be undefined). Returns false, with the live
+ * config left as it was, when storage refuses the save; the caller has
+ * already decided the input is acceptable. Returns 'pin-not-saved' when the
+ * config saved but storage refused the backup's PIN, so the device's PIN is
+ * unchanged; true when everything saved.
  */
 function applyImportedConfig(sanitized, pin) {
   // Stop playback before swapping streams out from under it.
   stopPlayback();
 
+  const before = JSON.parse(JSON.stringify(cfg));
   Object.assign(cfg, sanitized);
-
-  // PIN: only apply when present and conforming (4 digits or empty=disabled).
-  // Anything else is ignored so the current PIN is preserved.
-  if (typeof pin === 'string' && (pin === '' || /^\d{4}$/.test(pin))) {
-    setPin(pin);
+  cfg.preset = matchingPresetName(); // a backup's preset name is a hint, like storage's
+  const wasNewer = storedConfigIsNewer;
+  storedConfigIsNewer = false; // restoring a backup is a choice to replace what's stored
+  if (!saveSettings()) {
+    // Nothing reached storage: put the live config back, so what's on screen
+    // is what the next launch loads.
+    Object.assign(cfg, before);
+    storedConfigIsNewer = wasNewer;
+    return false;
   }
 
-  saveSettings();
+  // PIN: only apply when present and conforming (4 digits or empty=disabled).
+  // Anything else is ignored so the current PIN is preserved. Set after the
+  // config saved, so a failed restore never changes the PIN alone. If storage
+  // refuses the PIN, the config stays restored and the caller says so.
+  let pinSaved = true;
+  if (typeof pin === 'string' && (pin === '' || /^\d{4}$/.test(pin))) {
+    pinSaved = setPin(pin);
+  }
 
   // Reflect the restored config live across the whole UI.
   loadSettings();      // re-read from storage so cfg + storage are authoritative
@@ -4484,16 +5191,23 @@ function applyImportedConfig(sanitized, pin) {
   document.getElementById('vol-slider').value = cfg.volume;
   document.getElementById('vol-val').textContent = cfg.volume + '%';
   document.getElementById('in-org-name').value = cfg.orgName;
-  document.getElementById('in-pin').value = '';
+  // The field must hold the PIN now in force (the device's, or the one the
+  // backup just restored). A blank field here made the next Apply remove it.
+  document.getElementById('in-pin').value = getPin();
   if (typeof renderStreamEditor === 'function') renderStreamEditor();
 
   // A successful import replaces the snapshot baseline so closeSettings()
-  // won't revert the freshly-restored config.
+  // won't revert the freshly-restored config. Read the editor back first: it
+  // fills in fields a backup may omit (sub, emoji), and a baseline without them
+  // made an untouched close ask "Discard Changes?".
+  if (typeof readStreamEditor === 'function') readStreamEditor();
   cfgSnapshot = JSON.parse(JSON.stringify(cfg));
+  return pinSaved ? true : 'pin-not-saved';
 }
 
 /** Handle a chosen backup file: read, parse, validate, apply. */
 function importConfig(event) {
+  if (!settingsOpen) return;
   var input = event && event.target;
   var file = input && input.files && input.files[0];
   if (!file) return;
@@ -4515,6 +5229,14 @@ function importConfig(event) {
       return;
     }
 
+    // A newer version's backup may use fields this version doesn't know;
+    // applying the rest would half-restore it without a word.
+    if (typeof parsed.v === 'number' && parsed.v > CFG_VERSION) {
+      setBackupStatus('This backup is from a newer version of RadioGridXL. Update the app first. Nothing was changed.', true);
+      input.value = '';
+      return;
+    }
+
     // UNTRUSTED input — run through the shared allowlist. validateConfig()
     // returns only the fields that pass; it never throws and never mass-assigns.
     var sanitized = validateConfig(parsed);
@@ -4527,8 +5249,29 @@ function importConfig(event) {
       return;
     }
 
-    applyImportedConfig(sanitized, parsed.pin);
-    setBackupStatus('Backup restored.', false);
+    var restored;
+    try {
+      restored = applyImportedConfig(sanitized, parsed.pin);
+      if (!restored) {
+        setBackupStatus("Couldn't save on this device, so nothing was changed.", true);
+        input.value = '';
+        return;
+      }
+    } catch (e) {
+      // validateConfig() should make this unreachable; if it isn't, say so
+      // rather than leave the technician looking at a silent half-restore.
+      console.error('[backup] restore failed:', e);
+      setBackupStatus("Couldn't finish restoring that backup. Check the settings before you close.", true);
+      input.value = '';
+      return;
+    }
+    // A technician restoring a backup to set a new PIN must not leave
+    // believing it took when storage refused it.
+    if (restored === 'pin-not-saved') {
+      setBackupStatus("Backup restored, but the PIN couldn't be saved on this device. The PIN hasn't changed.", true);
+    } else {
+      setBackupStatus('Backup restored.', false);
+    }
     input.value = '';  // allow re-importing the same file later
   };
   reader.onerror = function() {
@@ -4543,10 +5286,11 @@ function importConfig(event) {
    RESET TO DEFAULTS
    Two-tap confirm: first tap shows warning, second tap executes.
    Resets all settings and streams to factory defaults. PIN is
-   preserved (it's stored separately).
+   preserved (it's stored separately), as the confirm dialog promises.
    ================================================================ */
 
 function confirmReset() {
+  if (!settingsOpen) return;
   showOverlay(document.getElementById('reset-overlay'));
 }
 
@@ -4555,7 +5299,10 @@ function cancelReset() {
 }
 
 function executeReset() {
-  hideOverlay(document.getElementById('reset-overlay'));
+  var resetOverlay = document.getElementById('reset-overlay');
+  // Only from the confirm dialog, opened from inside settings.
+  if (!settingsOpen || !resetOverlay.classList.contains('visible')) return;
+  hideOverlay(resetOverlay);
 
   // Stop any playback
   stopPlayback();
@@ -4570,15 +5317,16 @@ function executeReset() {
   cfg.haptics = 'on';
   cfg.tts = 'off';
   cfg.chime = 'on';
+  cfg.resume = 'off';
   cfg.orientation = PROFILE.orientation || 'auto';
   cfg.streams = JSON.parse(JSON.stringify(PROFILE.streams));
-  setPin(PROFILE.pin);
+  cfg.preset = matchingPresetName();
+  const wasNewer = storedConfigIsNewer;
+  storedConfigIsNewer = false; // starting over replaces even a newer version's settings
+  // Nothing to resume either: a reset device shouldn't start a station by itself.
+  try { localStorage.removeItem('rgxl_last'); } catch (e) { /* storage unavailable: resume is off anyway */ }
 
-  // Clear snapshot so close won't revert
-  cfgSnapshot = null;
-
-  // Save, refresh UI, and close settings
-  saveSettings();
+  // Refresh the UI, save, and close settings
   applyOrgName();
   applyTheme();
   updateMode();
@@ -4586,6 +5334,16 @@ function executeReset() {
   updateSimpleStop();
   updateAdvTransport();
   if (!fadeTimer) audio.volume = targetVolume();
+  if (!saveSettings()) {
+    // As in applySettings(): stay open and say so; the snapshot stays, so
+    // closing still offers to discard back to what's saved.
+    storedConfigIsNewer = wasNewer;
+    setApplyStatus(SAVE_FAILED_MESSAGE);
+    return;
+  }
+
+  // Clear snapshot so close won't revert
+  cfgSnapshot = null;
   closeSettings();
 }
 
@@ -4643,12 +5401,14 @@ function getPin() {
   }
 }
 
-/** Save a new PIN to LocalStorage. */
+/** Save a new PIN to LocalStorage. Returns false when storage refuses. */
 function setPin(v) {
   try {
     localStorage.setItem('rgxl_pin', v);
+    return true;
   } catch (e) {
-    /* LocalStorage unavailable */
+    console.error('[settings] could not save rgxl_pin:', e && e.name, e && e.message);
+    return false;
   }
 }
 
@@ -4700,7 +5460,6 @@ function pinKey(n) {
         pinEntry = '';
         pinFailCount = 0;
         openSettings();
-        document.getElementById('in-pin').value = getPin();
       } else {
         // Wrong PIN
         pinFailCount++;
@@ -4765,6 +5524,81 @@ document.addEventListener('keydown', function (e) {
 
 
 /* ================================================================
+   APP UPDATES (hosted PWA)
+   sw.js serves the app cache-first, so a new version shows only after the
+   page reloads, and a kiosk can stay open for weeks. So: ask for a new
+   sw.js whenever the app comes back on screen and every 6 hours, and when
+   a new worker takes over, reload silently once the radio is quiet:
+   nothing playing (paused counts), settings closed and no overlay showing.
+   There's no "update available" prompt for the listener to puzzle over.
+   An update reload is not a launch: it never auto-resumes, and since it
+   only runs while nothing plays, it forgets rgxl_last too. The key stays
+   when autoplay blocked a launch, and older versions kept it through Stop,
+   so with Resume on the reload, or a power cut after it, could otherwise
+   restart a radio someone stopped at bedtime. (The APK has no update
+   reload: its first launch after an upgrade can still find an old key.)
+   ================================================================ */
+
+const UPDATE_CHECK_MS = 6 * 60 * 60 * 1000;
+const UPDATE_RETRY_MS = 5 * 60 * 1000;
+const UPDATE_RELOAD_KEY = 'rgxl_update_reload';
+let updatePending = false;
+let updateRetryTimer = null;
+
+/** Once the worker registers: look for a new sw.js on return and on a timer. */
+function checkForUpdates(reg) {
+  const check = () => reg.update().catch(() => { /* offline: the next check retries */ });
+  setInterval(check, UPDATE_CHECK_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') check();
+  });
+}
+
+/** A new worker took over this page, which is still the old version. */
+function onNewVersion() {
+  updatePending = true;
+  applyUpdateWhenQuiet();
+}
+
+/** True while anything is open over the radio: settings or a screen opened
+    from it, the PIN pad, the no-network or sleep timer overlay, a confirm.
+    Each is marked aria-modal and shows by adding 'visible' (.overlay) or
+    'open' (the rest), so there's no list to keep up to date. settingsOpen
+    counts on its own: the panel only gets 'open' a frame after openSettings(). */
+function overlayShowing() {
+  return settingsOpen || !!document.querySelector('[aria-modal="true"].visible, [aria-modal="true"].open');
+}
+
+function applyUpdateWhenQuiet() {
+  clearTimeout(updateRetryTimer);
+  if (!updatePending) return;
+  // A reload would wipe a half-typed PIN or a message the listener is reading.
+  if ((playing && !paused) || overlayShowing()) {
+    updateRetryTimer = setTimeout(applyUpdateWhenQuiet, UPDATE_RETRY_MS);
+    return;
+  }
+  updatePending = false;
+  try {
+    sessionStorage.setItem(UPDATE_RELOAD_KEY, '1');
+  } catch (e) {
+    return; // can't mark the reload, so it could auto-resume: leave it for the next launch
+  }
+  location.reload();
+}
+
+/** True, once, when this page load is an update reload. */
+function isUpdateReload() {
+  try {
+    if (!sessionStorage.getItem(UPDATE_RELOAD_KEY)) return false;
+    sessionStorage.removeItem(UPDATE_RELOAD_KEY);
+    return true;
+  } catch (e) {
+    return false; // storage unavailable: applyUpdateWhenQuiet() couldn't have set it either
+  }
+}
+
+
+/* ================================================================
    BOOT
    ================================================================ */
 
@@ -4781,14 +5615,30 @@ init();
   // location.protocol is 'http:' or 'https:' only when served by a server.
   // file:// (APK), and browsers without SW support, fall through to no-op.
   if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
+  // Listen now, not after register(): the new worker can take over first.
+  // The very first install also fires controllerchange (clients.claim), with
+  // nothing to reload; only a page that already had a worker is out of date.
+  try {
+    var controlled = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (controlled) onNewVersion();
+      controlled = true;
+    });
+  } catch (e) { /* updates then wait for the next launch */ }
   window.addEventListener('load', function () {
     try {
-      navigator.serviceWorker.register('sw.js').catch(function () { /* offline-first is best-effort */ });
+      navigator.serviceWorker.register('sw.js').then(checkForUpdates).catch(function () { /* offline-first is best-effort */ });
     } catch (e) { /* never let SW registration break the app */ }
-    // Best-effort: ask the browser to keep our cache from being evicted.
+    // Best-effort: ask the browser to keep our cache and settings from being
+    // evicted. Only in the installed app, where losing them would hurt and
+    // Chrome grants it silently. In a tab, Firefox would answer with a
+    // permission prompt a first-time visitor can't make sense of.
     try {
-      if (navigator.storage && navigator.storage.persist) {
-        navigator.storage.persist().catch(function () {});
+      var installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+      if (installed && navigator.storage && navigator.storage.persisted && navigator.storage.persist) {
+        navigator.storage.persisted().then(function (kept) {
+          if (!kept) return navigator.storage.persist();
+        }).catch(function () {});
       }
     } catch (e) { /* persistence is optional */ }
   });
