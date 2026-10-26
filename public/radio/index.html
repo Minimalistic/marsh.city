@@ -2287,6 +2287,21 @@ let pausedByFailure = null; // the error the browser paused the element for as t
                             // stream failed (Chromium does); its 'pause' isn't the
                             // listener's. Tied to that error, so a reload ends it
 let announceOnPlay = null; // station label to say "Now playing" for once its audio starts
+let liveSource = false;   // the active source loaded with no end (live radio): the
+                          // server hanging up is a lost connection, not the end.
+                          // Kept if the browser reports a length at the cut-off
+let stallWatch = null;    // setInterval handle for the no-audio check (watchForStall)
+let stallChecks = 0;      // consecutive checks with no playback progress
+let lastPosition = 0;     // audio.currentTime at the last check
+let steadyFrom = null;    // audio.currentTime when play resumed after the last lost
+                          // connection; STEADY_S of progress past it resets
+                          // retryCount. null when no reset is pending
+
+const RETRY_DELAY_MS = 4000;  // wait before each quiet reconnect
+const MAX_TRIES = 4;          // lost connections in a row before a station gives up
+const STALL_MS = 20000;       // this long with no audio arriving counts as a lost connection
+const STALL_CHECK_MS = 2000;
+const STEADY_S = 60;          // a reconnected station must play this long before its tries reset
 
 /* Sleep timer state */
 let sleepRemaining = 0;   // seconds remaining until auto-stop
@@ -3154,8 +3169,9 @@ function updateAdvTransport() {
 
 /* ================================================================
    PLAYBACK
-   Manages the HTML5 audio element. Includes auto-retry on errors
-   (up to 4 attempts before showing the connection error overlay).
+   Manages the HTML5 audio element. A lost connection reconnects quietly
+   (connectionLost(): MAX_TRIES before the station greys out); offline,
+   the no-network overlay waits for Wi-Fi instead.
    ================================================================ */
 
 /** Effective playback volume (0–1): the configured max times the currently-
@@ -3199,12 +3215,71 @@ function forgetLastStation() {
   try { localStorage.removeItem('rgxl_last'); } catch (e) { /* storage unavailable — non-fatal */ }
 }
 
+/** Cancel a pending quiet reconnect. retryTimer is null whenever none is
+    pending, so connectionLost() can tell a second report of the same loss
+    from a new one. */
+function cancelRetry() {
+  clearTimeout(retryTimer);
+  retryTimer = null;
+}
+
+/** Watch for audio that stops arriving while the app expects it: a station
+    that answers but never sends, or one that freezes mid-stream without
+    hanging up (the element just waits, forever). STALL_MS with no progress
+    in the playback position counts as a lost connection. Started with every
+    load and resume; it stops itself once the radio is paused or stopped, so
+    nothing it does can restart a paused radio. Counted in checks, not read
+    off a clock: a locked phone that slows timers stretches it instead of
+    misfiring. */
+function watchForStall() {
+  clearInterval(stallWatch);
+  stallChecks = 0;
+  lastPosition = audio.currentTime;
+  stallWatch = setInterval(() => {
+    if (!playing || paused) { stopStallWatch(); return; }
+    const position = audio.currentTime;
+    if (position !== lastPosition) {
+      lastPosition = position;
+      stallChecks = 0;
+      if (steadyFrom !== null && position - steadyFrom >= STEADY_S) { retryCount = 0; steadyFrom = null; }
+      return;
+    }
+    // A recording that buffers keeps its place: reloading would start it over.
+    // (It hasn't got this far if it never loaded: the length isn't known yet.)
+    if (!liveSource && isFinite(audio.duration)) return;
+    if (++stallChecks * STALL_CHECK_MS < STALL_MS) return;
+    stopStallWatch();
+    connectionLost();
+  }, STALL_CHECK_MS);
+}
+
+function stopStallWatch() {
+  clearInterval(stallWatch);
+  stallWatch = null;
+}
+
+/** Load the active station again after a lost connection. Silent, and the
+    sound fades back in once it arrives: after up to STALL_MS of silence,
+    audio snapping back at full volume is the loudest moment of a reconnect. */
+function reloadActive() {
+  const s = cfg.streams.find(x => x.id === playing);
+  if (!s) return;
+  clearInterval(fadeTimer); fadeTimer = null;
+  audio.volume = 0;
+  pendingFade = true;
+  audio.src = s.url;
+  audio.load();
+  playActive();
+  watchForStall();
+}
+
 /** Start playing a stream by its ID. Switches if already playing another.
     Tapping the active stream toggles pause/resume; while it is reconnecting
     after an error, a tap retries it now instead of pausing silence. */
 function playStream(id) {
-  clearTimeout(retryTimer);
+  cancelRetry();
   retryCount = 0;
+  steadyFrom = null;
   failedStreams.delete(id);
   hideOverlay(nonetOverlay);
 
@@ -3245,9 +3320,11 @@ function playStream(id) {
   audio.volume = 0;   // silence until playing event fires and fade begins
   pendingFade = true;
   streamFault = false;
+  liveSource = false; // until this source says otherwise (noteLiveness)
   audio.src = s.url;
   audio.load();
   playActive();
+  watchForStall();
   renderButtons();
   updateSimpleStop();
   updateAdvTransport();
@@ -3263,7 +3340,9 @@ function stopPlayback() {
 
   clearInterval(fadeTimer); fadeTimer = null;
   pendingFade = false;
-  clearTimeout(retryTimer);
+  cancelRetry();
+  stopStallWatch();
+  steadyFrom = null;
   clearTimeout(speakTimer); // a "Now playing" still waiting to be said is stale now
   audio.pause();
   audio.src = '';
@@ -3272,6 +3351,7 @@ function stopPlayback() {
   playing = null;
   paused = false;
   streamFault = false;
+  liveSource = false;
   announceOnPlay = null;
   retryCount = 0;
 
@@ -3331,19 +3411,20 @@ function resumeActive() {
   // A fresh attempt, as a station tap is: a retry still pending from before
   // the pause would load the stream a second time, and the count of failed
   // tries starts over (after three, the next error would give up at once).
-  clearTimeout(retryTimer);
+  cancelRetry();
   retryCount = 0;
+  steadyFrom = null;
   paused = false;
   rememberLastStation(playing);
   const s = cfg.streams.find(x => x.id === playing);
   if ((streamFault || audio.error) && s) {
-    audio.src = s.url;
-    audio.load();
     announceStart(s.label); // a reconnect, announced like a fresh start
+    reloadActive();
   } else {
     feedback('up', 'Resuming');
+    playActive();
+    watchForStall();
   }
-  playActive();
   setConnStatus('buffering');
   requestWakeLock();
   setMediaPlaybackState('playing');
@@ -3412,7 +3493,7 @@ function showSkipToast(msg) {
 /** Retry the current stream (called from the error overlay button). */
 function retryStream() {
   hideOverlay(nonetOverlay);
-  clearTimeout(retryTimer); // a pending auto-retry would load the stream a second time
+  cancelRetry(); // a pending auto-retry would load the stream a second time
   if (!playing) return;
 
   const s = cfg.streams.find(x => x.id === playing);
@@ -3421,9 +3502,8 @@ function retryStream() {
   // Clear any failed/error state so a successful retry un-grays the button.
   failedStreams.delete(playing);
   retryCount = 0;
-  audio.src = s.url;
-  audio.load();
-  playActive();
+  steadyFrom = null;
+  reloadActive();
   renderButtons();
   setConnStatus('buffering');
 }
@@ -3519,7 +3599,16 @@ function updateMediaSessionSkip() {
    ================================================================ */
 
 audio.addEventListener('playing', () => {
-  retryCount = 0;
+  // A stall that cleared by itself before its reconnect: keep this audio.
+  cancelRetry();
+  // The tries reset only once the station has played a full minute since its
+  // last lost connection (watchForStall() counts it in playback progress, so
+  // neither buffering nor the time a stall takes to notice counts), so one
+  // that plays a few seconds and hangs up (a "not available in your area"
+  // clip, a broken server) gives up after MAX_TRIES instead of replaying all
+  // night. A server that cuts everyone off hourly still comes back each time.
+  if (retryCount > 0 && steadyFrom === null) steadyFrom = audio.currentTime;
+  if (playing && !paused) watchForStall();
   if (streamFault) { streamFault = false; renderButtons(); } // clears "Reconnecting…"
   if (playing) setConnStatus('good');
   if (playing && announceOnPlay) { say('Now playing ' + announceOnPlay, SPEAK_AFTER_CHIME_MS); announceOnPlay = null; }
@@ -3554,6 +3643,11 @@ audio.addEventListener('pause', () => {
   // WebKit), a pause while the error stands is a call or the lock screen,
   // and a retry or Wi-Fi coming back must not restart audio after it.
   if (audio.error && audio.error === pausedByFailure) { pausedByFailure = null; return; }
+  // A live station's server hanging up reaches the element as the end of the
+  // stream: it pauses itself and then fires 'ended'. That's a lost connection,
+  // not the listener pausing (it used to read "Paused, tap to resume"). A
+  // recording reaching its end still lands below, as today.
+  if (audio.ended && liveSource && playing && !paused) { connectionLost(); return; }
   if (playing && !paused) {
     paused = true;
     announceOnPlay = null;
@@ -3575,6 +3669,7 @@ audio.addEventListener('play', () => {
   if (playing && paused) {
     paused = false;
     rememberLastStation(playing);
+    watchForStall();
     setConnStatus('buffering');
     requestWakeLock();
     setMediaPlaybackState('playing');
@@ -3584,8 +3679,33 @@ audio.addEventListener('play', () => {
   }
 });
 
+/** A source that loads with no end is live radio. Latched for the source: an
+    engine may report a length once a live stream is cut off, and that cut-off
+    must still count as a lost connection. */
+function noteLiveness() {
+  if (audio.duration === Infinity) liveSource = true;
+  // A length learned well before the end (a recording served without one,
+  // known once it has downloaded) means a recording after all: its end must
+  // not reconnect and replay it. A length reported at a live cut-off equals
+  // the position reached, so it doesn't count.
+  else if (isFinite(audio.duration) && audio.duration - audio.currentTime > 5) liveSource = false;
+}
+
 audio.addEventListener('loadedmetadata', () => {
+  noteLiveness();
   updateSkipButtons();
+});
+
+audio.addEventListener('durationchange', noteLiveness);
+
+// An engine that ends a live stream without pausing first. The pause
+// listener has already handled one that did (streamFault is set by then).
+audio.addEventListener('ended', () => {
+  if (!liveSource || !playing) return;
+  // Hung up while paused: nothing reconnects now, but the source is dead, so
+  // resuming must reload it rather than play() an ended element.
+  if (paused) { streamFault = true; return; }
+  if (!streamFault) connectionLost();
 });
 
 audio.addEventListener('error', () => {
@@ -3598,12 +3718,29 @@ audio.addEventListener('error', () => {
   // The app expects the element to be playing, so if it is already paused,
   // the browser paused it as part of this failure and its 'pause' comes next.
   pausedByFailure = audio.paused ? audio.error : null;
+  connectionLost();
+});
+
+/** The active station stopped delivering audio while the app expects it: an
+    error, a live station's server hanging up, or STALL_MS of silence. Each
+    loss uses one of MAX_TRIES quiet reconnects ("Reconnecting…", no chime,
+    voice, buzz or flash); the last gives up and says so. Never called while
+    paused, and the reconnect re-checks, so a paused radio stays silent. */
+function connectionLost() {
+  if (!playing || paused) return;
+  streamFault = true;
+  stopStallWatch();
+  steadyFrom = null;
+  // Already reconnecting: this is the same loss reported again (the stalled
+  // connection erroring out while its reconnect waits), not a new one.
+  if (retryTimer) return;
 
   // If the device is offline, retrying the URL won't help and picking a
   // different station won't either — surface the accessible connection-error
-  // overlay (plain-language Wi-Fi guidance) instead. Per-stream failures while
-  // ONLINE still fall through to the retry-then-gray-out path below, so the
-  // user can simply try another station.
+  // overlay (plain-language Wi-Fi guidance) instead, using no try. Wi-Fi
+  // coming back reloads the station once (the 'online' listener). Per-stream
+  // failures while ONLINE still fall through to the retry-then-gray-out path
+  // below, so the user can simply try another station.
   if (!navigator.onLine) {
     setConnStatus('error');
     renderButtons(); // the active button reads "Reconnecting…"
@@ -3614,12 +3751,12 @@ audio.addEventListener('error', () => {
   retryCount++;
   setConnStatus('error');
 
-  // After 4 consecutive errors, gray out the button, stop retrying, and say so
+  // After MAX_TRIES losses, gray out the button, stop retrying, and say so
   // in every channel: this used to be silent, after "Now playing" at the tap.
   // While the sleep timer runs someone may be asleep, so the greyed-out button
   // and the status text say it, with no buzz, flash, chime or voice. Read the
   // timer before stopPlayback(), which cancels it.
-  if (retryCount >= 4) {
+  if (retryCount >= MAX_TRIES) {
     const failedId = playing;
     const s = cfg.streams.find(x => x.id === failedId);
     const message = (s ? s.label : 'This station') + ' is not available right now. Try another station.';
@@ -3635,16 +3772,12 @@ audio.addEventListener('error', () => {
 
   renderButtons(); // the active button reads "Reconnecting…"
 
-  // Auto-retry after 4 seconds
   retryTimer = setTimeout(() => {
+    retryTimer = null;
     if (!playing || paused) return;
-    const s = cfg.streams.find(x => x.id === playing);
-    if (!s) return;
-    audio.src = s.url;
-    audio.load();
-    playActive();
-  }, 4000);
-});
+    reloadActive();
+  }, RETRY_DELAY_MS);
+}
 
 
 /* ================================================================
