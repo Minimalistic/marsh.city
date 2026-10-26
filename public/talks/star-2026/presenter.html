@@ -16,8 +16,9 @@
   button[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
   #timer { font: 600 40px/1 ui-monospace, monospace; }
   #timer.over { color: var(--accent); }
+  #place { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
   #where { color: var(--dim); margin: 0; }
-  h1 { margin: 0; font-size: 34px; line-height: 1.2; }
+  h1 { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.5; color: var(--dim); }
   #notes { background: var(--panel); border-radius: 12px; padding: 20px 24px; margin: 0; display: grid; gap: 12px; }
   #notes p { margin: 0; font-size: 22px; line-height: 1.45; color: var(--faint); }
   #notes p.now { font-size: 28px; color: var(--fg); }
@@ -53,8 +54,10 @@
     <button id="cue-mode" type="button" aria-pressed="false">Cue mode</button>
     <button id="edit" type="button" aria-pressed="false">Edit notes</button>
   </header>
-  <p id="where">Open the deck, then share only that window in Teams or Zoom.</p>
-  <h1 id="title"></h1>
+  <div id="place">
+    <p id="where">Open the deck, then share only that window in Teams or Zoom.</p>
+    <h1 id="title"></h1>
+  </div>
   <div id="notes"></div>
   <section id="editor" hidden aria-label="Edit this slide's notes">
     <p class="help">Edits stay in this browser and show here right away. They don't change the deck. When you're happy, copy them and paste them to Claude to make them permanent.</p>
