@@ -571,6 +571,10 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
      (status-bar-style is black-translucent, so content sits under it).
      env() is 0 on Android/desktop, so this is a no-op there. */
   padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  /* A landscape iPhone's notch sits on a side edge: the logo (the way into
+     settings) stays clear of it, the header colour still runs to the edge. */
+  padding-left: calc(18px + env(safe-area-inset-left, 0px));
+  padding-right: calc(18px + env(safe-area-inset-right, 0px));
   background: var(--header-bg);
   border-bottom: 1px solid var(--settings-border);
   flex-shrink: 0;
@@ -583,6 +587,8 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
 #header.compact {
   padding: 4px 12px;
   padding-top: calc(4px + env(safe-area-inset-top, 0px));
+  padding-left: calc(12px + env(safe-area-inset-left, 0px));
+  padding-right: calc(12px + env(safe-area-inset-right, 0px));
   gap: 8px;
 }
 #header.compact #logo-svg { width: 24px; height: 32px; }
@@ -664,6 +670,10 @@ html.is-desktop #org-name { font-size: 16px; }
   gap: 4px;
   overflow: hidden;
   padding: 4px;
+  /* Margin, not padding, for a landscape notch: renderButtons() reads this
+     box's width and takes its padding to be the gap, so the box narrows
+     instead and the sizing sees the width the buttons really have. */
+  margin: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
 }
 
 /* Switch to 2-column grid when there are more than 3 streams */
@@ -1046,6 +1056,8 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   padding: 10px 18px;
   /* Match #simple-stop: color fills the bottom safe area, content stays above it. */
   padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(18px + env(safe-area-inset-left, 0px));
+  padding-right: calc(18px + env(safe-area-inset-right, 0px));
   min-height: 70px;
   background: var(--stop-idle-bg);
   border-top: 2px solid var(--stop-idle-border);
@@ -1130,7 +1142,7 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   font-size: 18px;
   transition: color 0.2s;
   position: absolute;
-  right: 18px;
+  right: calc(18px + env(safe-area-inset-right, 0px));
 }
 #adv-transport.has-playing .adv-sleep-btn { color: var(--stop-active-text); }
 
@@ -1334,6 +1346,8 @@ html.is-desktop .overlay-body { font-size: 20px; }
   transform: translateX(100%);
   z-index: 100;
   overflow-y: auto;
+  /* A landscape iPhone's notch can sit on the right edge. */
+  padding-right: env(safe-area-inset-right, 0px);
 }
 #settings-panel.animated { transition: transform 0.3s ease; }
 #settings-panel.open { transform: translateX(0); }
@@ -1351,6 +1365,9 @@ html.is-desktop .overlay-body { font-size: 20px; }
   align-items: center;
   justify-content: space-between;
   padding: 15px 20px;
+  /* An installed iPhone app draws under the status bar (black-translucent),
+     so the pinned header starts below it, keeping Preview and × in reach. */
+  padding-top: calc(15px + env(safe-area-inset-top, 0px));
   border-bottom: 1px solid var(--settings-border);
   flex-shrink: 0;
   position: sticky;
@@ -1387,7 +1404,7 @@ html.is-desktop .overlay-body { font-size: 20px; }
 #preview-back {
   position: fixed;
   top: max(8px, env(safe-area-inset-top));
-  right: 8px;
+  right: max(8px, env(safe-area-inset-right));
   z-index: 101;
   border-color: var(--settings-text);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
@@ -1579,6 +1596,7 @@ html.is-ios .ios-hide { display: none; }
   display: none;
   position: fixed;
   inset: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   background: var(--overlay-bg);
   z-index: 2000;
   justify-content: center;
@@ -1589,8 +1607,8 @@ html.is-ios .ios-hide { display: none; }
   background: var(--settings-bg);
   border-radius: 14px;
   padding: 16px;
-  width: min(360px, 90vw);
-  max-height: 80vh;
+  width: min(360px, 90vw, 100%);
+  max-height: min(80vh, 100%);
   display: flex;
   flex-direction: column;
 }
@@ -1727,6 +1745,7 @@ html.is-ios .ios-hide { display: none; }
   display: none;
   position: fixed;
   inset: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   background: var(--overlay-bg);
   z-index: 2000;
   justify-content: center;
@@ -1737,8 +1756,8 @@ html.is-ios .ios-hide { display: none; }
   background: var(--settings-bg);
   border-radius: 14px;
   padding: 16px;
-  width: min(420px, 94vw);
-  max-height: 85vh;
+  width: min(420px, 94vw, 100%);
+  max-height: min(85vh, 100%);
   display: flex;
   flex-direction: column;
 }
@@ -1866,6 +1885,7 @@ html.is-ios .ios-hide { display: none; }
   display: none;
   position: fixed;
   inset: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   background: var(--overlay-bg);
   z-index: 2000;
   justify-content: center;
@@ -1875,8 +1895,10 @@ html.is-ios .ios-hide { display: none; }
 .help-sheet {
   background: var(--settings-bg);
   border-radius: 14px;
-  width: min(720px, 96vw);
-  height: 94vh;
+  width: min(720px, 96vw, 100%);
+  /* 100%: the overlay's box inside the safe area, so the close button
+     never sits under an iPhone's status bar. */
+  height: min(94vh, 100%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2019,7 +2041,7 @@ html.is-ios .ios-hide { display: none; }
 
 #settings-version {
   text-align: center;
-  padding: 8px 20px 16px;
+  padding: 8px 20px calc(16px + env(safe-area-inset-bottom, 0px));
   font-size: 10px;
   font-weight: 600;
   color: var(--settings-label);
@@ -2410,7 +2432,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.12.0</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.12.1</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
