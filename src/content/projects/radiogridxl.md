@@ -42,7 +42,7 @@ Five taps on the logo opens a PIN-protected settings panel - hidden enough that 
 
 ![The station browser: shelves of hand-picked stations, or a search of the Radio Browser directory](/images/radiogridxl/page/stream-browser.webp)
 
-The stream browser opens on six shelves of stations I picked: Calm & easy, Oldies, Classical, Jazz, News & talk, and Sleep. A script plays every one of them before each release. Past the shelves, it searches the Radio Browser API by name, country, state or region, and genre. Preview a station before adding it. Pick an emoji icon and color theme per station.
+The stream browser opens on six shelves of stations I picked: Calm & easy, Oldies, Classical, Jazz, News & talk, and Sleep. A script plays every one of them before each release. Past the shelves, it searches the Radio Browser API by name, country, state or region, and mood: Relaxing, Upbeat, Oldies, Classical, Jazz, Country, News & talk, Sports or Faith. Preview a station before adding it. A station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has, and any of them can be changed.
 
 ## Accessibility
 
@@ -84,6 +84,8 @@ flowchart TD
 ## Updates
 
 ### 2026-10-26
+Released v7.15.0. A station added from the browser used to arrive with no icon, a description like "US — jazz", the directory's full name and the next color in line. Now it gets an icon guessed from its genre, the plain line the browser showed, its name without the clutter, so "KNOW 91.1 Minnesota Public Radio News - Minneapolis-St. Paul, MN" becomes "KNOW 91.1 Minnesota Public Radio News", and a color no other station uses. Mood chips replace the genre dropdown, and each searches a few related tags at once. I also fixed the Search, Add and Apply buttons in MonoRadio Light and High Contrast Light, where their dark text sat on a dark fill and could barely be read. The contrast test now covers those buttons.
+
 Released v7.14.0. The station browser used to open on an empty search box, so finding something meant knowing a station's name or guessing at genre tags. Now it opens on six shelves of hand-picked stations, from Calm & easy to Sleep, and a script plays each one before a release. After a country, you can pick a state or region from the directory, so United States then Minnesota lists Minnesota stations. Results list each station once, leave out ones failing the directory's own check, and describe each in one plain line, like "Jazz · Minnesota · English". A station already on the radio says Added. In High Contrast, the browser's preview and Close buttons drew white on white; they're outlined now.
 
 Released v7.13.0. In settings, Preview shows the station grid with your changes before you apply them, and the grid can't be used while it's showing, so a tapped station used to do nothing with no sign why. Now that tap brings up "Preview only. Tap Back to settings to make changes." for a few seconds, and the Back to settings button pulses so it's easy to find. Screen readers hear the message too.

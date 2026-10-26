@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.14.0
+appVersion: 7.15.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -60,9 +60,9 @@ Stations are run by other people, and this app has no control over what they pla
 ![The station browser opening on six shelves: Calm & easy, Oldies, Classical, Jazz, News & talk and Sleep](/images/radiogridxl/guide/browse.webp)
 
 1. In settings, under **Audio Streams**, tap **Browse**.
-2. Tap a shelf, such as **Jazz** or **Sleep**, for a short list of hand-picked stations. Or search by name, or pick a country (then a state or region, if you like) and a genre, and tap **Search**.
+2. Tap a shelf, such as **Jazz** or **Sleep**, for a short list of hand-picked stations. Or tap a mood, such as **Relaxing** or **News & talk**, to search the directory for that kind of station. You can also search by name, or pick a country (then a state or region, if you like) and tap **Search**; a mood narrows those searches too.
 3. Tap a station's play button to hear it first, then tap **+ Add**. A station that's already on this radio says **Added** instead.
-4. Adjust the label, icon and color if you like, then tap **Apply & Close**.
+4. The station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has. Change any of them if you like, then tap **Apply & Close**.
 
 The shelf stations are checked before each release of the app. Searches go to the free, community-run [Radio Browser](https://www.radio-browser.info/) directory, so they need an internet connection. Each station is listed once, and stations failing the directory's own check are left out. On this website the browser only lists stations with secure (https://) addresses, because browsers block the others here.
 
