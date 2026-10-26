@@ -910,6 +910,11 @@ html.theme-contrast-light .logo-wave { stroke: #000000; }
 html[class*="theme-contrast"] #header { border-bottom-width: 2px; }
 /* A chosen chip is filled, not just outlined, as a playing station is. */
 html[class*="theme-contrast"] .chip.selected { border-width: 3px; background: var(--accent); color: var(--hc-chip-chosen-text); }
+/* The station browser fills its buttons with the border colour, which is the
+   text colour in High Contrast: outline them instead. */
+html[class*="theme-contrast"] .sb-shelf,
+html[class*="theme-contrast"] .sb-result-play,
+html[class*="theme-contrast"] .stream-browser-actions button { background: var(--settings-bg); border: 2px solid var(--settings-border); }
 /* No faded settings text in High Contrast. */
 html[class*="theme-contrast"] .theme-group-label,
 html[class*="theme-contrast"] .stream-action-btn,
@@ -1989,6 +1994,55 @@ html.is-ios .ios-hide { display: none; }
   font-size: 13px;
   padding: 30px 10px;
 }
+/* Starter shelves: what the browser opens on, before any search. */
+.sb-shelves-intro {
+  color: var(--settings-label);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 4px 2px 10px;
+}
+.sb-shelves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.sb-shelf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--settings-border);
+  color: var(--settings-text);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sb-shelf-icon { font-size: 20px; line-height: 1; }
+.sb-back {
+  display: block;
+  margin: 0 0 6px;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  color: var(--settings-text);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+/* Shown in place of + Add for a station already on this radio. */
+.sb-result-added {
+  flex: 0 0 auto;
+  padding: 6px 4px;
+  color: var(--settings-label);
+  font-size: 11px;
+  font-weight: 700;
+}
 
 /* Apply button */
 #apply-btn {
@@ -2466,7 +2520,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.13.0</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.14.0</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -2482,7 +2536,7 @@ html.is-ios .ios-hide { display: none; }
         <button onclick="searchStations()">Search</button>
       </div>
       <div class="stream-browser-filters">
-        <select id="sb-country" aria-label="Filter by country">
+        <select id="sb-country" aria-label="Filter by country" onchange="loadRegions()">
           <option value="">Any country</option>
           <option value="US">United States</option>
           <option value="GB">United Kingdom</option>
@@ -2498,6 +2552,10 @@ html.is-ios .ios-hide { display: none; }
           <option value="ES">Spain</option>
           <option value="IT">Italy</option>
           <option value="IN">India</option>
+        </select>
+        <!-- Filled from the directory once a country is picked; see loadRegions() -->
+        <select id="sb-region" aria-label="Filter by state or region" hidden disabled>
+          <option value="">Any region</option>
         </select>
         <select id="sb-tag" aria-label="Filter by genre">
           <option value="">Any genre</option>
@@ -2524,9 +2582,8 @@ html.is-ios .ios-hide { display: none; }
       <!-- One short spoken status per search; the results list itself is not a
            live region, or a screen reader queues all 40 rows as one announcement. -->
       <div id="sb-status" class="sr-only" role="status" aria-live="polite"></div>
-      <div class="stream-browser-results" id="sb-results" role="region" aria-label="Search results">
-        <div class="stream-browser-empty">Search for stations by name, or pick a country and genre to browse.</div>
-      </div>
+      <!-- Opens on the starter shelves (showShelves); a shelf or a search fills it with stations. -->
+      <div class="stream-browser-results" id="sb-results" role="region" aria-label="Stations"></div>
       <div class="stream-browser-actions">
         <button onclick="closeStreamBrowser()">Close</button>
       </div>
@@ -5184,6 +5241,66 @@ function readStreamEditor() {
    or genre — instead of manually entering stream URLs.
    ================================================================ */
 
+/* Starter shelves: hand-picked stations the browser opens on, so finding
+   something good doesn't start from an empty search box. Every address is
+   https (they play on the hosted app too), and `npm run check:shelves` plays
+   each one before a release. Plain JSON, so that script can read it. */
+/* === SHELVES — check-shelves.mjs reads this block === */
+const SHELVES = [
+  { "id": "calm", "label": "Calm & easy", "icon": "🌿", "stations": [
+    { "name": "Radio Paradise Mellow Mix", "sub": "Soft rock and acoustic, no ads · California", "url": "https://stream.radioparadise.com/mellow-128" },
+    { "name": "Classic FM Calm", "sub": "Relaxing classical · UK", "url": "https://media-ice.musicradio.com/ClassicFMCalmMP3" },
+    { "name": "YourClassical Favorites", "sub": "Well-loved classical · Minnesota", "url": "https://favorites.stream.publicradio.org/favorites.mp3" },
+    { "name": "Classic Vinyl HD", "sub": "Standards and crooners, 1930s–60s", "url": "https://icecast.walmradio.com:8443/classic" },
+    { "name": "SmoothJazz.com", "sub": "Smooth jazz", "url": "https://smoothjazz.cdnstream1.com/2585_128.mp3" },
+    { "name": "Airport Lounge Radio", "sub": "Lounge and easy listening · Canada", "url": "https://az1.mediacp.eu/listen/airport-lounge-radio/radio.mp3" }
+  ] },
+  { "id": "oldies", "label": "Oldies", "icon": "📻", "stations": [
+    { "name": "Old Time Radio", "sub": "Radio dramas and comedy, 1930s–50s", "url": "https://icecast.walmradio.com:8443/otr" },
+    { "name": "1940s Radio", "sub": "Music of the 1940s · UK", "url": "https://cast2.asurahosting.com/proxy/1940sradio/stream" },
+    { "name": "50s on Radio", "sub": "Hits of the 1950s", "url": "https://0n-50s.radionetz.de/0n-50s.mp3" },
+    { "name": "60s on Radio", "sub": "Hits of the 1960s", "url": "https://0n-60s.radionetz.de/0n-60s.mp3" },
+    { "name": "Gold", "sub": "Hits of the 60s, 70s and 80s · UK", "url": "https://media-ssl.musicradio.com/GoldMP3" },
+    { "name": "Soul Radio", "sub": "Classic soul · UK", "url": "https://listen.soulradio.uk/uk" }
+  ] },
+  { "id": "classical", "label": "Classical", "icon": "🎻", "stations": [
+    { "name": "YourClassical MPR", "sub": "Classical · Minnesota", "url": "https://cms.stream.publicradio.org/cms.mp3" },
+    { "name": "WQXR", "sub": "Classical · New York", "url": "https://stream.wqxr.org/wqxr-web" },
+    { "name": "WFMT", "sub": "Classical · Chicago", "url": "https://wfmt.streamguys1.com/main128.aac" },
+    { "name": "Classical KUSC", "sub": "Classical · Los Angeles", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KUSCMP256.mp3" },
+    { "name": "Classic FM", "sub": "Classical · UK", "url": "https://media-ice.musicradio.com/ClassicFMMP3" },
+    { "name": "YourClassical Chamber Music", "sub": "Chamber music · Minnesota", "url": "https://chambermusic.stream.publicradio.org/chambermusic.mp3" },
+    { "name": "Venice Classic Radio", "sub": "Classical · Italy", "url": "https://uk2.streamingpulse.com/ssl/vcr1" }
+  ] },
+  { "id": "jazz", "label": "Jazz", "icon": "🎷", "stations": [
+    { "name": "Jazz 88 KBEM", "sub": "Jazz · Minneapolis", "url": "https://kbem-live.streamguys1.com/kbem_aac" },
+    { "name": "Jazz24", "sub": "Jazz · Seattle", "url": "https://knkx-live-a.edge.audiocdn.com/6285_128k" },
+    { "name": "WBGO", "sub": "Jazz · Newark", "url": "https://ais-sa8.cdnstream1.com/3629_128.mp3" },
+    { "name": "KUVO Jazz", "sub": "Jazz · Denver", "url": "https://kuvo.streamguys1.com/kuvo-aac-128" },
+    { "name": "WWOZ", "sub": "Jazz and blues · New Orleans", "url": "https://wwoz-sc.streamguys1.com/wwoz-hi.mp3" },
+    { "name": "TSF Jazz", "sub": "Jazz · Paris", "url": "https://tsfjazz.ice.infomaniak.ch/tsfjazz-high.mp3" }
+  ] },
+  { "id": "news", "label": "News & talk", "icon": "🗞️", "stations": [
+    { "name": "MPR News", "sub": "News · Minnesota", "url": "https://nis.stream.publicradio.org/nis.mp3" },
+    { "name": "BBC World Service", "sub": "World news · UK", "url": "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" },
+    { "name": "WNYC", "sub": "News · New York", "url": "https://fm939.wnyc.org/wnycfm-web" },
+    { "name": "WBUR", "sub": "News · Boston", "url": "https://fm909.wbur.org/wbur_www" },
+    { "name": "WAMU", "sub": "News · Washington, DC", "url": "https://wamu.cdnstream1.com/wamu.mp3" },
+    { "name": "KQED", "sub": "News · San Francisco", "url": "https://streams.kqed.org/kqedradio" },
+    { "name": "C-SPAN Radio", "sub": "Public affairs · Washington, DC", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CSPANRADIO.mp3" }
+  ] },
+  { "id": "sleep", "label": "Sleep", "icon": "🌙", "stations": [
+    { "name": "YourClassical Relax", "sub": "Quiet classical · Minnesota", "url": "https://relax.stream.publicradio.org/relax.mp3" },
+    { "name": "Ambient Sleeping Pill", "sub": "Slow ambient, no beats", "url": "https://radio.stereoscenic.com/asp-h" },
+    { "name": "Sleep Classical", "sub": "Slow classical", "url": "https://streaming.positivity.radio/pr/sleepclassical/icecast.audio" },
+    { "name": "Music for Sleep", "sub": "Soft classical", "url": "https://0nlineradio.radioho.st/classical-classical-music-for-sleep" },
+    { "name": "Piano for Sleep", "sub": "Soft piano", "url": "https://air.radioart.online/fPiano_for_sleep.mp3" },
+    { "name": "Guitar for Sleep", "sub": "Soft guitar", "url": "https://air.radioart.online/fGuitar_for_sleep.mp3" },
+    { "name": "Nature Radio Sleep", "sub": "Nature sounds", "url": "https://az1.mediacp.eu/listen/natureradiosleep/radio.mp3" }
+  ] }
+];
+/* === END SHELVES === */
+
 var sbPreviewAudio = null;
 
 /* Radio Browser runs several mirrors and publishes the list at
@@ -5289,10 +5406,151 @@ function openStreamBrowser() {
   document.getElementById('sb-search').value = '';
   document.getElementById('sb-country').value = '';
   document.getElementById('sb-tag').value = '';
-  document.getElementById('sb-results').innerHTML =
-    '<div class="stream-browser-empty">Search for stations by name, or pick a country and genre to browse.</div>';
+  loadRegions(); // no country: hides the region list
+  showShelves();
   document.getElementById('sb-status').textContent = '';
   document.getElementById('sb-search').focus();
+}
+
+/** The starter shelves, in place of any results. */
+function showShelves() {
+  stopSbPreview();
+  const results = document.getElementById('sb-results');
+  results._stations = null;
+  results.innerHTML = '';
+  const intro = document.createElement('p');
+  intro.className = 'sb-shelves-intro';
+  intro.textContent = 'Start with a shelf of hand-picked stations, or search the directory above.';
+  const grid = document.createElement('div');
+  grid.className = 'sb-shelves';
+  SHELVES.forEach(function(shelf) {
+    const btn = document.createElement('button');
+    btn.className = 'sb-shelf';
+    btn.dataset.shelf = shelf.id;
+    const icon = document.createElement('span');
+    icon.className = 'sb-shelf-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = shelf.icon;
+    btn.append(icon, document.createTextNode(shelf.label));
+    btn.addEventListener('click', function() { openShelf(shelf.id); });
+    grid.appendChild(btn);
+  });
+  results.append(intro, grid);
+}
+
+function openShelf(id) {
+  const shelf = SHELVES.find(function(sh) { return sh.id === id; });
+  if (!shelf) return;
+  renderStationRows(shelf.stations.map(function(st) {
+    return { name: st.name, url: st.url, meta: st.sub, sub: st.sub };
+  }), shelf.id);
+  document.getElementById('sb-status').textContent =
+    shelf.label + ': ' + shelf.stations.length + ' stations.';
+}
+
+/** Back to the shelves from a shelf or a search. Focus goes to the shelf that
+    was open (or the first), since the button that had it is gone. */
+function backToShelves(fromShelf) {
+  showShelves();
+  const results = document.getElementById('sb-results');
+  const target = (fromShelf && results.querySelector('.sb-shelf[data-shelf="' + fromShelf + '"]')) ||
+    results.querySelector('.sb-shelf');
+  if (target) target.focus();
+  document.getElementById('sb-status').textContent = 'Shelves.';
+}
+
+function backButton(fromShelf) {
+  const back = document.createElement('button');
+  back.className = 'sb-back';
+  back.innerHTML = '<span aria-hidden="true">&#8249; </span>All shelves';
+  back.addEventListener('click', function() { backToShelves(fromShelf); });
+  return back;
+}
+
+/** A message where results would be, with the way back to the shelves. */
+function showResultsMessage(msg) {
+  const results = document.getElementById('sb-results');
+  results._stations = null;
+  results.innerHTML = '';
+  const empty = document.createElement('div');
+  empty.className = 'stream-browser-empty';
+  empty.textContent = msg;
+  results.append(backButton(), empty);
+}
+
+/* ── Stations near you ────────────────────────────────────────────────
+   Once a country is picked, its states or regions come from the directory.
+   The directory's region names are typed in by whoever listed each station,
+   so the list keeps names with enough stations to be worth a search, drops
+   bare abbreviations ("CA", "NY") and repeats, and sorts the rest. If the
+   list can't load, the region picker stays off and the country search works
+   as before. */
+const REGION_MIN_STATIONS = 10;
+var sbCountryNames = null; // ISO code → the directory's country name, fetched once
+var sbRegionRequest = 0;   // a newer country pick wins over a slower older one
+
+/** GET a directory path as JSON, trying mirrors like searchStations does. */
+async function radioBrowserJson(path) {
+  for (const host of await radioBrowserHosts()) {
+    try {
+      const resp = await fetchWithTimeout('https://' + host + path, RB_TIMEOUT_MS);
+      if (!resp.ok) throw new Error('API returned ' + resp.status);
+      return await resp.json();
+    } catch (err) {
+      console.warn('[stream browser] ' + host + ' ' + path + ' failed:', err && err.message);
+    }
+  }
+  throw new Error('the station directory is not responding');
+}
+
+function regionNames(states, countryName) {
+  if (!Array.isArray(states)) return [];
+  const seen = new Set();
+  const names = [];
+  states.forEach(function(st) {
+    if (!st || st.country !== countryName || typeof st.name !== 'string') return;
+    if (!(st.stationcount >= REGION_MIN_STATIONS)) return;
+    const name = st.name.trim();
+    if (!name || /^[A-Z]{2,3}$/.test(name) || seen.has(name.toLowerCase())) return;
+    seen.add(name.toLowerCase());
+    names.push(name);
+  });
+  return names.sort(function(a, b) { return a.localeCompare(b); });
+}
+
+async function loadRegions() {
+  const country = document.getElementById('sb-country').value;
+  const region = document.getElementById('sb-region');
+  const request = ++sbRegionRequest;
+  region.innerHTML = '';
+  region.appendChild(new Option('Any region', ''));
+  region.disabled = true;
+  region.hidden = !country;
+  if (!country) return;
+  region.options[0].textContent = 'Loading regions…';
+  try {
+    if (!sbCountryNames) {
+      const countries = await radioBrowserJson('/json/countries');
+      if (!Array.isArray(countries)) throw new Error('country list is not a list');
+      sbCountryNames = {};
+      countries.forEach(function(c) {
+        if (c && typeof c.iso_3166_1 === 'string' && typeof c.name === 'string') sbCountryNames[c.iso_3166_1] = c.name;
+      });
+    }
+    const countryName = sbCountryNames[country];
+    if (!countryName) throw new Error('no directory name for ' + country);
+    const states = await radioBrowserJson('/json/states/' + encodeURIComponent(countryName) + '/?hidebroken=true');
+    if (request !== sbRegionRequest) return;
+    const names = regionNames(states, countryName);
+    if (names.length === 0) { region.hidden = true; return; }
+    region.options[0].textContent = 'Any region';
+    names.forEach(function(name) { region.appendChild(new Option(name, name)); });
+    region.disabled = false;
+  } catch (err) {
+    if (request !== sbRegionRequest) return;
+    console.warn('[stream browser] region list:', err && err.message);
+    region.options[0].textContent = 'Regions unavailable';
+  }
 }
 
 function closeStreamBrowser() {
@@ -5311,22 +5569,29 @@ async function searchStations() {
   const query = document.getElementById('sb-search').value.trim();
   const country = document.getElementById('sb-country').value;
   const tag = document.getElementById('sb-tag').value;
+  const regionSelect = document.getElementById('sb-region');
+  const region = country && !regionSelect.disabled ? regionSelect.value : '';
 
   if (!query && !country && !tag) return;
 
+  stopSbPreview();
   const results = document.getElementById('sb-results');
   const status = document.getElementById('sb-status');
+  results._stations = null;
   results.innerHTML = '<div class="sb-loading">Searching...</div>';
   status.textContent = 'Searching…';
 
+  // 60, not 40: repeats of one station fold together below, so a page of
+  // 60 still fills the list.
   const params = new URLSearchParams({
-    limit: '40',
+    limit: '60',
     order: 'clickcount',
     reverse: 'true',
     hidebroken: 'true'
   });
   if (query) params.set('name', query);
   if (country) params.set('countrycode', country);
+  if (region) params.set('state', region);
   if (tag) params.set('tag', tag);
   // An https page can't play http:// streams (see isMixedContentUrl), so the
   // hosted app asks only for https stations: a full page of results that play.
@@ -5363,8 +5628,8 @@ async function searchStations() {
   // Every mirror failed. Offline, that's the network; online, it's the directory.
   const msg = navigator.onLine === false
     ? 'Search failed. Check your network connection and try again.'
-    : "The station directory isn't responding. Try again in a few minutes.";
-  results.innerHTML = '<div class="stream-browser-empty">' + msg + '</div>';
+    : "The station directory isn't responding. Try again in a few minutes, or pick a shelf.";
+  showResultsMessage(msg);
   status.textContent = msg;
 }
 
@@ -5379,33 +5644,86 @@ function playableHere(stations) {
 
 const HTTP_ONLY_RESULTS_MESSAGE = 'No stations found that can play on this website. Some use http:// addresses, which browsers block here.';
 
+/** The first entry of a directory list field ("jazz,blues" → "Jazz"). */
+function firstListed(field) {
+  const first = typeof field === 'string' ? field.split(',')[0].trim() : '';
+  return first ? first.charAt(0).toUpperCase() + first.slice(1) : '';
+}
+
+/** One plain line about a directory station: "Jazz · Minnesota · English". */
+function stationLine(s) {
+  const place = (typeof s.state === 'string' && s.state.trim()) || s.country || '';
+  return [firstListed(s.tags), place, firstListed(s.language)].filter(Boolean).join(' · ');
+}
+
+/** One entry per station. The directory lists many stations several times
+    (one per bitrate or mirror): the same address, or the same name and
+    homepage, fold into the copy with the highest bitrate. */
+function collapseDuplicates(stations) {
+  const groups = new Map();
+  stations.forEach(function(s) {
+    if (typeof s.url_resolved !== 'string' || !s.url_resolved) return;
+    const home = typeof s.homepage === 'string'
+      ? s.homepage.trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '') : '';
+    const name = typeof s.name === 'string' ? s.name.trim().toLowerCase() : '';
+    const key = home ? name + '|' + home : 'url|' + s.url_resolved;
+    const group = groups.get(key);
+    if (!group) groups.set(key, s);
+    else if ((Number(s.bitrate) || 0) > (Number(group.bitrate) || 0)) groups.set(key, s);
+  });
+  const seenUrls = new Set();
+  return [...groups.values()].filter(function(s) {
+    if (seenUrls.has(s.url_resolved)) return false;
+    seenUrls.add(s.url_resolved);
+    return true;
+  });
+}
+
 function renderBrowserResults(stations, onlyHttpMatches) {
-  const results = document.getElementById('sb-results');
   const status = document.getElementById('sb-status');
-  stations = playableHere(stations);
+  // lastcheckok 0: the directory's own check found the station failing.
+  stations = playableHere(stations).filter(s => s.lastcheckok !== 0);
 
   if (stations.length === 0) {
     const msg = onlyHttpMatches ? HTTP_ONLY_RESULTS_MESSAGE : 'No stations found. Try different search terms.';
-    results.innerHTML = '<div class="stream-browser-empty">' + msg + '</div>';
+    showResultsMessage(msg);
     status.textContent = onlyHttpMatches ? msg : 'No stations found.';
     return;
   }
 
-  // Dedupe by URL — the API sometimes returns duplicates
-  const seen = new Set();
-  const unique = stations.filter(s => {
-    if (!s.url_resolved || seen.has(s.url_resolved)) return false;
-    seen.add(s.url_resolved);
-    return true;
-  });
+  const items = collapseDuplicates(stations).map(s => ({
+    name: typeof s.name === 'string' ? s.name.trim() : '',
+    url: s.url_resolved,
+    meta: stationLine(s),
+    sub: [s.country, s.tags ? s.tags.split(',')[0] : ''].filter(Boolean).join(' — ')
+  }));
+  renderStationRows(items);
+  status.textContent = items.length === 1 ? '1 station found.' : items.length + ' stations found.';
+}
 
+/** Addresses already on this radio, including edits not yet applied. */
+function addedStreamUrls() {
+  const urls = new Set(cfg.streams.map(st => typeof st.url === 'string' ? st.url.trim() : ''));
+  document.querySelectorAll('#stream-editor [data-field="url"]').forEach(input => urls.add(input.value.trim()));
+  urls.delete('');
+  return urls;
+}
+
+/** Station rows (from a shelf or a search) under a way back to the shelves.
+    Each item is { name, url, meta, sub }: meta is the line under the name,
+    sub the description a station gets when added. */
+function renderStationRows(items, fromShelf) {
+  stopSbPreview();
+  const results = document.getElementById('sb-results');
+  const added = addedStreamUrls();
+  // A shelf tap removes the button that had focus; a search keeps it in the box.
+  const hadFocus = results.contains(document.activeElement);
   results.innerHTML = '';
-  unique.forEach((s, i) => {
+  const back = backButton(fromShelf);
+  results.appendChild(back);
+  items.forEach((s, i) => {
     const div = document.createElement('div');
     div.className = 'sb-result';
-
-    const tags = [s.country, s.tags ? s.tags.split(',')[0] : '', s.bitrate ? s.bitrate + 'kbps' : '']
-      .filter(Boolean).join(' · ');
 
     // Station name/URL are third-party (anyone can submit to Radio Browser).
     // Buttons are built with DOM APIs + closures, never an inline onclick
@@ -5418,7 +5736,7 @@ function renderBrowserResults(stations, onlyHttpMatches) {
     playBtn.innerHTML = '&#9654;';
     playBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      toggleSbPreview(s.url_resolved, playBtn);
+      toggleSbPreview(s.url, playBtn);
     });
 
     const info = document.createElement('div');
@@ -5426,16 +5744,27 @@ function renderBrowserResults(stations, onlyHttpMatches) {
     info.setAttribute('aria-hidden', 'true');
     info.innerHTML =
       '<div class="sb-result-name">' + escHtml(s.name) + '</div>' +
-      '<div class="sb-result-meta">' + escHtml(tags) + '</div>';
+      '<div class="sb-result-meta">' + escHtml(s.meta) + '</div>';
 
-    const addBtn = document.createElement('button');
-    addBtn.className = 'sb-result-add';
-    addBtn.setAttribute('aria-label', 'Add ' + s.name);
-    addBtn.textContent = '+ Add';
-    addBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      addFromBrowser(i);
-    });
+    let addBtn;
+    if (added.has(s.url)) {
+      addBtn = document.createElement('span');
+      addBtn.className = 'sb-result-added';
+      addBtn.textContent = 'Added';
+      const why = document.createElement('span');
+      why.className = 'sr-only';
+      why.textContent = ': ' + s.name + ' is already on this radio';
+      addBtn.appendChild(why);
+    } else {
+      addBtn = document.createElement('button');
+      addBtn.className = 'sb-result-add';
+      addBtn.setAttribute('aria-label', 'Add ' + s.name);
+      addBtn.textContent = '+ Add';
+      addBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        addFromBrowser(i);
+      });
+    }
 
     div.append(playBtn, info, addBtn);
     div.dataset.stationIdx = i;
@@ -5443,8 +5772,8 @@ function renderBrowserResults(stations, onlyHttpMatches) {
   });
 
   // Stash results for addFromBrowser
-  results._stations = unique;
-  status.textContent = unique.length === 1 ? '1 station found.' : unique.length + ' stations found.';
+  results._stations = items;
+  if (hadFocus) back.focus();
 }
 
 function toggleSbPreview(url, btn) {
@@ -5496,13 +5825,13 @@ function addFromBrowser(idx) {
   const s = stations[idx];
   // Third-party URL — same http(s)-only rule applySettings() enforces, checked
   // here so a bad scheme never reaches the live preview before Apply.
-  if (typeof s.url_resolved !== 'string' || !s.url_resolved || !isValidStreamUrl(s.url_resolved)) return;
+  if (typeof s.url !== 'string' || !s.url || !isValidStreamUrl(s.url)) return;
   const colorIdx = cfg.streams.length % PALETTE.length;
   cfg.streams.push({
     id: 's' + Date.now(),
     label: s.name.substring(0, 40),
-    sub: [s.country, s.tags ? s.tags.split(',')[0] : ''].filter(Boolean).join(' — '),
-    url: s.url_resolved,
+    sub: s.sub,
+    url: s.url,
     emoji: '',
     color: PALETTE[colorIdx].id
   });

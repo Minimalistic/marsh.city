@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.13.0
+appVersion: 7.14.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -55,16 +55,16 @@ You can have up to 8 stations. There are two ways to add one.
 
 Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it for someone else.
 
-### Search for a station
+### Find a station
 
-![The station browser with a search box and country and genre filters](/images/radiogridxl/guide/browse.webp)
+![The station browser opening on six shelves: Calm & easy, Oldies, Classical, Jazz, News & talk and Sleep](/images/radiogridxl/guide/browse.webp)
 
 1. In settings, under **Audio Streams**, tap **Browse**.
-2. Search by name, or pick a country and a genre.
-3. Tap a result's play button to hear it first, then tap **+ Add**.
+2. Tap a shelf, such as **Jazz** or **Sleep**, for a short list of hand-picked stations. Or search by name, or pick a country (then a state or region, if you like) and a genre, and tap **Search**.
+3. Tap a station's play button to hear it first, then tap **+ Add**. A station that's already on this radio says **Added** instead.
 4. Adjust the label, icon and color if you like, then tap **Apply & Close**.
 
-The station browser searches the free, community-run [Radio Browser](https://www.radio-browser.info/) directory, so it needs an internet connection. On this website it only lists stations with secure (https://) addresses, because browsers block the others here.
+The shelf stations are checked before each release of the app. Searches go to the free, community-run [Radio Browser](https://www.radio-browser.info/) directory, so they need an internet connection. Each station is listed once, and stations failing the directory's own check are left out. On this website the browser only lists stations with secure (https://) addresses, because browsers block the others here.
 
 ### Type one in
 

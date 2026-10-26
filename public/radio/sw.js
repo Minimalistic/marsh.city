@@ -5,7 +5,7 @@
    it sat at v1 from 7.5.0). Keep it in lockstep with the version-bump routine.
    The server sends sw.js no-cache, so each load refetches this file and the
    install→activate purge cycle kicks in. */
-const CACHE_VERSION = 'rgxl-shell-7.13.0-6a8e719c';
+const CACHE_VERSION = 'rgxl-shell-7.14.0-1bd20ad8';
 
 /* Shell assets, relative to the SW scope (the directory it's served from).
    start_url is "." so the HTML is reachable both as "./" and by filename.
