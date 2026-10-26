@@ -2554,7 +2554,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.15.1</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.15.2</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -3717,7 +3717,7 @@ function targetVolume() {
   return Math.max(0, Math.min(1, base * g));
 }
 
-/** Fade audio volume from 0 up to the configured level over ~2 seconds.
+/** Fade audio volume from 0 up to the configured level over 4 seconds.
     Called only after the playing event fires so buffering time doesn't eat the fade. */
 function fadeInAudio() {
   clearInterval(fadeTimer);
@@ -3730,6 +3730,16 @@ function fadeInAudio() {
     audio.volume = Math.min(target, (step / steps) * target);
     if (step >= steps) { clearInterval(fadeTimer); fadeTimer = null; }
   }, intervalMs);
+}
+
+/** A pause during the fade-in: stop the fade and leave it owed, so resuming
+    fades in again from silence. Left running, it climbed to full volume while
+    paused and the resume came back at full. */
+function holdFade() {
+  if (!fadeTimer) return;
+  clearInterval(fadeTimer); fadeTimer = null;
+  audio.volume = 0;
+  pendingFade = true;
 }
 
 /** rgxl_last (a top-level key, not in rgxl_cfg) is the station the next
@@ -3822,6 +3832,7 @@ function playStream(id) {
       paused = true;
       announceOnPlay = null;
       audio.pause();
+      holdFade();
       forgetLastStation();
       setConnStatus('idle');
       releaseWakeLock();
@@ -4148,7 +4159,9 @@ audio.addEventListener('playing', () => {
 });
 
 audio.addEventListener('waiting', () => {
-  if (playing) setConnStatus('buffering');
+  // play() queues 'waiting' when there's no audio yet; a pause right after
+  // still receives it, and paused isn't buffering.
+  if (playing && !paused) setConnStatus('buffering');
 });
 
 // INTERRUPTION / FOCUS handling. When the OS or another app pauses our media
@@ -4182,6 +4195,7 @@ audio.addEventListener('pause', () => {
   if (playing && !paused) {
     paused = true;
     announceOnPlay = null;
+    holdFade();
     forgetLastStation();
     setConnStatus('idle');
     releaseWakeLock();
@@ -4197,6 +4211,10 @@ audio.addEventListener('pause', () => {
 // line so the UI shows playing again. Guarded the same way — only when the app
 // believed it was paused on the active stream.
 audio.addEventListener('play', () => {
+  // Like 'pause' above, judge by the element's state now: a tap's own play()
+  // queues this event, and a pause tapped right after still receives it. If
+  // the element is paused again, that play is already superseded.
+  if (audio.paused) return;
   if (playing && paused) {
     paused = false;
     rememberLastStation(playing);
