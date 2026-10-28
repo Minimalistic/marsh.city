@@ -1807,6 +1807,7 @@ html.is-ios .ios-hide { display: none; }
   display: flex;
   flex-direction: column;
 }
+.stream-browser-title:focus { outline: none; } /* focused by script only, never by Tab */
 .stream-browser-title {
   font-size: 15px;
   font-weight: 700;
@@ -2554,7 +2555,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.15.2</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.15.3</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -2564,7 +2565,7 @@ html.is-ios .ios-hide { display: none; }
   <!-- ========== STREAM BROWSER POPUP ========== -->
   <div id="stream-browser-overlay" class="stream-browser-overlay" role="dialog" aria-labelledby="sb-title" aria-modal="true">
     <div class="stream-browser">
-      <div class="stream-browser-title" id="sb-title">Browse Radio Stations</div>
+      <div class="stream-browser-title" id="sb-title" tabindex="-1">Browse Radio Stations</div>
       <div class="stream-browser-search">
         <input type="text" id="sb-search" placeholder="Search by name..." aria-label="Search stations" autocomplete="off">
         <button onclick="searchStations()">Search</button>
@@ -4375,7 +4376,10 @@ function trapFocus(e, container) {
   if (focusable.length === 0) return;
   var first = focusable[0];
   var last = focusable[focusable.length - 1];
-  if (e.shiftKey && document.activeElement === first) {
+  // Focus parked on something outside the cycle (a dialog title with
+  // tabindex=-1) would otherwise Shift+Tab straight out of the dialog.
+  var outsideCycle = focusable.indexOf(document.activeElement) === -1;
+  if (e.shiftKey && (document.activeElement === first || outsideCycle)) {
     e.preventDefault();
     last.focus();
   } else if (!e.shiftKey && document.activeElement === last) {
@@ -5558,7 +5562,10 @@ function openStreamBrowser() {
   loadRegions(); // no country: hides the region list
   showShelves();
   document.getElementById('sb-status').textContent = '';
-  document.getElementById('sb-search').focus();
+  // Focus the title, not the search box: most people start from a shelf, and a
+  // focused input pops the phone keyboard over them. A screen reader still
+  // hears the dialog's name first.
+  document.getElementById('sb-title').focus();
 }
 
 /** The mood chips, none chosen. */

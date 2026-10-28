@@ -6,7 +6,7 @@ repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-10-26
+updated: 2026-10-28
 image: /images/radiogridxl/page/grid.webp
 imageAlt: RadioGridXL — two large station buttons filling a dark screen
 hideTagline: true
@@ -82,6 +82,9 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-10-28
+Released v7.15.3. Add station used to open with the cursor in the search box, so on a phone the keyboard slid up over the shelves before you could pick one. Plenty of people never search, so now it opens on the title with the keyboard down. Tap the search box when you want it. A screen reader still hears "Browse Radio Stations" first.
 
 ### 2026-10-26
 Released v7.15.2. A new station fades in over four seconds, and pausing partway through used to let the fade keep climbing, so resuming came back at full volume. Now a pause holds the fade and resuming fades in again from silence. A quick second tap also made the app briefly think it had resumed, flashing "buffering" before it settled on paused. It stays paused now.
