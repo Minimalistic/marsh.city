@@ -111,6 +111,22 @@ body {
   background: var(--surface);
 }
 
+/* Beta channel identity (body class set in app.js by hostname). The chip is
+   a ::before so no HTML/JS toggling fights the [hidden] !important rule. */
+body.beta-channel #nav-bar { background: #4b2d5e; }
+
+body.beta-channel #nav-bar::before {
+  content: "BETA";
+  background: var(--accent);
+  color: #10131a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 6px;
+  padding: 3px 7px;
+  flex-shrink: 0;
+}
+
 #nav-home {
   min-height: 44px;
   padding: 0 14px;

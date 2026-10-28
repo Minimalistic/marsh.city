@@ -16,6 +16,10 @@ const navLabel = document.getElementById('nav-label');
 const navTitle = document.getElementById('nav-title');
 const checkBtn = document.getElementById('check-btn');
 
+// Channel identity by hostname, not build flag — there is no build step to
+// forget, so stable (marsh.city) can never accidentally wear the beta look.
+if (location.hostname.endsWith('github.io')) document.body.classList.add('beta-channel');
+
 const state = {
   config: null,
   editing: false,

@@ -1,12 +1,15 @@
 // Cache-first app shell. Bump CACHE on every deployed change — activate
 // deletes old caches, so the version string is the whole update mechanism.
+// CacheStorage is shared by the whole origin (marsh.city hosts other apps),
+// so activate deletes only caches carrying our own prefix.
 //
 // Deliberate updates: no skipWaiting() at install — a new version downloads,
 // then WAITS. It takes over only when Settings posts SKIP_WAITING (the
 // backup-first update flow in edit.js), or on the next cold launch after all
 // pages close (browser lifecycle — a waiting worker can't be held past that).
 // Either way it never swaps out from under a running session.
-const CACHE = 'buttongriddle-v17';
+const CACHE_PREFIX = 'buttongriddle-';
+const CACHE = 'buttongriddle-v19'; // plain literal: tools/publish-web.mjs parses it
 
 const SHELL = [
   '.',
@@ -42,7 +45,9 @@ self.addEventListener('message', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys
+        .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE)
+        .map((key) => caches.delete(key))))
       .then(() => self.clients.claim()),
   );
 });
