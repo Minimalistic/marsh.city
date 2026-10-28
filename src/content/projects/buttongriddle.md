@@ -5,7 +5,7 @@ status: wip
 url: https://marsh.city/buttongriddle/
 tags: [vanilla-js, pwa, indexeddb, assistive-tech]
 started: 2026-07-16
-updated: 2026-07-18
+updated: 2026-10-27
 image: /images/buttongriddle/meals-board.webp
 imageAlt: ButtonGriddle Meals board - a 4x2 grid of colored choice buttons with a Check button
 hideTagline: true
@@ -27,4 +27,4 @@ Boards are organized by context, so the tablet opens to a simple list - staff pi
 
 Vanilla JavaScript PWA - no framework, no build step, no server, no dependencies. All storage is IndexedDB on the device, including photos; nothing is collected and there's no account. Works fully offline after install.
 
-[Product page and install instructions →](/buttongriddle/)
+[Product page →](/buttongriddle/)
