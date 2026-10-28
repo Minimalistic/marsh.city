@@ -47,3 +47,6 @@ pnpm-debug.log*
 
 # generated art thumbnails for the home page strip (rebuilt by predev/prebuild)
 public/_thumbs/
+
+# Claude Code machine-local settings
+.claude/
