@@ -11,7 +11,11 @@
     pre.replaceWith(div);
   });
   const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  // Exact version + SRI: this runs on the marsh.city origin, which every app here shares,
+  // so a changed file must fail to load rather than run.
+  s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js';
+  s.integrity = 'sha384-EOXBFmc3gx5mb+vn0vPvvGqACToJD24hhacX5Yx+8NUUQrHIle/Qi5Bg9o3zKwW2';
+  s.crossOrigin = 'anonymous';
   s.onload = () => {
     const isDark = document.documentElement.dataset.theme === 'dark';
     window.mermaid.initialize({
