@@ -25,6 +25,8 @@ public/
   CNAME          # marsh.city — DO NOT remove
 ```
 
+**Apps under `public/` share one origin** (storage, caches, any CDN script). An app that will hold personal data moves to its own subdomain before real use, the way Tavela did (`tavela-test.marsh.city`). CDN scripts need an exact version + SRI (`tests/cdn-pinned.test.mjs`).
+
 ## Content conventions
 
 **Adding a project**: create `src/content/projects/<slug>.md` with frontmatter:
