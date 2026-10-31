@@ -1,0 +1,16 @@
+:root {
+  --bg: #fbf8f2;
+  --fg: #1f2a2e;
+  --link: #1d5f73;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #161c1f; --fg: #e9e4da; --link: #8cc9db; }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 1.125rem/1.5 system-ui, -apple-system, sans-serif;
+}
+main { max-width: 34rem; padding: 2rem 1rem; margin: 0 auto; }
+a { color: var(--link); font-weight: 600; }
