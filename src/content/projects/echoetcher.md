@@ -1,11 +1,11 @@
 ---
 title: EchoEtcher
 description: Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
-status: wip
+status: archived
 repo: https://github.com/Minimalistic/EchoEtcher
 tags: [python, whisper, ollama, obsidian, ai]
 started: 2025-09-01
-updated: 2026-03-15
+updated: 2026-11-02
 ---
 
 I do most of my thinking while driving - working through problems, coming up with project ideas, planning next steps. The ideas are there, but capturing them in a usable form is hard, and scrubbing through a raw voice recording later isn't much better.
@@ -33,6 +33,9 @@ Python with a file watcher (watchdog) monitoring a configurable directory. Whisp
 It runs as a background agent with configurable polling intervals, designed to run unattended and process files as they appear. Everything stays local unless the Claude formatting step is opted into.
 
 ## Updates
+
+### 2026-11-02
+Shelved for now. This page stays up as a record of how it worked.
 
 ### 2026-04-26
 Currently offline while I work on some convenience improvements to the workflow. Was in regular use before that.
