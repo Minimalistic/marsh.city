@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.15.3
+appVersion: 7.16.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -30,7 +30,7 @@ The panel slides in from the side. Scroll down to see everything. Most changes s
 
 ![The PIN keypad](/images/radiogridxl/guide/pin-pad.webp)
 
-If someone has set a PIN, five taps on the logo bring up a keypad instead. Enter the 4-digit PIN to get in. After 5 wrong tries the keypad locks for a little while, and the wait gets longer each time. See [Lock settings with a PIN](#lock-settings-with-a-pin) to set or remove one.
+If someone has set a PIN, five taps on the logo bring up a keypad instead. Enter the 4-digit PIN to get in. After 5 wrong tries the keypad locks for a little while and counts down the seconds, and the wait gets longer each time. See [Lock settings with a PIN](#lock-settings-with-a-pin) to set or remove one.
 
 ## Change a station's stream URL
 
@@ -51,7 +51,7 @@ Links that start with `http://` (no "s") won't play on this website, because bro
 
 ## Add a station
 
-You can have up to 8 stations. There are two ways to add one.
+You can have up to 8 stations. There are two ways to add one. Removed one by mistake? Tap **Undo** right after.
 
 Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it for someone else.
 
@@ -61,8 +61,8 @@ Stations are run by other people, and this app has no control over what they pla
 
 1. In settings, under **Audio Streams**, tap **Browse**.
 2. Tap a shelf, such as **Jazz** or **Sleep**, for a short list of hand-picked stations. Or tap a mood, such as **Relaxing** or **News & talk**, to search the directory for that kind of station. You can also search by name, or pick a country (then a state or region, if you like) and tap **Search**; a mood narrows those searches too.
-3. Tap a station's play button to hear it first, then tap **+ Add**. A station that's already on this radio says **Added** instead.
-4. The station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has. Change any of them if you like, then tap **Apply & Close**.
+3. Tap a station's play button to hear it first, then tap **+ Add**. It changes to **Added**, and you can add more from the same list. A station that's already on this radio says **Added** too. Close the browser when you're done.
+4. Each station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has. Change any of them if you like, then tap **Apply & Close**.
 
 The shelf stations are checked before each release of the app. Searches go to the free, community-run [Radio Browser](https://www.radio-browser.info/) directory, so they need an internet connection. Each station is listed once, and stations failing the directory's own check are left out. On this website the browser only lists stations with secure (https://) addresses, because browsers block the others here.
 
@@ -71,8 +71,8 @@ The shelf stations are checked before each release of the app. Searches go to th
 ![A new station block with a label and stream URL filled in](/images/radiogridxl/guide/add-blank.webp)
 
 1. Under **Audio Streams**, tap **+ Add Blank**. A new block called "New Stream" appears at the bottom.
-2. Fill in the **Label**, **Description** and **Stream URL**.
-3. Tap **Apply & Close**.
+2. Fill in the **Label**, **Description** and **Stream URL**. The address has to start with https:// (or http://).
+3. Tap **Apply & Close**. If a station has no address, or one that doesn't start that way, settings stays open and says which one to fix.
 
 With 5 or more stations the button text gets smaller to fit, and on a small screen buttons may show only their icon, so give every station an icon.
 
@@ -126,7 +126,7 @@ Pick the closest one, then fine-tune anything below it. Once you change somethin
 
 **Text Size** has Normal, Large, X-Large and Ultra. Ultra is the largest, which suits a tablet across the room.
 
-Further down there are more options: **Voice Announcements** (speaks "Now playing…" and so on aloud), **Audio Tones** (a short chime when playback starts or stops), **Haptic Feedback** (a small buzz on tap, on phones that support it), and **Auto-Resume** (when the app opens, starts the station again if it was playing when the app closed).
+Further down there are more options: **Voice Announcements** (speaks "Now playing…" and so on aloud), **Audio Tones** (a short chime when playback starts or stops), **Haptic Feedback** (a small buzz on tap, on Android phones and tablets only), and **Auto-Resume** (when the app opens, starts the station again if it was playing when the app closed).
 
 ## Simple or Advanced controls
 
@@ -135,7 +135,7 @@ Further down there are more options: **Voice Announcements** (speaks "Now playin
 Under **Advanced Controls**:
 
 - **Simple** shows a single Stop button. Best for most listeners.
-- **Advanced** adds skip back and forward, separate Pause and Stop buttons, and a **sleep timer** (the clock button) that stops playback after 15 minutes to 4 hours.
+- **Advanced** adds separate Pause and Stop buttons and a **sleep timer** (the clock button) that stops playback after 15 minutes to 4 hours. Skip back and forward show up only for recordings with a set length, not live radio.
 
 ## Lock settings with a PIN
 

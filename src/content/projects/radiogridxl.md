@@ -6,7 +6,7 @@ repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-10-28
+updated: 2026-11-05
 image: /images/radiogridxl/page/grid.webp
 imageAlt: RadioGridXL — two large station buttons filling a dark screen
 hideTagline: true
@@ -82,6 +82,11 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-11-05
+Released v7.16.0. I walked every setting on a simulated iPhone, a small iPhone SE and a big iPad, and fixed the thirty things that tripped me up. The ones a listener will notice: Stop in Simple mode now really stops, and the playing station is marked by a thick ring as well as its color. Turned sideways with five or more stations, the grid splits into two even rows that still show names. On an iPad, names grow with the buttons. Pause and Stop have words beside their icons, and the sleep timer gained 60 minutes and a Cancel button.
+
+For whoever sets it up: Apply now refuses a station with a missing or broken address and points at the field. A station marked "Not available" tries again once its address is fixed. Removing a station offers Undo. A wrong PIN message stays put until the next key, and a lockout counts down. In the station browser you can add several stations in one visit, each gets its own icon, and listings stuffed with keywords sink to the bottom. If the device is set to increase contrast, the Auto themes switch to High Contrast, and a large system text size sets the starting size on a fresh install. Haptic feedback only ever worked on Android, so on iPhone and iPad the setting is now greyed out with the reason.
 
 ### 2026-10-28
 Released v7.15.3. Add station used to open with the cursor in the search box, so on a phone the keyboard slid up over the shelves before you could pick one. Plenty of people never search, so now it opens on the title with the keyboard down. Tap the search box when you want it. A screen reader still hears "Browse Radio Stations" first.

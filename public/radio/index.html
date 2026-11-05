@@ -478,6 +478,9 @@ html.theme-night {
   outline-offset: 2px;
 }
 
+/* A theme change that must not fade (see snapTheme()). */
+html.theme-snap, html.theme-snap body, html.theme-snap #app, html.theme-snap #header { transition: none !important; }
+
 /* Suppress focus outlines for mouse/touch interactions */
 *:focus:not(:focus-visible) {
   outline: none;
@@ -831,10 +834,12 @@ html[class*="theme-mono"] .stream-btn {
   border: 2px solid var(--mono-btn-border);
   box-shadow: 0 1px 3px var(--mono-btn-glow);
 }
+/* Playing: a thick accent ring, edge included, so it's found by shape at a
+   glance. A 2px ring passed contrast but was easy to miss. */
 html[class*="theme-mono"] .stream-btn.active {
   background: var(--mono-btn-active-bg) !important;
-  border-color: var(--mono-btn-active-border);
-  box-shadow: 0 0 12px var(--mono-btn-glow), inset 0 0 0 2px var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--mono-btn-glow), inset 0 0 0 5px var(--accent);
   filter: none;
 }
 html[class*="theme-mono"] .stream-btn.paused {
@@ -946,7 +951,8 @@ html.theme-night .stream-btn {
 }
 html.theme-night .stream-btn.active {
   background: var(--night-btn-active-bg) !important;
-  box-shadow: inset 0 0 0 3px var(--accent);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 5px var(--accent);
   filter: none;
 }
 html.theme-night .stream-btn.paused {
@@ -1090,11 +1096,13 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   display: flex;
   align-items: center;
 }
-#adv-left { justify-content: flex-end; }
+#adv-left { justify-content: flex-end; gap: 8px; }
 #adv-right { justify-content: flex-start; gap: 8px; }
 
 /* Skip buttons */
 .adv-btn {
+  min-width: 48px;
+  min-height: 48px;
   padding: 8px 12px;
   color: var(--stop-idle-text);
   font-size: 22px;
@@ -1105,28 +1113,38 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
 .adv-btn:active { transform: scale(0.9); }
 .adv-btn.active { color: var(--stop-active-text); }
 
-/* Center stop button */
+/* Center stop button. Pause and Stop say their names beside their icons:
+   two glyphs alone were easy to mix up. */
 .adv-stop {
-  width: 50px;
+  min-width: 50px;
   height: 50px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   transition: all 0.2s;
-  margin: 0 12px;
+  margin: 0 6px;
+  color: var(--stop-idle-text);
 }
+.adv-text { font-size: 17px; font-weight: 800; line-height: 1; }
+/* A very narrow phone keeps the icons alone, so the row doesn't run under
+   the sleep timer button; the names stay in the buttons' labels. */
+@media (max-width: 359px) { .adv-text { display: none; } }
 .adv-stop:active { transform: scale(0.92); }
 
 /* Pause/resume — same footprint as the stop button; SVG inherits currentColor. */
 .adv-pause {
-  width: 50px;
+  min-width: 50px;
   height: 50px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   color: var(--stop-idle-text);
   transition: color 0.3s, transform 0.1s;
-  margin: 0 12px;
+  margin: 0 6px;
 }
 .adv-pause:active { transform: scale(0.92); }
 
@@ -1138,6 +1156,7 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   transition: background 0.3s;
 }
 #adv-transport.has-playing .adv-stop-square { background: var(--stop-active-text); }
+#adv-transport.has-playing .adv-stop,
 #adv-transport.has-playing .adv-btn,
 #adv-transport.has-playing .adv-pause { color: var(--stop-active-text); }
 
@@ -1145,12 +1164,18 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
    by source order since both are single-class specificity. */
 #adv-transport.paused { background: var(--stop-paused-bg); border-top-color: var(--stop-paused-border); }
 #adv-transport.paused .adv-stop-square { background: var(--stop-paused-text); }
+#adv-transport.paused .adv-stop,
 #adv-transport.paused .adv-pause,
 #adv-transport.paused .adv-btn,
 #adv-transport.paused .adv-sleep-btn { color: var(--stop-paused-text); }
 
-/* Sleep timer button */
+/* Sleep timer button: at least 48 px square, a finger's width. */
 .adv-sleep-btn {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px;
   color: var(--stop-idle-text);
   font-size: 18px;
@@ -1220,6 +1245,9 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   overflow-y: auto;
 }
 .overlay.visible { opacity: 1; pointer-events: all; visibility: visible; transition: opacity 0.4s, visibility 0s; }
+/* Blur what's behind, so station names don't read through the keypad or
+   the sleep timer on the lighter themes. */
+.overlay { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 
 .overlay-icon { font-size: 52px; line-height: 1; }
 
@@ -1256,13 +1284,16 @@ html.is-desktop .overlay-body { font-size: 20px; }
 .overlay-btn:active { filter: brightness(0.9); }
 
 /* -- Sleep timer option buttons -- */
+/* Two even columns; an odd last option takes the whole row. */
 .sleep-options {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  justify-content: center;
+  width: 100%;
   max-width: 360px;
 }
+.sleep-options .sleep-opt:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.sleep-opt.cancel { width: 100%; max-width: 360px; margin-top: 10px; }
 .sleep-opt {
   padding: 14px 24px;
   border-radius: 10px;
@@ -1278,6 +1309,7 @@ html.is-desktop .overlay-body { font-size: 20px; }
 }
 .sleep-opt:active { background: var(--accent); color: var(--on-accent); }
 .sleep-opt.cancel { border-color: var(--stop-active-text); color: var(--stop-active-text); }
+.sleep-opt.cancel[hidden] { display: none; }
 
 
 /* --- PIN OVERLAY --- */
@@ -1319,6 +1351,11 @@ html.is-desktop .overlay-body { font-size: 20px; }
 }
 .pin-key:active { background: var(--accent); color: var(--on-accent); transform: scale(0.95); }
 .pin-key-wide { font-size: 14px; font-weight: 700; }
+.pin-field-row { display: flex; gap: 8px; align-items: stretch; }
+.pin-field-row .s-input { flex: 1; min-width: 0; }
+.pin-field-row .pin-show-btn { flex: 0 0 auto; width: auto; margin: 0; min-height: 44px; padding: 0 16px; }
+.pin-masked { -webkit-text-security: disc; text-security: disc; }
+.pin-key:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
 #in-pin { letter-spacing: 0.2em; font-size: 16px; padding: 10px 12px; }
 
@@ -1503,9 +1540,11 @@ html.is-desktop .overlay-body { font-size: 20px; }
   color: var(--settings-text);
   padding: 8px 10px;
   font-size: 13px;
-  font-family: monospace;
+  font-family: inherit;
   font-weight: 600;
 }
+/* Addresses stay monospace, where telling l from 1 and 0 from O matters. */
+.s-input[data-field="url"] { font-family: monospace; }
 .s-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* -- Selection chips (theme, size, etc.) -- */
@@ -1513,6 +1552,9 @@ html.is-desktop .overlay-body { font-size: 20px; }
 .theme-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--settings-label); margin-bottom: 4px; }
 .chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .chip-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.chip[hidden] { display: none; }
+/* Custom, when shown, takes its own row under the three presets. */
+#preset-chips .chip[data-val="custom"] { grid-column: 1 / -1; }
 .chip-row { display: flex; gap: 6px; }
 .chip {
   padding: 12px 6px;
@@ -1531,6 +1573,8 @@ html.is-desktop .overlay-body { font-size: 20px; }
   font-family: inherit;
 }
 .chip.selected { border-color: var(--accent); color: var(--accent-text); }
+.chip:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+.s-unavailable .s-section-title { opacity: 0.6; }
 .chip:active { filter: brightness(1.2); }
 
 /* Desktop-only view section — hidden on mobile */
@@ -1624,16 +1668,45 @@ html.is-ios .ios-hide { display: none; }
   border-radius: 4px;
   white-space: nowrap;
 }
-.stream-entry-actions { display: flex; gap: 4px; align-items: center; }
+/* 44 px targets with room between them: Remove sat right next to Move. */
+.stream-entry-actions { display: flex; gap: 8px; align-items: center; }
 .stream-action-btn {
   color: var(--settings-label);
-  font-size: 16px;
-  padding: 2px 6px;
+  font-size: 18px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
   opacity: 0.7;
   transition: opacity 0.15s;
 }
 .stream-action-btn:active { opacity: 1; }
-.stream-action-btn.danger { color: var(--stop-active-text); }
+.stream-action-btn.danger { color: var(--stop-active-text); margin-left: 8px; }
+.stream-undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.stream-undo[hidden] { display: none; }
+.stream-undo button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 2px solid var(--accent);
+  background: transparent;
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
 
 .emoji-input { width: 50px; font-size: 20px; text-align: center; font-family: inherit; padding: 4px; cursor: pointer; -webkit-user-select: none; user-select: none; }
 
@@ -1665,18 +1738,21 @@ html.is-ios .ios-hide { display: none; }
   margin-bottom: 8px;
   text-align: center;
 }
+/* Tabs wrap to a second line rather than scroll: scrolled, the last ones
+   ran off the edge with nothing to say they were there. */
 .emoji-picker-tabs {
   display: flex;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: 2px 4px;
   margin-bottom: 10px;
-  overflow-x: auto;
 }
 .emoji-tab {
   flex: 0 0 auto;
   border-bottom: 2px solid transparent;
   color: var(--settings-label);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
+  min-height: 36px;
   padding: 4px 8px;
   white-space: nowrap;
 }
@@ -1753,6 +1829,15 @@ html.is-ios .ios-hide { display: none; }
   text-align: center;
 }
 .stream-add-btn:active { border-color: var(--accent); color: var(--accent); }
+.stream-add-row button:disabled { opacity: 0.45; cursor: not-allowed; }
+.stream-entry .url-error {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--danger);
+  margin: -2px 0 8px;
+}
+.stream-entry .s-input[aria-invalid="true"] { border-color: var(--danger); }
 
 .stream-add-row {
   display: flex;
@@ -1804,8 +1889,15 @@ html.is-ios .ios-hide { display: none; }
   padding: 16px;
   width: min(420px, 94vw, 100%);
   max-height: min(85vh, 100%);
+  /* The visible height (vh counts what's under Safari's toolbars, which hid
+     Close on a sideways phone). Short screens scroll the whole dialog. */
+  max-height: min(85dvh, 100%);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+@media (max-height: 520px) {
+  .stream-browser-results { flex: none; max-height: none; min-height: 0; overflow-y: visible; }
 }
 .stream-browser-title:focus { outline: none; } /* focused by script only, never by Tab */
 .stream-browser-title {
@@ -1904,19 +1996,22 @@ html.is-ios .ios-hide { display: none; }
 }
 .sb-result-add {
   flex: 0 0 auto;
+  min-width: 64px;
+  min-height: 44px;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: none;
   background: var(--accent);
   color: var(--on-accent);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
 }
+.sb-result-add:disabled { opacity: 0.45; cursor: not-allowed; }
 .sb-result-play {
   flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background: var(--settings-border);
@@ -2073,11 +2168,23 @@ html.is-ios .ios-hide { display: none; }
 /* Shown in place of + Add for a station already on this radio. */
 .sb-result-added {
   flex: 0 0 auto;
+  min-width: 64px;
   padding: 6px 4px;
   color: var(--settings-label);
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.sb-cap {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+  color: var(--settings-text);
+  font-size: 13px;
   font-weight: 700;
 }
+.sb-cap[hidden] { display: none; }
 
 /* Apply button */
 #apply-btn {
@@ -2136,8 +2243,13 @@ html.is-ios .ios-hide { display: none; }
   z-index: 10000;
 }
 
+/* The Reset dialog sits outside #app, so it gets the app's font here (it
+   fell back to the browser's serif). */
+#reset-overlay { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; }
+
 /* Reset confirm overlay */
 .reset-confirm-btn {
+  font-family: inherit;
   padding: 16px 40px;
   border-radius: 12px;
   border: none;
@@ -2195,9 +2307,13 @@ html.is-ios .ios-hide { display: none; }
 /* --- FORCE LANDSCAPE (for MDM-locked portrait tablets) --- */
 
 @media screen and (orientation: portrait) {
+  /* dvh, the height left visible under the browser's toolbars, after a vh
+     fallback: 100vh is the height with the toolbars gone, which put the
+     rotated grid's edge under Safari's toolbar. */
   html.force-landscape-cw,
   html.force-landscape-ccw {
     width: 100vh;
+    width: 100dvh;
     height: 100vw;
     transform-origin: top left;
     overflow: hidden;
@@ -2209,10 +2325,12 @@ html.is-ios .ios-hide { display: none; }
   /* Counter-clockwise: top of screen goes left (buttons on right) */
   html.force-landscape-ccw {
     transform: translateY(100vh) rotate(-90deg);
+    transform: translateY(100dvh) rotate(-90deg);
   }
   html.force-landscape-cw #app,
   html.force-landscape-ccw #app {
     width: 100vh;
+    width: 100dvh;
     height: 100vw;
   }
   html.force-landscape-cw #settings-panel,
@@ -2282,7 +2400,7 @@ html.is-ios .ios-hide { display: none; }
   <audio id="audio-player" preload="none"></audio>
 
   <!-- ========== SIMPLE STOP BAR (default transport) ========== -->
-  <button id="simple-stop" onclick="softStop()" aria-label="Stop playback" aria-disabled="true">
+  <button id="simple-stop" onclick="simpleStopPress()" aria-label="Stop playback" aria-disabled="true">
     <div id="simple-stop-square" aria-hidden="true"></div>
     <span id="simple-stop-label">Stop</span>
   </button>
@@ -2291,16 +2409,18 @@ html.is-ios .ios-hide { display: none; }
   <nav id="adv-transport" aria-label="Playback controls">
     <div id="adv-left">
       <button class="adv-btn" id="adv-skip-back" onclick="skipBack()" aria-label="Skip back 15 seconds">&#9664;&#9664;</button>
+      <!-- LIVE sits where skip back would be: live radio never shows skip, and
+           on the right it ran under the sleep timer once Pause and Stop had names. -->
+      <span id="adv-live-badge" role="status" aria-live="polite">● Live</span>
     </div>
     <!-- Advanced mode gets distinct Pause (soft, resumable) and Stop (full) controls;
          simple mode keeps its single resume-labelled button. Icons are inline SVG so
          iOS can't substitute emoji glyphs (the old &#9202; rendered skeuomorphic). -->
     <button class="adv-pause" id="adv-pause" onclick="softStop()" aria-label="Pause" style="display:none"></button>
-    <button class="adv-stop" onclick="userStop()" aria-label="Stop playback"><div class="adv-stop-square" aria-hidden="true"></div></button>
+    <button class="adv-stop" onclick="userStop()" aria-label="Stop playback"><div class="adv-stop-square" aria-hidden="true"></div><span class="adv-text" aria-hidden="true">Stop</span></button>
     <div id="adv-right">
       <button class="adv-btn" id="adv-skip-fwd" onclick="skipFwd()" aria-label="Skip forward 30 seconds">&#9654;&#9654;</button>
       <button class="adv-sleep-btn" onclick="showSleepOverlay()" aria-label="Sleep timer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><line x1="12" y1="13" x2="12" y2="9.5"/><line x1="9.5" y1="2" x2="14.5" y2="2"/><line x1="18.5" y1="5.5" x2="19.5" y2="4.5"/></svg></button>
-      <span id="adv-live-badge" role="status" aria-live="polite">● Live</span>
     </div>
   </nav>
 
@@ -2323,10 +2443,12 @@ html.is-ios .ios-hide { display: none; }
     <div class="sleep-options" role="group" aria-label="Timer duration options">
       <button class="sleep-opt" onclick="setSleep(15)">15 min</button>
       <button class="sleep-opt" onclick="setSleep(30)">30 min</button>
+      <button class="sleep-opt" onclick="setSleep(60)">1 hour</button>
       <button class="sleep-opt" onclick="setSleep(120)">2 hours</button>
       <button class="sleep-opt" onclick="setSleep(240)">4 hours</button>
-      <button class="sleep-opt cancel" onclick="setSleep(0)">Cancel Timer</button>
     </div>
+    <!-- Only while a timer runs: with none, there's nothing to cancel. -->
+    <button class="sleep-opt cancel" id="sleep-cancel" onclick="setSleep(0)" hidden>Cancel Timer</button>
     <button class="overlay-btn" onclick="closeSleepOverlay()" style="margin-top:4px;padding:12px 32px;font-size:16px;">Close</button>
   </div>
 
@@ -2366,6 +2488,8 @@ html.is-ios .ios-hide { display: none; }
       <button class="pin-key pin-key-wide" onclick="pinBackspace()" aria-label="Delete last digit">&#9003;</button>
     </div>
     <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-top:4px;">&nbsp;</div>
+    <!-- The lockout countdown: not a live region, or a screen reader would read every second. -->
+    <div id="pin-wait" style="color:var(--danger);font-size:14px;font-weight:700;" hidden></div>
   </div>
 
   <!-- ========== SETTINGS PANEL (technician only) ========== -->
@@ -2395,7 +2519,7 @@ html.is-ios .ios-hide { display: none; }
       <div class="s-section-title">Organization Name</div>
       <div class="s-row">
         <label class="s-label" for="in-org-name">Shown in the header (use Enter for a second line)</label>
-        <textarea class="s-input" id="in-org-name" rows="2" maxlength="80" style="resize:none;font-family:inherit;" aria-label="Organization name" oninput="previewOrgName()"></textarea>
+        <textarea class="s-input" id="in-org-name" rows="2" maxlength="80" style="resize:none;font-family:inherit;" aria-label="Organization name" oninput="previewOrgName()" onfocus="caretToEnd(this)"></textarea>
       </div>
     </div>
 
@@ -2423,6 +2547,7 @@ html.is-ios .ios-hide { display: none; }
       <div class="chip-grid" role="radiogroup" aria-labelledby="theme-night-label">
         <button class="chip" onclick="selectChip(this,'theme','night')" data-group="theme" data-val="night" role="radio" aria-checked="false">Night<br><small>Dim, warm</small></button>
       </div>
+      <div class="s-hint">Auto follows the device: light or dark, and High Contrast when the device is set to increase contrast.</div>
     </div>
 
     <div class="s-section" id="size-section">
@@ -2433,6 +2558,7 @@ html.is-ios .ios-hide { display: none; }
         <button class="chip" onclick="selectChip(this,'size','xlarge')" data-group="size" data-val="xlarge" role="radio" aria-checked="false">X-Large</button>
         <button class="chip" onclick="selectChip(this,'size','ultra')" data-group="size" data-val="ultra" role="radio" aria-checked="false">Ultra</button>
       </div>
+      <div class="s-hint">Names grow as big as their buttons allow, and grow with the screen. On a phone with few stations, X-Large and Ultra can come out close: the buttons are already full.</div>
     </div>
 
     <div class="s-section" id="view-section">
@@ -2450,7 +2576,7 @@ html.is-ios .ios-hide { display: none; }
         <button class="chip" onclick="selectChip(this,'orientation','landscape-cw')" data-group="orientation" data-val="landscape-cw" role="radio" aria-checked="false">Landscape<br><small>Buttons Left</small></button>
         <button class="chip" onclick="selectChip(this,'orientation','landscape-ccw')" data-group="orientation" data-val="landscape-ccw" role="radio" aria-checked="false">Landscape<br><small>Buttons Right</small></button>
       </div>
-      <div class="s-hint">Forces landscape layout even when the device is locked to portrait by MDM. Choose the direction that puts the hardware buttons where you need them.</div>
+      <div class="s-hint">Forces landscape layout even when the device is locked to portrait by MDM. Choose the direction that puts the hardware buttons where you need them. A change takes effect when you close settings.</div>
     </div>
 
     <div class="s-section" id="vol-section">
@@ -2470,16 +2596,18 @@ html.is-ios .ios-hide { display: none; }
         <button class="chip" onclick="selectChip(this,'advanced','off')" data-group="advanced" data-val="off" role="radio" aria-checked="false">Simple</button>
         <button class="chip" onclick="selectChip(this,'advanced','on')" data-group="advanced" data-val="on" role="radio" aria-checked="false">Advanced<br><small>Skip &amp; Sleep</small></button>
       </div>
-      <div class="s-hint">Simple shows only a Stop button. Advanced adds skip back/forward and a sleep timer that stops playback after a set time.</div>
+      <div class="s-hint">Simple shows only a Stop button. Advanced adds a separate Pause button and a sleep timer that stops playback after a set time. Skip back and forward appear only for recordings with a set length, never for live radio.</div>
     </div>
 
-    <div class="s-section">
+    <!-- Works on Android only. Elsewhere init greys it out and says why:
+         Safari on iPhone and iPad has no web vibration. -->
+    <div class="s-section" id="haptics-section">
       <div class="s-section-title" id="haptics-label">Haptic Feedback</div>
       <div class="chip-row" role="radiogroup" aria-labelledby="haptics-label">
         <button class="chip" onclick="selectChip(this,'haptics','on')" data-group="haptics" data-val="on" role="radio" aria-checked="false">On</button>
         <button class="chip" onclick="selectChip(this,'haptics','off')" data-group="haptics" data-val="off" role="radio" aria-checked="false">Off</button>
       </div>
-      <div class="s-hint">Vibrates briefly on button taps. Only available on mobile devices that support it.</div>
+      <div class="s-hint" id="haptics-hint">Vibrates briefly on button taps.</div>
     </div>
 
     <div class="s-section">
@@ -2488,7 +2616,7 @@ html.is-ios .ios-hide { display: none; }
         <button class="chip" onclick="selectChip(this,'tts','off')" data-group="tts" data-val="off" role="radio" aria-checked="false">Off</button>
         <button class="chip" onclick="selectChip(this,'tts','on')" data-group="tts" data-val="on" role="radio" aria-checked="false">On</button>
       </div>
-      <div class="s-hint">Speaks aloud what is happening — "Now playing…", "Paused", "Stopped", or that a station is not available. To change the voice or improve quality, use OS Settings below (Accessibility → Text-to-Speech).</div>
+      <div class="s-hint">Speaks aloud what is happening — "Now playing…", "Paused", "Stopped", or that a station is not available. <span id="voice-hint"></span></div>
     </div>
 
     <div class="s-section">
@@ -2512,10 +2640,12 @@ html.is-ios .ios-hide { display: none; }
 <div class="s-section">
       <div class="s-section-title">Audio Streams</div>
       <div id="stream-editor"></div>
+      <div class="stream-undo" id="stream-undo" role="status" hidden><span id="stream-undo-text"></span><button type="button" id="stream-undo-btn" onclick="undoRemoveStream()">Undo</button></div>
       <div class="stream-add-row" id="stream-add-row">
         <button class="stream-add-btn" id="stream-add-btn" onclick="addStreamEntry()">+ Add Blank</button>
         <button class="stream-browse-btn" onclick="openStreamBrowser()">&#128269; Browse</button>
       </div>
+      <div class="s-hint" id="stream-cap" hidden></div>
       <div class="stream-hint" id="stream-hint" style="display:none" role="note"></div>
       <div class="s-hint">Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it for someone else.</div>
     </div>
@@ -2537,7 +2667,12 @@ html.is-ios .ios-hide { display: none; }
       <div class="s-section-title">Setup PIN</div>
       <div class="s-row">
         <label class="s-label" for="in-pin">Current PIN — 4 digits, or blank to disable (tap logo 5&times; to access settings)</label>
-        <input class="s-input" id="in-pin" type="text" inputmode="numeric" maxlength="4" value="" aria-label="Setup PIN">
+        <div class="pin-field-row">
+          <!-- Masked with -webkit-text-security, not type=password, so phones
+               don't offer to save or autofill it as an account password. -->
+          <input class="s-input pin-masked" id="in-pin" type="text" inputmode="numeric" maxlength="4" value="" aria-label="Setup PIN" autocomplete="off">
+          <button type="button" class="device-btn pin-show-btn" id="pin-show" aria-pressed="false" onclick="togglePinShown()">Show</button>
+        </div>
       </div>
     </div>
 
@@ -2555,7 +2690,7 @@ html.is-ios .ios-hide { display: none; }
     <div class="s-hint" id="apply-status" role="alert" hidden></div>
     <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.15.3</div>
+    <div id="settings-version" aria-hidden="true">RadioGridXL v7.16.0</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -2571,7 +2706,7 @@ html.is-ios .ios-hide { display: none; }
         <button onclick="searchStations()">Search</button>
       </div>
       <div class="stream-browser-filters">
-        <select id="sb-country" aria-label="Filter by country" onchange="loadRegions()">
+        <select id="sb-country" aria-label="Filter by country" onchange="sbCountryChanged()">
           <option value="">Any country</option>
           <option value="US">United States</option>
           <option value="GB">United Kingdom</option>
@@ -2589,7 +2724,7 @@ html.is-ios .ios-hide { display: none; }
           <option value="IN">India</option>
         </select>
         <!-- Filled from the directory once a country is picked; see loadRegions() -->
-        <select id="sb-region" aria-label="Filter by state or region" hidden disabled>
+        <select id="sb-region" aria-label="Filter by state or region" hidden disabled onchange="sbFilterChanged()">
           <option value="">Any region</option>
         </select>
       </div>
@@ -2598,6 +2733,7 @@ html.is-ios .ios-hide { display: none; }
       <!-- One short spoken status per search; the results list itself is not a
            live region, or a screen reader queues all 40 rows as one announcement. -->
       <div id="sb-status" class="sr-only" role="status" aria-live="polite"></div>
+      <div id="sb-cap" class="sb-cap" hidden></div>
       <!-- Opens on the starter shelves (showShelves); a shelf or a search fills it with stations. -->
       <div class="stream-browser-results" id="sb-results" role="region" aria-label="Stations"></div>
       <div class="stream-browser-actions">
@@ -2793,6 +2929,7 @@ let fadeTimer = null;     // setInterval handle for volume fade-in on stream sta
 let pendingFade = false;  // true when a new stream start should fade in once playing fires
 let retryCount = 0;       // consecutive errors before marking stream as failed
 const failedStreams = new Set(); // stream IDs that have exhausted retries
+let autoplayBlocked = false; // a launch's auto-resume was refused by the browser: the station waits for a tap
 let streamFault = false;  // the active stream errored and hasn't played since;
                           // the element can't recover by itself, so resume reloads
 let pausedByFailure = null; // the error the browser paused the element for as the
@@ -2874,6 +3011,7 @@ function init() {
   }
 
   document.getElementById('help-section').hidden = !helpAvailable();
+  showHapticsAvailability();
 
   // The Device buttons need the APK's bridge (see openDeviceSettings). A
   // phone or tablet browser gets a pointer to its Settings app instead, and
@@ -2882,6 +3020,7 @@ function init() {
   document.getElementById('device-section').hidden = !hasBridge && platform.isDesktop;
   document.getElementById('device-buttons').hidden = !hasBridge;
   document.getElementById('device-hint-web').hidden = hasBridge;
+  document.getElementById('voice-hint').textContent = voiceSettingsHint(hasBridge);
 
   sanitizeStoredPin();
   loadSettings();
@@ -2905,6 +3044,9 @@ function init() {
 
 // Re-apply theme when system dark/light preference changes (for "auto" mode)
   window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+    if (cfg.theme.endsWith('auto')) applyTheme();
+  });
+  window.matchMedia('(prefers-contrast: more)').addEventListener('change', () => {
     if (cfg.theme.endsWith('auto')) applyTheme();
   });
 
@@ -3102,7 +3244,14 @@ function validateConfig(s) {
  */
 function loadSettings() {
   try {
-    const s = JSON.parse(localStorage.getItem('rgxl_cfg') || '{}');
+    const stored = localStorage.getItem('rgxl_cfg');
+    // Nothing saved yet: start at a text size matching the phone's. Never
+    // over a saved size, which is someone's choice.
+    if (stored === null) {
+      const start = osStartingTextSize();
+      if (start) cfg.size = start;
+    }
+    const s = JSON.parse(stored || '{}');
     storedConfigIsNewer = !!s && typeof s.v === 'number' && s.v > CFG_VERSION;
     Object.assign(cfg, validateConfig(s));
     // The preset name is derived, not trusted: a stored one can be stale.
@@ -3155,9 +3304,44 @@ function saveSettings() {
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const DEFAULT_THEME_COLOR = themeColorMeta ? themeColorMeta.getAttribute('content') : null;
 
+/** Whether the system asks for more contrast. */
+function osWantsMoreContrast() {
+  try { return window.matchMedia('(prefers-contrast: more)').matches; } catch (e) { return false; }
+}
+
+/* The phone's own text size, read where the browser shares it: Safari sizes
+   the -apple-system-body font by the iOS Larger Text setting (17 px at the
+   default; the accessibility sizes start at 28 px). Elsewhere the font is
+   unknown and the probe reads the page's 16 px. */
+const OS_TEXT_XLARGE_PX = 28;
+
+/** The Text Size a fresh install starts at for the phone's text size: X-Large
+    for the iOS accessibility sizes, otherwise null (the usual default). */
+function osStartingTextSize() {
+  try {
+    var probe = document.createElement('span');
+    probe.style.font = '-apple-system-body';
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.textContent = 'A';
+    document.body.appendChild(probe);
+    var px = parseFloat(getComputedStyle(probe).fontSize);
+    probe.remove();
+    return px >= OS_TEXT_XLARGE_PX ? 'xlarge' : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 /** The theme to paint: an Auto choice resolved to its dark or light half by the system preference. */
 function resolveTheme() {
   var t = cfg.theme;
+  // Any Auto theme follows the phone's Increase Contrast (iOS) or high
+  // contrast setting, as it follows dark mode. A theme picked by hand is
+  // left alone, and the saved choice stays Auto.
+  if ((t === 'auto' || t === 'mono-auto' || t === 'contrast-auto') && osWantsMoreContrast()) {
+    return 'contrast-' + (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  }
   if (t === 'auto') {
     return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
@@ -3168,17 +3352,44 @@ function resolveTheme() {
   return t;
 }
 
+/** The orientation to draw. A new choice waits until settings closes:
+    applied at once, it turned the open settings panel sideways under the
+    finger that chose it. The saved one holds meanwhile, so opening settings
+    on a sideways kiosk doesn't turn it upright. */
+function shownOrientation() {
+  return settingsOpen && cfgSnapshot ? cfgSnapshot.orientation : cfg.orientation;
+}
+
 /** Apply the current theme, size, and desktop view mode to the DOM. */
 function applyTheme() {
   const resolved = resolveTheme();
   const base = (platform.isDesktop ? 'is-desktop' : 'is-android') + (platform.isIOS ? ' is-ios' : '');
   const fill = (platform.isDesktop && cfg.fillview === 'on') ? ' fill-view' : '';
-  const orient = cfg.orientation !== 'auto' ? ' force-' + cfg.orientation : '';
-  document.documentElement.className = base + fill + orient + ' theme-' + resolved;
+  const orient = shownOrientation() !== 'auto' ? ' force-' + shownOrientation() : '';
+  const snap = document.documentElement.classList.contains('theme-snap') ? ' theme-snap' : ''; // see snapTheme()
+  document.documentElement.className = base + fill + orient + snap + ' theme-' + resolved;
   // The browser bar / Android status bar: black in Night, which has no blue.
   if (themeColorMeta) themeColorMeta.setAttribute('content', resolved === 'night' ? '#000000' : DEFAULT_THEME_COLOR);
   document.documentElement.setAttribute('data-size', cfg.size);
   renderButtons();
+}
+
+/** Where to change the speaking voice on this device. Only the APK has an
+    OS Settings button; iPhone and iPad call it Spoken Content. */
+function voiceSettingsHint(hasBridge) {
+  if (hasBridge) return 'To change the voice or improve quality, use OS Settings below (Accessibility → Text-to-speech output).';
+  if (platform.isIOS) return 'To change the voice, open the Settings app: Accessibility → Spoken Content → Voices.';
+  if (platform.isAndroid) return "To change the voice, open this device's Settings app and search for Text-to-speech.";
+  return "The voice is your computer's own; change it in its system settings.";
+}
+
+/** Skip the background fade for the theme change just made. */
+function snapTheme() {
+  var root = document.documentElement;
+  root.classList.add('theme-snap');
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() { root.classList.remove('theme-snap'); });
+  });
 }
 
 /** Apply the configurable organization name to the header. */
@@ -3202,6 +3413,14 @@ function getColor(colorId, themeKey) {
   return p[themeKey];
 }
 
+
+/** The stations the grid shows: all of them while settings is open,
+    otherwise those with an address (all, if none has one). */
+function gridStreams() {
+  if (settingsOpen) return cfg.streams;
+  var playable = cfg.streams.filter(function(s) { return s.url && s.url.trim(); });
+  return playable.length ? playable : cfg.streams;
+}
 
 /* ================================================================
    STREAM BUTTON RENDERING
@@ -3266,7 +3485,11 @@ function textLines(text, px, width) {
 
 function renderButtons() {
   const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
-  const count = cfg.streams.length;
+  // A station with no address can't play, so the listener never sees it.
+  // Settings shows it (its preview is how a new one gets set up), and Apply
+  // won't save one; this covers configs saved before that.
+  const streams = gridStreams();
+  const count = streams.length;
 
   // Measure available height by subtracting fixed siblings from the app container.
   // This is more reliable than reading buttonsEl.clientHeight which depends on
@@ -3294,15 +3517,19 @@ function renderButtons() {
   // Determine column count based on stream count and aspect ratio.
   // Landscape or wide screens use more columns to reduce row count.
   var isLandscape = window.innerWidth > window.innerHeight;
+  // Sideways, 5-8 stations split into two even rows (5 is 3+2, 6 is 3+3,
+  // 7 is 4+3, 8 is 4+4), the shorter row's buttons growing to fill it. A
+  // full-width first button there made 1-4-1 rows: a third row on a short
+  // screen, which left a phone only room for icons.
+  var twoRows = isLandscape && count >= 5;
   var cols = 1;
   if (count <= 3 && !isLandscape) cols = 1;
   else if (count <= 4) cols = 2;
-  else if (isLandscape && count >= 6) cols = Math.min(4, count);
-  else if (isLandscape) cols = Math.min(3, count);
+  else if (twoRows) cols = Math.ceil(count / 2);
   else cols = 2;
 
   var useGrid = cols > 1;
-  var oddGrid = useGrid && count % cols !== 0;
+  var oddGrid = useGrid && !twoRows && count % cols !== 0;
   // An odd grid makes button 0 a full-width "primary" (flex: 0 0 100%), which
   // eats a whole row by itself. Count that row — otherwise the row height is
   // oversized and the final row overflows below the clipped (overflow:hidden)
@@ -3376,14 +3603,16 @@ function renderButtons() {
   // keeps only the emoji and state.
   var sizeMode = document.documentElement.getAttribute('data-size') || '';
   var sizes = BUTTON_TEXT_SIZES[sizeMode] || BUTTON_TEXT_SIZES.normal;
-  var grow = 1;
-  if (sizeMode === 'ultra') {
-    // Ultra also grows with the screen (titles 11% of its short side stacked,
-    // 7% in a grid), so a tablet across the room gets bigger text still. On a
-    // phone that comes out under the base sizes, so they win.
+  // Text grows with the screen: Ultra's titles are 11% of its short side
+  // stacked, 7% in a grid, and every size grows by that same factor, so a big
+  // iPad's tiles don't keep phone-sized names (only Ultra used to grow) and a
+  // larger setting stays larger. On a phone it comes out under 1: the base
+  // sizes win.
+  function screenGrow() {
     var vmin = Math.min(window.innerWidth, window.innerHeight);
-    grow = Math.max(1, vmin * (useGrid ? 0.07 : 0.11) / sizes.label);
+    return Math.max(1, vmin * (useGrid ? 0.07 : 0.11) / BUTTON_TEXT_SIZES.ultra.label);
   }
+  var grow = screenGrow();
   var basePad = compact ? 8 : 16;
   var baseEmoji = (compact ? sizes.compactEmoji : (hideSub ? 0 : sizes.emoji)) * grow;
   var baseLabel = compact ? 0 : sizes.label * grow;
@@ -3407,7 +3636,7 @@ function renderButtons() {
   // Titles wrap at spaces, and a word wider than its button is cut off. So
   // titles are no bigger than the size at which every word fits its button,
   // and the fit counts the lines they wrap to.
-  var titles = compact ? [] : cfg.streams.map(function(s, i) {
+  var titles = compact ? [] : streams.map(function(s, i) {
     return { text: s.label, width: textWidthOf(i) };
   });
   var maxTitle = Infinity;
@@ -3431,9 +3660,12 @@ function renderButtons() {
   // A station in trouble says so in words where its description goes, in
   // every layout, tight and compact ones included. Compact has room for "Not
   // available" alone; the aria-label always has the full text.
-  var statuses = cfg.streams.map(function(s) {
+  var statuses = streams.map(function(s) {
     if (failedStreams.has(s.id)) return compact ? 'Not available' : 'Not available. Tap to try again.';
     if (!compact && playing === s.id && !paused && streamFault) return 'Reconnecting…';
+    // Auto-resume at launch can be refused until someone taps: say so on
+    // screen, not only to a screen reader, or the radio looks broken.
+    if (playing === s.id && paused && autoplayBlocked) return 'Tap to resume';
     return '';
   });
   // Button i's status is the description's size, but never under 12px: it
@@ -3485,12 +3717,19 @@ function renderButtons() {
   // costs the name no more than 15% of its size. The fit is worked out both
   // ways and the title sizes compared, so a wide button whose title is held
   // by its longest word keeps the icon for free.
+  // The choice is made once, at the Normal size, for every text size. Made
+  // per size, a larger size could keep the icon a smaller one dropped and
+  // show a smaller name.
   var keepIcon = false;
   if (hideSub && !compact) {
+    var ownLabel = baseLabel;
+    baseLabel = BUTTON_TEXT_SIZES.normal.label * grow;
+    baseEmoji = 0;
     var plainTitle = titleAt(fitScale());
-    baseEmoji = sizes.emoji * grow;
+    baseEmoji = BUTTON_TEXT_SIZES.normal.emoji * grow;
     keepIcon = titleAt(fitScale()) >= 0.85 * plainTitle;
-    if (!keepIcon) baseEmoji = 0;
+    baseLabel = ownLabel;
+    baseEmoji = keepIcon ? sizes.emoji * grow : 0;
   }
   buttonsEl.classList.toggle('keep-icon', keepIcon);
   var scale = fitScale();
@@ -3526,7 +3765,7 @@ function renderButtons() {
   setSizes(buttonsEl, scale);
   buttonsEl.style.setProperty('--btn-gap', Math.round(gap * Math.max(scale, 0.5)) + 'px');
 
-  cfg.streams.forEach((s, i) => {
+  streams.forEach((s, i) => {
     const c = getColor(s.color || PALETTE[i % PALETTE.length].id, themeKey);
     const isActive = playing === s.id;
     const isPrimary = oddGrid && i === 0;
@@ -3550,7 +3789,8 @@ function renderButtons() {
     else if (isReconnecting) label = 'Reconnecting to ' + s.label;
     else if (isActive) label = 'Now playing: ' + s.label;
     btn.setAttribute('aria-label', label);
-    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    // Pressed only while it plays: a paused station isn't on.
+    btn.setAttribute('aria-pressed', isActive && !isPaused ? 'true' : 'false');
 
     // When there's trouble, the description line says so in words: the
     // greyed-out button and ⚠ were the only cues before.
@@ -3650,7 +3890,8 @@ function updateSkipButtons() {
   const skippable = canSkip();
   skipBackBtn.style.display = skippable ? '' : 'none';
   skipFwdBtn.style.display = skippable ? '' : 'none';
-  liveBadge.classList.toggle('visible', !!playing && !skippable);
+  // LIVE means live audio is coming in, so it hides while paused.
+  liveBadge.classList.toggle('visible', !!playing && !paused && !skippable);
 }
 
 /** Update simple stop bar appearance and accessibility state. */
@@ -3692,7 +3933,8 @@ function updateAdvTransport() {
   const pauseBtn = document.getElementById('adv-pause');
   if (pauseBtn) {
     pauseBtn.style.display = isPlaying ? '' : 'none';
-    pauseBtn.innerHTML = isPaused ? ADV_PLAY_SVG : ADV_PAUSE_SVG;
+    pauseBtn.innerHTML = (isPaused ? ADV_PLAY_SVG : ADV_PAUSE_SVG) +
+      '<span class="adv-text" aria-hidden="true">' + (isPaused ? 'Resume' : 'Pause') + '</span>';
     pauseBtn.setAttribute('aria-label', isPaused ? 'Resume' : 'Pause');
   }
   updateSkipButtons();
@@ -3820,6 +4062,7 @@ function reloadActive() {
     after an error, a tap retries it now instead of pausing silence. */
 function playStream(id) {
   cancelRetry();
+  autoplayBlocked = false;
   retryCount = 0;
   steadyFrom = null;
   failedStreams.delete(id);
@@ -3893,6 +4136,7 @@ function stopPlayback() {
 
   playing = null;
   paused = false;
+  autoplayBlocked = false;
   streamFault = false;
   liveSource = false;
   announceOnPlay = null;
@@ -3918,6 +4162,17 @@ function userStop() {
   doHaptic(playing);
   stopPlayback();
   feedback('down', 'Stopped');
+}
+
+/** The Simple-mode bar. It says Stop, so it stops: the station goes back
+    to idle and the next launch won't resume it. It used to pause, leaving
+    the station "Paused, tap to resume" and its button still pressed; on live
+    radio a resume and a fresh start sound the same. When something else
+    paused the station (a tap on it, the lock screen, autoplay blocked at
+    launch), the bar reads "Resume …" and resumes it. */
+function simpleStopPress() {
+  if (!playing) return;
+  if (paused) softStop(); else userStop();
 }
 
 /** Soft stop — pauses the stream and shows a resume prompt on the stop bar.
@@ -3958,6 +4213,7 @@ function resumeActive() {
   retryCount = 0;
   steadyFrom = null;
   paused = false;
+  autoplayBlocked = false;
   rememberLastStation(playing);
   const s = cfg.streams.find(x => x.id === playing);
   if ((streamFault || audio.error) && s) {
@@ -3988,6 +4244,7 @@ function playActive() {
       // this station again.
       if (playing === id && !paused) {
         paused = true;
+        autoplayBlocked = true; // its button says "Tap to resume" on screen
         setConnStatus('idle');
         releaseWakeLock();
         setMediaPlaybackState('paused');
@@ -4394,7 +4651,35 @@ function restoreFocus(target) {
 }
 
 /** Show an overlay and move focus to its first focusable element. */
+/* While a dialog is open, everything behind it is inert: out of the tab
+   order and hidden from screen readers, which aria-modal alone doesn't do
+   on iOS (VoiceOver swiped on into the page behind). Each ancestor's
+   siblings are marked, so it works wherever the dialog sits. Dialogs nest
+   (the discard prompt over settings): opening one lifts inert from itself
+   and its ancestors, and closing it puts back exactly what it changed. */
+function inertBehind(el) {
+  var marked = [], lifted = [];
+  for (var node = el; node && node !== document.body && node.parentElement; node = node.parentElement) {
+    if (node.hasAttribute('inert')) { node.removeAttribute('inert'); lifted.push(node); }
+    Array.prototype.forEach.call(node.parentElement.children, function(sib) {
+      if (sib === node || sib.tagName === 'SCRIPT' || sib.hasAttribute('inert')) return;
+      sib.setAttribute('inert', '');
+      marked.push(sib);
+    });
+  }
+  el._inert = { marked: marked, lifted: lifted };
+}
+
+/** Undo inertBehind(el). Call before moving focus back behind it. */
+function releaseInert(el) {
+  if (!el._inert) return;
+  el._inert.marked.forEach(function(n) { n.removeAttribute('inert'); });
+  el._inert.lifted.forEach(function(n) { n.setAttribute('inert', ''); });
+  el._inert = null;
+}
+
 function showOverlay(el) {
+  inertBehind(el);
   el._returnFocus = document.activeElement;
   el.classList.add('visible');
   el._focusTrap = function(e) { trapFocus(e, el); };
@@ -4414,6 +4699,7 @@ function hideOverlay(el) {
     el.removeEventListener('keydown', el._focusTrap);
     el._focusTrap = null;
   }
+  releaseInert(el);
   restoreFocus(el._returnFocus);
   el._returnFocus = null;
 }
@@ -4498,8 +4784,9 @@ function doHaptic(streamId) {
     }, TAP_FLASH_MS));
   }
 
-  // Device vibration (mobile only, silently ignored on desktop)
-  if (navigator.vibrate) navigator.vibrate(30);
+  // Vibration on Android only: iOS Safari has none, and nothing else is tried
+  // there (the setting is hidden on other platforms).
+  if (platform.isAndroid && navigator.vibrate) navigator.vibrate(30);
 }
 
 
@@ -4599,6 +4886,7 @@ function chime(direction) {
 const SLEEP_STATUS_MS = 5000; // long enough for a screen reader to finish the line
 
 function showSleepOverlay() {
+  document.getElementById('sleep-cancel').hidden = !(sleepRemaining > 0);
   showOverlay(document.getElementById('sleep-overlay'));
 }
 
@@ -4794,6 +5082,7 @@ function openSettings() {
   var panel = document.getElementById('settings-panel');
   panel._returnFocus = document.activeElement;
   settingsOpen = true;
+  inertBehind(panel);
 
   // Snapshot current config so we can revert on cancel
   cfgSnapshot = JSON.parse(JSON.stringify(cfg));
@@ -4807,6 +5096,10 @@ function openSettings() {
   // Use rAF so the browser registers the transition before the target state is set
   requestAnimationFrame(function() { panel.classList.add('open'); });
 
+  // Always open at the top: reopening where the last visit scrolled to put
+  // Reset to Defaults under the first tap.
+  panel.scrollTop = 0;
+
   // Sync volume slider with current value
   document.getElementById('vol-slider').value = cfg.volume;
   document.getElementById('vol-val').textContent = cfg.volume + '%';
@@ -4817,6 +5110,7 @@ function openSettings() {
   // The PIN field always starts from the saved PIN. Apply reads it back, so a
   // stale or blank field here would silently change (or remove) the PIN.
   document.getElementById('in-pin').value = getPin();
+  setPinShown(false);
 
   renderStreamEditor();
   renderPresetChips();
@@ -4886,9 +5180,12 @@ function doCloseSettings() {
     cfg.streams = cfgSnapshot.streams;
     cfgSnapshot = null;
 
-    // Re-apply reverted settings to the UI
+    // Re-apply reverted settings to the UI. The theme snaps back with no
+    // fade: Safari tints its toolbar from the page, and mid-fade it kept the
+    // previewed theme's colour.
     applyOrgName();
     applyTheme();
+    snapTheme();
     updateMode();
     renderButtons();
     updateSimpleStop();
@@ -4903,6 +5200,10 @@ function doCloseSettings() {
   }
   panel.classList.remove('open');
   settingsOpen = false;
+  releaseInert(panel);
+  // Lays the grid out again: stations with no address show only while
+  // settings is open, and a new orientation waits for it to close.
+  applyTheme();
   // Don't leave the PIN sitting in the closed panel's text field.
   document.getElementById('in-pin').value = '';
   // Remove animated class after slide-out completes (timeout fallback if transitionend doesn't fire)
@@ -4914,6 +5215,17 @@ function doCloseSettings() {
   });
   restoreFocus(panel._returnFocus);
   panel._returnFocus = null;
+}
+
+/** Put the caret at the end of a field on focus. iOS put it at the start
+    of the organization name, so typing went in front of the old name. Done
+    a frame later, after the browser places it for the tap. */
+function caretToEnd(el) {
+  requestAnimationFrame(function() {
+    if (document.activeElement !== el) return;
+    var end = el.value.length;
+    el.setSelectionRange(end, end);
+  });
 }
 
 /** Live-preview the organization name as it's typed. */
@@ -4929,6 +5241,9 @@ function previewOrgName() {
 function startPreview() {
   if (!settingsOpen || previewing) return;
   previewing = true;
+  // The grid behind is the preview: readable again, while taps on it are
+  // still caught below.
+  releaseInert(document.getElementById('settings-panel'));
   document.getElementById('settings-panel').classList.add('previewing');
   var back = document.getElementById('preview-back');
   back.hidden = false;
@@ -4940,6 +5255,7 @@ function endPreview(moveFocus = true) {
   if (!previewing) return;
   previewing = false;
   hidePreviewHint();
+  inertBehind(document.getElementById('settings-panel'));
   document.getElementById('settings-panel').classList.remove('previewing');
   document.getElementById('preview-back').hidden = true;
   if (moveFocus) requestAnimationFrame(() => document.getElementById('settings-preview').focus());
@@ -4988,11 +5304,23 @@ function hidePreviewHint() {
   document.getElementById('preview-back').classList.remove('nudge');
 }
 
+/** Haptics only work on Android. Elsewhere the setting stays in view, greyed
+    out with the reason, so nobody hunts for a switch that can't work. */
+function showHapticsAvailability() {
+  if (platform.isAndroid) return;
+  document.getElementById('haptics-section').classList.add('s-unavailable');
+  document.querySelectorAll('.chip[data-group="haptics"]').forEach(c => { c.disabled = true; });
+  document.getElementById('haptics-hint').textContent = platform.isIOS
+    ? "Not available on iPhone or iPad. Apple doesn't let web apps vibrate."
+    : 'Not available on this device. Only Android phones and tablets can vibrate.';
+}
+
 /** Sync all settings chip selections and aria-checked state. */
 function syncChips() {
   ['theme', 'size', 'fillview', 'advanced', 'haptics', 'tts', 'chime', 'resume', 'orientation'].forEach(g => {
     document.querySelectorAll('.chip[data-group="' + g + '"]').forEach(c => {
-      var isSelected = c.dataset.val === cfg[g];
+      // A greyed-out chip shows no choice: "On" there would be a promise it can't keep.
+      var isSelected = !c.disabled && c.dataset.val === cfg[g];
       c.classList.toggle('selected', isSelected);
       c.setAttribute('aria-checked', isSelected ? 'true' : 'false');
     });
@@ -5053,6 +5381,18 @@ function renderPresetChips() {
     btn.onclick = function() { applyPreset(p.name); };
     box.appendChild(btn);
   });
+  // "Custom": shown, chosen, only once a setting no longer matches a preset,
+  // so the hint's "your changes mark the preset as Custom" is visibly true.
+  // Not a choice in itself: tapping it changes nothing.
+  var custom = document.createElement('button');
+  custom.className = 'chip';
+  custom.dataset.group = 'preset';
+  custom.dataset.val = 'custom';
+  custom.setAttribute('role', 'radio');
+  custom.setAttribute('aria-checked', 'false');
+  custom.textContent = 'Custom';
+  custom.hidden = true;
+  box.appendChild(custom);
 }
 
 /** Apply a named preset's bundle to cfg, refresh the live UI, and mark it
@@ -5082,6 +5422,7 @@ function syncPresetSelection() {
     var sel = c.dataset.val === cfg.preset;
     c.classList.toggle('selected', sel);
     c.setAttribute('aria-checked', sel ? 'true' : 'false');
+    if (c.dataset.val === 'custom') c.hidden = !sel;
   });
 }
 
@@ -5096,6 +5437,9 @@ function syncPresetSelection() {
 /** Render the stream editor form inside the settings panel. */
 function renderStreamEditor() {
   const editor = document.getElementById('stream-editor');
+  // A change to the list after a remove ends its Undo (removeStreamEntry
+  // offers it after this render).
+  if (undoRemoved) dropUndo(false);
   const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
   editor.innerHTML = '';
 
@@ -5146,7 +5490,8 @@ function renderStreamEditor() {
       '<div class="s-row"><label class="s-label">Description</label>' +
         '<input class="s-input" data-field="sub" data-idx="' + i + '" value="' + escAttr(s.sub || '') + '" aria-label="Stream ' + num + ' description" oninput="previewStreamEdit()"></div>' +
       '<div class="s-row"><label class="s-label">Stream URL</label>' +
-        '<input class="s-input" data-field="url" data-idx="' + i + '" value="' + escAttr(s.url) + '" aria-label="Stream ' + num + ' URL" oninput="updateUrlWarning(' + i + ')"></div>' +
+        '<input class="s-input" data-field="url" data-idx="' + i + '" value="' + escAttr(s.url) + '" aria-label="Stream ' + num + ' URL" aria-describedby="url-err-' + i + '" oninput="updateUrlWarning(' + i + ')"></div>' +
+      '<div class="url-error" id="url-err-' + i + '" data-err-idx="' + i + '" hidden></div>' +
       '<div class="url-warn" data-warn-idx="' + i + '" role="alert" style="display:' + (isMixedContentUrl(s.url) ? 'block' : 'none') + ';">' +
         'This address starts with http://, so it won\'t play here, not even from the home screen: browsers block it on secure sites. Look for an https:// address for this station.' +
       '</div>' +
@@ -5157,9 +5502,13 @@ function renderStreamEditor() {
     editor.appendChild(div);
   });
 
-  // Hide add/browse row when at the 8-stream maximum
-  document.getElementById('stream-add-row').style.display =
-    cfg.streams.length >= 8 ? 'none' : 'flex';
+  // At the 8-station maximum the add buttons stay where they were, turned
+  // off, with the reason beside them: hiding them left people hunting.
+  var full = cfg.streams.length >= MAX_STREAMS;
+  document.querySelectorAll('#stream-add-row button').forEach(function(b) { b.disabled = full; });
+  var cap = document.getElementById('stream-cap');
+  cap.hidden = !full;
+  cap.textContent = full ? STREAM_CAP_MESSAGE : '';
 
   // Show hint when 5+ streams — layout adapts but user should be aware
   var hint = document.getElementById('stream-hint');
@@ -5170,6 +5519,9 @@ function renderStreamEditor() {
     hint.style.display = 'none';
   }
 }
+
+const MAX_STREAMS = 8;
+const STREAM_CAP_MESSAGE = '8 of 8 stations. Remove one to add another.';
 
 /** Focus the first control in the stream editor matching one of the selectors.
  *  renderStreamEditor() rebuilds the editor with innerHTML, which drops focus,
@@ -5240,8 +5592,46 @@ function removeStreamEntry(idx) {
   cfg.streams.splice(idx, 1);
   renderStreamEditor();
   renderButtons();
-  // The stream that moved into this slot, or the new last one.
-  refocusStreamEditor(['.emoji-input[data-idx="' + Math.min(idx, cfg.streams.length - 1) + '"]']);
+  offerUndoRemove(removed, idx);
+}
+
+/* The last removed station, for Undo: until the next change to the list,
+   or 8 s. Remove sat right beside the move buttons with no way back. */
+const UNDO_MS = 8000;
+let undoRemoved = null; // { stream, idx }
+let undoTimer = null;
+
+function offerUndoRemove(stream, idx) {
+  undoRemoved = { stream: stream, idx: idx };
+  document.getElementById('stream-undo-text').textContent = 'Removed ' + (stream.label || 'a stream') + '.';
+  document.getElementById('stream-undo').hidden = false;
+  document.getElementById('stream-undo-btn').focus();
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(function() { dropUndo(true); }, UNDO_MS);
+}
+
+/** Forget the removed station. refocus: Undo had focus and is going away. */
+function dropUndo(refocus) {
+  clearTimeout(undoTimer);
+  undoTimer = null;
+  undoRemoved = null;
+  var bar = document.getElementById('stream-undo');
+  var hadFocus = bar.contains(document.activeElement);
+  bar.hidden = true;
+  if (refocus && hadFocus) refocusStreamEditor(['.emoji-input']);
+}
+
+/** Put the last removed station back where it was. It's the station
+    object settings already held, so nothing new is trusted here. */
+function undoRemoveStream() {
+  if (!undoRemoved || cfg.streams.length >= MAX_STREAMS) { dropUndo(true); return; }
+  readStreamEditor();
+  var r = undoRemoved;
+  dropUndo(false);
+  cfg.streams.splice(Math.min(r.idx, cfg.streams.length), 0, r.stream);
+  renderStreamEditor();
+  renderButtons();
+  refocusStreamEditor(['.emoji-input[data-idx="' + Math.min(r.idx, cfg.streams.length - 1) + '"]']);
 }
 
 /** Live-preview stream label/description/emoji changes as the user types. */
@@ -5444,12 +5834,39 @@ function freeColour(streams) {
   return (free || PALETTE[streams.length % PALETTE.length]).id;
 }
 
+/* Look-alikes for a guessed icon another station already has, so three jazz
+   stations don't arrive as three 🎷 buttons a non-reader can't tell apart. */
+const ICON_ALTERNATES = {
+  '🎻': ['🎹', '🎼', '🪈'],
+  '🎷': ['🎺', '🎹', '🎶'],
+  '🗞️': ['🎙️', '📰', '📡'],
+  '📻': ['📀', '💿', '🎙️'],
+  '🤠': ['🪕', '🎸', '🌾'],
+  '🌙': ['⭐', '✨', '🌌'],
+  '🌿': ['🌊', '🌸', '🍃'],
+  '🏟️': ['⚾', '🏈', '🏒'],
+  '🕊️': ['⛪', '🙏', '✨'],
+  '🎸': ['🥁', '🎤', '🔥'],
+  '🪕': ['🎸', '🪗', '🌾'],
+  '🎧': ['🎛️', '💿', '🎚️'],
+  '🎤': ['🎶', '⭐', '💿'],
+  '🎵': ['🎶', '🎼', '📻'],
+};
+
+/** `icon`, or the first look-alike no station in `streams` has yet. */
+function distinctIcon(icon, streams) {
+  const used = new Set(streams.map(st => st.emoji));
+  if (!used.has(icon)) return icon;
+  const alt = (ICON_ALTERNATES[icon] || []).find(a => !used.has(a));
+  return alt || icon;
+}
+
 /** The label, description, icon and colour a browser item gets on add. */
 function smartStation(item, streams) {
   return {
     label: cleanStationName(item.name),
     sub: clip(typeof item.meta === 'string' ? item.meta : '', SUB_MAX),
-    emoji: item.icon || DEFAULT_STATION_ICON,
+    emoji: distinctIcon(item.icon || DEFAULT_STATION_ICON, streams),
     color: freeColour(streams)
   };
 }
@@ -5532,6 +5949,7 @@ function openHelp() {
     }
   }
   overlay.classList.add('open');
+  inertBehind(overlay);
   overlay._focusTrap = function(e) { trapFocus(e, overlay); };
   overlay.addEventListener('keydown', overlay._focusTrap);
   document.getElementById('help-close').focus();
@@ -5544,6 +5962,7 @@ function closeHelp() {
     overlay._focusTrap = null;
   }
   overlay.classList.remove('open');
+  releaseInert(overlay);
   // Drop the frame (or offline notice) so every open starts fresh at the guide,
   // even if a link inside it navigated the frame somewhere else.
   document.getElementById('help-body').innerHTML = '';
@@ -5554,6 +5973,7 @@ function openStreamBrowser() {
   var overlay = document.getElementById('stream-browser-overlay');
   overlay._returnFocus = document.activeElement;
   overlay.classList.add('open');
+  inertBehind(overlay);
   overlay._focusTrap = function(e) { trapFocus(e, overlay); };
   overlay.addEventListener('keydown', overlay._focusTrap);
   document.getElementById('sb-search').value = '';
@@ -5603,6 +6023,7 @@ function selectMood(id) {
 /** The starter shelves, in place of any results. */
 function showShelves() {
   stopSbPreview();
+  sbSearched = false;
   const results = document.getElementById('sb-results');
   results._stations = null;
   results.innerHTML = '';
@@ -5698,9 +6119,12 @@ function regionNames(states, countryName) {
   states.forEach(function(st) {
     if (!st || st.country !== countryName || typeof st.name !== 'string') return;
     if (!(st.stationcount >= REGION_MIN_STATIONS)) return;
-    const name = st.name.trim();
-    if (!name || /^[A-Z]{2,3}$/.test(name) || seen.has(name.toLowerCase())) return;
-    seen.add(name.toLowerCase());
+    const name = st.name.trim().replace(/\s+/g, ' ');
+    // Folded for the repeat check: case, spacing and accents ("Île-de-France"
+    // and "Ile-de-France" were listed twice).
+    const key = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if (!name || /^[A-Z]{2,3}$/.test(name) || seen.has(key)) return;
+    seen.add(key);
     names.push(name);
   });
   return names.sort(function(a, b) { return a.localeCompare(b); });
@@ -5741,6 +6165,19 @@ async function loadRegions() {
   }
 }
 
+/* The last search, so a filter change can run it again: changing the
+   country or region left the old results up as if they matched. */
+var sbSearched = false;
+
+function sbCountryChanged() {
+  loadRegions();
+  sbFilterChanged();
+}
+
+function sbFilterChanged() {
+  if (sbSearched) searchStations();
+}
+
 function closeStreamBrowser() {
   stopSbPreview();
   var overlay = document.getElementById('stream-browser-overlay');
@@ -5749,6 +6186,7 @@ function closeStreamBrowser() {
     overlay._focusTrap = null;
   }
   overlay.classList.remove('open');
+  releaseInert(overlay);
   restoreFocus(overlay._returnFocus);
   overlay._returnFocus = null;
 }
@@ -5761,6 +6199,7 @@ async function searchStations() {
   const region = country && !regionSelect.disabled ? regionSelect.value : '';
 
   if (!query && !country && !mood) return;
+  sbSearched = true;
 
   stopSbPreview();
   const results = document.getElementById('sb-results');
@@ -5882,6 +6321,23 @@ function collapseDuplicates(stations) {
   });
 }
 
+/* A name past this is keyword stuffing ("Jazz Smooth Jazz Lounge Chill
+   Relax Café …", 300 characters and more): it ranks below plain names,
+   whatever its popularity, and shows cut short. */
+const SB_NAME_MAX = 60;
+
+/** Plain names first, each group keeping the directory's popularity order. */
+function rankByName(stations) {
+  const long = (s) => (typeof s.name === 'string' ? s.name.trim().length : 0) > SB_NAME_MAX;
+  return stations.filter(s => !long(s)).concat(stations.filter(long));
+}
+
+/** A name cut to SB_NAME_MAX characters for the list. */
+function shortStationName(name) {
+  const chars = Array.from(name);
+  return chars.length > SB_NAME_MAX ? chars.slice(0, SB_NAME_MAX - 1).join('').trimEnd() + '…' : name;
+}
+
 function renderBrowserResults(stations, onlyHttpMatches, mood) {
   const status = document.getElementById('sb-status');
   // lastcheckok 0: the directory's own check found the station failing.
@@ -5894,7 +6350,7 @@ function renderBrowserResults(stations, onlyHttpMatches, mood) {
     return;
   }
 
-  const items = collapseDuplicates(stations).slice(0, 60).map(s => ({
+  const items = rankByName(collapseDuplicates(stations)).slice(0, 60).map(s => ({
     name: typeof s.name === 'string' ? s.name.trim() : '',
     url: s.url_resolved,
     meta: stationLine(s),
@@ -5946,18 +6402,12 @@ function renderStationRows(items, fromShelf) {
     info.className = 'sb-result-info';
     info.setAttribute('aria-hidden', 'true');
     info.innerHTML =
-      '<div class="sb-result-name">' + escHtml(s.name) + '</div>' +
+      '<div class="sb-result-name">' + escHtml(shortStationName(s.name)) + '</div>' +
       '<div class="sb-result-meta">' + escHtml(s.meta) + '</div>';
 
     let addBtn;
     if (added.has(s.url)) {
-      addBtn = document.createElement('span');
-      addBtn.className = 'sb-result-added';
-      addBtn.textContent = 'Added';
-      const why = document.createElement('span');
-      why.className = 'sr-only';
-      why.textContent = ': ' + s.name + ' is already on this radio';
-      addBtn.appendChild(why);
+      addBtn = addedMark(s.name);
     } else {
       addBtn = document.createElement('button');
       addBtn.className = 'sb-result-add';
@@ -5976,7 +6426,30 @@ function renderStationRows(items, fromShelf) {
 
   // Stash results for addFromBrowser
   results._stations = items;
+  syncBrowserCap();
   if (hadFocus) back.focus();
+}
+
+/** The "Added" mark that takes a row's + Add place. */
+function addedMark(name) {
+  const mark = document.createElement('span');
+  mark.className = 'sb-result-added';
+  mark.tabIndex = -1; // focus lands here after an add, so a screen reader hears it
+  mark.textContent = 'Added';
+  const why = document.createElement('span');
+  why.className = 'sr-only';
+  why.textContent = ': ' + name + ' is already on this radio';
+  mark.appendChild(why);
+  return mark;
+}
+
+/** At 8 stations, every + Add left is turned off, and the browser says why. */
+function syncBrowserCap() {
+  const full = cfg.streams.length >= MAX_STREAMS;
+  document.querySelectorAll('#sb-results .sb-result-add').forEach(function(b) { b.disabled = full; });
+  const cap = document.getElementById('sb-cap');
+  cap.hidden = !full;
+  cap.textContent = full ? STREAM_CAP_MESSAGE : '';
 }
 
 function toggleSbPreview(url, btn) {
@@ -6029,11 +6502,23 @@ function addFromBrowser(idx) {
   // Third-party URL — same http(s)-only rule applySettings() enforces, checked
   // here so a bad scheme never reaches the live preview before Apply.
   if (typeof s.url !== 'string' || !s.url || !isValidStreamUrl(s.url)) return;
-  cfg.streams.push(Object.assign({ id: 's' + Date.now(), url: s.url }, smartStation(s, cfg.streams)));
+  const station = Object.assign({ id: 's' + Date.now(), url: s.url }, smartStation(s, cfg.streams));
+  cfg.streams.push(station);
 
   renderStreamEditor();
   renderButtons();
-  closeStreamBrowser();
+  // Browse stays open, so several stations can be added in one visit (each
+  // add used to close it). The row says Added, and focus goes there.
+  const row = document.querySelector('#sb-results .sb-result[data-station-idx="' + idx + '"]');
+  const btn = row && row.querySelector('.sb-result-add');
+  if (btn) {
+    const mark = addedMark(s.name);
+    btn.replaceWith(mark);
+    mark.focus();
+  }
+  syncBrowserCap();
+  document.getElementById('sb-status').textContent = 'Added ' + station.label + '. ' +
+    cfg.streams.length + ' of ' + MAX_STREAMS + ' stations.';
 }
 
 // Allow Enter key to trigger search
@@ -6054,7 +6539,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var el = e.target;
     while (el && el !== document.body) {
       // Allow scroll inside settings sidebar and overlay scroll containers
-      if (el.id === 'settings-panel' || el.classList.contains('stream-browser-results') ||
+      if (el.id === 'settings-panel' || el.classList.contains('stream-browser-results') || el.classList.contains('stream-browser') ||
           el.classList.contains('emoji-grid') || el.classList.contains('emoji-picker-tabs')) {
         return;
       }
@@ -6101,6 +6586,7 @@ function openEmojiPicker(idx) {
   renderEmojiGrid(0);
   var overlay = document.getElementById('emoji-picker-overlay');
   overlay.classList.add('open');
+  inertBehind(overlay);
   overlay._focusTrap = function(e) { trapFocus(e, overlay); };
   overlay.addEventListener('keydown', overlay._focusTrap);
   // Move focus to first emoji tab for keyboard accessibility
@@ -6115,6 +6601,7 @@ function closeEmojiPicker() {
     overlay._focusTrap = null;
   }
   overlay.classList.remove('open');
+  releaseInert(overlay);
   emojiPickerIdx = -1;
   if (emojiPickerReturnFocus) {
     emojiPickerReturnFocus.focus();
@@ -6212,6 +6699,27 @@ function updateUrlWarning(idx) {
   const warn = document.querySelector('#stream-editor .url-warn[data-warn-idx="' + idx + '"]');
   if (!input || !warn) return;
   warn.style.display = isMixedContentUrl(input.value) ? 'block' : 'none';
+  showUrlError(idx, '');
+}
+
+/** What's wrong with a station's address for Apply, or '' when it's fine.
+    A blank or non-web address used to be blanked silently on Apply, leaving a
+    station on the grid that fails when the listener taps it. */
+function streamUrlProblem(url, num) {
+  var u = (url || '').trim();
+  if (!u) return 'Stream ' + num + ' has no web address. Add one, or remove the stream.';
+  if (!isValidStreamUrl(u)) return "Stream " + num + "'s address has to start with https:// (or http://).";
+  return '';
+}
+
+/** Show (or with '' clear) the error under stream idx's address field. */
+function showUrlError(idx, msg) {
+  var input = document.querySelector('#stream-editor .s-input[data-field="url"][data-idx="' + idx + '"]');
+  var err = document.getElementById('url-err-' + idx);
+  if (!input || !err) return;
+  err.textContent = msg;
+  err.hidden = !msg;
+  if (msg) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
 }
 
 /* Bounds for the optional per-stream gain trim. 1.0 = unchanged. Below 1
@@ -6245,10 +6753,27 @@ function applySettings() {
   var orgVal = document.getElementById('in-org-name').value.trim();
   cfg.orgName = orgVal || PROFILE.orgName;
 
-  // Sanitize stream data
+  // Every station needs a web address before anything is saved. The first
+  // problem is named above Apply and marked on its field, which gets focus.
+  var firstBad = -1;
+  cfg.streams.forEach((s, i) => {
+    var msg = streamUrlProblem(s.url, i + 1);
+    showUrlError(i, msg);
+    if (msg && firstBad < 0) firstBad = i;
+  });
+  if (firstBad >= 0) {
+    setApplyStatus(streamUrlProblem(cfg.streams[firstBad].url, firstBad + 1));
+    var badInput = document.querySelector('#stream-editor .s-input[data-field="url"][data-idx="' + firstBad + '"]');
+    if (badInput) badInput.focus();
+    return;
+  }
+
   cfg.streams.forEach((s, i) => {
     if (!s.label.trim()) s.label = 'Stream ' + (i + 1);
-    if (!isValidStreamUrl(s.url)) s.url = '';
+    s.url = s.url.trim();
+    // A new address gets a fresh try: "Not available" was about the old one.
+    var before = cfgSnapshot && cfgSnapshot.streams.find(o => o.id === s.id);
+    if (before && before.url !== s.url) failedStreams.delete(s.id);
   });
 
   // Update PIN if changed — exactly 4 digits, or empty to disable.
@@ -6352,7 +6877,9 @@ function exportConfig() {
     document.body.removeChild(a);
     // Revoke on the next tick so the download has a chance to start first.
     setTimeout(function() { URL.revokeObjectURL(url); }, 0);
-    setBackupStatus(includePin ? 'Backup exported (includes PIN — store it securely).' : 'Backup exported.', false);
+    // "Ready to save", not "exported": the phone may still be asking where
+    // to save it, or the person may cancel.
+    setBackupStatus(includePin ? 'Backup ready to save (includes PIN — store it securely).' : 'Backup ready to save.', false);
   } catch (e) {
     setBackupStatus('Could not export backup on this device.', true);
   }
@@ -6578,12 +7105,14 @@ let tapTimer = null;
 let pinEntry = '';
 let pinFailCount = 0;
 let pinLocked = false;
-let pinResetTimer = null; // pending "clear banner" timer — cancelled before each new one so a stale clear can't wipe a later message (e.g. the lockout banner)
+let pinResetTimer = null; // pending lockout tick — cancelled before each new one so a stale tick can't wipe a later message
+let pinWrongShown = false; // "Incorrect PIN" stays up until the next key press
 
 const pinOverlay = document.getElementById('pin-overlay');
 const pinDots = document.querySelectorAll('.pin-dot');
 const pinErrorEl = document.getElementById('pin-error');
 const pinStatusEl = document.getElementById('pin-status');
+const pinWaitEl = document.getElementById('pin-wait');
 
 /**
  * One-time self-heal for legacy/corrupt PINs. The unlock pad is fixed at 4
@@ -6654,15 +7183,65 @@ document.getElementById('logo-area').addEventListener('keydown', function (e) {
 /** Show the PIN entry overlay with a fresh state. */
 function showPinOverlay() {
   pinEntry = '';
-  pinErrorEl.innerHTML = '&nbsp;';
   pinStatusEl.textContent = '';
-  pinDots.forEach(d => d.classList.remove('filled', 'wrong'));
+  pinDots.forEach(d => d.classList.remove('filled'));
+  // A lockout keeps running (and showing) if the pad is closed and reopened.
+  if (!pinLocked) clearPinError();
   showOverlay(pinOverlay);
+}
+
+/** Clear "Incorrect PIN" and the red dots. */
+function clearPinError() {
+  pinWrongShown = false;
+  pinErrorEl.innerHTML = '&nbsp;';
+  pinDots.forEach(d => d.classList.remove('wrong'));
+}
+
+/** Turn the digit keys off during a lockout, on after. Cancel stays on. */
+function setPinKeysEnabled(on) {
+  document.querySelectorAll('#pin-pad .pin-key').forEach(function(k) {
+    if (!k.classList.contains('pin-key-wide')) k.disabled = !on;
+  });
+}
+
+/** Lock the pad for `sec` seconds, counting down on screen each second. */
+function startPinLockout(sec) {
+  pinLocked = true;
+  setPinKeysEnabled(false);
+  pinErrorEl.textContent = 'Too many attempts';
+  pinStatusEl.textContent = 'Wait ' + sec + ' seconds, then try again.';
+  pinWaitEl.hidden = false;
+  (function tick(left) {
+    if (left <= 0) {
+      pinLocked = false;
+      setPinKeysEnabled(true);
+      pinWaitEl.hidden = true;
+      pinWaitEl.textContent = '';
+      pinEntry = '';
+      clearPinError();
+      pinStatusEl.textContent = 'You can try again now.';
+      return;
+    }
+    pinWaitEl.textContent = 'Try again in ' + left + ' s';
+    pinResetTimer = setTimeout(function() { tick(left - 1); }, 1000);
+  })(sec);
+}
+
+/** Show or mask the PIN in settings. It opens masked every time. */
+function setPinShown(shown) {
+  document.getElementById('in-pin').classList.toggle('pin-masked', !shown);
+  var btn = document.getElementById('pin-show');
+  btn.textContent = shown ? 'Hide' : 'Show';
+  btn.setAttribute('aria-pressed', shown ? 'true' : 'false');
+}
+function togglePinShown() {
+  setPinShown(document.getElementById('in-pin').classList.contains('pin-masked'));
 }
 
 /** Handle a PIN digit press. Validates after 4 digits are entered. */
 function pinKey(n) {
   if (pinLocked || pinEntry.length >= 4) return;
+  if (pinWrongShown) clearPinError();
 
   pinEntry += n;
   pinDots[pinEntry.length - 1].classList.add('filled');
@@ -6686,26 +7265,15 @@ function pinKey(n) {
         // an earlier 800ms timer during rapid failures).
         clearTimeout(pinResetTimer);
 
+        pinEntry = '';
         if (pinFailCount >= 5) {
           // Lockout: escalating delay (5s per failure, capped at 30s)
-          var lockSec = Math.min(30, pinFailCount * 5);
-          pinLocked = true;
-          pinErrorEl.textContent = 'Too many attempts — wait ' + lockSec + 's';
-          pinResetTimer = setTimeout(() => {
-            pinLocked = false;
-            pinDots.forEach(d => d.classList.remove('wrong'));
-            pinEntry = '';
-            pinErrorEl.innerHTML = '&nbsp;';
-            pinStatusEl.textContent = 'PIN cleared, try again';
-          }, lockSec * 1000);
+          startPinLockout(Math.min(30, pinFailCount * 5));
         } else {
+          // Stays until the next key press: gone after 0.8 s, it was easy
+          // to miss, and the pad looked as if it had ignored the PIN.
           pinErrorEl.textContent = 'Incorrect PIN — try again';
-          pinResetTimer = setTimeout(() => {
-            pinDots.forEach(d => d.classList.remove('wrong'));
-            pinEntry = '';
-            pinErrorEl.innerHTML = '&nbsp;';
-            pinStatusEl.textContent = 'PIN cleared, try again';
-          }, 800);
+          pinWrongShown = true;
         }
       }
     }, 200);
@@ -6717,7 +7285,7 @@ function pinBackspace() {
   if (pinEntry.length === 0) return;
   pinDots[pinEntry.length - 1].classList.remove('filled');
   pinEntry = pinEntry.slice(0, -1);
-  pinErrorEl.innerHTML = '&nbsp;';
+  if (!pinLocked) clearPinError();
   pinStatusEl.textContent = pinEntry.length + ' of 4 digits entered';
 }
 
