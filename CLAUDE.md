@@ -111,6 +111,8 @@ Brief entry about what changed, what's next, or what was decided.
 
 Keep entries short and factual. These are devlog entries, not blog posts. Add them when there's something worth noting — don't pad with filler updates.
 
+Every entry is a public claim nobody re-checks, so add one only for a change a visitor would notice. Never restate security or privacy mechanics (logging, CSP, guards, retention); link the product's own page for anything it already describes. One to two sentences per release; group a burst of releases into one entry.
+
 ### Non-project posts
 
 The journal conversation might surface topics worth writing about that aren't project-specific — accessibility patterns, tooling opinions, industry problems Jason has perspective on. If the discussion goes there, offer to capture it as a standalone post. These don't need to tie back to a specific project.
