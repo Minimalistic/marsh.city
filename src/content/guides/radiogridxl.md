@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.16.0
+appVersion: 7.17.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -20,11 +20,11 @@ Settings are hidden on purpose. To open them, **tap the logo in the top corner 5
 
 ![The settings panel, open over the station buttons](/images/radiogridxl/guide/settings-open.webp)
 
-The panel slides in from the side. Scroll down to see everything. Most changes show up behind the panel right away, so you can see what they'll look like.
+The panel slides in from the side. It has four groups: **Stations**, **Look**, **Sound and controls** and **Setup**. Scroll to see them all. Most changes show up behind the panel right away, so you can see what they'll look like, and when one tap changes other settings too (a preset, say), those settings light up briefly so you can see what moved.
 
-**Nothing is saved until you tap Apply & Close** at the bottom. If you close the panel with the × instead, the app asks whether to throw your changes away.
+**Nothing is saved until you tap Apply & Close**, which stays pinned at the bottom of the panel (on a phone turned sideways, at the top next to Preview). If you close the panel with the × instead, the app asks whether to throw your changes away.
 
-![The Apply & Close button at the bottom of settings](/images/radiogridxl/guide/apply.webp)
+![The Apply & Close button pinned at the bottom of settings](/images/radiogridxl/guide/apply.webp)
 
 ### If it asks for a PIN
 
@@ -34,20 +34,20 @@ If someone has set a PIN, five taps on the logo bring up a keypad instead. Enter
 
 ## Change a station's stream URL
 
-![A station's Stream URL field in settings](/images/radiogridxl/guide/stream-url.webp)
+![A station opened in settings, with its stream address field](/images/radiogridxl/guide/stream-url.webp)
 
-Each station has its own block under **Audio Streams** in settings. To point a button at a different station:
+Each station has a row under **Stations**, at the top of settings. Tap a row to open that station's details under it, and tap it again to close them. To point a button at a different station:
 
-1. Open settings and scroll to **Audio Streams**.
-2. In that station's block, replace the **Stream URL** with the new one.
-3. Change the **Label** (the big text on the button) and the **Description** (the smaller line under it) to match.
+1. Open settings and tap the station under **Stations**.
+2. Replace the **Stream address** with the new one.
+3. Change the **Name** (the big text on the button) and the **Description** (the smaller line under it) to match.
 4. Tap **Apply & Close**.
 
 The URL has to be a direct audio stream, usually starting with `https://` and often ending in `.mp3` or `.aac`. A station's website address won't work, and neither will most playlist files (`.pls`, `.m3u`). If all you have is a playlist file, open it in a text editor and copy the web address inside it.
 
 Links that start with `http://` (no "s") won't play on this website, because browsers block them on secure pages. That includes RadioGridXL on your home screen, since it's the same website. The app shows a warning under the field when that's the case. Look for an `https://` address for the station instead.
 
-**Volume Trim** evens out a station that's much louder or quieter than the others. 1.0 is normal, and lower numbers make that station quieter. Numbers above 1.0 only make it louder when **Max App Volume** is set below 100%. On iPhone and iPad, Volume Trim and Max App Volume don't appear: Apple doesn't let web apps change the volume, so use the side buttons.
+**Volume Trim** evens out a station that's much louder or quieter than the others. 1.0 is normal, and lower numbers make that station quieter. Numbers above 1.0 only make it louder when **Volume**, under **Sound and controls**, is set below 100%. On iPhone and iPad, Volume Trim and the Volume slider don't appear: Apple doesn't let web apps change the volume, so use the side buttons.
 
 ## Add a station
 
@@ -59,7 +59,7 @@ Stations are run by other people, and this app has no control over what they pla
 
 ![The station browser opening on six shelves: Calm & easy, Oldies, Classical, Jazz, News & talk and Sleep](/images/radiogridxl/guide/browse.webp)
 
-1. In settings, under **Audio Streams**, tap **Browse**.
+1. In settings, under **Stations**, tap **Browse stations**.
 2. Tap a shelf, such as **Jazz** or **Sleep**, for a short list of hand-picked stations. Or tap a mood, such as **Relaxing** or **News & talk**, to search the directory for that kind of station. You can also search by name, or pick a country (then a state or region, if you like) and tap **Search**; a mood narrows those searches too.
 3. Tap a station's play button to hear it first, then tap **+ Add**. It changes to **Added**, and you can add more from the same list. A station that's already on this radio says **Added** too. Close the browser when you're done.
 4. Each station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has. Change any of them if you like, then tap **Apply & Close**.
@@ -68,10 +68,10 @@ The shelf stations are checked before each release of the app. Searches go to th
 
 ### Type one in
 
-![A new station block with a label and stream URL filled in](/images/radiogridxl/guide/add-blank.webp)
+![A new station with its name and stream address filled in](/images/radiogridxl/guide/add-blank.webp)
 
-1. Under **Audio Streams**, tap **+ Add Blank**. A new block called "New Stream" appears at the bottom.
-2. Fill in the **Label**, **Description** and **Stream URL**. The address has to start with https:// (or http://).
+1. Under **Stations**, tap **Add by address**. A new station called "New Stream" opens at the bottom, ready for its address.
+2. Fill in the **Stream address**, **Name** and **Description**. The address has to start with https:// (or http://).
 3. Tap **Apply & Close**. If a station has no address, or one that doesn't start that way, settings stays open and says which one to fix.
 
 With 5 or more stations the button text gets smaller to fit, and on a small screen buttons may show only their icon, so give every station an icon.
@@ -80,27 +80,27 @@ With 5 or more stations the button text gets smaller to fit, and on a small scre
 
 ![The row of color choices for a station](/images/radiogridxl/guide/station-look.webp)
 
-In a station's block, tap the **Icon** box to pick an emoji, and tap a swatch under **Button Color** to color its button. There are eight colors, and all of them are readable in both light and dark themes.
+Open a station's row, then tap the **Icon** box to pick an emoji, and tap a swatch under **Button Color** to color its button. There are eight colors, and all of them are readable in both light and dark themes.
 
 ## Reorder or remove stations
 
-![The arrow and remove buttons at the top of a station's block](/images/radiogridxl/guide/reorder.webp)
+![The Move up, Move down and Remove buttons under an open station](/images/radiogridxl/guide/reorder.webp)
 
-Each station block has small buttons in its top corner:
+Open a station's row. Under its details are three buttons:
 
-- **▲ / ▼** move the station up or down. The order in settings is the order of the buttons on screen.
-- **✕** removes the station. The app always keeps at least one.
+- **Move up** and **Move down** move the station. It slides to its new place, and the order in settings is the order of the buttons on screen.
+- **Remove** removes the station, with an **Undo** right after. The app always keeps at least one.
 
 ## Change the theme
 
 ![The theme choices in settings](/images/radiogridxl/guide/theme.webp)
 
-Under **Theme**, pick one:
+Under **Look**, **Theme** shows four looks, each drawn like a small station button. Pick one, then **Dark**, **Light** or **Auto** (Auto follows your device's own light or dark setting, and switches to High Contrast when the device is set to increase contrast):
 
-- **Dark** or **Light**, or **Auto** to follow your device's own light or dark setting.
-- **MonoRadio**: quieter grey versions of the same three, with every station the same color.
-- **High Contrast**: black, white and yellow, with the most contrast and the station that's playing filled solid yellow. Good for low vision. Dark, Light or Auto.
-- **Night**: dim amber on black, with no blue, for a radio by the bed. It keeps the screen from lighting up the room.
+- **Classic**: the standard colors, with each station its own color.
+- **MonoRadio**: quieter grey versions, with every station the same color.
+- **High Contrast**: black, white and yellow, with the most contrast and the station that's playing filled solid yellow. Good for low vision.
+- **Night**: dim amber on black, with no blue, for a radio by the bed. It keeps the screen from lighting up the room. Night has no Dark or Light, so those switch off.
 
 The screen behind the panel changes as soon as you tap, so you can compare. Tap **Apply & Close** to keep it.
 
@@ -110,10 +110,10 @@ The screen behind the panel changes as soon as you tap, so you can compare. Tap 
 
 ![The accessibility preset choices](/images/radiogridxl/guide/presets.webp)
 
-**Accessibility Preset** at the top of settings sets several options in one tap:
+**Starting point**, at the top of **Look**, sets several options in one tap:
 
 - **Standard**: Auto theme, Large text, with tones and vibration on.
-- **Low Vision**: the High Contrast Dark theme, Ultra text, and spoken announcements. If you use VoiceOver or TalkBack, turn **Voice Announcements** off afterwards, so the app doesn't talk over your screen reader.
+- **Low Vision**: the High Contrast Dark theme, Ultra text, and spoken announcements. If you use VoiceOver or TalkBack, turn **Voice announcements** off afterwards, so the app doesn't talk over your screen reader.
 - **Simplest**: X-Large text with no tones, vibration or announcements.
 
 All three use Simple controls.
@@ -124,15 +124,15 @@ Pick the closest one, then fine-tune anything below it. Once you change somethin
 
 ![The text size choices](/images/radiogridxl/guide/text-size.webp)
 
-**Text Size** has Normal, Large, X-Large and Ultra. Ultra is the largest, which suits a tablet across the room.
+**Text size** has Normal, Large, X-Large and Ultra, each showing how big it is. Ultra is the largest, which suits a tablet across the room.
 
-Further down there are more options: **Voice Announcements** (speaks "Now playing…" and so on aloud), **Audio Tones** (a short chime when playback starts or stops), **Haptic Feedback** (a small buzz on tap, on Android phones and tablets only), and **Auto-Resume** (when the app opens, starts the station again if it was playing when the app closed).
+Under **Sound and controls** are switches: **Voice announcements** (speaks "Now playing…" and so on aloud), **Audio tones** (a short chime when playback starts or stops), **Auto-resume** (when the app opens, starts the station again if it was playing when the app closed) and **Haptic feedback** (a small buzz on tap, on Android phones and tablets only; elsewhere it's greyed out with the reason).
 
 ## Simple or Advanced controls
 
 ![The Advanced controls bar at the bottom of the screen](/images/radiogridxl/guide/controls.webp)
 
-Under **Advanced Controls**:
+Under **Buttons while playing**, in **Sound and controls**:
 
 - **Simple** shows a single Stop button. Best for most listeners.
 - **Advanced** adds separate Pause and Stop buttons and a **sleep timer** (the clock button) that stops playback after 15 minutes to 4 hours. Skip back and forward show up only for recordings with a set length, not live radio.
@@ -141,18 +141,18 @@ Under **Advanced Controls**:
 
 ![The Setup PIN field in settings](/images/radiogridxl/guide/set-pin.webp)
 
-To keep anyone else out of settings, type a 4-digit PIN in **Setup PIN** and tap **Apply & Close**. From then on, five taps on the logo bring up the keypad. To remove the PIN, clear the field and apply.
+To keep anyone else out of settings, type a 4-digit PIN in **Setup PIN**, under **Setup**, and tap **Apply & Close**. From then on, five taps on the logo bring up the keypad. To remove the PIN, clear the field and apply.
 
 Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser's saved data for marsh.city, which also erases your RadioGridXL stations and settings.
 
 ## Backup and restore
 
-![The Backup and Restore section](/images/radiogridxl/guide/backup.webp)
+![The Backup section](/images/radiogridxl/guide/backup.webp)
 
 - **Export Backup** saves your stations and settings to a file.
 - **Import Backup** loads a backup file, on this device or another one.
 
-The PIN is only included if you tick **Include PIN in backup file**. Anyone with that file could get into settings, so keep it somewhere safe.
+The PIN is only included if you tick **Include the PIN**. Anyone with that file could get into settings, so keep it somewhere safe.
 
 ## Install it as an app
 

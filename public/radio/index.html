@@ -986,6 +986,10 @@ html.theme-night #adv-live-badge { color: #d09440; background: rgba(0, 0, 0, 0);
 html.theme-night .color-chip { filter: grayscale(1) sepia(1) brightness(0.6); }
 html.theme-night .stream-action-btn,
 html.theme-night #settings-version { opacity: 1; }
+/* Without fading, an unavailable Move shows as a dashed outline with its
+   label struck through (the label grey is near white in High Contrast). */
+html[class*="theme-contrast"] .stream-action-btn:disabled,
+html.theme-night .stream-action-btn:disabled { border-style: dashed; color: var(--settings-label); text-decoration: line-through; }
 html.is-desktop.theme-night body { background: #000000; }
 
 
@@ -1389,17 +1393,57 @@ html.is-desktop .overlay-body { font-size: 20px; }
 #settings-panel {
   position: fixed;
   top: 0; right: 0; bottom: 0;
-  width: min(360px, 94vw);
+  /* A side panel, so the radio shows beside it; the full screen on a phone,
+     a little wider on a big screen (see the media rules under it). */
+  width: 360px;
+  max-width: 100vw;
   background: var(--settings-bg);
   border-left: 1px solid var(--settings-border);
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
   z-index: 100;
-  overflow-y: auto;
+  /* The body scrolls, never the panel: header and Apply stay put. */
+  overflow: hidden;
   /* A landscape iPhone's notch can sit on the right edge. */
   padding-right: env(safe-area-inset-right, 0px);
 }
+@media (max-width: 479px) {
+  #settings-panel { width: 100vw; border-left: none; }
+}
+@media (min-width: 1200px) {
+  #settings-panel { width: 480px; }
+}
+#settings-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 16px 24px;
+}
+#settings-footer {
+  flex-shrink: 0;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--settings-border);
+  background: var(--settings-bg);
+}
+/* A short panel (a phone on its side, a phone forced sideways, or the
+   keyboard up): header and Apply share one row, so the settings keep the
+   height. Set from the panel's own height by fitSettingsPanel(). The title
+   stays for screen readers. */
+#settings-panel.short-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+#settings-panel.short-panel #settings-header { grid-column: 1; grid-row: 1; padding-top: calc(4px + env(safe-area-inset-top, 0px)); padding-bottom: 4px; padding-left: 12px; padding-right: 4px; }
+#settings-panel.short-panel #settings-footer { grid-column: 2; grid-row: 1; border-top: none; border-bottom: 1px solid var(--settings-border); padding: calc(4px + env(safe-area-inset-top, 0px)) 12px 4px 4px; display: flex; align-items: center; }
+#settings-panel.short-panel #settings-body { grid-column: 1 / -1; grid-row: 2; }
+#settings-panel.short-panel #settings-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#settings-panel.short-panel #apply-btn { min-height: 44px; padding: 0 14px; width: auto; }
+#settings-panel.short-panel #settings-header-actions { gap: 4px; }
+#settings-panel.short-panel #settings-preview { padding: 0 12px; }
+#settings-panel.short-panel #apply-status { position: absolute; left: 12px; right: 12px; top: 56px; z-index: 2; background: var(--settings-bg); padding: 6px 8px; border: 1px solid var(--danger); border-radius: 8px; }
 #settings-panel.animated { transition: transform 0.3s ease; }
 #settings-panel.open { transform: translateX(0); }
 /* Closed = hidden from screen readers and Tab, not just slid off-screen.
@@ -1494,24 +1538,146 @@ html.is-desktop .overlay-body { font-size: 20px; }
   50% { transform: scale(1.12); }
 }
 
-/* -- Section layout -- */
-.s-section { padding: 14px 20px; border-bottom: 1px solid var(--settings-border); }
-.s-section-title {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--settings-label);
-  margin-bottom: 10px;
+/* -- Groups: Stations, Look, Sound and controls, Setup -- */
+.s-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+.s-group-head { display: flex; align-items: baseline; gap: 8px; }
+.s-group-title { margin: 0; flex: 1; font-size: 20px; font-weight: 800; color: var(--settings-text); }
+.s-group-count { font-size: 13px; font-weight: 700; color: var(--settings-label); }
+.s-card {
+  border: 1px solid var(--settings-border);
+  border-radius: 12px;
+  background: var(--settings-input-bg);
+  overflow: hidden;
 }
-/* No fade: at 75% it fell under 4.5:1 outside dark theme. 12px, up from 11,
-   for legibility. */
+.s-card .s-input { background: var(--settings-bg); }
+.s-section { padding: 14px; border-bottom: 1px solid var(--settings-border); }
+.s-section:last-child { border-bottom: none; }
+.s-section-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--settings-text);
+  margin-bottom: 8px;
+}
+/* No fade: at 75% it fell under 4.5:1 outside dark theme. */
 .s-hint {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--settings-label);
   margin-top: 8px;
   line-height: 1.4;
 }
+/* On/off settings are switches: one row each, the label naming it. The words
+   beside a switch are its name and description (aria-labelledby/-describedby),
+   hidden as text of their own so VoiceOver makes one stop, not two. */
+.s-switch-row { display: flex; align-items: center; gap: 12px; }
+.s-switch-text { flex: 1; min-width: 0; }
+.s-switch-row .s-section-title { margin-bottom: 2px; }
+.s-switch-row .s-hint { margin-top: 2px; }
+.s-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.s-switch::before {
+  content: '';
+  position: absolute;
+  left: 2px; right: 2px; top: 6px; bottom: 6px;
+  border-radius: 16px;
+  border: 2px solid var(--settings-label);
+  background: var(--settings-bg);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.s-switch-knob {
+  position: absolute;
+  top: 12px; left: 8px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--settings-label);
+  transition: transform 0.2s ease-out, background-color 0.2s;
+}
+.s-switch[aria-checked="true"]::before { background: var(--accent); border-color: var(--accent); }
+.s-switch[aria-checked="true"] .s-switch-knob { transform: translateX(24px); background: var(--on-accent); }
+.s-switch:disabled { opacity: 0.45; cursor: not-allowed; }
+.s-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 18px; }
+.s-unavailable .s-section-title { opacity: 0.7; }
+
+/* Theme: a family swatch, drawn like a small station button, plus a mode. */
+.theme-families { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.theme-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+  border: 3px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--settings-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+.theme-swatch[aria-checked="true"] { border-color: var(--accent); }
+.swatch-art {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 52px;
+  padding: 7px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+}
+.swatch-tile { height: 20px; border-radius: 4px; border: 2px solid; }
+.swatch-bar { height: 5px; width: 55%; border-radius: 3px; }
+/* Each swatch shows its own family whatever theme is on now. */
+.theme-swatch[data-family="default"] .swatch-art { background: #0d0d1a; }
+.theme-swatch[data-family="default"] .swatch-tile { background: #1f4e8c; border-color: #1f4e8c; }
+.theme-swatch[data-family="default"] .swatch-bar { background: #f0c040; }
+.theme-swatch[data-family="mono"] .swatch-art { background: #0a0a0c; }
+.theme-swatch[data-family="mono"] .swatch-tile { background: #2a2a30; border-color: #2a2a30; }
+.theme-swatch[data-family="mono"] .swatch-bar { background: #b0b0b0; }
+.theme-swatch[data-family="contrast"] .swatch-art { background: #000000; }
+.theme-swatch[data-family="contrast"] .swatch-tile { background: #000000; border-color: #ffffff; }
+.theme-swatch[data-family="contrast"] .swatch-bar { background: #ffff00; }
+.theme-swatch[data-family="night"] .swatch-art { background: #000000; }
+.theme-swatch[data-family="night"] .swatch-tile { background: #0e0904; border-color: #805626; }
+.theme-swatch[data-family="night"] .swatch-bar { background: #d09440; }
+
+/* Text size: each choice shows its own size. */
+.size-chips .chip { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 64px; }
+.size-aa { font-weight: 800; line-height: 1; }
+.size-chips [data-val="normal"] .size-aa { font-size: 14px; }
+.size-chips [data-val="large"] .size-aa { font-size: 17px; }
+.size-chips [data-val="xlarge"] .size-aa { font-size: 21px; }
+.size-chips [data-val="ultra"] .size-aa { font-size: 26px; }
+
+.s-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.s-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--settings-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.s-link-row .s-icon { color: var(--settings-label); }
+.backup-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.backup-row .device-btn { flex: 1; min-height: 48px; }
+
 /* Inline checkbox row (e.g. the opt-in "include PIN" toggle in Backup). */
 .s-check {
   display: flex;
@@ -1554,14 +1720,24 @@ html.is-desktop .overlay-body { font-size: 20px; }
 .chip-grid-4 { grid-template-columns: repeat(4, 1fr); }
 .chip[hidden] { display: none; }
 /* Custom, when shown, takes its own row under the three presets. */
-#preset-chips .chip[data-val="custom"] { grid-column: 1 / -1; }
+/* Custom always holds its place beside the presets (dimmed until it
+   applies), so its appearing never pushes the settings below it down. */
+#preset-chips .chip[data-val="custom"]:disabled { opacity: 0.45; }
+/* Four words don't fit across a narrow phone: two by two there. */
+@media (max-width: 400px) {
+  #preset-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Hints that rewrite themselves keep room for two lines, so a shorter or
+   longer one doesn't nudge everything under it. */
+#theme-hint, #controls-hint { min-height: 2.8em; }
 .chip-row { display: flex; gap: 6px; }
 .chip {
-  padding: 12px 6px;
-  border-radius: 7px;
+  padding: 10px 6px;
+  min-height: 44px;
+  border-radius: 8px;
   border: 2px solid var(--settings-border);
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-align: center;
   line-height: 1.3;
@@ -1574,7 +1750,6 @@ html.is-desktop .overlay-body { font-size: 20px; }
 }
 .chip.selected { border-color: var(--accent); color: var(--accent-text); }
 .chip:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
-.s-unavailable .s-section-title { opacity: 0.6; }
 .chip:active { filter: brightness(1.2); }
 
 /* Desktop-only view section — hidden on mobile */
@@ -1622,17 +1797,56 @@ html.is-ios .ios-hide { display: none; }
 }
 
 /* -- Stream editor -- */
-.stream-entry {
-  padding: 10px;
-  margin-bottom: 8px;
-  border: 1px solid var(--settings-border);
-  border-radius: 8px;
-  background: var(--settings-input-bg);
-  position: relative;
+/* One row per station; its fields fold out under it. */
+.stream-entry { position: relative; border-bottom: 1px solid var(--settings-border); }
+.stream-entry:last-child { border-bottom: none; }
+.stream-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--settings-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-.stream-entry .s-row { margin-bottom: 8px; }
-.stream-entry .s-label { font-size: 11px; }
-.stream-entry .s-input { font-size: 12px; padding: 6px 8px; }
+.stream-row-icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 1;
+}
+.stream-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.stream-row-name, .stream-row-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stream-row-name { font-size: 16px; font-weight: 700; }
+.stream-row-sub { font-size: 13px; color: var(--settings-label); }
+.stream-row-chevron { color: var(--settings-label); transition: transform 0.2s ease-out; }
+.stream-entry.open .stream-row-chevron { transform: rotate(90deg); }
+/* Height unfolds from the row (0fr to 1fr), so the fields visibly come out
+   of the station and the rows below slide down instead of jumping. */
+.stream-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 0.2s ease-out, visibility 0s linear 0.2s;
+}
+.stream-entry.open .stream-body { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 0.2s ease-out, visibility 0s; }
+.stream-entry.instant .stream-body, .stream-entry.instant .stream-row-chevron { transition: none; }
+.stream-body-inner { min-height: 0; overflow: hidden; }
+.stream-fields { padding: 2px 14px 16px; }
+.stream-entry .s-row { margin-bottom: 10px; }
+.stream-entry .s-label { font-size: 13px; }
+.stream-entry .s-input { font-size: 15px; padding: 9px 10px; min-height: 44px; }
 .stream-entry .url-warn {
   font-size: 11px;
   line-height: 1.35;
@@ -1658,6 +1872,8 @@ html.is-ios .ios-hide { display: none; }
   text-transform: uppercase;
 }
 .stream-primary-badge {
+  align-self: flex-start;
+  margin-top: 2px;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -1668,19 +1884,34 @@ html.is-ios .ios-hide { display: none; }
   border-radius: 4px;
   white-space: nowrap;
 }
-/* 44 px targets with room between them: Remove sat right next to Move. */
-.stream-entry-actions { display: flex; gap: 8px; align-items: center; }
+/* Labelled, 44 px, with room between them: Remove sat right next to Move. */
+.stream-entry-actions { display: flex; gap: 8px; margin-top: 14px; }
 .stream-action-btn {
-  color: var(--settings-label);
-  font-size: 18px;
-  min-width: 44px;
+  flex: 1;
   min-height: 44px;
-  padding: 0;
-  opacity: 0.7;
-  transition: opacity 0.15s;
+  padding: 0 6px;
+  border: 1px solid var(--settings-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--settings-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
 }
-.stream-action-btn:active { opacity: 1; }
-.stream-action-btn.danger { color: var(--stop-active-text); margin-left: 8px; }
+.stream-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.stream-action-btn.danger { border-color: var(--danger); color: var(--danger); }
+
+/* "This changed": a brief accent ring on whatever a tap just changed. */
+.s-changed { animation: s-changed 1.2s ease-out; }
+@keyframes s-changed {
+  0%, 35% { box-shadow: 0 0 0 3px var(--accent); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+/* While the theme changes, colours cross-fade instead of flashing. */
+html.theme-fading, html.theme-fading * {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, fill 0.25s ease !important;
+}
 .stream-undo {
   display: flex;
   align-items: center;
@@ -1818,12 +2049,13 @@ html.is-ios .ios-hide { display: none; }
 .stream-add-btn {
   display: block;
   width: 100%;
+  min-height: 48px;
   padding: 10px;
-  border: 2px dashed var(--settings-border);
-  border-radius: 8px;
+  border: 2px solid var(--settings-border);
+  border-radius: 10px;
   background: transparent;
-  color: var(--settings-label);
-  font-size: 13px;
+  color: var(--settings-text);
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   text-align: center;
@@ -1841,23 +2073,28 @@ html.is-ios .ios-hide { display: none; }
 
 .stream-add-row {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
-.stream-add-row .stream-add-btn { flex: 1; }
+.stream-add-row .stream-add-btn { flex: 2 1 0; }
 .stream-browse-btn {
-  flex: 0 0 auto;
+  flex: 3 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
   padding: 10px 14px;
-  border: 2px dashed var(--settings-border);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--settings-label);
-  font-size: 13px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   text-align: center;
   white-space: nowrap;
 }
-.stream-browse-btn:active { border-color: var(--accent); color: var(--accent); }
+.stream-browse-btn:active { filter: brightness(0.9); }
 
 .stream-hint {
   margin-top: 8px;
@@ -2188,22 +2425,24 @@ html.is-ios .ios-hide { display: none; }
 
 /* Apply button */
 #apply-btn {
-  margin: 14px 20px 10px;
+  display: block;
+  margin: 0;
+  min-height: 50px;
   padding: 13px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: none;
   background: var(--accent);
   color: var(--on-accent);
   font-size: 15px;
   font-weight: 900;
   cursor: pointer;
-  width: calc(100% - 40px);
+  width: 100%;
   letter-spacing: 0.02em;
   transition: filter 0.2s, transform 0.15s;
 }
 #apply-btn:active { filter: brightness(0.9); }
 /* Shown above Apply & Close when settings couldn't be saved. */
-#apply-status { margin: 12px 20px 0; color: var(--danger, #e66); opacity: 1; }
+#apply-status { margin: 0 0 8px; color: var(--danger, #e66); opacity: 1; }
 
 .device-btn {
   display: flex;
@@ -2224,17 +2463,18 @@ html.is-ios .ios-hide { display: none; }
 .device-btn:active { filter: brightness(1.2); }
 
 #reset-btn {
-  margin: 8px 20px 0;
-  padding: 11px;
-  border-radius: 8px;
-  border: 1px solid var(--settings-border);
+  align-self: center;
+  margin: 6px 0 0;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: none;
   background: transparent;
-  color: var(--settings-label);
-  font-size: 13px;
+  color: var(--danger);
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   text-align: center;
-  width: calc(100% - 40px);
 }
 #reset-btn:active { border-color: var(--danger); color: var(--danger); }
 
@@ -2274,7 +2514,7 @@ html.is-ios .ios-hide { display: none; }
 
 #settings-version {
   text-align: center;
-  padding: 8px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 4px 0 0;
   font-size: 10px;
   font-weight: 600;
   color: var(--settings-label);
@@ -2335,7 +2575,7 @@ html.is-ios .ios-hide { display: none; }
   }
   html.force-landscape-cw #settings-panel,
   html.force-landscape-ccw #settings-panel {
-    width: min(360px, 94vh);
+    width: min(360px, 100vh);
   }
   html.force-landscape-cw .emoji-picker,
   html.force-landscape-ccw .emoji-picker {
@@ -2366,6 +2606,9 @@ html.is-ios .ios-hide { display: none; }
   #conn-dot.buffering { animation: none; }
   .tap-flash.flash { animation: none; }
   #settings-panel.animated, #settings-panel.animated.previewing { transition: none; }
+  /* The ring still marks what changed, held for a second, without fading. */
+  .s-changed { animation: none; box-shadow: 0 0 0 3px var(--accent); }
+  html.theme-fading, html.theme-fading * { transition: none !important; }
   /* The outline alone marks Back to settings: no pulse. */
   #preview-back.nudge { animation: none; }
 }
@@ -2502,195 +2745,209 @@ html.is-ios .ios-hide { display: none; }
       </div>
     </div>
 
-    <!-- Shown only when hosted and the profile names a guide — see helpAvailable() -->
-    <div class="s-section" id="help-section" hidden>
-      <button class="device-btn" id="help-btn" onclick="openHelp()">&#10067; How to use this app</button>
-    </div>
+    <div id="settings-body">
 
-    <div class="s-section" id="preset-section">
-      <div class="s-section-title" id="preset-label">Accessibility Preset</div>
-      <div class="chip-grid" id="preset-chips" role="radiogroup" aria-labelledby="preset-label"></div>
-      <div class="s-hint">Quick starting points for common needs. Pick one, then fine-tune any setting below — your changes mark the preset as Custom.</div>
-      <!-- The app's own speech talks over a screen reader. -->
-      <div class="s-hint" id="preset-sr-hint">Low Vision turns on Voice Announcements. If you use VoiceOver or TalkBack, turn them off below.</div>
-    </div>
-
-    <div class="s-section">
-      <div class="s-section-title">Organization Name</div>
-      <div class="s-row">
-        <label class="s-label" for="in-org-name">Shown in the header (use Enter for a second line)</label>
-        <textarea class="s-input" id="in-org-name" rows="2" maxlength="80" style="resize:none;font-family:inherit;" aria-label="Organization name" oninput="previewOrgName()" onfocus="caretToEnd(this)"></textarea>
+    <!-- ===== Stations ===== -->
+    <section class="s-group">
+      <div class="s-group-head">
+        <h2 class="s-group-title" id="g-stations">Stations</h2>
+        <span class="s-group-count" id="stream-count"></span>
       </div>
-    </div>
-
-    <div class="s-section" id="theme-section">
-      <div class="s-section-title" id="theme-label">Theme</div>
-      <div class="theme-group-label">Default</div>
-      <div class="chip-grid" role="radiogroup" aria-labelledby="theme-label">
-        <button class="chip" onclick="selectChip(this,'theme','dark')" data-group="theme" data-val="dark" role="radio" aria-checked="false">Dark</button>
-        <button class="chip" onclick="selectChip(this,'theme','light')" data-group="theme" data-val="light" role="radio" aria-checked="false">Light</button>
-        <button class="chip" onclick="selectChip(this,'theme','auto')" data-group="theme" data-val="auto" role="radio" aria-checked="false">Auto<br><small>System</small></button>
-      </div>
-      <div class="theme-group-label" style="margin-top:8px;" id="theme-mono-label">MonoRadio</div>
-      <div class="chip-grid" role="radiogroup" aria-labelledby="theme-mono-label">
-        <button class="chip" onclick="selectChip(this,'theme','mono-dark')" data-group="theme" data-val="mono-dark" role="radio" aria-checked="false">Dark</button>
-        <button class="chip" onclick="selectChip(this,'theme','mono-light')" data-group="theme" data-val="mono-light" role="radio" aria-checked="false">Light</button>
-        <button class="chip" onclick="selectChip(this,'theme','mono-auto')" data-group="theme" data-val="mono-auto" role="radio" aria-checked="false">Auto<br><small>System</small></button>
-      </div>
-      <div class="theme-group-label" style="margin-top:8px;" id="theme-contrast-label">High Contrast</div>
-      <div class="chip-grid" role="radiogroup" aria-labelledby="theme-contrast-label">
-        <button class="chip" onclick="selectChip(this,'theme','contrast-dark')" data-group="theme" data-val="contrast-dark" role="radio" aria-checked="false">Dark</button>
-        <button class="chip" onclick="selectChip(this,'theme','contrast-light')" data-group="theme" data-val="contrast-light" role="radio" aria-checked="false">Light</button>
-        <button class="chip" onclick="selectChip(this,'theme','contrast-auto')" data-group="theme" data-val="contrast-auto" role="radio" aria-checked="false">Auto<br><small>System</small></button>
-      </div>
-      <div class="theme-group-label" style="margin-top:8px;" id="theme-night-label">Bedside</div>
-      <div class="chip-grid" role="radiogroup" aria-labelledby="theme-night-label">
-        <button class="chip" onclick="selectChip(this,'theme','night')" data-group="theme" data-val="night" role="radio" aria-checked="false">Night<br><small>Dim, warm</small></button>
-      </div>
-      <div class="s-hint">Auto follows the device: light or dark, and High Contrast when the device is set to increase contrast.</div>
-    </div>
-
-    <div class="s-section" id="size-section">
-      <div class="s-section-title" id="size-label">Text Size</div>
-      <div class="chip-grid chip-grid-4" role="radiogroup" aria-labelledby="size-label">
-        <button class="chip" onclick="selectChip(this,'size','normal')" data-group="size" data-val="normal" role="radio" aria-checked="false">Normal</button>
-        <button class="chip" onclick="selectChip(this,'size','large')" data-group="size" data-val="large" role="radio" aria-checked="false">Large</button>
-        <button class="chip" onclick="selectChip(this,'size','xlarge')" data-group="size" data-val="xlarge" role="radio" aria-checked="false">X-Large</button>
-        <button class="chip" onclick="selectChip(this,'size','ultra')" data-group="size" data-val="ultra" role="radio" aria-checked="false">Ultra</button>
-      </div>
-      <div class="s-hint">Names grow as big as their buttons allow, and grow with the screen. On a phone with few stations, X-Large and Ultra can come out close: the buttons are already full.</div>
-    </div>
-
-    <div class="s-section" id="view-section">
-      <div class="s-section-title" id="view-label">Desktop View</div>
-      <div class="chip-row" role="radiogroup" aria-labelledby="view-label">
-        <button class="chip" onclick="selectChip(this,'fillview','off')" data-group="fillview" data-val="off" role="radio" aria-checked="false">Card</button>
-        <button class="chip" onclick="selectChip(this,'fillview','on')" data-group="fillview" data-val="on" role="radio" aria-checked="false">Fill View</button>
-      </div>
-    </div>
-
-    <div class="s-section" id="orientation-section">
-      <div class="s-section-title" id="orientation-label">Screen Orientation</div>
-      <div class="chip-grid" role="radiogroup" aria-labelledby="orientation-label">
-        <button class="chip" onclick="selectChip(this,'orientation','auto')" data-group="orientation" data-val="auto" role="radio" aria-checked="false">Auto</button>
-        <button class="chip" onclick="selectChip(this,'orientation','landscape-cw')" data-group="orientation" data-val="landscape-cw" role="radio" aria-checked="false">Landscape<br><small>Buttons Left</small></button>
-        <button class="chip" onclick="selectChip(this,'orientation','landscape-ccw')" data-group="orientation" data-val="landscape-ccw" role="radio" aria-checked="false">Landscape<br><small>Buttons Right</small></button>
-      </div>
-      <div class="s-hint">Forces landscape layout even when the device is locked to portrait by MDM. Choose the direction that puts the hardware buttons where you need them. A change takes effect when you close settings.</div>
-    </div>
-
-    <div class="s-section" id="vol-section">
-      <div class="s-section-title">Max App Volume</div>
-      <label class="s-label ios-hide" style="margin-bottom:6px;">Caps the app's audio output. Device volume buttons still work up to this limit.</label>
-      <div class="s-hint ios-only">On iPhone and iPad, use the side volume buttons. Apple doesn't let web apps change the volume.</div>
-      <div class="vol-row ios-hide">
-        <span style="font-size:15px;line-height:1;" aria-hidden="true">&#128264;</span>
-        <input type="range" id="vol-slider" min="0" max="100" value="100" oninput="setVolume(this.value)" aria-label="Max app volume">
-        <span id="vol-val" aria-hidden="true">100%</span>
-      </div>
-    </div>
-
-    <div class="s-section">
-      <div class="s-section-title" id="controls-label">Advanced Controls</div>
-      <div class="chip-row" role="radiogroup" aria-labelledby="controls-label">
-        <button class="chip" onclick="selectChip(this,'advanced','off')" data-group="advanced" data-val="off" role="radio" aria-checked="false">Simple</button>
-        <button class="chip" onclick="selectChip(this,'advanced','on')" data-group="advanced" data-val="on" role="radio" aria-checked="false">Advanced<br><small>Skip &amp; Sleep</small></button>
-      </div>
-      <div class="s-hint">Simple shows only a Stop button. Advanced adds a separate Pause button and a sleep timer that stops playback after a set time. Skip back and forward appear only for recordings with a set length, never for live radio.</div>
-    </div>
-
-    <!-- Works on Android only. Elsewhere init greys it out and says why:
-         Safari on iPhone and iPad has no web vibration. -->
-    <div class="s-section" id="haptics-section">
-      <div class="s-section-title" id="haptics-label">Haptic Feedback</div>
-      <div class="chip-row" role="radiogroup" aria-labelledby="haptics-label">
-        <button class="chip" onclick="selectChip(this,'haptics','on')" data-group="haptics" data-val="on" role="radio" aria-checked="false">On</button>
-        <button class="chip" onclick="selectChip(this,'haptics','off')" data-group="haptics" data-val="off" role="radio" aria-checked="false">Off</button>
-      </div>
-      <div class="s-hint" id="haptics-hint">Vibrates briefly on button taps.</div>
-    </div>
-
-    <div class="s-section">
-      <div class="s-section-title" id="tts-label">Voice Announcements</div>
-      <div class="chip-row" role="radiogroup" aria-labelledby="tts-label">
-        <button class="chip" onclick="selectChip(this,'tts','off')" data-group="tts" data-val="off" role="radio" aria-checked="false">Off</button>
-        <button class="chip" onclick="selectChip(this,'tts','on')" data-group="tts" data-val="on" role="radio" aria-checked="false">On</button>
-      </div>
-      <div class="s-hint">Speaks aloud what is happening — "Now playing…", "Paused", "Stopped", or that a station is not available. <span id="voice-hint"></span></div>
-    </div>
-
-    <div class="s-section">
-      <div class="s-section-title" id="chime-label">Audio Tones</div>
-      <div class="chip-row" role="radiogroup" aria-labelledby="chime-label">
-        <button class="chip" onclick="selectChip(this,'chime','off')" data-group="chime" data-val="off" role="radio" aria-checked="false">Off</button>
-        <button class="chip" onclick="selectChip(this,'chime','on')" data-group="chime" data-val="on" role="radio" aria-checked="false">On</button>
-      </div>
-      <div class="s-hint">Plays a short rising tone when a stream starts or resumes, and a falling tone when paused.</div>
-    </div>
-
-    <div class="s-section">
-      <div class="s-section-title" id="resume-label">Auto-Resume</div>
-      <div class="chip-row" role="radiogroup" aria-labelledby="resume-label">
-        <button class="chip" onclick="selectChip(this,'resume','off')" data-group="resume" data-val="off" role="radio" aria-checked="false">Off</button>
-        <button class="chip" onclick="selectChip(this,'resume','on')" data-group="resume" data-val="on" role="radio" aria-checked="false">On</button>
-      </div>
-      <div class="s-hint">When the app starts, automatically begin playing the station that was playing when the app closed. If the radio was paused or stopped, or that station has since been removed, the app starts stopped.</div>
-    </div>
-
-<div class="s-section">
-      <div class="s-section-title">Audio Streams</div>
-      <div id="stream-editor"></div>
+      <div class="s-card stream-list" id="stream-editor"></div>
       <div class="stream-undo" id="stream-undo" role="status" hidden><span id="stream-undo-text"></span><button type="button" id="stream-undo-btn" onclick="undoRemoveStream()">Undo</button></div>
       <div class="stream-add-row" id="stream-add-row">
-        <button class="stream-add-btn" id="stream-add-btn" onclick="addStreamEntry()">+ Add Blank</button>
-        <button class="stream-browse-btn" onclick="openStreamBrowser()">&#128269; Browse</button>
+        <button class="stream-browse-btn" onclick="openStreamBrowser()"><svg class="s-icon" viewBox="0 0 18 18" aria-hidden="true"><circle cx="8" cy="8" r="5.5"></circle><path d="M12 12l4 4"></path></svg>Browse stations</button>
+        <button class="stream-add-btn" id="stream-add-btn" onclick="addStreamEntry()">Add by address</button>
       </div>
       <div class="s-hint" id="stream-cap" hidden></div>
       <div class="stream-hint" id="stream-hint" style="display:none" role="note"></div>
-      <div class="s-hint">Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it for someone else.</div>
-    </div>
+      <div class="s-hint">Tap a station to edit it.</div>
+      <div class="s-hint">Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it.</div>
+    </section>
 
-    <div class="s-section" id="device-section">
-      <div class="s-section-title">Device</div>
-      <div id="device-buttons">
-        <!-- Each name holds its visible text, which is what voice control matches. -->
-        <button class="device-btn" onclick="openWifiSettings()" aria-label="Setup WiFi">&#128246; Setup WiFi</button>
-        <button class="device-btn" onclick="openLiveCaptionSettings()" aria-label="Open Live Caption settings">&#128292; Live Caption</button>
-        <button class="device-btn" onclick="openOsSettings()" aria-label="Open OS settings">&#9881;&#65039; OS Settings</button>
-        <div class="s-hint">Live Caption transcribes audio playing on the device in real time — enable it in Accessibility settings. OS Settings gives access to everything else: Wi-Fi, text-to-speech voice, display brightness, and more.</div>
-        <div class="s-hint" id="device-status" aria-live="polite"></div>
-      </div>
-      <div class="s-hint" id="device-hint-web" hidden>To change Wi-Fi, captions or the speaking voice, open this device's Settings app.</div>
-    </div>
+    <!-- ===== Look ===== -->
+    <section class="s-group">
+      <h2 class="s-group-title" id="g-look">Look</h2>
+      <div class="s-card">
+        <div class="s-section" id="preset-section">
+          <div class="s-section-title" id="preset-label">Starting point</div>
+          <div class="chip-grid chip-grid-4" id="preset-chips" role="radiogroup" aria-labelledby="preset-label"></div>
+          <div class="s-hint">Pick one, then change anything below. Your changes show as Custom.</div>
+          <!-- The app's own speech talks over a screen reader. -->
+          <div class="s-hint" id="preset-sr-hint">Low Vision turns on Voice announcements. With VoiceOver or TalkBack, turn them off below.</div>
+        </div>
 
-    <div class="s-section" id="pin-section">
-      <div class="s-section-title">Setup PIN</div>
-      <div class="s-row">
-        <label class="s-label" for="in-pin">Current PIN — 4 digits, or blank to disable (tap logo 5&times; to access settings)</label>
-        <div class="pin-field-row">
-          <!-- Masked with -webkit-text-security, not type=password, so phones
-               don't offer to save or autofill it as an account password. -->
-          <input class="s-input pin-masked" id="in-pin" type="text" inputmode="numeric" maxlength="4" value="" aria-label="Setup PIN" autocomplete="off">
-          <button type="button" class="device-btn pin-show-btn" id="pin-show" aria-pressed="false" onclick="togglePinShown()">Show</button>
+        <div class="s-section" id="theme-section">
+          <div class="s-section-title" id="theme-label">Theme</div>
+          <!-- A theme is a family plus Dark, Light or Auto. Together they save the
+               same cfg.theme values as ever (dark, mono-auto, contrast-light…). -->
+          <div class="theme-families" role="radiogroup" aria-labelledby="theme-label">
+            <button class="theme-swatch" data-family="default" role="radio" aria-checked="false" onclick="selectThemeFamily('default')"><span class="swatch-art" aria-hidden="true"><span class="swatch-tile"></span><span class="swatch-bar"></span></span>Classic</button>
+            <button class="theme-swatch" data-family="mono" role="radio" aria-checked="false" onclick="selectThemeFamily('mono')"><span class="swatch-art" aria-hidden="true"><span class="swatch-tile"></span><span class="swatch-bar"></span></span>MonoRadio</button>
+            <button class="theme-swatch" data-family="contrast" role="radio" aria-checked="false" onclick="selectThemeFamily('contrast')"><span class="swatch-art" aria-hidden="true"><span class="swatch-tile"></span><span class="swatch-bar"></span></span>High Contrast</button>
+            <button class="theme-swatch" data-family="night" role="radio" aria-checked="false" onclick="selectThemeFamily('night')"><span class="swatch-art" aria-hidden="true"><span class="swatch-tile"></span><span class="swatch-bar"></span></span>Night</button>
+          </div>
+          <div class="chip-row theme-modes" role="radiogroup" aria-label="Light or dark">
+            <button class="chip" data-mode="dark" role="radio" aria-checked="false" onclick="selectThemeMode('dark')">Dark</button>
+            <button class="chip" data-mode="light" role="radio" aria-checked="false" onclick="selectThemeMode('light')">Light</button>
+            <button class="chip" data-mode="auto" role="radio" aria-checked="false" onclick="selectThemeMode('auto')">Auto</button>
+          </div>
+          <div class="s-hint" id="theme-hint"></div>
+        </div>
+
+        <div class="s-section" id="size-section">
+          <div class="s-section-title" id="size-label">Text size</div>
+          <div class="chip-grid chip-grid-4 size-chips" role="radiogroup" aria-labelledby="size-label">
+            <button class="chip" onclick="selectChip(this,'size','normal')" data-group="size" data-val="normal" role="radio" aria-checked="false"><span class="size-aa" aria-hidden="true">Aa</span>Normal</button>
+            <button class="chip" onclick="selectChip(this,'size','large')" data-group="size" data-val="large" role="radio" aria-checked="false"><span class="size-aa" aria-hidden="true">Aa</span>Large</button>
+            <button class="chip" onclick="selectChip(this,'size','xlarge')" data-group="size" data-val="xlarge" role="radio" aria-checked="false"><span class="size-aa" aria-hidden="true">Aa</span>X-Large</button>
+            <button class="chip" onclick="selectChip(this,'size','ultra')" data-group="size" data-val="ultra" role="radio" aria-checked="false"><span class="size-aa" aria-hidden="true">Aa</span>Ultra</button>
+          </div>
+          <div class="s-hint">Names grow to fill their buttons. On a phone with few stations, X-Large and Ultra can look alike.</div>
+        </div>
+
+        <div class="s-section" id="view-section">
+          <div class="s-section-title" id="view-label">Desktop view</div>
+          <div class="chip-row" role="radiogroup" aria-labelledby="view-label">
+            <button class="chip" onclick="selectChip(this,'fillview','off')" data-group="fillview" data-val="off" role="radio" aria-checked="false">Card</button>
+            <button class="chip" onclick="selectChip(this,'fillview','on')" data-group="fillview" data-val="on" role="radio" aria-checked="false">Fill View</button>
+          </div>
+        </div>
+
+        <div class="s-section" id="orientation-section">
+          <div class="s-section-title" id="orientation-label">Screen direction</div>
+          <div class="chip-grid" role="radiogroup" aria-labelledby="orientation-label">
+            <button class="chip" onclick="selectChip(this,'orientation','auto')" data-group="orientation" data-val="auto" role="radio" aria-checked="false">Turn freely</button>
+            <button class="chip" onclick="selectChip(this,'orientation','landscape-cw')" data-group="orientation" data-val="landscape-cw" role="radio" aria-checked="false">Sideways, buttons left</button>
+            <button class="chip" onclick="selectChip(this,'orientation','landscape-ccw')" data-group="orientation" data-val="landscape-ccw" role="radio" aria-checked="false">Sideways, buttons right</button>
+          </div>
+          <div class="s-hint">Keeps the screen sideways even on a device locked upright. Takes effect when you close settings.</div>
         </div>
       </div>
+    </section>
+
+    <!-- ===== Sound and controls ===== -->
+    <section class="s-group">
+      <h2 class="s-group-title" id="g-sound">Sound and controls</h2>
+      <div class="s-card">
+        <div class="s-section" id="controls-section">
+          <div class="s-section-title" id="controls-label">Buttons while playing</div>
+          <div class="chip-row" role="radiogroup" aria-labelledby="controls-label">
+            <button class="chip" onclick="selectChip(this,'advanced','off')" data-group="advanced" data-val="off" role="radio" aria-checked="false">Simple</button>
+            <button class="chip" onclick="selectChip(this,'advanced','on')" data-group="advanced" data-val="on" role="radio" aria-checked="false">Advanced</button>
+          </div>
+          <div class="s-hint" id="controls-hint"></div>
+        </div>
+
+        <div class="s-section" id="vol-section">
+          <div class="s-section-title" id="vol-label">Volume</div>
+          <div class="s-hint ios-only">Use the side buttons. Apple doesn't let web apps set the volume.</div>
+          <div class="vol-row ios-hide">
+            <span style="font-size:15px;line-height:1;" aria-hidden="true">&#128264;</span>
+            <input type="range" id="vol-slider" min="0" max="100" value="100" oninput="setVolume(this.value)" aria-label="Max app volume">
+            <span id="vol-val" aria-hidden="true">100%</span>
+          </div>
+          <div class="s-hint ios-hide">The loudest the app plays. The device's volume buttons still work below it.</div>
+        </div>
+
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="tts-label">Voice announcements</div>
+            <div class="s-hint" id="tts-hint">Says "Now playing…", "Paused" and "Stopped" aloud. <span id="voice-hint"></span></div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="tts" aria-checked="false" aria-labelledby="tts-label" aria-describedby="tts-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="chime-label">Audio tones</div>
+            <div class="s-hint" id="chime-hint">A short rising tone when a station starts, and a falling one when it pauses.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="chime" aria-checked="false" aria-labelledby="chime-label" aria-describedby="chime-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="resume-label">Auto-resume</div>
+            <div class="s-hint" id="resume-hint">When the app opens, plays the station that was playing when it closed. Never after a Stop.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="resume" aria-checked="false" aria-labelledby="resume-label" aria-describedby="resume-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+
+        <!-- Works on Android only. Elsewhere init greys it out and says why:
+             Safari on iPhone and iPad has no web vibration. -->
+        <div class="s-section s-switch-row" id="haptics-section">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="haptics-label">Haptic feedback</div>
+            <div class="s-hint" id="haptics-hint">Vibrates briefly on button taps.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="haptics" aria-checked="false" aria-labelledby="haptics-label" aria-describedby="haptics-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Setup ===== -->
+    <section class="s-group">
+      <h2 class="s-group-title" id="g-setup">Setup</h2>
+      <div class="s-card">
+        <div class="s-section">
+          <label class="s-section-title" for="in-org-name">Name in the header</label>
+          <textarea class="s-input" id="in-org-name" rows="2" maxlength="80" style="resize:none;font-family:inherit;" aria-describedby="org-hint" oninput="previewOrgName()" onfocus="caretToEnd(this)"></textarea>
+          <div class="s-hint" id="org-hint">Use Enter for a second line.</div>
+        </div>
+
+        <div class="s-section" id="pin-section">
+          <label class="s-section-title" for="in-pin">Setup PIN</label>
+          <div class="pin-field-row">
+            <!-- Masked with -webkit-text-security, not type=password, so phones
+                 don't offer to save or autofill it as an account password. -->
+            <input class="s-input pin-masked" id="in-pin" type="text" inputmode="numeric" maxlength="4" value="" aria-describedby="pin-hint" autocomplete="off">
+            <button type="button" class="device-btn pin-show-btn" id="pin-show" aria-pressed="false" onclick="togglePinShown()">Show</button>
+          </div>
+          <div class="s-hint" id="pin-hint">4 digits, or blank for none. Tap the logo 5 times to open settings.</div>
+        </div>
+
+        <div class="s-section" id="backup-section">
+          <div class="s-section-title">Backup</div>
+          <!-- Each name is its visible text, so "tap Export Backup" works by voice
+               control; the label also keeps the icon from being read out. -->
+          <div class="backup-row">
+            <button class="device-btn" onclick="exportConfig()" aria-label="Export Backup">&#128190; Export Backup</button>
+            <button class="device-btn" onclick="document.getElementById('import-file').click()" aria-label="Import Backup">&#128193; Import Backup</button>
+          </div>
+          <label class="s-check"><input type="checkbox" id="in-backup-pin"> Include the PIN (keep that file safe)</label>
+          <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importConfig(event)" aria-hidden="true">
+          <div class="s-hint" id="backup-status" role="status" aria-live="polite">Saves all settings and stations to a file, to restore here or on another device.</div>
+        </div>
+
+        <!-- Shown only when hosted and the profile names a guide — see helpAvailable() -->
+        <div class="s-section" id="help-section" hidden>
+          <button class="s-link-row" id="help-btn" onclick="openHelp()"><span>How to use this app</span><svg class="s-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 3l6 6-6 6"></path></svg></button>
+        </div>
+
+        <div class="s-section" id="device-section">
+          <div class="s-section-title">Device</div>
+          <div id="device-buttons">
+            <!-- Each name holds its visible text, which is what voice control matches. -->
+            <button class="device-btn" onclick="openWifiSettings()" aria-label="Setup WiFi">&#128246; Setup WiFi</button>
+            <button class="device-btn" onclick="openLiveCaptionSettings()" aria-label="Open Live Caption settings">&#128292; Live Caption</button>
+            <button class="device-btn" onclick="openOsSettings()" aria-label="Open OS settings">&#9881;&#65039; OS Settings</button>
+            <div class="s-hint">Live Caption writes out any sound the device plays. OS Settings opens everything else.</div>
+            <div class="s-hint" id="device-status" aria-live="polite"></div>
+          </div>
+          <div class="s-hint" id="device-hint-web" hidden>To change Wi-Fi, captions or the speaking voice, open this device's Settings app.</div>
+        </div>
+      </div>
+      <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.17.0</div>
+    </section>
     </div>
 
-    <div class="s-section" id="backup-section">
-      <div class="s-section-title">Backup &amp; Restore</div>
-      <label class="s-check"><input type="checkbox" id="in-backup-pin"> Include PIN in backup file</label>
-      <!-- Each name is its visible text, so "tap Export Backup" works by voice
-           control; the label also keeps the icon from being read out. -->
-      <button class="device-btn" onclick="exportConfig()" aria-label="Export Backup">&#128190; Export Backup</button>
-      <button class="device-btn" onclick="document.getElementById('import-file').click()" aria-label="Import Backup">&#128193; Import Backup</button>
-      <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importConfig(event)" aria-hidden="true">
-      <div class="s-hint" id="backup-status" role="status" aria-live="polite">Export saves all settings and streams to a file. The PIN is only included if you tick the box above &mdash; that file then unlocks settings, so store it securely. Import restores a backup on this or another device.</div>
+    <!-- Pinned: Apply never scrolls away, keyboard up or not. -->
+    <div id="settings-footer">
+      <div class="s-hint" id="apply-status" role="alert" hidden></div>
+      <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
     </div>
-
-    <div class="s-hint" id="apply-status" role="alert" hidden></div>
-    <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
-    <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-    <div id="settings-version" aria-hidden="true">RadioGridXL v7.16.0</div>
   </aside>
 
   <!-- Shown only while previewing settings — see startPreview() -->
@@ -3367,7 +3624,8 @@ function applyTheme() {
   const fill = (platform.isDesktop && cfg.fillview === 'on') ? ' fill-view' : '';
   const orient = shownOrientation() !== 'auto' ? ' force-' + shownOrientation() : '';
   const snap = document.documentElement.classList.contains('theme-snap') ? ' theme-snap' : ''; // see snapTheme()
-  document.documentElement.className = base + fill + orient + snap + ' theme-' + resolved;
+  const fading = document.documentElement.classList.contains('theme-fading') ? ' theme-fading' : ''; // see fadeTheme()
+  document.documentElement.className = base + fill + orient + snap + fading + ' theme-' + resolved;
   // The browser bar / Android status bar: black in Night, which has no blue.
   if (themeColorMeta) themeColorMeta.setAttribute('content', resolved === 'night' ? '#000000' : DEFAULT_THEME_COLOR);
   document.documentElement.setAttribute('data-size', cfg.size);
@@ -4077,6 +4335,7 @@ function playStream(id) {
       announceOnPlay = null;
       audio.pause();
       holdFade();
+      dropLiveConnection();
       forgetLastStation();
       setConnStatus('idle');
       releaseWakeLock();
@@ -4188,6 +4447,8 @@ function softStop() {
     paused = true;
     announceOnPlay = null;
     audio.pause();
+    holdFade();
+    dropLiveConnection();
     forgetLastStation();
     setConnStatus('idle');
     releaseWakeLock();
@@ -4218,6 +4479,13 @@ function resumeActive() {
   const s = cfg.streams.find(x => x.id === playing);
   if ((streamFault || audio.error) && s) {
     announceStart(s.label); // a reconnect, announced like a fresh start
+    reloadActive();
+  } else if (isLiveSource() && s) {
+    // Live radio resumes at the live point, on a fresh connection. iOS
+    // Safari stops downloading a paused live stream without saying so, and a
+    // bare play() then ran out the second or two it had kept and stopped,
+    // which read as the radio pausing itself again.
+    feedback('up', 'Resuming');
     reloadActive();
   } else {
     feedback('up', 'Resuming');
@@ -4485,6 +4753,24 @@ audio.addEventListener('play', () => {
     updateAdvTransport();
   }
 });
+
+/** A paused live station lets go of its connection; resuming starts it fresh
+    (resumeActive reloads live sources). Keeping it open bought nothing, since
+    live radio resumes at the live point anyway, and left iOS Safari a
+    half-paused stream that quick pause/resume taps could wedge. A recording
+    keeps its place. */
+function dropLiveConnection() {
+  if (!isLiveSource()) return;
+  stopStallWatch();
+  audio.removeAttribute('src');
+  audio.load(); // closes the download; with no src it fires no error
+}
+
+/** Is the active source live radio? Latched by noteLiveness(); a source whose
+    length isn't known yet counts as live too (only a recording reports one). */
+function isLiveSource() {
+  return liveSource || !isFinite(audio.duration);
+}
 
 /** A source that loads with no end is live radio. Latched for the source: an
     engine may report a length once a live stream is cut off, and that cut-off
@@ -5098,7 +5384,7 @@ function openSettings() {
 
   // Always open at the top: reopening where the last visit scrolled to put
   // Reset to Defaults under the first tap.
-  panel.scrollTop = 0;
+  document.getElementById('settings-body').scrollTop = 0;
 
   // Sync volume slider with current value
   document.getElementById('vol-slider').value = cfg.volume;
@@ -5112,9 +5398,13 @@ function openSettings() {
   document.getElementById('in-pin').value = getPin();
   setPinShown(false);
 
+  fitSettingsPanel();
+  showBuildCode();
   renderStreamEditor();
   renderPresetChips();
+  quietSync = true; // opening isn't a change: nothing to point at
   syncChips();
+  quietSync = false;
 
   // Focus trap + move focus to the close button for keyboard users
   panel._focusTrap = function(e) { trapFocus(e, panel); };
@@ -5200,6 +5490,7 @@ function doCloseSettings() {
   }
   panel.classList.remove('open');
   settingsOpen = false;
+  fitSettingsPanel(); // back to the whole screen, for next time
   releaseInert(panel);
   // Lays the grid out again: stations with no address show only while
   // settings is open, and a new orientation waits for it to close.
@@ -5309,23 +5600,189 @@ function hidePreviewHint() {
 function showHapticsAvailability() {
   if (platform.isAndroid) return;
   document.getElementById('haptics-section').classList.add('s-unavailable');
-  document.querySelectorAll('.chip[data-group="haptics"]').forEach(c => { c.disabled = true; });
+  document.querySelector('.s-switch[data-switch="haptics"]').disabled = true;
   document.getElementById('haptics-hint').textContent = platform.isIOS
     ? "Not available on iPhone or iPad. Apple doesn't let web apps vibrate."
     : 'Not available on this device. Only Android phones and tablets can vibrate.';
 }
 
-/** Sync all settings chip selections and aria-checked state. */
+/* ── Keep settings inside what's visible ──────────────────────────────
+   iOS Safari doesn't shrink the page for the on-screen keyboard: a panel
+   pinned top to bottom runs on under it, with Apply hidden and, sideways,
+   the header scrolled away. While settings is open the panel follows the
+   visual viewport instead, and anything 420px tall or less (a phone on its
+   side, forced sideways, or the keyboard up) gets the one-row header. */
+const SHORT_PANEL_PX = 420;
+
+function fitSettingsPanel() {
+  var panel = document.getElementById('settings-panel');
+  var vv = window.visualViewport;
+  var forced = /force-landscape/.test(document.documentElement.className);
+  var squeezed = settingsOpen && vv && !forced && (vv.height < window.innerHeight - 1 || vv.offsetTop > 0);
+  // The panel still reaches the bottom of the page (so nothing shows between
+  // it and the keyboard); padding ends its contents at the keyboard's top.
+  panel.style.top = squeezed ? vv.offsetTop + 'px' : '';
+  panel.style.paddingBottom = squeezed ? Math.max(0, window.innerHeight - vv.offsetTop - vv.height) + 'px' : '';
+  panel.scrollTop = 0; // the panel never scrolls, only its body
+  // offsetHeight is the panel's own height, which forced sideways is the
+  // screen's visual height, not its rotated box. With the keyboard up, the
+  // part above the keyboard is what counts.
+  var visibleHeight = squeezed ? vv.height : panel.offsetHeight;
+  panel.classList.toggle('short-panel', settingsOpen && visibleHeight > 0 && visibleHeight <= SHORT_PANEL_PX);
+  // The field being typed in stays in view above the keyboard: scrolled
+  // within the list only (scrollIntoView also moved the panel, header and all).
+  var f = document.activeElement, body = document.getElementById('settings-body');
+  if (squeezed && f && body.contains(f)) {
+    var fr = f.getBoundingClientRect(), br = body.getBoundingClientRect();
+    if (fr.bottom > br.bottom) body.scrollTop += fr.bottom - br.bottom + 8;
+    else if (fr.top < br.top) body.scrollTop -= br.top - fr.top + 8;
+  }
+}
+if (window.visualViewport) {
+  visualViewport.addEventListener('resize', fitSettingsPanel);
+  visualViewport.addEventListener('scroll', fitSettingsPanel);
+}
+window.addEventListener('resize', fitSettingsPanel);
+
+/** Add a build code to the version line ("v7.17.0 · 1a2b3c4d"): a hash of
+    the app's own script and styles, so two copies of the same version can be
+    told apart. Worked out in the page because the offline cache (which also
+    carries a hash) doesn't exist on a plain-http address, such as a phone
+    testing against a computer on the same Wi-Fi. FNV-1a: tiny, and enough to
+    tell builds apart; not a security hash. */
+function showBuildCode() {
+  var el = document.getElementById('settings-version');
+  if (!el) return;
+  if (!showBuildCode.code) {
+    var text = '';
+    document.querySelectorAll('script:not([src]), style').forEach(function(n) { text += n.textContent; });
+    var h = 0x811c9dc5;
+    for (var i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    showBuildCode.code = ('0000000' + h.toString(16)).slice(-8);
+  }
+  el.textContent = el.textContent.split(' · ')[0] + ' · ' + showBuildCode.code;
+}
+
+/* True while settings syncs to cfg without anyone having changed anything. */
+let quietSync = false;
+function canFlash() { return settingsOpen && !quietSync; }
+
+/** Where each preset-owned setting lives on the panel, to point at it. */
+function settingBlock(field) {
+  var sw = document.querySelector('.s-switch[data-switch="' + field + '"]');
+  if (sw) return sw.closest('.s-section');
+  return document.getElementById({ theme: 'theme-section', size: 'size-section', advanced: 'controls-section', fillview: 'view-section' }[field]);
+}
+
+/** Sync every settings control (chips, switches, theme) to cfg. */
 function syncChips() {
-  ['theme', 'size', 'fillview', 'advanced', 'haptics', 'tts', 'chime', 'resume', 'orientation'].forEach(g => {
+  ['size', 'fillview', 'advanced', 'orientation'].forEach(g => {
     document.querySelectorAll('.chip[data-group="' + g + '"]').forEach(c => {
-      // A greyed-out chip shows no choice: "On" there would be a promise it can't keep.
-      var isSelected = !c.disabled && c.dataset.val === cfg[g];
+      var isSelected = c.dataset.val === cfg[g];
       c.classList.toggle('selected', isSelected);
       c.setAttribute('aria-checked', isSelected ? 'true' : 'false');
     });
   });
+  document.querySelectorAll('.s-switch').forEach(function(sw) {
+    // A greyed-out switch shows off: "on" there would be a promise it can't keep.
+    sw.setAttribute('aria-checked', !sw.disabled && cfg[sw.dataset.switch] === 'on' ? 'true' : 'false');
+  });
+  syncThemePicker();
+  syncControlsHint();
   syncPresetSelection();
+}
+
+/* ── Theme: family + mode ─────────────────────────────────────────────
+   The picker shows a theme as a family (Classic, MonoRadio, High Contrast,
+   Night) and a mode (Dark, Light, Auto). cfg.theme keeps its old values;
+   these two functions are the only translation between the two. */
+const THEME_FAMILY_PREFIX = { default: '', mono: 'mono-', contrast: 'contrast-' };
+
+function themeParts(theme) {
+  if (theme === 'night') return { family: 'night', mode: null };
+  var m = /^(mono-|contrast-)?(dark|light|auto)$/.exec(theme || '');
+  if (!m) return { family: 'default', mode: 'dark' };
+  return { family: m[1] ? m[1].slice(0, -1) : 'default', mode: m[2] };
+}
+
+function themeFromParts(family, mode) {
+  if (family === 'night') return 'night';
+  return (THEME_FAMILY_PREFIX[family] || '') + (mode || 'auto');
+}
+
+/* Night has no mode; switching back from it restores the last one picked. */
+let lastThemeMode = 'auto';
+
+function selectThemeFamily(family) {
+  var parts = themeParts(cfg.theme);
+  if (parts.mode) lastThemeMode = parts.mode;
+  setTheme(themeFromParts(family, parts.mode || lastThemeMode));
+}
+
+function selectThemeMode(mode) {
+  var parts = themeParts(cfg.theme);
+  if (parts.family === 'night') return;
+  lastThemeMode = mode;
+  setTheme(themeFromParts(parts.family, mode));
+}
+
+function setTheme(theme) {
+  cfg.theme = theme;
+  fadeTheme();
+  applyTheme();
+  syncChips();
+}
+
+/** Cross-fade the colours for a moment while the theme changes. */
+function fadeTheme() {
+  if (!canFlash()) return;
+  var root = document.documentElement;
+  root.classList.add('theme-fading');
+  clearTimeout(fadeTheme._t);
+  fadeTheme._t = setTimeout(function() { root.classList.remove('theme-fading'); }, 300);
+}
+
+function syncThemePicker() {
+  var parts = themeParts(cfg.theme);
+  var modes = document.querySelector('.theme-modes');
+  var wasNight = modes.dataset.night === 'true';
+  modes.dataset.night = String(parts.family === 'night');
+  document.querySelectorAll('.theme-swatch').forEach(function(b) {
+    b.setAttribute('aria-checked', b.dataset.family === parts.family ? 'true' : 'false');
+  });
+  document.querySelectorAll('.theme-modes .chip').forEach(function(b) {
+    var sel = b.dataset.mode === parts.mode;
+    b.disabled = parts.family === 'night';
+    b.classList.toggle('selected', sel);
+    b.setAttribute('aria-checked', sel ? 'true' : 'false');
+  });
+  setHint(document.getElementById('theme-hint'), parts.family === 'night'
+    ? 'Night is always dim and warm, for a bedside.'
+    : 'Auto follows the device: light or dark, and High Contrast when it asks for more contrast.');
+  // Night turns Dark/Light/Auto off: point at them so that isn't a mystery.
+  if (wasNight !== (parts.family === 'night') && canFlash()) flashChanged(modes);
+}
+
+/** Rewrite a hint, pointing at it when its words change. */
+function setHint(el, text) {
+  if (el.textContent === text) return;
+  var had = el.textContent !== '';
+  el.textContent = text;
+  if (had && canFlash()) flashChanged(el);
+}
+
+function syncControlsHint() {
+  setHint(document.getElementById('controls-hint'), cfg.advanced === 'on'
+    ? 'Pause, Stop and a sleep timer. Skip shows only for recordings, never live radio.'
+    : 'One Stop button. Tap a station to start it again.');
+}
+
+/** Flip an on/off setting from its switch. */
+function toggleSwitch(sw) {
+  if (sw.disabled) return;
+  var group = sw.dataset.switch;
+  cfg[group] = cfg[group] === 'on' ? 'off' : 'on';
+  syncChips();
 }
 
 /** Handle a chip selection — update config, aria state, and apply visual changes. */
@@ -5339,8 +5796,8 @@ function selectChip(el, group, val) {
   el.classList.add('selected');
   el.setAttribute('aria-checked', 'true');
 
-  if (group === 'theme' || group === 'size' || group === 'fillview' || group === 'orientation') applyTheme();
-  if (group === 'advanced') updateMode();
+  if (group === 'size' || group === 'fillview' || group === 'orientation') applyTheme();
+  if (group === 'advanced') { updateMode(); syncControlsHint(); }
 
   // Touching any preset-owned control may diverge from the active preset's
   // bundle; recompute so the preset chip highlight stays truthful ('custom'
@@ -5381,9 +5838,9 @@ function renderPresetChips() {
     btn.onclick = function() { applyPreset(p.name); };
     box.appendChild(btn);
   });
-  // "Custom": shown, chosen, only once a setting no longer matches a preset,
-  // so the hint's "your changes mark the preset as Custom" is visibly true.
-  // Not a choice in itself: tapping it changes nothing.
+  // "Custom": always in its place, but off (dimmed) until a setting no longer
+  // matches a preset, then chosen, so the hint's "your changes show as
+  // Custom" is visibly true. Not a choice in itself: tapping it changes nothing.
   var custom = document.createElement('button');
   custom.className = 'chip';
   custom.dataset.group = 'preset';
@@ -5391,7 +5848,7 @@ function renderPresetChips() {
   custom.setAttribute('role', 'radio');
   custom.setAttribute('aria-checked', 'false');
   custom.textContent = 'Custom';
-  custom.hidden = true;
+  custom.disabled = true;
   box.appendChild(custom);
 }
 
@@ -5401,6 +5858,8 @@ function renderPresetChips() {
 function applyPreset(name) {
   var preset = PRESETS.find(function(p) { return p.name === name; });
   if (!preset) return;
+  var changed = PRESET_FIELDS.filter(function(f) { return f in preset.apply && cfg[f] !== preset.apply[f]; });
+  if (changed.includes('theme')) fadeTheme();
   PRESET_FIELDS.forEach(function(f) {
     if (f in preset.apply) cfg[f] = preset.apply[f];
   });
@@ -5411,6 +5870,8 @@ function applyPreset(name) {
   updateMode();          // advanced transport
   renderButtons();
   syncChips();           // also calls syncPresetSelection via its tail
+  // A preset changes settings further down: point at each one it changed.
+  if (canFlash()) changed.forEach(function(f) { flashChanged(settingBlock(f)); });
 }
 
 /** Sync the preset chip highlight to whichever preset (or 'custom') matches
@@ -5422,7 +5883,10 @@ function syncPresetSelection() {
     var sel = c.dataset.val === cfg.preset;
     c.classList.toggle('selected', sel);
     c.setAttribute('aria-checked', sel ? 'true' : 'false');
-    if (c.dataset.val === 'custom') c.hidden = !sel;
+    if (c.dataset.val === 'custom') {
+      if (c.disabled && sel && canFlash()) flashChanged(c);
+      c.disabled = !sel;
+    }
   });
 }
 
@@ -5434,7 +5898,15 @@ function syncPresetSelection() {
    Maximum of 8 streams. At least 1 must remain.
    ================================================================ */
 
-/** Render the stream editor form inside the settings panel. */
+/* The one station whose fields are showing (by id), or null. One at a time
+   keeps the list short; toggleStream keeps the tapped row where it was. */
+let openStreamId = null;
+
+function prefersReducedMotion() {
+  return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+/** Render the station list: a row per station, its fields folded under it. */
 function renderStreamEditor() {
   const editor = document.getElementById('stream-editor');
   // A change to the list after a remove ends its Undo (removeStreamEntry
@@ -5442,12 +5914,14 @@ function renderStreamEditor() {
   if (undoRemoved) dropUndo(false);
   const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
   editor.innerHTML = '';
+  if (!cfg.streams.some(function(s) { return s.id === openStreamId; })) openStreamId = null;
 
   cfg.streams.forEach((s, i) => {
+    const isOpen = s.id === openStreamId;
     const div = document.createElement('div');
-    div.className = 'stream-entry';
-    div.setAttribute('role', 'group');
-    div.setAttribute('aria-label', 'Stream ' + (i + 1) + ': ' + s.label);
+    div.className = 'stream-entry' + (isOpen ? ' open' : '');
+    div.dataset.idx = String(i);
+    div.dataset.id = s.id; // a dataset write, never markup
 
     // Build color palette picker chips
     let colorChipsHtml = '<div class="color-chips" role="radiogroup" aria-label="Button color">';
@@ -5466,44 +5940,57 @@ function renderStreamEditor() {
     });
     colorChipsHtml += '</div>';
 
-    // Build stream entry HTML — all user values are attribute-escaped
+    // All user values are escaped (escHtml for text, escAttr for attributes).
     var num = i + 1;
+    var pal = PALETTE.find(function(p) { return p.id === s.color; }) || PALETTE[0];
     var showPrimaryBadge = i === 0 && cfg.streams.length > 3 && cfg.streams.length % 2 === 1;
+    var who = '<span class="sr-only">: ' + escHtml(s.label || 'station ' + num) + '</span>';
     div.innerHTML =
-      '<div class="stream-entry-header">' +
-        '<span class="stream-entry-num">Stream ' + num +
-          (showPrimaryBadge ? ' <span class="stream-primary-badge">Primary — full width</span>' : '') +
+      '<button type="button" class="stream-row" aria-expanded="' + isOpen + '" aria-controls="stream-body-' + i + '" onclick="toggleStream(' + i + ')">' +
+        '<span class="stream-row-icon" style="background:' + pal[themeKey].bg + ';" aria-hidden="true">' + (s.emoji ? escHtml(s.emoji) : '&#9835;') + '</span>' +
+        '<span class="stream-row-text">' +
+          '<span class="stream-row-name"><span class="sr-only">Station ' + num + ': </span>' + escHtml(s.label || 'New station') + '</span>' +
+          '<span class="stream-row-sub">' + escHtml(s.sub || s.url || 'No address yet') + '</span>' +
+          // A line of its own: inside the description it was cut off with it,
+          // and beside the name it squeezed the name to a few letters.
+          (showPrimaryBadge ? '<span class="stream-primary-badge">Full width</span>' : '') +
         '</span>' +
-        '<div class="stream-entry-actions">' +
-          (i > 0 ? '<button class="stream-action-btn" onclick="moveStream(' + i + ',-1)" aria-label="Move stream ' + num + ' up">&#9650;</button>' : '') +
-          (i < cfg.streams.length - 1 ? '<button class="stream-action-btn" onclick="moveStream(' + i + ',1)" aria-label="Move stream ' + num + ' down">&#9660;</button>' : '') +
-          (cfg.streams.length > 1 ? '<button class="stream-action-btn danger" onclick="removeStreamEntry(' + i + ')" aria-label="Remove stream ' + num + '">&#10005;</button>' : '') +
-        '</div>' +
-      '</div>' +
+        '<svg class="s-icon stream-row-chevron" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 3l6 6-6 6"></path></svg>' +
+      '</button>' +
+      '<div class="stream-body" id="stream-body-' + i + '"' + (isOpen ? '' : ' inert') + '><div class="stream-body-inner"><div class="stream-fields">' +
       '<div class="inline-row">' +
         '<div class="narrow"><div class="s-row"><label class="s-label">Icon</label>' +
           '<button type="button" class="s-input emoji-input" data-field="emoji" data-idx="' + i + '" aria-label="Stream ' + num + ' icon" onclick="openEmojiPicker(' + i + ')">' + (s.emoji ? escHtml(s.emoji) : '<span style="opacity:0.4">—</span>') + '</button>' +
           '<input type="hidden" data-field="emoji" data-idx="' + i + '" value="' + escAttr(s.emoji || '') + '"></div></div>' +
-        '<div><div class="s-row"><label class="s-label">Label</label>' +
+        '<div><div class="s-row"><label class="s-label">Name</label>' +
           '<input class="s-input" data-field="label" data-idx="' + i + '" value="' + escAttr(s.label) + '" aria-label="Stream ' + num + ' label" oninput="previewStreamEdit()"></div></div>' +
       '</div>' +
       '<div class="s-row"><label class="s-label">Description</label>' +
         '<input class="s-input" data-field="sub" data-idx="' + i + '" value="' + escAttr(s.sub || '') + '" aria-label="Stream ' + num + ' description" oninput="previewStreamEdit()"></div>' +
-      '<div class="s-row"><label class="s-label">Stream URL</label>' +
-        '<input class="s-input" data-field="url" data-idx="' + i + '" value="' + escAttr(s.url) + '" aria-label="Stream ' + num + ' URL" aria-describedby="url-err-' + i + '" oninput="updateUrlWarning(' + i + ')"></div>' +
+      '<div class="s-row"><label class="s-label">Stream address</label>' +
+        '<input class="s-input" data-field="url" data-idx="' + i + '" value="' + escAttr(s.url) + '" aria-label="Stream ' + num + ' URL" aria-describedby="url-err-' + i + '" oninput="updateUrlWarning(' + i + '); previewStreamEdit()"></div>' +
       '<div class="url-error" id="url-err-' + i + '" data-err-idx="' + i + '" hidden></div>' +
       '<div class="url-warn" data-warn-idx="' + i + '" role="alert" style="display:' + (isMixedContentUrl(s.url) ? 'block' : 'none') + ';">' +
         'This address starts with http://, so it won\'t play here, not even from the home screen: browsers block it on secure sites. Look for an https:// address for this station.' +
       '</div>' +
       '<div class="s-row ios-hide"><label class="s-label">Volume Trim</label>' +
         '<input class="s-input" type="number" inputmode="decimal" min="0.1" max="4" step="0.1" data-field="gain" data-idx="' + i + '" value="' + escAttr(s.gain != null ? String(s.gain) : '') + '" placeholder="1.0 (normal)" aria-label="Stream ' + num + ' volume trim, 0.1 to 4, 1 is normal"></div>' +
-      '<div class="s-row"><label class="s-label">Button Color</label>' + colorChipsHtml + '</div>';
+      '<div class="s-row"><label class="s-label">Button Color</label>' + colorChipsHtml + '</div>' +
+      // Labelled buttons, always in the same place: disabled, never removed,
+      // so nothing shifts under a finger. The station's name is for screen readers.
+      '<div class="stream-entry-actions">' +
+        '<button type="button" class="stream-action-btn" data-action="up" onclick="moveStream(' + i + ',-1)"' + (i === 0 ? ' disabled' : '') + '>Move up' + who + '</button>' +
+        '<button type="button" class="stream-action-btn" data-action="down" onclick="moveStream(' + i + ',1)"' + (i === cfg.streams.length - 1 ? ' disabled' : '') + '>Move down' + who + '</button>' +
+        '<button type="button" class="stream-action-btn danger" data-action="remove" onclick="removeStreamEntry(' + i + ')"' + (cfg.streams.length <= 1 ? ' disabled' : '') + '>Remove' + who + '</button>' +
+      '</div>' +
+      '</div></div></div>';
 
     editor.appendChild(div);
   });
 
   // At the 8-station maximum the add buttons stay where they were, turned
   // off, with the reason beside them: hiding them left people hunting.
+  document.getElementById('stream-count').textContent = cfg.streams.length + ' of ' + MAX_STREAMS;
   var full = cfg.streams.length >= MAX_STREAMS;
   document.querySelectorAll('#stream-add-row button').forEach(function(b) { b.disabled = full; });
   var cap = document.getElementById('stream-cap');
@@ -5522,6 +6009,100 @@ function renderStreamEditor() {
 
 const MAX_STREAMS = 8;
 const STREAM_CAP_MESSAGE = '8 of 8 stations. Remove one to add another.';
+
+/** Keep each row's name, line and icon in step with its fields as they're typed. */
+function syncStreamRows() {
+  document.querySelectorAll('#stream-editor .stream-entry').forEach(function(entry) {
+    var i = parseInt(entry.dataset.idx, 10);
+    var s = cfg.streams[i];
+    if (!s) return;
+    var name = entry.querySelector('.stream-row-name');
+    name.lastChild.textContent = s.label || 'New station';
+    var sub = entry.querySelector('.stream-row-sub');
+    sub.textContent = s.sub || s.url || 'No address yet';
+    entry.querySelector('.stream-row-icon').textContent = s.emoji || '♫';
+  });
+}
+
+/** Open or close one station's fields. animate=false snaps (used for a
+    station above the tapped one, whose closing would drag the row up). */
+function setStreamOpen(entry, open, animate) {
+  if (!animate) entry.classList.add('instant');
+  entry.classList.toggle('open', open);
+  entry.querySelector('.stream-row').setAttribute('aria-expanded', open ? 'true' : 'false');
+  var body = entry.querySelector('.stream-body');
+  if (open) body.removeAttribute('inert'); else body.setAttribute('inert', '');
+  if (!animate) { void entry.offsetHeight; entry.classList.remove('instant'); }
+}
+
+/** Tap a station's row: open its fields under it, or close them. Only one is
+    open at a time, and the tapped row stays where it was on screen. */
+function toggleStream(idx) {
+  readStreamEditor();
+  var s = cfg.streams[idx];
+  var entry = document.querySelector('#stream-editor .stream-entry[data-idx="' + idx + '"]');
+  if (!s || !entry) return;
+  var scroller = document.getElementById('settings-body');
+  var row = entry.querySelector('.stream-row');
+  var before = row.getBoundingClientRect().top;
+  var opening = openStreamId !== s.id;
+  document.querySelectorAll('#stream-editor .stream-entry.open').forEach(function(other) {
+    if (other === entry) return;
+    var above = !!(other.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING);
+    setStreamOpen(other, false, !above);
+  });
+  openStreamId = opening ? s.id : null;
+  setStreamOpen(entry, opening, true);
+  scroller.scrollTop += row.getBoundingClientRect().top - before;
+  // No scrolling to show the fields: that moved the row out from under the
+  // finger (to the top, when the fields are taller than the screen).
+}
+
+/** Open a station's fields (if closed) without moving it, e.g. to show an error. */
+function openStream(idx) {
+  var s = cfg.streams[idx];
+  if (s && openStreamId !== s.id) toggleStream(idx);
+}
+
+/* Where each station row sits before a change, to slide it from there after. */
+function stationPositions() {
+  var at = {};
+  document.querySelectorAll('#stream-editor .stream-entry').forEach(function(e) {
+    at[e.dataset.id] = e.getBoundingClientRect().top;
+  });
+  return at;
+}
+
+/** Slide each station from where it was to where it is now (FLIP), so a move
+    or a removal shows where things went instead of snapping. */
+function slideStations(before) {
+  if (prefersReducedMotion()) return;
+  document.querySelectorAll('#stream-editor .stream-entry').forEach(function(e) {
+    if (!(e.dataset.id in before)) return;
+    var d = before[e.dataset.id] - e.getBoundingClientRect().top;
+    if (!d) return;
+    e.style.transition = 'none';
+    e.style.transform = 'translateY(' + d + 'px)';
+    void e.offsetHeight;
+    e.style.transition = 'transform 0.22s ease-out';
+    e.style.transform = '';
+  });
+}
+
+/** Mark a setting a tap just changed: a brief accent ring (a steady one,
+    for a second, with reduced motion), so the eye finds what changed. */
+function flashChanged(el) {
+  if (!el) return;
+  el.classList.remove('s-changed');
+  void el.offsetWidth;
+  el.classList.add('s-changed');
+  clearTimeout(el._changedTimer);
+  el._changedTimer = setTimeout(function() { el.classList.remove('s-changed'); }, 1200);
+}
+
+function stationEntry(idx) {
+  return document.querySelector('#stream-editor .stream-entry[data-idx="' + idx + '"]');
+}
 
 /** Focus the first control in the stream editor matching one of the selectors.
  *  renderStreamEditor() rebuilds the editor with innerHTML, which drops focus,
@@ -5549,37 +6130,49 @@ function moveStream(idx, dir) {
   const target = idx + dir;
   if (target < 0 || target >= cfg.streams.length) return;
 
+  const scroller = document.getElementById('settings-body');
+  const wasAt = stationEntry(idx).offsetTop - scroller.scrollTop;
   const temp = cfg.streams[idx];
   cfg.streams[idx] = cfg.streams[target];
   cfg.streams[target] = temp;
+  const before = stationPositions();
   renderStreamEditor();
   renderButtons();
+  // Keep the moved station where it was on screen (its Move button stays
+  // under the finger for the next tap) and let its neighbour slide past.
+  const moved = stationEntry(target);
+  scroller.scrollTop += (moved.offsetTop - scroller.scrollTop) - wasAt;
+  slideStations(before);
+  flashChanged(moved);
   // Follow the moved stream: same direction again if it can, else the other way.
-  const num = target + 1;
-  refocusStreamEditor([
-    '[aria-label="Move stream ' + num + (dir < 0 ? ' up' : ' down') + '"]',
-    '[aria-label="Move stream ' + num + (dir < 0 ? ' down' : ' up') + '"]',
-  ]);
+  const at = '.stream-entry[data-idx="' + target + '"] ';
+  var btn = document.querySelector('#stream-editor ' + at + '[data-action="' + (dir < 0 ? 'up' : 'down') + '"]:not([disabled])') ||
+            document.querySelector('#stream-editor ' + at + '[data-action="' + (dir < 0 ? 'down' : 'up') + '"]:not([disabled])');
+  // preventScroll: the scroll above already put it in place.
+  if (btn) btn.focus({ preventScroll: true });
 }
 
-/** Add a new blank stream entry to the editor. */
+/** Add a station by its address: a new row, open, with the address field focused. */
 function addStreamEntry() {
   if (cfg.streams.length >= 8) return;
   readStreamEditor();
 
   const colorIdx = cfg.streams.length % PALETTE.length;
+  const id = 's' + Date.now();
   cfg.streams.push({
-    id: 's' + Date.now(),
+    id: id,
     label: 'New Stream',
     sub: '',
     url: '',
     emoji: '',
     color: PALETTE[colorIdx].id
   });
+  openStreamId = id;
   renderStreamEditor();
   renderButtons();
-  // The new entry's icon button: a button, so no on-screen keyboard pops up.
-  refocusStreamEditor(['.emoji-input[data-idx="' + (cfg.streams.length - 1) + '"]']);
+  const idx = cfg.streams.length - 1;
+  flashChanged(stationEntry(idx));
+  refocusStreamEditor(['.s-input[data-field="url"][data-idx="' + idx + '"]']);
 }
 
 /** Remove a stream entry. Stops playback if that stream is playing. */
@@ -5587,11 +6180,13 @@ function removeStreamEntry(idx) {
   if (cfg.streams.length <= 1) return;
   readStreamEditor();
 
+  const before = stationPositions();
   const removed = cfg.streams[idx];
   if (playing === removed.id) stopPlayback();
   cfg.streams.splice(idx, 1);
   renderStreamEditor();
   renderButtons();
+  slideStations(before);
   offerUndoRemove(removed, idx);
 }
 
@@ -5604,7 +6199,9 @@ let undoTimer = null;
 function offerUndoRemove(stream, idx) {
   undoRemoved = { stream: stream, idx: idx };
   document.getElementById('stream-undo-text').textContent = 'Removed ' + (stream.label || 'a stream') + '.';
-  document.getElementById('stream-undo').hidden = false;
+  var bar = document.getElementById('stream-undo');
+  bar.hidden = false;
+  flashChanged(bar);
   document.getElementById('stream-undo-btn').focus();
   clearTimeout(undoTimer);
   undoTimer = setTimeout(function() { dropUndo(true); }, UNDO_MS);
@@ -5618,7 +6215,7 @@ function dropUndo(refocus) {
   var bar = document.getElementById('stream-undo');
   var hadFocus = bar.contains(document.activeElement);
   bar.hidden = true;
-  if (refocus && hadFocus) refocusStreamEditor(['.emoji-input']);
+  if (refocus && hadFocus) refocusStreamEditor(['.stream-row']);
 }
 
 /** Put the last removed station back where it was. It's the station
@@ -5628,15 +6225,20 @@ function undoRemoveStream() {
   readStreamEditor();
   var r = undoRemoved;
   dropUndo(false);
+  const before = stationPositions();
   cfg.streams.splice(Math.min(r.idx, cfg.streams.length), 0, r.stream);
   renderStreamEditor();
   renderButtons();
-  refocusStreamEditor(['.emoji-input[data-idx="' + Math.min(r.idx, cfg.streams.length - 1) + '"]']);
+  slideStations(before);
+  var at = Math.min(r.idx, cfg.streams.length - 1);
+  flashChanged(stationEntry(at));
+  refocusStreamEditor(['.stream-entry[data-idx="' + at + '"] .stream-row']);
 }
 
 /** Live-preview stream label/description/emoji changes as the user types. */
 function previewStreamEdit() {
   readStreamEditor();
+  syncStreamRows();
   renderButtons();
 }
 
@@ -6763,6 +7365,7 @@ function applySettings() {
   });
   if (firstBad >= 0) {
     setApplyStatus(streamUrlProblem(cfg.streams[firstBad].url, firstBad + 1));
+    openStream(firstBad);
     var badInput = document.querySelector('#stream-editor .s-input[data-field="url"][data-idx="' + firstBad + '"]');
     if (badInput) badInput.focus();
     return;
