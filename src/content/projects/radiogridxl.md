@@ -56,14 +56,14 @@ I designed for older adults and people with disabilities from the start, and it 
 - Full screen reader support - ARIA roles, labels, and live regions throughout
 - Optional text-to-speech that announces playback actions via the Web Speech API
 - Audio chimes on play/pause using Web Audio API oscillators
-- Haptic feedback on mobile devices
+- Haptic feedback on Android
 - Keyboard navigation with focus trapping in overlays
 - An "Ultra" size mode that scales with viewport dimensions for low vision users
 - Simple and Advanced transport modes to control cognitive load
 
 ## How it's built
 
-One HTML file. Around 6,000 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
+One HTML file. Around 8,000 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
 
 A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
 
@@ -84,50 +84,32 @@ flowchart TD
 ## Updates
 
 ### 2026-11-05
-Released v7.17.0, a reorganised settings panel. Settings now sit in four groups with headings: Stations, Look, Sound and controls, and Setup. Each station is one row with its color, icon and name, and tapping it opens that station's fields right under it while the row stays where your finger is. Voice, tones and auto-resume are switches. Themes are little swatches that look like a station button, with Dark, Light or Auto beside them, and text sizes show a growing "Aa". Apply stays pinned to the bottom, so it never scrolls away, and the panel fits phones upright and sideways, tablets and desktops. When a tap changes something elsewhere on the panel, the changed setting glows briefly so you can see what moved. With Reduce Motion on, nothing slides and the glow is a plain outline. Every saved setup and backup loads exactly as before.
+Released v7.17.0, a reorganised settings panel: four groups (Stations, Look, Sound and controls, Setup), one tappable row per station, switches for voice and tones, theme swatches that look like station buttons, and an Apply button pinned to the bottom. Every saved setup loads exactly as before. Pausing live radio now lets go of the stream and resuming reconnects at the live point, which fixes stations getting stuck on iPhone after a quick pause and play.
 
-Pausing live radio now lets go of the stream, and resuming reconnects at the live point. On iPhone, a quick pause and play could leave a station stuck after a second of sound, and this fixes that. The version line in Settings also shows a short build code, so I can tell at a glance which copy a device is running.
-
-Released v7.16.0. I walked every setting on a simulated iPhone, a small iPhone SE and a big iPad, and fixed the thirty things that tripped me up. The ones a listener will notice: Stop in Simple mode now really stops, and the playing station is marked by a thick ring as well as its color. Turned sideways with five or more stations, the grid splits into two even rows that still show names. On an iPad, names grow with the buttons. Pause and Stop have words beside their icons, and the sleep timer gained 60 minutes and a Cancel button.
-
-For whoever sets it up: Apply now refuses a station with a missing or broken address and points at the field. A station marked "Not available" tries again once its address is fixed. Removing a station offers Undo. A wrong PIN message stays put until the next key, and a lockout counts down. In the station browser you can add several stations in one visit, each gets its own icon, and listings stuffed with keywords sink to the bottom. If the device is set to increase contrast, the Auto themes switch to High Contrast, and a large system text size sets the starting size on a fresh install. Haptic feedback only ever worked on Android, so on iPhone and iPad the setting is now greyed out with the reason.
+Released v7.16.0 after walking every setting on a simulated iPhone, an iPhone SE and an iPad, and fixing the thirty things that tripped me up. A thick ring now marks the playing station, Pause and Stop have labels, the sleep timer gained 60 minutes and a Cancel button, Apply refuses a broken station address, and removing a station offers Undo. Haptics only ever worked on Android, so on iPhone and iPad that setting is greyed out with the reason.
 
 ### 2026-10-28
-Released v7.15.3. Add station used to open with the cursor in the search box, so on a phone the keyboard slid up over the shelves before you could pick one. Plenty of people never search, so now it opens on the title with the keyboard down. Tap the search box when you want it. A screen reader still hears "Browse Radio Stations" first.
+Released v7.15.3. Add station opens on its title with the keyboard down, so on a phone you see the shelves first and tap the search box when you want it.
 
 ### 2026-10-26
-Released v7.15.2. A new station fades in over four seconds, and pausing partway through used to let the fade keep climbing, so resuming came back at full volume. Now a pause holds the fade and resuming fades in again from silence. A quick second tap also made the app briefly think it had resumed, flashing "buffering" before it settled on paused. It stays paused now.
+Fourteen releases in one day, v7.7.0 through v7.15.2. The ones that matter:
 
-Released v7.15.1. The plain line under a station named whatever tag the directory listed first, which could be a year or a city, so a swing station read "1930 · New York NY". Now it names the first tag that is a genre, "Jazz · New York NY", and leaves the genre out when no tag is one.
+- High Contrast, held to AAA with the playing station solid yellow, and Night, dim amber with no blue for a bedside radio
+- A new logo that follows the theme
+- A station browser that opens on six hand-picked shelves, with state and region search and mood chips
+- Added stations arrive with an icon, a cleaned-up name, a plain description and a color of their own
+- A whole-app audit: a paused or stopped radio stays silent through Wi-Fi drops and relaunches, so nothing comes back on its own at night
 
-Released v7.15.0. A station added from the browser used to arrive with no icon, a description like "US — jazz", the directory's full name and the next color in line. Now it gets an icon guessed from its genre, the plain line the browser showed, its name without the clutter, so "KNOW 91.1 Minnesota Public Radio News - Minneapolis-St. Paul, MN" becomes "KNOW 91.1 Minnesota Public Radio News", and a color no other station uses. Mood chips replace the genre dropdown, and each searches a few related tags at once. I also fixed the Search, Add and Apply buttons in MonoRadio Light and High Contrast Light, where their dark text sat on a dark fill and could barely be read. The contrast test now covers those buttons.
-
-Released v7.14.0. The station browser used to open on an empty search box, so finding something meant knowing a station's name or guessing at genre tags. Now it opens on six shelves of hand-picked stations, from Calm & easy to Sleep, and a script plays each one before a release. After a country, you can pick a state or region from the directory, so United States then Minnesota lists Minnesota stations. Results list each station once, leave out ones failing the directory's own check, and describe each in one plain line, like "Jazz · Minnesota · English". A station already on the radio says Added. In High Contrast, the browser's preview and Close buttons drew white on white; they're outlined now.
-
-Released v7.13.0. In settings, Preview shows the station grid with your changes before you apply them, and the grid can't be used while it's showing, so a tapped station used to do nothing with no sign why. Now that tap brings up "Preview only. Tap Back to settings to make changes." for a few seconds, and the Back to settings button pulses so it's easy to find. Screen readers hear the message too.
-
-Released v7.12.1, fixing the app on iPhones with a notch. Installed on the home screen, the app draws under the status bar, and the top of settings, with its Preview and close buttons, sat under it where a tap couldn't reach. Settings now starts below the status bar and keeps those buttons pinned while it scrolls. The help sheet got the same fix. With the phone sideways, the logo, the outer station buttons and the sleep timer now keep clear of the notch.
-
-Released v7.12.0 with a new logo: an R built from rounded tiles, like the station buttons, shading from cyan to violet, with radio waves on both sides. It follows the theme, turning grey in MonoRadio, white and yellow in High Contrast and amber in Night, and every part of it holds 3:1 contrast against the header. The browser tab shows the R by itself, drawn on whole pixels so it stays sharp at 16px.
-
-Released v7.11.0. When a row has room for a station's name but not its description, as on a phone turned sideways, the button keeps its icon as long as the icon costs the name no more than 15% of its size. The icon is how someone who doesn't read finds a station.
-
-Released v7.10.1. Six to eight stations used to drop their names and show only their icons on every screen, a large tablet included. Now they show names wherever a row has the room, and fall back to icons only on a screen too small for words.
-
-Released v7.10.0 with a Night theme for a radio by the bed: black and dim amber with no blue anywhere, text just over the WCAG AA line so it reads without lighting the room. The flash on a tap, the emoji and the overlay icons dim with it. A web page can't turn down the backlight, so on an LCD the black still glows a little.
-
-Released v7.9.0 with a High Contrast theme for low vision: black, white and yellow, every word at 7:1 contrast (WCAG AAA), and a playing station filled solid yellow. The Low Vision preset now uses it. MonoRadio buttons got a visible edge, since every station there shares one background. Earlier the same day, v7.8.0 added a Preview button to settings, so on a phone you can see a theme or station change before applying it, and v7.8.1 added a note to listen to a station before setting it up for someone else. The screenshots on this page now come from the app itself, retaken with each release.
-
-Released v7.7.0, the result of an audit of the whole app. A paused or stopped radio now stays silent through Wi-Fi drops, retries and relaunches, because a station coming back on its own at night could wake someone. Auto-Resume only restarts a station that was playing when the app closed. Playing, paused and failed stations meet WCAG AA contrast in every theme, the sleep timer stops chattering to screen readers, and Ultra is now the largest text size on every screen. When a live station drops or stalls, the app reconnects quietly and fades back in. On the web, the station browser only lists stations it can play.
+Smaller fixes covered the iPhone notch, a hint when you tap a station in Preview, and a fade-in that kept climbing through a pause. The screenshots on this page now come from the app itself, retaken with each release.
 
 ### 2026-10-20
-Added a how-to guide (v7.6.0). Its steps run as tests against the real app, so a change that breaks a step fails the build, and its screenshots are captured from the app itself. The app's settings open it in an overlay, and this page links to it.
+Added a how-to guide (v7.6.0). Its steps run as tests against the real app, so a change that breaks a step fails the build.
 
 ### 2026-05-29
-Synced the live demo to v7.5.5, which adds the Pause/Stop split in Advanced mode and the inline SVG transport icons. v7.5.2 re-centered the logo and regenerated the maskable PWA icons, since the home-screen mark was getting cropped off-center on add-to-home-screen.
+Synced the live demo to v7.5.5: the Pause/Stop split in Advanced mode, inline SVG transport icons, and a re-centered home-screen icon.
 
 ### 2026-05-28
-Updated the live demo to v7.5.1. The big addition since launch is a PWA shell - installable, with lock-screen audio controls (MediaSession), auto-resume, and offline app-shell caching via a service worker. Also added backup/restore of settings, accessibility presets, and per-stream loudness leveling so stations don't jump in volume. The demo moved from `/radio.html` to `/radio/` so the service worker stays scoped to its own directory instead of the whole site.
+Updated the live demo to v7.5.1. It's now an installable PWA with lock-screen controls, auto-resume, offline caching, settings backup, accessibility presets and per-station loudness leveling. The demo moved from `/radio.html` to `/radio/` to keep the service worker scoped.
 
 ### 2026-04-26
-Shipped and deployed. The profile system needs a web-based editor so other organizations can create branded deployments without touching code. Also looking at Service Worker caching for unreliable networks.
+Shipped and deployed.
