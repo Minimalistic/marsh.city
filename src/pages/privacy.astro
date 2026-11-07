@@ -12,18 +12,18 @@ const updated = '2026-11-06';
     <h2>What's counted</h2>
     <p>
       Each time a page on marsh.city loads, it sends one anonymous count to
-      <a href="https://www.goatcounter.com/">GoatCounter</a>
-      (<code>marshcity.goatcounter.com</code>), a small open-source analytics service.
-      The count carries two things:
+      <a href="https://www.goatcounter.com/">GoatCounter</a>, a small open-source analytics
+      service, at marshcity.goatcounter.com. The count carries two things:
     </p>
+    {/* Plain text, no <code>: VoiceOver splits a sentence into separate swipes at each inline code element (a11y/privacy.txt). */}
     <ul>
-      <li>the page's address, without anything after a <code>?</code> or <code>#</code></li>
-      <li>the name of the site that linked you here, such as <code>www.linkedin.com</code>, without the page you came from</li>
+      <li>the page's address, without any search terms or section link added to the end</li>
+      <li>the name of the site that linked you here, such as www.linkedin.com, without the page you came from</li>
     </ul>
     <p>
       Like any web server, GoatCounter sees the request your browser makes. From it,
       GoatCounter works out your country and your browser and operating system name and
-      version, and keeps only those. To tell one visit from several, it holds a temporary
+      version, and keeps only those, grouped by the hour. To tell one visit from several, it holds a temporary
       code in memory for eight hours and never writes it to disk.
       Its <a href="https://www.goatcounter.com/privacy">privacy policy</a> has the details.
     </p>
@@ -47,9 +47,10 @@ const updated = '2026-11-06';
 
     <h2>Other services pages use</h2>
     <p>
-      Pages with diagrams load the Mermaid drawing library from jsDelivr
-      (<code>cdn.jsdelivr.net</code>), which sees the request the way any web server does.
-      Fonts and everything else come from marsh.city itself.
+      Pages with diagrams load the Mermaid drawing library from jsDelivr at cdn.jsdelivr.net,
+      which sees the request the way any web server does.
+      Fonts and everything else come from marsh.city itself, which is hosted on GitHub Pages;
+      like any web host, GitHub sees each request your browser makes.
     </p>
 
     <h2>Questions</h2>

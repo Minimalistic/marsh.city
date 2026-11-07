@@ -1,0 +1,114 @@
+# a11y-smoke transcript
+# target: /Users/jason/JasonsWorkspace/marsh.city/dist/privacy/index.html
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: Privacy
+11. What this site counts and what it leaves alone.
+12. heading level 2: What's counted
+13. Each time a page on marsh.city loads, it sends one anonymous count to
+14. link: GoatCounter
+15. , a small open-source analytics service, at marshcity.goatcounter.com. The count carries two things:
+16. [list, 2 items] the page's address, without any search terms or section link added to the end
+17. the name of the site that linked you here, such as www.linkedin.com, without the page you came from
+18. Like any web server, GoatCounter sees the request your browser makes. From it, GoatCounter works out your country and your browser and operating system name and version, and keeps only those, grouped by the hour. To tell one visit from several, it holds a temporary code in memory for eight hours and never writes it to disk. Its
+19. link: privacy policy
+20. has the details.
+21. heading level 2: What isn't
+22. [list, 5 items] No cookies, and nothing is stored in your browser for counting.
+23. No ID that follows you from visit to visit or site to site.
+24. Your IP address isn't stored, by me or by GoatCounter.
+25. Nothing you do inside the apps on this site (the radio, games and tools) is counted.
+26. If your browser sends Global Privacy Control or Do Not Track, nothing is counted at all.
+27. heading level 2: RadioGridXL's one question
+28. RadioGridXL can ask the person setting it up one optional question: "Who's this radio for?" Picking an answer sends that answer and the app's version number to the same GoatCounter account, once. Skip sends nothing. The person listening never sees the question, and nothing about what anyone listens to leaves the device.
+29. heading level 2: Other services pages use
+30. Pages with diagrams load the Mermaid drawing library from jsDelivr at cdn.jsdelivr.net, which sees the request the way any web server does. Fonts and everything else come from marsh.city itself, which is hosted on GitHub Pages; like any web host, GitHub sees each request your browser makes.
+31. heading level 2: Questions
+32. Email
+33. link: jason@marsh.city
+34. .
+35. Updated 2026-11-06
+36. [contentinfo] ©
+37. link: Jason Marsh
+38. link: email
+39. link: github
+40. link: linkedin
+41. link: source
+42. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "Privacy" [level=1]
+  - paragraph: What this site counts and what it leaves alone.
+  - heading "What's counted" [level=2]
+  - paragraph:
+    - text: Each time a page on marsh.city loads, it sends one anonymous count to
+    - link "GoatCounter":
+      - /url: https://www.goatcounter.com/
+    - text: ", a small open-source analytics service, at marshcity.goatcounter.com. The count carries two things:"
+  - list:
+    - listitem: the page's address, without any search terms or section link added to the end
+    - listitem: the name of the site that linked you here, such as www.linkedin.com, without the page you came from
+  - paragraph:
+    - text: Like any web server, GoatCounter sees the request your browser makes. From it, GoatCounter works out your country and your browser and operating system name and version, and keeps only those, grouped by the hour. To tell one visit from several, it holds a temporary code in memory for eight hours and never writes it to disk. Its
+    - link "privacy policy":
+      - /url: https://www.goatcounter.com/privacy
+    - text: has the details.
+  - heading "What isn't" [level=2]
+  - list:
+    - listitem: No cookies, and nothing is stored in your browser for counting.
+    - listitem: No ID that follows you from visit to visit or site to site.
+    - listitem: Your IP address isn't stored, by me or by GoatCounter.
+    - listitem: Nothing you do inside the apps on this site (the radio, games and tools) is counted.
+    - listitem: If your browser sends Global Privacy Control or Do Not Track, nothing is counted at all.
+  - heading "RadioGridXL's one question" [level=2]
+  - paragraph: "RadioGridXL can ask the person setting it up one optional question: \"Who's this radio for?\" Picking an answer sends that answer and the app's version number to the same GoatCounter account, once. Skip sends nothing. The person listening never sees the question, and nothing about what anyone listens to leaves the device."
+  - heading "Other services pages use" [level=2]
+  - paragraph: Pages with diagrams load the Mermaid drawing library from jsDelivr at cdn.jsdelivr.net, which sees the request the way any web server does. Fonts and everything else come from marsh.city itself, which is hosted on GitHub Pages; like any web host, GitHub sees each request your browser makes.
+  - heading "Questions" [level=2]
+  - paragraph:
+    - text: Email
+    - link "jason@marsh.city":
+      - /url: mailto:jason@marsh.city
+    - text: .
+  - paragraph: Updated 2026-11-06
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/
