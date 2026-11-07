@@ -1,6 +1,6 @@
 # Privacy-first page counts
 
-Status: draft
+Status: approved
 
 Intent: Anonymous page counts across marsh.city and one host RadioGridXL can send its "Who's this radio for?" answer to, with no cookies, no personal IDs and no stored IP addresses, plus a plain-language note saying what's counted.
 
