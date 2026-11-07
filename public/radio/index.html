@@ -2972,7 +2972,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.2</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.3</div>
     </section>
     </div>
 
@@ -4441,6 +4441,8 @@ function stopPlayback() {
   stopStallWatch();
   steadyFrom = null;
   clearTimeout(speakTimer); // a "Now playing" still waiting to be said is stale now
+  pausedBySpeech = false; // stopped: nothing to play when the line ends
+  if (heldFor || speechHoldTimer) releaseSpeechHold(); // the next start mustn't begin muted
   audio.pause();
   audio.src = '';
   forgetLastStation();
@@ -4770,6 +4772,11 @@ audio.addEventListener('pause', () => {
   // not the listener pausing (it used to read "Paused, tap to resume"). A
   // recording reaching its end still lands below, as today.
   if (audio.ended && liveSource && playing && !paused) { connectionLost(); return; }
+  // On iOS our own voice line pauses the stream, muted or not. That pause is
+  // ours, not the listener's: the stream plays again when the line ends
+  // (releaseSpeechHold). The listener's own pause set paused first, so the
+  // release leaves that one alone.
+  if (heldFor || speechHoldTimer) { pausedBySpeech = true; return; }
   if (playing && !paused) {
     paused = true;
     announceOnPlay = null;
@@ -5171,18 +5178,63 @@ function say(text, delayMs) {
   speakTimer = setTimeout(() => speak(text), delayMs);
 }
 
+/* iPhone and iPad can't mix speech with a playing stream: whichever starts
+   second interrupts the other, and a stream interrupted by our own voice
+   reads as the listener pausing (the audio 'pause' listener). So on iOS a
+   line spoken as audio starts goes first: the stream still starts at the
+   tap (iOS only lets a tap start playback) but muted, and its sound comes
+   on when the line ends. `muted`, not volume: iOS ignores a scripted volume.
+   Android and desktop mix the two and keep "Now playing" once it plays. */
+const SPEAK_BEFORE_SOUND = platform.isIOS;
+const SPEECH_HOLD_MAX_MS = 6000; // sound comes on by then even if iOS never reports the line's end
+let heldFor = null;              // the utterance the stream is muted for
+let speechHoldTimer = null;
+let pausedBySpeech = false;      // iOS paused the stream for our line; play it when the line ends
+
+/** Mute the stream, say `text` after the chime, unmute when it ends. */
+function sayBeforeSound(text) {
+  clearTimeout(speakTimer);
+  clearTimeout(speechHoldTimer);
+  audio.muted = true;
+  const line = new SpeechSynthesisUtterance(text);
+  heldFor = line;
+  line.onend = line.onerror = () => { if (heldFor === line) releaseSpeechHold(); };
+  speechHoldTimer = setTimeout(releaseSpeechHold, SPEECH_HOLD_MAX_MS);
+  speakTimer = setTimeout(() => {
+    speechSynthesis.cancel();
+    speechSynthesis.speak(line);
+  }, SPEAK_AFTER_CHIME_MS);
+}
+
+function releaseSpeechHold() {
+  clearTimeout(speechHoldTimer);
+  speechHoldTimer = null;
+  heldFor = null;
+  audio.muted = false;
+  // The tap's play() already unlocked this element, so iOS allows this one.
+  if (pausedBySpeech) { pausedBySpeech = false; if (playing && !paused) playActive(); }
+}
+
+function speakingBeforeSound() {
+  return SPEAK_BEFORE_SOUND && cfg.tts === 'on' && !!window.speechSynthesis;
+}
+
 /** Play chime then speak — ensures TTS doesn't overlap the tone. */
 function feedback(direction, text) {
   chime(direction);
-  say(text, SPEAK_AFTER_CHIME_MS);
+  // 'up' lines go with sound starting; 'down' lines follow it stopping.
+  if (direction === 'up' && speakingBeforeSound()) sayBeforeSound(text);
+  else say(text, SPEAK_AFTER_CHIME_MS);
 }
 
 /** Chime now; say "Now playing" when the audio really starts (the 'playing'
     listener) rather than at the tap, so a dead station is never announced as
     playing. A start slower than CONNECTING_SPEECH_MS hears "Connecting to"
-    first. */
+    first. On iOS the line comes first instead ("Tuning to"), which still
+    never claims a dead station is playing. */
 function announceStart(label) {
   chime('up');
+  if (speakingBeforeSound()) { announceOnPlay = null; sayBeforeSound('Tuning to ' + label); return; }
   announceOnPlay = label;
   say('Connecting to ' + label, CONNECTING_SPEECH_MS);
 }
