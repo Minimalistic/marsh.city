@@ -1,6 +1,6 @@
 # Privacy-first page counts
 
-Status: approved
+Status: shipped
 
 Intent: Anonymous page counts across marsh.city, with no cookies, no personal IDs and no stored IP addresses, plus a plain-language note saying what's counted.
 
