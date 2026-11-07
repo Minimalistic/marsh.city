@@ -2972,7 +2972,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.1</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.2</div>
     </section>
     </div>
 
@@ -5134,6 +5134,22 @@ function doHaptic(streamId) {
    Announces playback actions aloud when enabled in settings.
    Uses the Web Speech API — device agnostic, no external deps.
    ================================================================ */
+
+/** iOS Safari puts speech and Web Audio (the chime) on the "ambient" audio
+    session: muted by the silent switch, and when speech starts, iOS treats it
+    as a second player and pauses the stream. 'playback' moves the whole page
+    onto the media session the <audio> stream already uses. Audio Session API,
+    Safari 16.4+; nothing else has navigator.audioSession, so it no-ops there. */
+function usePlaybackAudioSession() {
+  try {
+    if (navigator.audioSession && navigator.audioSession.type !== 'playback') {
+      navigator.audioSession.type = 'playback';
+    }
+  } catch (e) {
+    console.warn('[RadioGridXL] audioSession.type not settable:', e);
+  }
+}
+usePlaybackAudioSession();
 
 function speak(text) {
   if (cfg.tts !== 'on') return;
