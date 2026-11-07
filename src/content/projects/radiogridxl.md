@@ -83,6 +83,9 @@ flowchart TD
 
 ## Updates
 
+### 2026-11-07
+Released v7.19.0. Settings now close themselves when they're left alone. After three minutes with no tap, the radio asks "Still setting up?", and if nobody answers it goes back to the stations, so whoever set it up can walk away without leaving the listener stuck in settings. The feedback card now shows its web address and email as plain text, so a stray tap on the radio can't open a website or an email app. The Stop label in the Dark theme is a touch lighter and easier to read.
+
 ### 2026-11-06
 Released v7.18.0. Settings now has a "Have feedback?" card with a code you scan with your phone. It opens a short page with an Email us button, so whoever set up a radio can tell me what confused them, even when the radio's own device can't send email.
 

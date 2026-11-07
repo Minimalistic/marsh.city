@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.18.0
+appVersion: 7.19.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -25,6 +25,8 @@ The panel slides in from the side. It has four groups: **Stations**, **Look**, *
 **Nothing is saved until you tap Apply & Close**, which stays pinned at the bottom of the panel (on a phone turned sideways, at the top next to Preview). If you close the panel with the × instead, the app asks whether to throw your changes away.
 
 ![The Apply & Close button pinned at the bottom of settings](/images/radiogridxl/guide/apply.webp)
+
+If settings sit untouched for 3 minutes, the app asks **Still setting up?** Tap anywhere on it to carry on. If nobody taps within 30 seconds, settings close and go back to the stations, and changes you haven't applied are thrown away, so the listener is never left looking at settings. A station that was playing keeps playing, and a paused one stays paused. The PIN keypad closes by itself after a minute with no tap.
 
 ### If it asks for a PIN
 
@@ -166,4 +168,4 @@ On Android and on computers, the installed app keeps the same stations and setti
 
 ## Send us feedback
 
-At the bottom of settings, **Have feedback?** shows a code you can scan with your phone's camera. It opens a short page with an **Email us** button, so you can tell us what was confusing from your own phone, even when the radio's device can't send email. The radio itself never sends anything about you or your listening.
+At the bottom of settings, **Have feedback?** shows a code you can scan with your phone's camera. It opens a short page with an **Email us** button, so you can tell us what was confusing from your own phone, even when the radio's device can't send email. The page address and our email, radio@marsh.city, are written beside the code too. The radio itself never sends anything about you or your listening.

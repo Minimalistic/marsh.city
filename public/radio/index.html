@@ -1681,15 +1681,12 @@ html.is-desktop .overlay-body { font-size: 20px; }
 .feedback-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .feedback-qr { width: 128px; height: 128px; flex-shrink: 0; border-radius: 6px; }
 .feedback-text { flex: 1 1 130px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.feedback-link {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--accent-text);
+/* Text, not links (see the markup): no underline or accent colour, so it
+   doesn't look tappable. Selectable, for copying on a desktop. */
+.feedback-address {
   font-size: 15px;
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
 }
 .backup-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .backup-row .device-btn { flex: 1; min-height: 48px; }
@@ -2503,6 +2500,10 @@ html.theme-fading, html.theme-fading * {
    fell back to the browser's serif). */
 #reset-overlay { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; }
 
+/* Over everything settings can open: the station browser, emoji picker,
+   guide and Reset dialog included. */
+#idle-overlay { position: fixed; z-index: 20000; font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; }
+
 /* Reset confirm overlay */
 .reset-confirm-btn {
   font-family: inherit;
@@ -2942,16 +2943,17 @@ html.theme-fading, html.theme-fading * {
         </div>
 
         <!-- Shown only when the profile turns it on (PROFILE.feedback). The code
-             opens a static page on the setter-up's own phone, since this device
-             often can't send email. The app itself sends nothing. -->
+             opens a static page on the setter-up's own phone. The address and
+             email are plain text, not links: a tap on the radio must never open
+             a website or another app (PROMISES.md). The app sends nothing. -->
         <div class="s-section" id="feedback-section" role="group" aria-labelledby="feedback-title" hidden>
           <div class="s-section-title" id="feedback-title">Have feedback?</div>
           <div class="feedback-row">
             <!-- === FEEDBACK QR — make-feedback-qr.mjs writes this === --><svg class="feedback-qr" id="feedback-qr" viewBox="0 0 37 37" role="img" aria-label="QR code: opens marsh.city/radio/feedback on your phone" shape-rendering="crispEdges"><rect width="37" height="37" fill="#ffffff"/><path fill="#000000" d="M4 4h7v1h-7zM14 4h1v1h-1zM16 4h1v1h-1zM19 4h2v1h-2zM22 4h1v1h-1zM26 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM12 5h3v1h-3zM17 5h2v1h-2zM20 5h1v1h-1zM22 5h1v1h-1zM26 5h1v1h-1zM32 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM12 6h2v1h-2zM17 6h1v1h-1zM19 6h1v1h-1zM24 6h1v1h-1zM26 6h1v1h-1zM28 6h3v1h-3zM32 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM12 7h2v1h-2zM20 7h2v1h-2zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h3v1h-3zM32 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM15 8h2v1h-2zM19 8h6v1h-6zM26 8h1v1h-1zM28 8h3v1h-3zM32 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM24 9h1v1h-1zM26 9h1v1h-1zM32 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h7v1h-7zM12 11h3v1h-3zM16 11h1v1h-1zM18 11h3v1h-3zM4 12h1v1h-1zM10 12h1v1h-1zM12 12h2v1h-2zM15 12h2v1h-2zM21 12h2v1h-2zM25 12h2v1h-2zM29 12h3v1h-3zM4 13h1v1h-1zM6 13h1v1h-1zM9 13h1v1h-1zM11 13h4v1h-4zM17 13h1v1h-1zM20 13h4v1h-4zM27 13h2v1h-2zM30 13h2v1h-2zM5 14h1v1h-1zM7 14h1v1h-1zM10 14h1v1h-1zM15 14h1v1h-1zM17 14h5v1h-5zM25 14h3v1h-3zM5 15h2v1h-2zM9 15h1v1h-1zM12 15h2v1h-2zM17 15h1v1h-1zM19 15h2v1h-2zM23 15h1v1h-1zM28 15h2v1h-2zM5 16h2v1h-2zM9 16h3v1h-3zM13 16h1v1h-1zM17 16h1v1h-1zM20 16h1v1h-1zM23 16h1v1h-1zM25 16h2v1h-2zM32 16h1v1h-1zM4 17h1v1h-1zM12 17h4v1h-4zM19 17h1v1h-1zM22 17h3v1h-3zM26 17h3v1h-3zM31 17h2v1h-2zM4 18h2v1h-2zM8 18h1v1h-1zM10 18h3v1h-3zM14 18h2v1h-2zM19 18h3v1h-3zM24 18h1v1h-1zM26 18h1v1h-1zM29 18h2v1h-2zM4 19h1v1h-1zM7 19h3v1h-3zM13 19h2v1h-2zM16 19h1v1h-1zM19 19h2v1h-2zM22 19h2v1h-2zM28 19h1v1h-1zM30 19h1v1h-1zM32 19h1v1h-1zM5 20h1v1h-1zM7 20h1v1h-1zM10 20h1v1h-1zM13 20h1v1h-1zM15 20h2v1h-2zM21 20h1v1h-1zM23 20h1v1h-1zM27 20h1v1h-1zM29 20h2v1h-2zM4 21h1v1h-1zM6 21h1v1h-1zM11 21h2v1h-2zM15 21h1v1h-1zM17 21h4v1h-4zM22 21h2v1h-2zM26 21h3v1h-3zM30 21h3v1h-3zM4 22h3v1h-3zM8 22h6v1h-6zM16 22h1v1h-1zM19 22h1v1h-1zM21 22h1v1h-1zM23 22h1v1h-1zM25 22h2v1h-2zM28 22h2v1h-2zM32 22h1v1h-1zM4 23h1v1h-1zM6 23h1v1h-1zM8 23h2v1h-2zM12 23h3v1h-3zM16 23h2v1h-2zM19 23h1v1h-1zM25 23h2v1h-2zM28 23h1v1h-1zM4 24h1v1h-1zM10 24h2v1h-2zM16 24h1v1h-1zM18 24h2v1h-2zM21 24h1v1h-1zM23 24h6v1h-6zM30 24h3v1h-3zM12 25h3v1h-3zM16 25h1v1h-1zM18 25h2v1h-2zM22 25h3v1h-3zM28 25h2v1h-2zM4 26h7v1h-7zM13 26h1v1h-1zM15 26h1v1h-1zM19 26h2v1h-2zM23 26h2v1h-2zM26 26h1v1h-1zM28 26h3v1h-3zM4 27h1v1h-1zM10 27h1v1h-1zM13 27h2v1h-2zM16 27h1v1h-1zM18 27h1v1h-1zM23 27h2v1h-2zM28 27h1v1h-1zM32 27h1v1h-1zM4 28h1v1h-1zM6 28h3v1h-3zM10 28h1v1h-1zM15 28h6v1h-6zM23 28h7v1h-7zM31 28h2v1h-2zM4 29h1v1h-1zM6 29h3v1h-3zM10 29h1v1h-1zM14 29h1v1h-1zM17 29h4v1h-4zM22 29h1v1h-1zM25 29h1v1h-1zM29 29h2v1h-2zM32 29h1v1h-1zM4 30h1v1h-1zM6 30h3v1h-3zM10 30h1v1h-1zM13 30h1v1h-1zM15 30h2v1h-2zM18 30h2v1h-2zM23 30h1v1h-1zM25 30h7v1h-7zM4 31h1v1h-1zM10 31h1v1h-1zM13 31h1v1h-1zM18 31h3v1h-3zM22 31h2v1h-2zM27 31h4v1h-4zM32 31h1v1h-1zM4 32h7v1h-7zM12 32h2v1h-2zM16 32h1v1h-1zM18 32h2v1h-2zM21 32h1v1h-1zM23 32h1v1h-1zM27 32h1v1h-1zM30 32h1v1h-1z"/></svg><!-- === END FEEDBACK QR === -->
             <div class="feedback-text">
               <div class="s-hint" id="feedback-hint">Scan with your phone to tell us what confused you.</div>
-              <a class="feedback-link" id="feedback-page-link" target="_blank" rel="noopener noreferrer">marsh.city/<wbr>radio/<wbr>feedback</a>
-              <a class="feedback-link" id="feedback-mail-link" href="mailto:radio@marsh.city?subject=RadioGridXL%20feedback">Something confusing? Tell us</a>
+              <div class="feedback-address" id="feedback-page-address">marsh.city/<wbr>radio/<wbr>feedback</div>
+              <div class="feedback-address" id="feedback-mail-address">or email radio@<wbr>marsh.city</div>
             </div>
           </div>
         </div>
@@ -2970,7 +2972,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.18.0</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.0</div>
     </section>
     </div>
 
@@ -3064,6 +3066,17 @@ html.theme-fading, html.theme-fading * {
   <div style="display:flex; gap:12px; margin-top:8px;">
     <button class="reset-confirm-btn reset-confirm-no" onclick="cancelReset()">Cancel</button>
     <button class="reset-confirm-btn reset-confirm-yes" onclick="executeReset()">Reset</button>
+  </div>
+</div>
+
+<!-- Settings left alone for a while (see IDLE TIMEOUT). A tap anywhere on it
+     keeps editing; no tap and settings close to the stations. -->
+<div class="overlay" id="idle-overlay" role="alertdialog" aria-modal="true" aria-labelledby="idle-overlay-title" aria-describedby="idle-overlay-body" onclick="keepEditing()">
+  <div class="overlay-icon" aria-hidden="true">&#9201;&#65039;</div>
+  <div class="overlay-title" id="idle-overlay-title">Still setting up?</div>
+  <div class="overlay-body" id="idle-overlay-body">Settings will close soon and unsaved changes will be dropped.</div>
+  <div style="display:flex; gap:12px; margin-top:8px;">
+    <button class="reset-confirm-btn reset-confirm-no">Keep editing</button>
   </div>
 </div>
 
@@ -5004,8 +5017,9 @@ function showOverlay(el) {
   el._focusTrap = function(e) { trapFocus(e, el); };
   el.addEventListener('keydown', el._focusTrap);
   // Move focus to the first button inside the overlay
+  // (unless it closed before the frame: focus on a hidden button is lost)
   var firstBtn = el.querySelector('button');
-  if (firstBtn) requestAnimationFrame(() => firstBtn.focus());
+  if (firstBtn) requestAnimationFrame(() => { if (el.classList.contains('visible')) firstBtn.focus(); });
 }
 
 /** Hide an overlay and return focus to what was focused before it opened.
@@ -5443,6 +5457,7 @@ function openSettings() {
   panel._focusTrap = function(e) { trapFocus(e, panel); };
   panel.addEventListener('keydown', panel._focusTrap);
   requestAnimationFrame(() => document.getElementById('settings-close').focus());
+  startSettingsIdle();
 }
 
 /** Check whether current cfg differs from the snapshot taken at open time. */
@@ -5485,6 +5500,7 @@ function confirmDiscard() {
 
 /** Actually close the settings panel, reverting any unapplied changes. */
 function doCloseSettings() {
+  stopSettingsIdle();
   endPreview(false);
   // Revert to snapshot if settings were not applied
   if (cfgSnapshot) {
@@ -6590,7 +6606,9 @@ function openHelp() {
   document.getElementById('help-close').focus();
 }
 
-function closeHelp() {
+/** Close the guide; focus goes back to its button unless `moveFocus` is
+    false (settings timing out, which must not be read aloud). */
+function closeHelp(moveFocus = true) {
   var overlay = document.getElementById('help-overlay');
   if (overlay._focusTrap) {
     overlay.removeEventListener('keydown', overlay._focusTrap);
@@ -6601,30 +6619,21 @@ function closeHelp() {
   // Drop the frame (or offline notice) so every open starts fresh at the guide,
   // even if a link inside it navigated the frame somewhere else.
   document.getElementById('help-body').innerHTML = '';
-  document.getElementById('help-btn').focus();
+  if (moveFocus) document.getElementById('help-btn').focus();
 }
 
 /* ================================================================
    FEEDBACK CARD
    A QR code to a static page on marsh.city, for the setter-up's own
-   phone, plus an email link for devices that can send one. Nothing is
-   sent by the app. Hosted builds only, and off unless the profile turns
-   it on (not Lighthouse).
+   phone, with the address and email as plain text. Nothing is sent by
+   the app. Hosted builds only, and off unless the profile turns it on
+   (not Lighthouse).
    ================================================================ */
 
-var FEEDBACK_URL = 'https://marsh.city/radio/feedback/'; // what the QR holds (make-feedback-qr.mjs)
-
 function showFeedbackCard() {
-  // Hosted only, like the guide: the APK's WebView drops https and mailto
-  // links, so on file:// both would be dead taps.
+  // Hosted only, like the guide (the generic APK is frozen without it).
   var on = PROFILE.feedback === true && /^https?:$/.test(location.protocol);
   document.getElementById('feedback-section').hidden = !on;
-  if (!on) return;
-  document.getElementById('feedback-page-link').href = FEEDBACK_URL;
-  var version = (document.getElementById('settings-version').textContent.match(/v\d+\.\d+\.\d+/) || [''])[0];
-  var subject = 'RadioGridXL feedback' + (version ? ' (' + version + ')' : '');
-  document.getElementById('feedback-mail-link').href =
-    'mailto:radio@marsh.city?subject=' + encodeURIComponent(subject);
 }
 
 function openStreamBrowser() {
@@ -7752,6 +7761,108 @@ function executeReset() {
 
 
 /* ================================================================
+   IDLE TIMEOUT
+   A setter-up who walks away mustn't leave the listener facing settings
+   or the PIN pad. After SETTINGS_IDLE_MS with no tap, key or scroll,
+   "Still setting up?" asks; with no answer in SETTINGS_WARN_MS, settings
+   close as Close → Discard does (unsaved edits dropped: saving would keep
+   a half-typed address nobody checked). The PIN pad just closes. Neither
+   touches the radio's stream, and neither moves focus or says anything on
+   closing: someone may be asleep with the radio on. (Closing settings stops
+   a station-browser preview and reverts an unapplied volume, as Discard
+   does.) Taps inside the guide's frame can't be seen from here, so reading
+   the guide for 3 minutes brings up the prompt; one tap carries on.
+   ================================================================ */
+const SETTINGS_IDLE_MS = 3 * 60 * 1000;
+const SETTINGS_WARN_MS = 30 * 1000;
+const PIN_IDLE_MS = 60 * 1000;
+const idleOverlay = document.getElementById('idle-overlay');
+let settingsIdleTimer = null;
+let settingsWarnTimer = null;
+let pinIdleTimer = null;
+
+function startSettingsIdle() {
+  clearTimeout(settingsIdleTimer);
+  clearTimeout(settingsWarnTimer);
+  settingsWarnTimer = null;
+  settingsIdleTimer = setTimeout(showIdlePrompt, SETTINGS_IDLE_MS);
+}
+
+function stopSettingsIdle() {
+  clearTimeout(settingsIdleTimer);
+  clearTimeout(settingsWarnTimer);
+  settingsIdleTimer = settingsWarnTimer = null;
+  hideOverlay(idleOverlay);
+}
+
+function showIdlePrompt() {
+  settingsIdleTimer = null;
+  if (!settingsOpen) return;
+  showOverlay(idleOverlay);
+  settingsWarnTimer = setTimeout(settingsTimedOut, SETTINGS_WARN_MS);
+}
+
+/** A tap anywhere on the prompt (its button included), or Escape. */
+function keepEditing() {
+  hideOverlay(idleOverlay);
+  if (settingsOpen) startSettingsIdle();
+}
+
+/** Close everything settings opened, then settings, handing focus to
+    nothing (a focus move is read aloud, like a tap). */
+function settingsTimedOut() {
+  settingsWarnTimer = null;
+  if (!settingsOpen) return;
+  // Let go of focus first, while its element can still give it up: blur()
+  // on a button whose dialog already closed does nothing.
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+  const quiet = (el) => { el._returnFocus = null; };
+  quiet(idleOverlay);
+  hideOverlay(idleOverlay);
+  const help = document.getElementById('help-overlay');
+  if (help.classList.contains('open')) closeHelp(false);
+  const emoji = document.getElementById('emoji-picker-overlay');
+  if (emoji.classList.contains('open')) { emojiPickerReturnFocus = null; closeEmojiPicker(); }
+  const browser = document.getElementById('stream-browser-overlay');
+  if (browser.classList.contains('open')) { quiet(browser); closeStreamBrowser(); }
+  Array.prototype.slice.call(document.querySelectorAll('.overlay.visible')).reverse()
+    .forEach(function(el) { quiet(el); hideOverlay(el); });
+  quiet(document.getElementById('settings-panel'));
+  doCloseSettings();
+}
+
+function restartPinIdle() {
+  clearTimeout(pinIdleTimer);
+  pinIdleTimer = setTimeout(function() {
+    pinIdleTimer = null;
+    if (!pinOverlay.classList.contains('visible')) return;
+    pinOverlay._returnFocus = null;
+    if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+    pinCancel(); // a running lockout keeps counting (see startPinLockout)
+  }, PIN_IDLE_MS);
+}
+
+/** Any tap, key or scroll restarts the clocks. While the prompt shows, only
+    its own tap or Escape answers it: a tap behind is impossible (it covers
+    the screen), and a stray key shouldn't dismiss a warning unseen. */
+function noteInput(e) {
+  if (pinOverlay.classList.contains('visible')) restartPinIdle();
+  if (!settingsOpen) return;
+  if (idleOverlay.classList.contains('visible')) {
+    if (e.type === 'keydown' && e.key === 'Escape') {
+      e.stopImmediatePropagation(); // Escape here means "keep editing", not "close settings"
+      keepEditing();
+    }
+    return;
+  }
+  startSettingsIdle();
+}
+['pointerdown', 'keydown', 'wheel', 'touchstart', 'input', 'scroll'].forEach(function(type) {
+  document.addEventListener(type, noteInput, { capture: true, passive: type !== 'keydown' });
+});
+
+
+/* ================================================================
    PIN SYSTEM
    Protects settings access. Tap the logo 5 times within 2 seconds
    to trigger the PIN overlay. Locks out after 5 failed attempts
@@ -7847,6 +7958,7 @@ function showPinOverlay() {
   // A lockout keeps running (and showing) if the pad is closed and reopened.
   if (!pinLocked) clearPinError();
   showOverlay(pinOverlay);
+  restartPinIdle();
 }
 
 /** Clear "Incorrect PIN" and the red dots. */
