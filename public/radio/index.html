@@ -2972,7 +2972,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.0</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.1</div>
     </section>
     </div>
 
@@ -3672,8 +3672,14 @@ function applyTheme() {
   const snap = document.documentElement.classList.contains('theme-snap') ? ' theme-snap' : ''; // see snapTheme()
   const fading = document.documentElement.classList.contains('theme-fading') ? ' theme-fading' : ''; // see fadeTheme()
   document.documentElement.className = base + fill + orient + snap + fading + ' theme-' + resolved;
-  // The browser bar / Android status bar: black in Night, which has no blue.
-  if (themeColorMeta) themeColorMeta.setAttribute('content', resolved === 'night' ? '#000000' : DEFAULT_THEME_COLOR);
+  // The browser bar / Android status bar matches the header in every theme
+  // (Night's header is black, which has no blue). Read from the theme's own
+  // --header-bg token so there's no second colour table to drift; custom
+  // properties don't transition, so this is the new theme's value at once.
+  if (themeColorMeta) {
+    var headerBg = getComputedStyle(document.documentElement).getPropertyValue('--header-bg').trim();
+    themeColorMeta.setAttribute('content', headerBg || DEFAULT_THEME_COLOR);
+  }
   document.documentElement.setAttribute('data-size', cfg.size);
   renderButtons();
 }
