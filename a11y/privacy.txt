@@ -28,22 +28,20 @@
 24. Your IP address isn't stored, by me or by GoatCounter.
 25. Nothing you do inside the apps on this site (the radio, games and tools) is counted.
 26. If your browser sends Global Privacy Control or Do Not Track, nothing is counted at all.
-27. heading level 2: RadioGridXL's one question
-28. RadioGridXL can ask the person setting it up one optional question: "Who's this radio for?" Picking an answer sends that answer and the app's version number to the same GoatCounter account, once. Skip sends nothing. The person listening never sees the question, and nothing about what anyone listens to leaves the device.
-29. heading level 2: Other services pages use
-30. Pages with diagrams load the Mermaid drawing library from jsDelivr at cdn.jsdelivr.net, which sees the request the way any web server does. Fonts and everything else come from marsh.city itself, which is hosted on GitHub Pages; like any web host, GitHub sees each request your browser makes.
-31. heading level 2: Questions
-32. Email
-33. link: jason@marsh.city
-34. .
-35. Updated 2026-11-06
-36. [contentinfo] ©
-37. link: Jason Marsh
-38. link: email
-39. link: github
-40. link: linkedin
-41. link: source
-42. link: privacy
+27. heading level 2: Other services pages use
+28. Pages with diagrams load the Mermaid drawing library from jsDelivr at cdn.jsdelivr.net, which sees the request the way any web server does. Fonts and everything else come from marsh.city itself, which is hosted on GitHub Pages; like any web host, GitHub sees each request your browser makes.
+29. heading level 2: Questions
+30. Email
+31. link: jason@marsh.city
+32. .
+33. Updated 2026-11-06
+34. [contentinfo] ©
+35. link: Jason Marsh
+36. link: email
+37. link: github
+38. link: linkedin
+39. link: source
+40. link: privacy
 
 ## Accessibility tree (Playwright WebKit)
 - link "Skip to main content":
@@ -87,8 +85,6 @@
     - listitem: Your IP address isn't stored, by me or by GoatCounter.
     - listitem: Nothing you do inside the apps on this site (the radio, games and tools) is counted.
     - listitem: If your browser sends Global Privacy Control or Do Not Track, nothing is counted at all.
-  - heading "RadioGridXL's one question" [level=2]
-  - paragraph: "RadioGridXL can ask the person setting it up one optional question: \"Who's this radio for?\" Picking an answer sends that answer and the app's version number to the same GoatCounter account, once. Skip sends nothing. The person listening never sees the question, and nothing about what anyone listens to leaves the device."
   - heading "Other services pages use" [level=2]
   - paragraph: Pages with diagrams load the Mermaid drawing library from jsDelivr at cdn.jsdelivr.net, which sees the request the way any web server does. Fonts and everything else come from marsh.city itself, which is hosted on GitHub Pages; like any web host, GitHub sees each request your browser makes.
   - heading "Questions" [level=2]
