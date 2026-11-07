@@ -72,7 +72,7 @@
   --pill-text: #88ee88;
 
   --stop-idle-bg: #111122;
-  --stop-idle-text: #7777aa;
+  --stop-idle-text: #7a7aad; /* 4.6:1 on the transport bar (#111122) */
   --stop-idle-border: #1a1a33;
   --stop-active-bg: #3a0d0d;
   --stop-active-text: #ff6b6b;
@@ -216,7 +216,7 @@ html.theme-mono-light {
   --header-bg: #f0eeeb;
   --logo-wave-fade: 0.55;
   --header-text: #1a1a1a;
-  --header-sub: #707070;
+  --header-sub: #666666;
 
   --screen-bg: #f5f3f0;
   --status-bg: #f0eeeb;
@@ -564,8 +564,7 @@ html.is-desktop.fill-view #app { width: 100vw; height: 100vh; border-radius: 0; 
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--header-sub);
-  opacity: 0.45;
+  color: var(--header-sub); /* full strength: header text holds 4.5:1 (PROMISES.md) */
   flex-shrink: 0;
   white-space: nowrap;
 }
