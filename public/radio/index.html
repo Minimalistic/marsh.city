@@ -2972,7 +2972,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.3</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.4</div>
     </section>
     </div>
 
@@ -3345,13 +3345,19 @@ function init() {
       'Please check your network connection, or try again in a moment.';
   }
 
-// Re-apply theme when system dark/light preference changes (for "auto" mode)
-  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-    if (cfg.theme.endsWith('auto')) applyTheme();
-  });
-  window.matchMedia('(prefers-contrast: more)').addEventListener('change', () => {
-    if (cfg.theme.endsWith('auto')) applyTheme();
-  });
+// Re-apply theme when system dark/light preference changes (for "auto" mode).
+  // No fade (snapTheme), and Safari is told to re-read its bar colours
+  // (retintSafariBars): it kept the old theme's until something else did.
+  function followSystemTheme() {
+    if (!cfg.theme.endsWith('auto')) return;
+    applyTheme();
+    snapTheme();
+    retintSafariBars();
+  }
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', followSystemTheme);
+  window.matchMedia('(prefers-contrast: more)').addEventListener('change', followSystemTheme);
+  // Safari's first read can come before the bottom bar is drawn.
+  retintSafariBars();
 
   // Sync initial aria-checked state for settings chips
   syncChips();
@@ -3699,6 +3705,53 @@ function snapTheme() {
   root.classList.add('theme-snap');
   requestAnimationFrame(function() {
     requestAnimationFrame(function() { root.classList.remove('theme-snap'); });
+  });
+}
+
+/* iOS Safari colours its status bar and the home-bar strip from the page's
+   own edges, and re-reads them only when a new fixed layer appears at an edge
+   (settings opening is one), not when the colours under them change. Found
+   in the simulator 2026-11-07: after a light/dark switch the bar kept the old
+   theme's colour, and after closing settings it kept the panel's. So after a
+   theme change, add a fixed strip at each edge in the colour already there
+   (no visible change) and take it away again: Safari re-reads both. The top
+   strip has to reach below the status bar, where Safari samples. It waits
+   out the colour fades (the stop bar's runs 0.3 s), or the bottom strip took
+   the old theme's colour mid-fade. */
+const RETINT_HOLD_MS = 250;
+const RETINT_AFTER_MS = 350;
+let retintTimer = null;
+
+/** The painted background at the bottom edge: the first non-transparent
+    one from the element there up. */
+function bottomEdgeColour() {
+  var el = document.elementFromPoint ? document.elementFromPoint(window.innerWidth / 2, window.innerHeight - 1) : null;
+  for (; el && el !== document.documentElement; el = el.parentElement) {
+    var bg = getComputedStyle(el).backgroundColor;
+    if (bg && bg !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(bg)) return bg;
+  }
+  return 'var(--screen-bg)';
+}
+
+function retintSafariBars() {
+  if (!platform.isIOS) return;
+  clearTimeout(retintTimer);
+  retintTimer = setTimeout(addRetintStrips, RETINT_AFTER_MS);
+}
+
+function addRetintStrips() {
+  retintTimer = null;
+  var edges = [
+    'top:0;height:calc(env(safe-area-inset-top) + 24px);background:var(--header-bg)',
+    'bottom:0;height:calc(env(safe-area-inset-bottom) + 24px);background:' + bottomEdgeColour(),
+  ];
+  edges.forEach(function(edge) {
+    var strip = document.createElement('div');
+    strip.className = 'retint-strip';
+    strip.setAttribute('aria-hidden', 'true');
+    strip.style.cssText = 'position:fixed;left:0;right:0;pointer-events:none;z-index:1;' + edge;
+    document.body.appendChild(strip);
+    setTimeout(function() { strip.remove(); }, RETINT_HOLD_MS);
   });
 }
 
@@ -5620,12 +5673,18 @@ function doCloseSettings() {
   applyTheme();
   // Don't leave the PIN sitting in the closed panel's text field.
   document.getElementById('in-pin').value = '';
-  // Remove animated class after slide-out completes (timeout fallback if transitionend doesn't fire)
-  var tid = setTimeout(function() { panel.classList.remove('animated'); }, 350);
+  // Remove animated class after slide-out completes (timeout fallback if
+  // transitionend doesn't fire). Then Safari's bars, which took the panel's
+  // colour as it opened, re-read the page's.
+  function slidOut() {
+    panel.classList.remove('animated');
+    retintSafariBars();
+  }
+  var tid = setTimeout(slidOut, 350);
   panel.addEventListener('transitionend', function handler() {
     panel.removeEventListener('transitionend', handler);
     clearTimeout(tid);
-    panel.classList.remove('animated');
+    slidOut();
   });
   restoreFocus(panel._returnFocus);
   panel._returnFocus = null;
