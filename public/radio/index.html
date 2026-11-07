@@ -1675,6 +1675,23 @@ html.is-desktop .overlay-body { font-size: 20px; }
   cursor: pointer;
 }
 .s-link-row .s-icon { color: var(--settings-label); }
+
+/* Feedback card. The QR keeps its own black-on-white in every theme (fills
+   set in the SVG, no theme rule touches it): phone cameras misread
+   light-on-dark codes. */
+.feedback-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.feedback-qr { width: 128px; height: 128px; flex-shrink: 0; border-radius: 6px; }
+.feedback-text { flex: 1 1 130px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.feedback-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent-text);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .backup-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .backup-row .device-btn { flex: 1; min-height: 48px; }
 
@@ -2925,6 +2942,21 @@ html.theme-fading, html.theme-fading * {
           <button class="s-link-row" id="help-btn" onclick="openHelp()"><span>How to use this app</span><svg class="s-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 3l6 6-6 6"></path></svg></button>
         </div>
 
+        <!-- Shown only when the profile turns it on (PROFILE.feedback). The code
+             opens a static page on the setter-up's own phone, since this device
+             often can't send email. The app itself sends nothing. -->
+        <div class="s-section" id="feedback-section" role="group" aria-labelledby="feedback-title" hidden>
+          <div class="s-section-title" id="feedback-title">Have feedback?</div>
+          <div class="feedback-row">
+            <!-- === FEEDBACK QR — make-feedback-qr.mjs writes this === --><svg class="feedback-qr" id="feedback-qr" viewBox="0 0 37 37" role="img" aria-label="QR code: opens marsh.city/radio/feedback on your phone" shape-rendering="crispEdges"><rect width="37" height="37" fill="#ffffff"/><path fill="#000000" d="M4 4h7v1h-7zM14 4h1v1h-1zM16 4h1v1h-1zM19 4h2v1h-2zM22 4h1v1h-1zM26 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM12 5h3v1h-3zM17 5h2v1h-2zM20 5h1v1h-1zM22 5h1v1h-1zM26 5h1v1h-1zM32 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM12 6h2v1h-2zM17 6h1v1h-1zM19 6h1v1h-1zM24 6h1v1h-1zM26 6h1v1h-1zM28 6h3v1h-3zM32 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM12 7h2v1h-2zM20 7h2v1h-2zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h3v1h-3zM32 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM15 8h2v1h-2zM19 8h6v1h-6zM26 8h1v1h-1zM28 8h3v1h-3zM32 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM24 9h1v1h-1zM26 9h1v1h-1zM32 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h7v1h-7zM12 11h3v1h-3zM16 11h1v1h-1zM18 11h3v1h-3zM4 12h1v1h-1zM10 12h1v1h-1zM12 12h2v1h-2zM15 12h2v1h-2zM21 12h2v1h-2zM25 12h2v1h-2zM29 12h3v1h-3zM4 13h1v1h-1zM6 13h1v1h-1zM9 13h1v1h-1zM11 13h4v1h-4zM17 13h1v1h-1zM20 13h4v1h-4zM27 13h2v1h-2zM30 13h2v1h-2zM5 14h1v1h-1zM7 14h1v1h-1zM10 14h1v1h-1zM15 14h1v1h-1zM17 14h5v1h-5zM25 14h3v1h-3zM5 15h2v1h-2zM9 15h1v1h-1zM12 15h2v1h-2zM17 15h1v1h-1zM19 15h2v1h-2zM23 15h1v1h-1zM28 15h2v1h-2zM5 16h2v1h-2zM9 16h3v1h-3zM13 16h1v1h-1zM17 16h1v1h-1zM20 16h1v1h-1zM23 16h1v1h-1zM25 16h2v1h-2zM32 16h1v1h-1zM4 17h1v1h-1zM12 17h4v1h-4zM19 17h1v1h-1zM22 17h3v1h-3zM26 17h3v1h-3zM31 17h2v1h-2zM4 18h2v1h-2zM8 18h1v1h-1zM10 18h3v1h-3zM14 18h2v1h-2zM19 18h3v1h-3zM24 18h1v1h-1zM26 18h1v1h-1zM29 18h2v1h-2zM4 19h1v1h-1zM7 19h3v1h-3zM13 19h2v1h-2zM16 19h1v1h-1zM19 19h2v1h-2zM22 19h2v1h-2zM28 19h1v1h-1zM30 19h1v1h-1zM32 19h1v1h-1zM5 20h1v1h-1zM7 20h1v1h-1zM10 20h1v1h-1zM13 20h1v1h-1zM15 20h2v1h-2zM21 20h1v1h-1zM23 20h1v1h-1zM27 20h1v1h-1zM29 20h2v1h-2zM4 21h1v1h-1zM6 21h1v1h-1zM11 21h2v1h-2zM15 21h1v1h-1zM17 21h4v1h-4zM22 21h2v1h-2zM26 21h3v1h-3zM30 21h3v1h-3zM4 22h3v1h-3zM8 22h6v1h-6zM16 22h1v1h-1zM19 22h1v1h-1zM21 22h1v1h-1zM23 22h1v1h-1zM25 22h2v1h-2zM28 22h2v1h-2zM32 22h1v1h-1zM4 23h1v1h-1zM6 23h1v1h-1zM8 23h2v1h-2zM12 23h3v1h-3zM16 23h2v1h-2zM19 23h1v1h-1zM25 23h2v1h-2zM28 23h1v1h-1zM4 24h1v1h-1zM10 24h2v1h-2zM16 24h1v1h-1zM18 24h2v1h-2zM21 24h1v1h-1zM23 24h6v1h-6zM30 24h3v1h-3zM12 25h3v1h-3zM16 25h1v1h-1zM18 25h2v1h-2zM22 25h3v1h-3zM28 25h2v1h-2zM4 26h7v1h-7zM13 26h1v1h-1zM15 26h1v1h-1zM19 26h2v1h-2zM23 26h2v1h-2zM26 26h1v1h-1zM28 26h3v1h-3zM4 27h1v1h-1zM10 27h1v1h-1zM13 27h2v1h-2zM16 27h1v1h-1zM18 27h1v1h-1zM23 27h2v1h-2zM28 27h1v1h-1zM32 27h1v1h-1zM4 28h1v1h-1zM6 28h3v1h-3zM10 28h1v1h-1zM15 28h6v1h-6zM23 28h7v1h-7zM31 28h2v1h-2zM4 29h1v1h-1zM6 29h3v1h-3zM10 29h1v1h-1zM14 29h1v1h-1zM17 29h4v1h-4zM22 29h1v1h-1zM25 29h1v1h-1zM29 29h2v1h-2zM32 29h1v1h-1zM4 30h1v1h-1zM6 30h3v1h-3zM10 30h1v1h-1zM13 30h1v1h-1zM15 30h2v1h-2zM18 30h2v1h-2zM23 30h1v1h-1zM25 30h7v1h-7zM4 31h1v1h-1zM10 31h1v1h-1zM13 31h1v1h-1zM18 31h3v1h-3zM22 31h2v1h-2zM27 31h4v1h-4zM32 31h1v1h-1zM4 32h7v1h-7zM12 32h2v1h-2zM16 32h1v1h-1zM18 32h2v1h-2zM21 32h1v1h-1zM23 32h1v1h-1zM27 32h1v1h-1zM30 32h1v1h-1z"/></svg><!-- === END FEEDBACK QR === -->
+            <div class="feedback-text">
+              <div class="s-hint" id="feedback-hint">Scan with your phone to tell us what confused you.</div>
+              <a class="feedback-link" id="feedback-page-link" target="_blank" rel="noopener noreferrer">marsh.city/<wbr>radio/<wbr>feedback</a>
+              <a class="feedback-link" id="feedback-mail-link" href="mailto:radio@marsh.city?subject=RadioGridXL%20feedback">Something confusing? Tell us</a>
+            </div>
+          </div>
+        </div>
+
         <div class="s-section" id="device-section">
           <div class="s-section-title">Device</div>
           <div id="device-buttons">
@@ -2939,7 +2971,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.17.0</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.18.0</div>
     </section>
     </div>
 
@@ -3100,6 +3132,7 @@ const PROFILE = {
   "logoSvg": "<rect class=\"logo-tile logo-r0\" fill=\"#67e8f9\" x=\"28.75\" y=\"28.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r1\" fill=\"#58c6f8\" x=\"39.75\" y=\"28.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r2\" fill=\"#4aa4f7\" x=\"50.75\" y=\"28.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r1\" fill=\"#58c6f8\" x=\"28.75\" y=\"39.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r4\" fill=\"#5f85f7\" x=\"61.75\" y=\"39.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r2\" fill=\"#4aa4f7\" x=\"28.75\" y=\"50.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r3\" fill=\"#3b82f6\" x=\"39.75\" y=\"50.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r4\" fill=\"#5f85f7\" x=\"50.75\" y=\"50.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r3\" fill=\"#3b82f6\" x=\"28.75\" y=\"61.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><rect class=\"logo-tile logo-r6\" fill=\"#a78bfa\" x=\"61.75\" y=\"61.75\" width=\"9.5\" height=\"9.5\" rx=\"2.6\"/><path class=\"logo-wave logo-wave-l\" fill=\"none\" stroke=\"#67e8f9\" stroke-width=\"5.5\" stroke-linecap=\"round\" d=\"M 17.92,33.66 A 36,36 0 0 0 17.92,66.34\"/><path class=\"logo-wave logo-wave-r\" fill=\"none\" stroke=\"#a78bfa\" stroke-width=\"5.5\" stroke-linecap=\"round\" d=\"M 82.08,33.66 A 36,36 0 0 1 82.08,66.34\"/><path class=\"logo-wave logo-wave-l logo-wave-out\" fill=\"none\" stroke=\"#67e8f9\" stroke-width=\"5.5\" stroke-linecap=\"round\" opacity=\"0.65\" d=\"M 8.12,28.66 A 47,47 0 0 0 8.12,71.34\"/><path class=\"logo-wave logo-wave-r logo-wave-out\" fill=\"none\" stroke=\"#a78bfa\" stroke-width=\"5.5\" stroke-linecap=\"round\" opacity=\"0.65\" d=\"M 91.88,28.66 A 47,47 0 0 1 91.88,71.34\"/>",
   "logoViewBox": "0 0 100 100",
   "helpUrl": "https://marsh.city/embed/guides/radiogridxl/",
+  "feedback": true,
   "streams": [
     {
       "id": "s1",
@@ -3268,6 +3301,7 @@ function init() {
   }
 
   document.getElementById('help-section').hidden = !helpAvailable();
+  showFeedbackCard();
   showHapticsAvailability();
 
   // The Device buttons need the APK's bridge (see openDeviceSettings). A
@@ -6569,6 +6603,29 @@ function closeHelp() {
   // even if a link inside it navigated the frame somewhere else.
   document.getElementById('help-body').innerHTML = '';
   document.getElementById('help-btn').focus();
+}
+
+/* ================================================================
+   FEEDBACK CARD
+   A QR code to a static page on marsh.city, for the setter-up's own
+   phone, plus an email link for devices that can send one. Nothing is
+   sent by the app. Hosted builds only, and off unless the profile turns
+   it on (not Lighthouse).
+   ================================================================ */
+
+var FEEDBACK_URL = 'https://marsh.city/radio/feedback/'; // what the QR holds (make-feedback-qr.mjs)
+
+function showFeedbackCard() {
+  // Hosted only, like the guide: the APK's WebView drops https and mailto
+  // links, so on file:// both would be dead taps.
+  var on = PROFILE.feedback === true && /^https?:$/.test(location.protocol);
+  document.getElementById('feedback-section').hidden = !on;
+  if (!on) return;
+  document.getElementById('feedback-page-link').href = FEEDBACK_URL;
+  var version = (document.getElementById('settings-version').textContent.match(/v\d+\.\d+\.\d+/) || [''])[0];
+  var subject = 'RadioGridXL feedback' + (version ? ' (' + version + ')' : '');
+  document.getElementById('feedback-mail-link').href =
+    'mailto:radio@marsh.city?subject=' + encodeURIComponent(subject);
 }
 
 function openStreamBrowser() {

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- A static page: no scripts, no forms, nothing loaded from anywhere else. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>RadioGridXL feedback</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1a1a1a; --muted: #4a4a4a;
+    --btn-bg: #1a4178; --btn-text: #ffffff; --rule: #d0d0d0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121418; --text: #f2f2f2; --muted: #c4c4c4;
+      --btn-bg: #8fb8ff; --btn-text: #0b1220; --rule: #3a3f48;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 34rem; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 12px; }
+  p { margin: 0 0 16px; }
+  .email {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 56px; margin: 24px 0 8px; padding: 12px 20px;
+    border-radius: 12px; background: var(--btn-bg); color: var(--btn-text);
+    font-size: 1.25rem; font-weight: 700; text-decoration: none;
+  }
+  .email:focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
+  .address { text-align: center; color: var(--muted); }
+  h2 { font-size: 1.1rem; margin: 32px 0 8px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  ul { margin: 0 0 16px; padding-left: 1.25rem; }
+  li { margin-bottom: 6px; }
+  .privacy { color: var(--muted); font-size: 1rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Thanks for helping make RadioGridXL better</h1>
+  <p>Something confusing, broken or missing? Tell us what happened. A sentence is plenty.</p>
+
+  <a class="email" href="mailto:radio@marsh.city?subject=RadioGridXL%20feedback">Email us</a>
+  <p class="address">radio@marsh.city</p>
+
+  <h2>It helps if you mention</h2>
+  <ul>
+    <li>What you tapped, and what you expected to happen.</li>
+    <li>The version number, at the bottom of the radio's settings.</li>
+    <li>The device, such as "an iPad" or "a Samsung tablet".</li>
+  </ul>
+
+  <h2>Privacy</h2>
+  <p class="privacy">The radio app sends nothing about you or your listening. This page doesn't either. If you email us, your message comes to us, is read only to fix the app, is never posted publicly and is deleted once it's dealt with.</p>
+</main>
+</body>
+</html>

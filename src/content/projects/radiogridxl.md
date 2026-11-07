@@ -6,7 +6,7 @@ repo: https://github.com/Minimalistic/RadioGridXL
 url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-11-05
+updated: 2026-11-06
 image: /images/radiogridxl/page/grid.webp
 imageAlt: RadioGridXL — two large station buttons filling a dark screen
 hideTagline: true
@@ -82,6 +82,9 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-11-06
+Released v7.18.0. Settings now has a "Have feedback?" card with a code you scan with your phone. It opens a short page with an Email us button, so whoever set up a radio can tell me what confused them, even when the radio's own device can't send email.
 
 ### 2026-11-05
 Released v7.17.0, a reorganised settings panel: four groups (Stations, Look, Sound and controls, Setup), one tappable row per station, switches for voice and tones, theme swatches that look like station buttons, and an Apply button pinned to the bottom. Every saved setup loads exactly as before. Pausing live radio now lets go of the stream and resuming reconnects at the live point, which fixes stations getting stuck on iPhone after a quick pause and play.

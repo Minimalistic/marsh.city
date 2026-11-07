@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.17.0
+appVersion: 7.18.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -163,3 +163,7 @@ RadioGridXL can sit on your home screen like a regular app and open full screen:
 - **Computer (Chrome or Edge):** click the install icon at the right end of the address bar.
 
 On Android and on computers, the installed app keeps the same stations and settings as the browser you installed it from. On iPhone and iPad it starts fresh, so set up your stations in the Home Screen app. If you already set them up in Safari, [Backup and restore](#backup-and-restore) moves them across.
+
+## Send us feedback
+
+At the bottom of settings, **Have feedback?** shows a code you can scan with your phone's camera. It opens a short page with an **Email us** button, so you can tell us what was confusing from your own phone, even when the radio's device can't send email. The radio itself never sends anything about you or your listening.

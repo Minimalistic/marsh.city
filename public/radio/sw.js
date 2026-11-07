@@ -5,7 +5,7 @@
    it sat at v1 from 7.5.0). Keep it in lockstep with the version-bump routine.
    The server sends sw.js no-cache, so each load refetches this file and the
    install→activate purge cycle kicks in. */
-const CACHE_VERSION = 'rgxl-shell-7.17.0-b9f75d46';
+const CACHE_VERSION = 'rgxl-shell-7.18.0-76946320';
 
 /* Shell assets, relative to the SW scope (the directory it's served from).
    start_url is "." so the HTML is reachable both as "./" and by filename.
@@ -70,6 +70,12 @@ self.addEventListener('fetch', (event) => {
   // Never touch cross-origin requests — radio stream URLs live elsewhere and
   // must always hit the network, never be cached or served stale.
   if (url.origin !== self.location.origin) return;
+
+  // The feedback page (feedback/ beside this worker) is its own static page,
+  // not part of the app: never cache it and never answer it with the app
+  // shell. Offline, it fails like any web page.
+  const feedback = new URL('feedback', self.location).pathname;
+  if (url.pathname === feedback || url.pathname.startsWith(feedback + '/')) return;
 
   // Cache-first for same-origin shell/static assets, falling back to network.
   // Successful same-origin GETs are cached so the app keeps booting offline.
