@@ -126,6 +126,10 @@ test('every page loads without JS errors or failed same-origin requests', { skip
       const source = msg.location().url
       if (msg.type() === 'error' && (!source || sameOrigin(source))) problems.push(`${path}: console: ${msg.text()}`)
     })
+    // The page counter only sends on marsh.city itself, so a test run never counts.
+    page.on('request', (req) => {
+      if (req.url().includes('goatcounter.com')) problems.push(`${path}: page count sent off marsh.city: ${req.url()}`)
+    })
     page.on('requestfailed', (req) => {
       if (sameOrigin(req.url())) problems.push(`${path}: failed: ${req.url()}`)
     })

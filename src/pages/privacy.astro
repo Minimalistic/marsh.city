@@ -1,0 +1,62 @@
+---
+import Base from '../layouts/Base.astro';
+// What src/scripts/count.js sends. tests/privacy-hosts.test.mjs fails if the
+// site's code starts talking to an outside host this page doesn't name.
+const updated = '2026-11-06';
+---
+<Base title="Privacy" description="What marsh.city counts, what it doesn't, and who does the counting.">
+  <h1>Privacy</h1>
+  <p class="tagline">What this site counts and what it leaves alone.</p>
+
+  <div class="prose">
+    <h2>What's counted</h2>
+    <p>
+      Each time a page on marsh.city loads, it sends one anonymous count to
+      <a href="https://www.goatcounter.com/">GoatCounter</a>
+      (<code>marshcity.goatcounter.com</code>), a small open-source analytics service.
+      The count carries two things:
+    </p>
+    <ul>
+      <li>the page's address, without anything after a <code>?</code> or <code>#</code></li>
+      <li>the name of the site that linked you here, such as <code>www.linkedin.com</code>, without the page you came from</li>
+    </ul>
+    <p>
+      Like any web server, GoatCounter sees the request your browser makes. From it,
+      GoatCounter works out your country and your browser and operating system name and
+      version, and keeps only those. To tell one visit from several, it holds a temporary
+      code in memory for eight hours and never writes it to disk.
+      Its <a href="https://www.goatcounter.com/privacy">privacy policy</a> has the details.
+    </p>
+
+    <h2>What isn't</h2>
+    <ul>
+      <li>No cookies, and nothing is stored in your browser for counting.</li>
+      <li>No ID that follows you from visit to visit or site to site.</li>
+      <li>Your IP address isn't stored, by me or by GoatCounter.</li>
+      <li>Nothing you do inside the apps on this site (the radio, games and tools) is counted.</li>
+      <li>If your browser sends Global Privacy Control or Do Not Track, nothing is counted at all.</li>
+    </ul>
+
+    <h2>RadioGridXL's one question</h2>
+    <p>
+      RadioGridXL can ask the person setting it up one optional question: "Who's this radio
+      for?" Picking an answer sends that answer and the app's version number to the same
+      GoatCounter account, once. Skip sends nothing. The person listening never sees the
+      question, and nothing about what anyone listens to leaves the device.
+    </p>
+
+    <h2>Other services pages use</h2>
+    <p>
+      Pages with diagrams load the Mermaid drawing library from jsDelivr
+      (<code>cdn.jsdelivr.net</code>), which sees the request the way any web server does.
+      Fonts and everything else come from marsh.city itself.
+    </p>
+
+    <h2>Questions</h2>
+    <p>Email <a href="mailto:jason@marsh.city">jason@marsh.city</a>.</p>
+  </div>
+
+  <p style="color: var(--fg-soft); font-size: 0.85rem; font-family: var(--font-mono); margin-top: 3rem;">
+    Updated {updated}
+  </p>
+</Base>
