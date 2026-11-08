@@ -84,6 +84,8 @@ flowchart TD
 ## Updates
 
 ### 2026-11-08
+Released v7.21.0, so a station can be played by saying its name. With Voice Control, "Tap Jazz 88" now plays Jazz 88. Each station button used to carry extra words in its hidden name, like "Play" and its description, which nobody would say out loud. Now the name is just the station, and VoiceOver reads the description after it. Numbers still work for every button and stay the first suggestion in the guide.
+
 Released v7.20.0, which makes the radio easier to run by voice. The skip and sleep buttons now show a word under their icons (Back 15, Skip 30 and Sleep), and both close buttons say Close, so someone using Voice Control on an iPhone, iPad or Mac can say what they see. The guide has a new section on using the radio by voice. It starts with numbers, which work for every button whatever a station is called. Settings warns when two stations share a name or a station is named like a button. In High Contrast light, the guide's close button had turned invisible, and it shows again.
 
 ### 2026-11-07

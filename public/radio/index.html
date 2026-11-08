@@ -3003,7 +3003,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.20.0</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.21.0</div>
     </section>
     </div>
 
@@ -4174,14 +4174,16 @@ function renderButtons() {
     btn.setAttribute('data-active', c.active);
     btn.onclick = () => playStream(s.id);
 
-    // Accessible label always includes full stream name + description
+    // The name is the station's own name, so saying it presses the button
+    // (Voice Control matches the whole name). Playing is aria-pressed, and
+    // the description is the button's description. The rare states keep
+    // their word after the station, so VoiceOver says them even with spoken
+    // hints off.
     const isReconnecting = isActive && !isPaused && streamFault;
-    var label = 'Play ' + s.label;
-    if (s.sub) label += ', ' + s.sub;
-    if (isFailed) label = s.label + ', not available. Tap to try again.';
-    else if (isPaused) label = 'Paused: ' + s.label + ', tap to resume';
-    else if (isReconnecting) label = 'Reconnecting to ' + s.label;
-    else if (isActive) label = 'Now playing: ' + s.label;
+    var label = s.label;
+    if (isFailed) label += ', not available';
+    else if (isPaused) label += ', paused';
+    else if (isReconnecting) label += ', reconnecting';
     btn.setAttribute('aria-label', label);
     // Pressed only while it plays: a paused station isn't on.
     btn.setAttribute('aria-pressed', isActive && !isPaused ? 'true' : 'false');
@@ -4208,11 +4210,15 @@ function renderButtons() {
       if (s.emoji) html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(s.emoji) + '</div>';
       html += '<div class="btn-label">' + escHtml(s.label) + '</div>';
       if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
-      else if (s.sub) html += '<div class="btn-sublabel">' + escHtml(s.sub) + '</div>';
+      else if (s.sub) html += '<div class="btn-sublabel" id="btn-desc-' + escAttr(s.id) + '">' + escHtml(s.sub) + '</div>';
       html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
     }
 
     btn.innerHTML = html;
+    // Point at the description only where one was drawn (compact layouts and
+    // a status line have none), so the reference can't dangle.
+    const desc = btn.querySelector('.btn-sublabel[id]');
+    if (desc) btn.setAttribute('aria-describedby', desc.id);
     buttonsEl.appendChild(btn);
   });
 

@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.20.0
+appVersion: 7.21.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -138,12 +138,13 @@ The surest way is by number. On an iPhone or iPad, also turn on **Voice Control 
 
 Numbers and names on screen need sight. For a listener who can't see the screen, use VoiceOver (**Settings › Accessibility › VoiceOver**), which reads each station and button aloud.
 
-Buttons that show a word can be pressed by that word too:
+Buttons can also be pressed by what they show:
 
+- "Tap" and a station's full name, such as "Tap Jazz 88", plays it. While a station is paused, use its number to resume it.
 - "Tap Stop" stops the station. With Advanced controls, "Tap Pause", "Tap Sleep", and for recordings "Tap Back 15" and "Tap Skip 30".
 - "Show names" labels every button with what to say.
 
-If someone would rather use station names, give each one a name that's easy to say and different from the others. Settings warns when two stations share a name, or when a station is named like a button, such as Stop.
+For saying stations by name, give each one a short name that's easy to say and different from the others. Settings warns when two stations share a name, or when a station is named like a button, such as Stop.
 
 ## Simple or Advanced controls
 
