@@ -2178,6 +2178,10 @@ html.theme-fading, html.theme-fading * {
   font-size: 13px;
   font-family: inherit;
 }
+/* Every placeholder in the hint colour: the browser's own grey fell to
+   4.06:1 on the light card and short of 7:1 in High Contrast. Opacity 1
+   because Firefox fades placeholders by default. */
+::placeholder { color: var(--settings-label); opacity: 1; }
 .stream-browser-search button {
   flex: 0 0 auto;
   padding: 8px 14px;
@@ -2979,7 +2983,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.5</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.6</div>
     </section>
     </div>
 
