@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.19.6
+appVersion: 7.20.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -130,6 +130,21 @@ Pick the closest one, then fine-tune anything below it. Once you change somethin
 
 Under **Sound and controls** are switches: **Voice announcements** (speaks "Now playing…" and so on aloud), **Audio tones** (a short chime when playback starts or stops), **Auto-resume** (when the app opens, starts the station again if it was playing when the app closed) and **Haptic feedback** (a small buzz on tap, on Android phones and tablets only; elsewhere it's greyed out with the reason).
 
+### Use it by voice
+
+Someone who can't touch the screen can run the radio by speaking, with the Voice Control built into iPhone, iPad and Mac. Whoever sets the radio up turns it on: on an iPhone or iPad, **Settings › Accessibility › Voice Control**; on a Mac, **System Settings › Accessibility › Voice Control**. It needs the device's microphone, and it listens on the device.
+
+The surest way is by number. On an iPhone or iPad, also turn on **Voice Control › Overlay › Item Numbers**: every button then keeps a small number beside it, and "Tap 2" presses button 2, whatever it's called. On a Mac, say "Show numbers" first, then the number.
+
+Numbers and names on screen need sight. For a listener who can't see the screen, use VoiceOver (**Settings › Accessibility › VoiceOver**), which reads each station and button aloud.
+
+Buttons that show a word can be pressed by that word too:
+
+- "Tap Stop" stops the station. With Advanced controls, "Tap Pause", "Tap Sleep", and for recordings "Tap Back 15" and "Tap Skip 30".
+- "Show names" labels every button with what to say.
+
+If someone would rather use station names, give each one a name that's easy to say and different from the others. Settings warns when two stations share a name, or when a station is named like a button, such as Stop.
+
 ## Simple or Advanced controls
 
 ![The Advanced controls bar at the bottom of the screen](/images/radiogridxl/guide/controls.webp)
@@ -137,7 +152,7 @@ Under **Sound and controls** are switches: **Voice announcements** (speaks "Now 
 Under **Buttons while playing**, in **Sound and controls**:
 
 - **Simple** shows a single Stop button. Best for most listeners.
-- **Advanced** adds separate Pause and Stop buttons and a **sleep timer** (the clock button) that stops playback after 15 minutes to 4 hours. Skip back and forward show up only for recordings with a set length, not live radio.
+- **Advanced** adds separate Pause and Stop buttons and a **sleep timer** (the clock button, labelled Sleep) that stops playback after 15 minutes to 4 hours. **Back 15** and **Skip 30** show up only for recordings with a set length, not live radio.
 
 ## Lock settings with a PIN
 

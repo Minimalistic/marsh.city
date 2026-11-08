@@ -83,6 +83,9 @@ flowchart TD
 
 ## Updates
 
+### 2026-11-08
+Released v7.20.0, which makes the radio easier to run by voice. The skip and sleep buttons now show a word under their icons (Back 15, Skip 30 and Sleep), and both close buttons say Close, so someone using Voice Control on an iPhone, iPad or Mac can say what they see. The guide has a new section on using the radio by voice. It starts with numbers, which work for every button whatever a station is called. Settings warns when two stations share a name or a station is named like a button. In High Contrast light, the guide's close button had turned invisible, and it shows again.
+
 ### 2026-11-07
 Released v7.19.0. Settings now close themselves when they're left alone. After three minutes with no tap, the radio asks "Still setting up?", and if nobody answers it goes back to the stations, so whoever set it up can walk away without leaving the listener stuck in settings. The feedback card now shows its web address and email as plain text, so a stray tap on the radio can't open a website or an email app. The Stop label in the Dark theme is a touch lighter and easier to read.
 
