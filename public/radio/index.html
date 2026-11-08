@@ -1603,7 +1603,9 @@ html.is-desktop .overlay-body { font-size: 20px; }
 .s-switch[aria-checked="true"] .s-switch-knob { transform: translateX(24px); background: var(--on-accent); }
 .s-switch:disabled { opacity: 0.45; cursor: not-allowed; }
 .s-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 18px; }
-.s-unavailable .s-section-title { opacity: 0.7; }
+/* Greyed by colour, not opacity: Night's amber at 70% fell to 4.22:1.
+   --settings-label is the hint colour, which holds AA in every theme. */
+.s-unavailable .s-section-title { color: var(--settings-label); }
 
 /* Theme: a family swatch, drawn like a small station button, plus a mode. */
 .theme-families { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
@@ -1680,12 +1682,16 @@ html.is-desktop .overlay-body { font-size: 20px; }
    light-on-dark codes. */
 .feedback-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .feedback-qr { width: 128px; height: 128px; flex-shrink: 0; border-radius: 6px; }
-.feedback-text { flex: 1 1 130px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.feedback-text { flex: 1 1 215px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* 215px fits the longer address (marsh.city/radio/feedback, 15px bold) on
+   one line; when the column beside the QR is narrower, the text moves under
+   the QR at full width rather than breaking an address mid-way. */
 /* Text, not links (see the markup): no underline or accent colour, so it
    doesn't look tappable. Selectable, for copying on a desktop. */
 .feedback-address {
   font-size: 15px;
   font-weight: 700;
+  color: var(--settings-text);
   overflow-wrap: anywhere;
 }
 .backup-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -2953,7 +2959,8 @@ html.theme-fading, html.theme-fading * {
             <div class="feedback-text">
               <div class="s-hint" id="feedback-hint">Scan with your phone to tell us what confused you.</div>
               <div class="feedback-address" id="feedback-page-address">marsh.city/<wbr>radio/<wbr>feedback</div>
-              <div class="feedback-address" id="feedback-mail-address">or email radio@<wbr>marsh.city</div>
+              <div class="s-hint feedback-or">or email</div>
+              <div class="feedback-address" id="feedback-mail-address">radio@<wbr>marsh.city</div>
             </div>
           </div>
         </div>
@@ -2972,7 +2979,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.4</div>
+      <div id="settings-version" aria-hidden="true">RadioGridXL v7.19.5</div>
     </section>
     </div>
 
