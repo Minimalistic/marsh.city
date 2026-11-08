@@ -931,7 +931,8 @@ html[class*="theme-contrast"] .stream-browser-actions button { background: var(-
 /* No faded settings text in High Contrast. */
 html[class*="theme-contrast"] .theme-group-label,
 html[class*="theme-contrast"] .stream-action-btn,
-html[class*="theme-contrast"] #settings-version { opacity: 1; }
+html[class*="theme-contrast"] #settings-version,
+html[class*="theme-contrast"] #settings-credit { opacity: 1; }
 /* LIVE sits on a stop bar that turns yellow while playing: its own yellow
    chip with black text reads on either bar. */
 html[class*="theme-contrast"] #adv-live-badge { color: #000000; background: #ffff00; border: 2px solid #000000; }
@@ -984,7 +985,8 @@ html.theme-night .reset-confirm-yes { background: #4a1006; color: #d09440; }
 html.theme-night #adv-live-badge { color: #d09440; background: rgba(0, 0, 0, 0); border-color: #805626; }
 html.theme-night .color-chip { filter: grayscale(1) sepia(1) brightness(0.6); }
 html.theme-night .stream-action-btn,
-html.theme-night #settings-version { opacity: 1; }
+html.theme-night #settings-version,
+html.theme-night #settings-credit { opacity: 1; }
 /* Without fading, an unavailable Move shows as a dashed outline with its
    label struck through (the label grey is near white in High Contrast). */
 html[class*="theme-contrast"] .stream-action-btn:disabled,
@@ -2559,7 +2561,8 @@ html.theme-fading, html.theme-fading * {
 
 #discard-overlay { z-index: 200; position: fixed; }
 
-#settings-version {
+#settings-version,
+#settings-credit {
   text-align: center;
   padding: 4px 0 0;
   font-size: 10px;
@@ -3003,7 +3006,9 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version" aria-hidden="true">RadioGridXL v7.21.0</div>
+      <div id="settings-version">RadioGridXL v7.21.1</div>
+      <!-- Who made it, from PROFILE.madeBy; plain text, never a link (promise-stays-radio). -->
+      <div id="settings-credit" hidden></div>
     </section>
     </div>
 
@@ -3176,6 +3181,7 @@ const PROFILE = {
   "logoViewBox": "0 0 100 100",
   "helpUrl": "https://marsh.city/embed/guides/radiogridxl/",
   "feedback": true,
+  "madeBy": "MarshWorks LLC",
   "streams": [
     {
       "id": "s1",
@@ -5611,6 +5617,7 @@ function openSettings() {
 
   fitSettingsPanel();
   showBuildCode();
+  showCredit();
   renderStreamEditor();
   renderPresetChips();
   quietSync = true; // opening isn't a change: nothing to point at
@@ -5880,6 +5887,16 @@ function showBuildCode() {
     showBuildCode.code = ('0000000' + h.toString(16)).slice(-8);
   }
   el.textContent = el.textContent.split(' · ')[0] + ' · ' + showBuildCode.code;
+}
+
+/** "Made by …" under the version, when the profile names a maker (the
+    default build does; the Lighthouse build doesn't). textContent only. */
+function showCredit() {
+  var el = document.getElementById('settings-credit');
+  if (!el) return;
+  var maker = typeof PROFILE.madeBy === 'string' ? PROFILE.madeBy.trim() : '';
+  el.textContent = maker ? 'Made by ' + maker : '';
+  el.hidden = !maker;
 }
 
 /* True while settings syncs to cfg without anyone having changed anything. */
