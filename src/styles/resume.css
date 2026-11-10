@@ -244,8 +244,11 @@
      empirically - Helvetica and Lora extract cleanly, Inter never does,
      with or without kerning/ligatures). Print body text in Helvetica;
      headings and the name stay Lora, which extracts fine. */
+  /* fi/fl ligature glyphs get dropped by some PDF text extractors
+     ("specication", "nonprot"), so print the letters separately. */
   * {
     font-family: Helvetica, Arial, sans-serif !important;
+    font-variant-ligatures: none !important;
   }
   h1, h2, h3,
   .resume-print-name {
