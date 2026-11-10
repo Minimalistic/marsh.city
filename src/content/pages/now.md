@@ -1,17 +1,20 @@
 ---
 title: Now
 description: What I'm working on right now.
-updated: October 2026
+updated: November 2026
 ---
 
 ## Building
 
 **[WhatCanHelp](/projects/whatcanhelp/)** is a free site for finding assistive
-technology. Most of my building time goes here. In September I reworked the
-state funding pages so each one opens with the state's AT Act program.
-Lately the work has been accuracy and accessibility: keeping program details
-current, tagging the PDF report for screen readers, and testing the core pages
-with VoiceOver.
+technology. Lately the work has been cleanup: reviewing the text page by page
+and refining what the site is, so it's more helpful to the people who use it.
+
+**[RadioGridXL](/projects/radiogridxl/)** is an internet radio app for older
+adults and people with disabilities. Recent releases have been about access: a
+station plays when you say its name with Voice Control, and there's an optional
+Settings button for people setting up their own radio by switch, voice or
+screen reader.
 
 **marsh.city** is this site. I'm rewriting the older pages so they read like
 me.
