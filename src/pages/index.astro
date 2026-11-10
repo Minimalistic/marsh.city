@@ -8,7 +8,7 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
 const projects = (await getCollection('projects'))
   .sort((a, b) => (b.data.updated ?? new Date(0)).valueOf() - (a.data.updated ?? new Date(0)).valueOf())
   .slice(0, 6);
-// Selected Works: six hand-picked tiles, in the order listed in
+// Selected Works: five hand-picked tiles, in the order listed in
 // src/data/showcase.json. getEntry() returns undefined for a mistyped id,
 // so fail the build rather than silently dropping a tile. An item can
 // override its title and url (the art tile opens the whole /art/ index).
