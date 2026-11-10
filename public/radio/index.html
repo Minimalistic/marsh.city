@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src http: https: blob:; connect-src 'self' https://*.api.radio-browser.info; frame-src https://marsh.city; base-uri 'none'; form-action 'none'">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" id="viewport-meta" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <!-- PWA shell: relative manifest href keeps the file fully self-contained (no http URLs). -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d0d1a">
@@ -572,6 +572,27 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
 
 
 /* --- HEADER --- */
+
+#settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  margin-left: 12px;
+  border-radius: 10px;
+  border: 2px solid var(--header-text);
+  background: transparent;
+  color: var(--header-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#settings-btn[hidden] { display: none; } /* display:flex above would beat the hidden attribute */
+#settings-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+#settings-btn:focus-visible { outline: 3px solid var(--header-text); outline-offset: 2px; }
 
 #header {
   display: flex;
@@ -1199,6 +1220,14 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   right: calc(18px + env(safe-area-inset-right, 0px));
 }
 #adv-transport.has-playing .adv-sleep-btn { color: var(--stop-active-text); }
+/* A recording shows Back and Skip too, and on a phone that row ran under the
+   sleep button (it overlaps up to about 490 px in Chromium; the margin is for
+   other engines' fonts). There the bar grows a second row for Sleep alone,
+   so every control keeps its name. Live radio shows no skip and keeps one row. */
+@media (max-width: 539px) {
+  #adv-transport.skippable { padding-bottom: calc(10px + 54px + env(safe-area-inset-bottom, 0px)); }
+  #adv-transport.skippable .adv-sleep-btn { bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+}
 
 /* Skip action toast (e.g. "Back 15s") */
 #skip-toast {
@@ -2171,7 +2200,7 @@ html.theme-fading, html.theme-fading * {
 @media (max-height: 520px) {
   .stream-browser-results { flex: none; max-height: none; min-height: 0; overflow-y: visible; }
 }
-.stream-browser-title:focus { outline: none; } /* focused by script only, never by Tab */
+.stream-browser-title:focus, #settings-title:focus { outline: none; } /* focused by script only, never by Tab */
 .stream-browser-title {
   font-size: 15px;
   font-weight: 700;
@@ -2674,7 +2703,8 @@ html.theme-fading, html.theme-fading * {
       <svg id="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
       <h1 id="org-name">RadioGridXL</h1>
     </div>
-    <div id="conn-dot" role="status" aria-live="polite" aria-label="Connection: idle"><span id="conn-text" class="sr-only">Connection: idle</span></div>
+    <div id="conn-dot" aria-hidden="true"></div>
+    <span id="conn-text" class="sr-only" role="status" aria-live="polite">Connection: idle</span>
     <!-- Not a live region: a screen reader reads the time left when someone
          swipes to it, from text updated once a minute. The ticking seconds
          are hidden from it, or it would read them out over the radio. That
@@ -2684,6 +2714,10 @@ html.theme-fading, html.theme-fading * {
     <!-- Confirms setting or cancelling the timer, once. Never written when the timer ends. -->
     <span id="sleep-status" class="sr-only" role="status" aria-live="polite"></span>
     <span id="platform-badge" aria-hidden="true">Desktop Preview</span>
+    <!-- Shown by the "Show a Settings button" switch: one tap into settings
+         (through the PIN pad when there's a PIN) for anyone who can't do
+         five taps on the logo, such as a switch or voice user. -->
+    <button type="button" id="settings-btn" hidden onclick="requestSettings()"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>Settings</button>
   </header>
 
   <!-- ========== STREAM BUTTONS (rendered by JS) ========== -->
@@ -2788,7 +2822,7 @@ html.theme-fading, html.theme-fading * {
   <!-- ========== SETTINGS PANEL (technician only) ========== -->
   <aside id="settings-panel" role="dialog" aria-labelledby="settings-title" aria-modal="true">
     <div id="settings-header">
-      <span id="settings-title">Settings</span>
+      <span id="settings-title" tabindex="-1">Settings</span>
       <div id="settings-header-actions">
         <button id="settings-preview" onclick="startPreview()">Preview</button>
         <button id="settings-close" onclick="closeSettings()" aria-label="Close settings"><span aria-hidden="true">&#215;</span><span class="close-word" aria-hidden="true">Close</span></button>
@@ -2873,6 +2907,14 @@ html.theme-fading, html.theme-fading * {
           </div>
           <div class="s-hint">Keeps the screen sideways even on a device locked upright. Takes effect when you close settings.</div>
         </div>
+
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="zoom-label">Allow pinch to zoom</div>
+            <div class="s-hint" id="zoom-hint">For people who zoom in to read. Off keeps the screen steady for hands that might pinch by accident.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="zoom" aria-checked="false" aria-labelledby="zoom-label" aria-describedby="zoom-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
       </div>
     </section>
 
@@ -2940,6 +2982,14 @@ html.theme-fading, html.theme-fading * {
     <section class="s-group">
       <h2 class="s-group-title" id="g-setup">Setup</h2>
       <div class="s-card">
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="settingsbtn-label">Show a Settings button</div>
+            <div class="s-hint" id="settingsbtn-hint">For people setting up their own radio by voice, switch or screen reader. Set a PIN if the listener shouldn't change things.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="settingsButton" aria-checked="false" aria-labelledby="settingsbtn-label" aria-describedby="settingsbtn-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+
         <div class="s-section">
           <label class="s-section-title" for="in-org-name">Name in the header</label>
           <textarea class="s-input" id="in-org-name" rows="2" maxlength="80" style="resize:none;font-family:inherit;" aria-describedby="org-hint" oninput="previewOrgName()" onfocus="caretToEnd(this)"></textarea>
@@ -3006,7 +3056,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version">RadioGridXL v7.21.1</div>
+      <div id="settings-version">RadioGridXL v7.22.0</div>
       <!-- Who made it, from PROFILE.madeBy; plain text, never a link (promise-stays-radio). -->
       <div id="settings-credit" hidden></div>
     </section>
@@ -3255,6 +3305,8 @@ const cfg = {
   tts: 'off',
   chime: 'on',
   resume: 'off',
+  zoom: 'off',
+  settingsButton: 'off',
   preset: 'Standard',
   orientation: PROFILE.orientation || 'auto',
   streams: JSON.parse(JSON.stringify(PROFILE.streams))
@@ -3371,8 +3423,7 @@ function init() {
 
   // Apply max volume cap
   audio.volume = cfg.volume / 100;
-  document.getElementById('vol-slider').value = cfg.volume;
-  document.getElementById('vol-val').textContent = cfg.volume + '%';
+  showVolume();
 
   // Desktop-specific adjustments. (There is no longer a volume overlay — the
   // volume control lives in Settings — so don't reference the removed
@@ -3527,6 +3578,8 @@ function validateConfig(s) {
   if (['on', 'off'].includes(s.tts))                    out.tts = s.tts;
   if (['on', 'off'].includes(s.chime))                  out.chime = s.chime;
   if (['on', 'off'].includes(s.resume))                 out.resume = s.resume;
+  if (['on', 'off'].includes(s.zoom))                   out.zoom = s.zoom;
+  if (['on', 'off'].includes(s.settingsButton))         out.settingsButton = s.settingsButton;
   // Accessibility preset name. Allowlist = built-in preset names + 'custom'.
   // Unknown/legacy values are simply omitted (fall back to the 'Standard'
   // default) — purely a UI highlight hint, never drives behavior on its own.
@@ -3629,6 +3682,8 @@ function saveSettings() {
       tts: cfg.tts,
       chime: cfg.chime,
       resume: cfg.resume,
+      zoom: cfg.zoom,
+      settingsButton: cfg.settingsButton,
       preset: cfg.preset,
       orientation: cfg.orientation,
       streams: cfg.streams
@@ -3724,7 +3779,19 @@ function applyTheme() {
     themeColorMeta.setAttribute('content', headerBg || DEFAULT_THEME_COLOR);
   }
   document.documentElement.setAttribute('data-size', cfg.size);
+  applyAccessOptions(); // every load, apply, revert, import and reset path runs through here
   renderButtons();
+}
+
+const FIXED_VIEWPORT = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+const ZOOMABLE_VIEWPORT = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
+
+/** The two Setup switches that change the page itself: pinch-zoom (the
+    viewport, rewritten live; browsers re-read it) and the header's Settings
+    button. */
+function applyAccessOptions() {
+  document.getElementById('viewport-meta').setAttribute('content', cfg.zoom === 'on' ? ZOOMABLE_VIEWPORT : FIXED_VIEWPORT);
+  document.getElementById('settings-btn').hidden = cfg.settingsButton !== 'on';
 }
 
 /** Where to change the speaking voice on this device. Only the APK has an
@@ -4296,6 +4363,12 @@ function updateSkipButtons() {
   const skippable = canSkip();
   skipBackBtn.style.display = skippable ? '' : 'none';
   skipFwdBtn.style.display = skippable ? '' : 'none';
+  // On a phone a recording's bar is taller (see the .skippable CSS), so the
+  // grid is re-sized to the bar's new height, only when that changes.
+  if (advTransport.classList.contains('skippable') !== skippable) {
+    advTransport.classList.toggle('skippable', skippable);
+    renderButtons();
+  }
   // LIVE means live audio is coming in, so it hides while paused.
   liveBadge.classList.toggle('visible', !!playing && !paused && !skippable);
 }
@@ -5041,16 +5114,18 @@ const CONN_LABELS = {
 };
 
 /** `message` replaces the standard label, for a sentence worth announcing
-    (a station that has stopped working). The text lives in an .sr-only span:
-    zero-size text inside the 8px dot may never be voiced.
+    (a station that has stopped working). The dot only shows the colour; the
+    words are a separate .sr-only status beside it. Inside the 8px dot Safari
+    never exposed them: with an aria-label too, macOS VoiceOver read
+    "Connection: idle empty application status", and without one it skipped
+    the dot and stopped there.
     While connQuiet is set (the sleep timer ending) the dot stops being a live
     region before its text changes, so no "Connection: idle" wakes anyone. It
     stays quiet until the next change, which turns it back on first. */
 function setConnStatus(status, message) {
   connDot.className = status === 'idle' ? '' : status;
   var label = message || CONN_LABELS[status] || CONN_LABELS.idle;
-  connDot.setAttribute('aria-live', connQuiet ? 'off' : 'polite');
-  connDot.setAttribute('aria-label', label);
+  connText.setAttribute('aria-live', connQuiet ? 'off' : 'polite');
   connText.textContent = label;
 }
 
@@ -5539,8 +5614,17 @@ function setVolume(val) {
   // Don't fight an in-progress fade; otherwise apply the effective volume
   // (max × current stream's gain trim) immediately so the slider is live.
   if (!fadeTimer) audio.volume = targetVolume();
+  showVolume();
+}
+
+/** Put cfg.volume on the slider, its label and its spoken value together:
+    a value set without the spoken text left screen readers reading the old
+    one (after a Discard) or a bare "100.0" (on open). */
+function showVolume() {
+  var slider = document.getElementById('vol-slider');
+  slider.value = cfg.volume;
+  slider.setAttribute('aria-valuetext', cfg.volume + ' percent');
   document.getElementById('vol-val').textContent = cfg.volume + '%';
-  document.getElementById('vol-slider').setAttribute('aria-valuetext', cfg.volume + ' percent');
 }
 
 
@@ -5604,8 +5688,7 @@ function openSettings() {
   document.getElementById('settings-body').scrollTop = 0;
 
   // Sync volume slider with current value
-  document.getElementById('vol-slider').value = cfg.volume;
-  document.getElementById('vol-val').textContent = cfg.volume + '%';
+  showVolume();
 
   // Sync org name textarea
   document.getElementById('in-org-name').value = cfg.orgName;
@@ -5624,10 +5707,12 @@ function openSettings() {
   syncChips();
   quietSync = false;
 
-  // Focus trap + move focus to the close button for keyboard users
+  // Focus trap + move focus to the title, so a screen reader starts at
+  // "Settings" and swipes on through Preview and Close (landing on Close
+  // skipped both). Tab from the title goes on to Preview.
   panel._focusTrap = function(e) { trapFocus(e, panel); };
   panel.addEventListener('keydown', panel._focusTrap);
-  requestAnimationFrame(() => document.getElementById('settings-close').focus());
+  requestAnimationFrame(() => document.getElementById('settings-title').focus());
   startSettingsIdle();
 }
 
@@ -5640,7 +5725,7 @@ function hasUnsavedChanges() {
   if (orgVal !== cfgSnapshot.orgName) return true;
   // No 'preset': it's derived from the fields compared here, so it can only
   // differ when they do (or when it's stale, which isn't a change).
-  for (var k of ['theme', 'size', 'fillview', 'advanced', 'haptics', 'tts', 'chime', 'resume', 'orientation']) {
+  for (var k of ['theme', 'size', 'fillview', 'advanced', 'haptics', 'tts', 'chime', 'resume', 'zoom', 'settingsButton', 'orientation']) {
     if (cfg[k] !== cfgSnapshot[k]) return true;
   }
   if (cfg.volume !== cfgSnapshot.volume) return true;
@@ -5685,6 +5770,8 @@ function doCloseSettings() {
     cfg.tts = cfgSnapshot.tts;
     cfg.chime = cfgSnapshot.chime;
     cfg.resume = cfgSnapshot.resume;
+    cfg.zoom = cfgSnapshot.zoom;
+    cfg.settingsButton = cfgSnapshot.settingsButton;
     cfg.preset = cfgSnapshot.preset;
     cfg.orientation = cfgSnapshot.orientation;
     cfg.streams = cfgSnapshot.streams;
@@ -6019,6 +6106,7 @@ function toggleSwitch(sw) {
   var group = sw.dataset.switch;
   cfg[group] = cfg[group] === 'on' ? 'off' : 'on';
   syncChips();
+  applyAccessOptions();
 }
 
 /** Handle a chip selection — update config, aria state, and apply visual changes. */
@@ -7745,6 +7833,8 @@ function buildBackupPayload(includePin) {
     tts: cfg.tts,
     chime: cfg.chime,
     resume: cfg.resume,
+    zoom: cfg.zoom,
+    settingsButton: cfg.settingsButton,
     preset: cfg.preset,
     orientation: cfg.orientation,
     streams: cfg.streams
@@ -7824,8 +7914,7 @@ function applyImportedConfig(sanitized, pin) {
   if (!fadeTimer) audio.volume = targetVolume();
 
   // If the settings panel is open, refresh its live inputs too.
-  document.getElementById('vol-slider').value = cfg.volume;
-  document.getElementById('vol-val').textContent = cfg.volume + '%';
+  showVolume();
   document.getElementById('in-org-name').value = cfg.orgName;
   // The field must hold the PIN now in force (the device's, or the one the
   // backup just restored). A blank field here made the next Apply remove it.
@@ -7954,6 +8043,8 @@ function executeReset() {
   cfg.tts = 'off';
   cfg.chime = 'on';
   cfg.resume = 'off';
+  cfg.zoom = 'off';
+  cfg.settingsButton = 'off';
   cfg.orientation = PROFILE.orientation || 'auto';
   cfg.streams = JSON.parse(JSON.stringify(PROFILE.streams));
   cfg.preset = matchingPresetName();
@@ -8162,9 +8253,15 @@ document.getElementById('logo-area').addEventListener('click', function (e) {
   if (tapCount >= 5) {
     tapCount = 0;
     clearTimeout(tapTimer);
-    if (getPin()) { showPinOverlay(); } else { openSettings(); }
+    requestSettings();
   }
 });
+
+/** The way into settings, from the logo or the Settings button: through
+    the PIN pad (and its lockout) whenever a PIN is set. */
+function requestSettings() {
+  if (getPin()) { showPinOverlay(); } else { openSettings(); }
+}
 
 // Also allow Enter/Space on logo area for keyboard users
 document.getElementById('logo-area').addEventListener('keydown', function (e) {

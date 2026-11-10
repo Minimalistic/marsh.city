@@ -83,6 +83,9 @@ flowchart TD
 
 ## Updates
 
+### 2026-11-09
+Released v7.22.0, with two new switches in Settings for whoever sets a radio up. Allow pinch to zoom, under Look, lets someone who zooms in to read pinch the stations bigger. It's off unless you turn it on. Show a Settings button, under Setup, puts a Settings button in the top corner for people setting up their own radio by switch, voice or screen reader, where five quick taps on the logo are hard. It still asks for the PIN, so set one if the listener shouldn't change things. On phones, a recording's controls get a second row, so Back, Pause, Stop and Skip share one line with Sleep below. VoiceOver reads the connection status without saying "empty", opening Settings puts focus on its title, and the volume slider always says its current value.
+
 ### 2026-11-08
 Released v7.21.0, so a station can be played by saying its name. With Voice Control, "Tap Jazz 88" now plays Jazz 88. Each station button used to carry extra words in its hidden name, like "Play" and its description, which nobody would say out loud. Now the name is just the station, and VoiceOver reads the description after it. Numbers still work for every button and stay the first suggestion in the guide.
 

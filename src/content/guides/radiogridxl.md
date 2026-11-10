@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.21.1
+appVersion: 7.22.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -17,6 +17,8 @@ Tap a station to play it, and tap it again to pause. The dot next to the name at
 ## Open settings
 
 Settings are hidden on purpose. To open them, **tap the logo in the top corner 5 times quickly**, within about two seconds. The logo is outlined on the screenshot above.
+
+If five quick taps are hard, say for someone setting up their own radio with a switch, by voice or with a screen reader, turn on **Show a Settings button** at the top of **Setup**. A **Settings** button then sits in the top corner and opens settings with one tap (it still asks for the PIN when there is one). Five taps on the logo keep working too. The button is easy for the listener to find too, so set a PIN if they shouldn't change things.
 
 ![The settings panel, open over the station buttons](/images/radiogridxl/guide/settings-open.webp)
 
@@ -128,6 +130,10 @@ Pick the closest one, then fine-tune anything below it. Once you change somethin
 
 **Text size** has Normal, Large, X-Large and Ultra, each showing how big it is. Ultra is the largest, which suits a tablet across the room.
 
+### Zoom
+
+**Allow pinch to zoom**, at the end of **Look**, lets the listener pinch the screen to make everything bigger, for anyone who zooms in to read. It's off unless you turn it on, so a hand that pinches by accident can't leave the radio zoomed in. The zoom built into the phone or tablet itself (Zoom on iPhone and iPad, Magnification on Android) works either way.
+
 Under **Sound and controls** are switches: **Voice announcements** (speaks "Now playing…" and so on aloud), **Audio tones** (a short chime when playback starts or stops), **Auto-resume** (when the app opens, starts the station again if it was playing when the app closed) and **Haptic feedback** (a small buzz on tap, on Android phones and tablets only; elsewhere it's greyed out with the reason).
 
 ### Use it by voice
@@ -142,6 +148,7 @@ Buttons can also be pressed by what they show:
 
 - "Tap" and a station's full name, such as "Tap Jazz 88", plays it. While a station is paused, use its number to resume it.
 - "Tap Stop" stops the station. With Advanced controls, "Tap Pause", "Tap Sleep", and for recordings "Tap Back 15" and "Tap Skip 30".
+- "Tap Settings" opens settings, if **Show a Settings button** is on.
 - "Show names" labels every button with what to say.
 
 For saying stations by name, give each one a short name that's easy to say and different from the others. Settings warns when two stations share a name, or when a station is named like a button, such as Stop.
