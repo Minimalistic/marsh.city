@@ -132,7 +132,7 @@ Project pages are written in Jason's voice. He's the author: he directs the work
 - Neutral description is the default when no actor needs naming ("The catalog has two views"). Prefer it over forcing "I" into every sentence.
 - **Never fabricate experiences, anecdotes, or motivations.** If Jason didn't confirm it, don't write it. Interview first, draft second.
 - Technical sections can just explain the thing without attribution.
-- The AI's role is stated **once, as a method**, on the colophon (`/oak`) and the about page — never inside project copy. Project pages don't name Oak/Claude as a collaborator.
+- Name AI tools the way you'd name any other tool: where they're part of how the thing works or was built. No co-author credit and no "we". Stay vague where detail would add a security or privacy risk (how the tooling is set up, what it can reach, anything from private sources).
 - The organizational "we" is fine where Jason speaks as part of the nonprofit ("the people we serve") — that's Lighthouse, not the AI.
 
 ### Blog posts — same first-person "I"
