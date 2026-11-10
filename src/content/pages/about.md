@@ -13,7 +13,8 @@ Outside that job I build software on my own time. The biggest is
 [WhatCanHelp](/projects/whatcanhelp/), a free tool for finding assistive
 technology. Smaller ones: a [radio app](/projects/radiogridxl/) piloted with
 older adults at my organization, a [Raspberry Pi pet feeder](/projects/petfeedr/),
-and a [voice-memo-to-notes pipeline](/projects/echoetcher/). Most of it is Node,
+and [tablet choice boards](/projects/buttongriddle/) that speak the button you
+tap. Most of it is Node,
 SQLite and plain JavaScript, with Python for machine learning and automation.
 
 I've been fascinated with computers since I was a kid - learned to fix them
