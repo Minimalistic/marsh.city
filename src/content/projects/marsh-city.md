@@ -6,7 +6,7 @@ repo: https://github.com/Minimalistic/marsh.city
 url: https://marsh.city
 tags: [astro, markdown, github-actions, pwa]
 started: 2026-03-01
-updated: 2026-09-27
+updated: 2026-11-10
 ---
 
 I needed a central place to point people - a resume that stays current, project pages that show what I'm actually building, and posts when something's worth writing about. The problem with most personal sites is maintenance. They launch polished and rot within months because updating them feels like work on top of work.
@@ -23,7 +23,9 @@ Content lives in `src/content/` organized by type. When I finish a work session 
 
 The visual language is built around a monstera/forest palette - cream and deep greens in light mode, dark canopy tones at night. Lora for headings, Inter for body text. Dark mode gets a starfield with occasional shooting stars and fireflies that drift and scatter from the cursor.
 
-Mermaid diagrams render client-side when a page needs them. Images open in a lightbox with pinch-to-zoom. A command palette (Cmd+K) lets you jump to any page instantly. All of it runs without a build step on the frontend - vanilla JS, no framework.
+Behind the pages is a painted forest scene built from layers, and a View background option hides the page so the scene can be looked at on its own. There's optional ambient sound, off until you turn it on: wind and birdsong by day, a breeze and crickets at night. The birds are northern Minnesota species, synthesized in the browser from spectrogram measurements, and which ones are around follows the month.
+
+Mermaid diagrams render client-side when a page needs them. Images open in a lightbox with pinch-to-zoom. A command palette (Cmd+K) lets you jump to any page instantly. All of it runs without a build step on the frontend - vanilla JS, no framework. Page counts are anonymous, with no cookies; the [privacy page](/privacy/) says exactly what's counted.
 
 ## The workflow
 
