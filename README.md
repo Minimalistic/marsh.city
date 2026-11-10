@@ -1,43 +1,40 @@
-# Astro Starter Kit: Minimal
+# marsh.city
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Source for [marsh.city](https://marsh.city), Jason Marsh's personal site: projects, posts, a playground of small experiments, art series and a resume.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## How it's built
 
-## 🚀 Project Structure
+- [Astro](https://astro.build) generates static HTML from Markdown content collections.
+- The frontend is vanilla JavaScript and one stylesheet, `src/styles/global.css`.
+- GitHub Actions builds the site, runs the smoke tests and deploys to GitHub Pages on every push to `main`.
 
-Inside of your Astro project, you'll see the following folders and files:
+The [colophon](https://marsh.city/oak/) covers how the content gets written, and the [privacy page](https://marsh.city/privacy/) says what the site counts.
+
+## Layout
 
 ```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+src/
+  content/     one Markdown file per project, post, playground item, art series and guide
+  pages/       routes, mostly generated from the collections
+  layouts/     Base.astro and Post.astro
+  scripts/     browser scripts: theme, command palette, lightbox, the night sky
+  styles/      global.css holds the design tokens
+public/        static assets, plus standalone apps served as-is (radio, dungeon, driftglass, particul8, buttongriddle)
+plugins/       build-time image work: placeholders, thumbnails, sizes
+scripts/       maintenance scripts run by hand
+tests/         node:test smoke tests against the built site
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Some apps under `public/` are built in their own repos and synced in.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## Commands
 
-Any static assets, like images, can be placed in the `public/` directory.
+Needs Node 22.12 or newer.
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+| Command | What it does |
+| :-- | :-- |
+| `npm install` | Install dependencies |
+| `npm run dev` | Dev server at `localhost:4321` |
+| `npm run build` | Build the site into `dist/` |
+| `npm run preview` | Serve the built site locally |
+| `npm test` | Build, then run the smoke tests |
