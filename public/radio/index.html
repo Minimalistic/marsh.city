@@ -3402,6 +3402,7 @@ function init() {
   }
 
   document.getElementById('help-section').hidden = !helpAvailable();
+  document.getElementById('backup-section').hidden = !backupAvailable();
   showFeedbackCard();
   showHapticsAvailability();
 
@@ -4806,7 +4807,7 @@ function retryStream() {
    Android System WebView (file://) has no mediaSession, so every entry point
    here no-ops and existing behavior is unchanged. Verified on-device in Chrome
    for Android, where lock-screen controls, background audio and call/focus
-   interruption are real (see STRATEGY.md). Handlers map to the app's EXISTING
+   interruption are real (see docs/archive/STRATEGY-2026-05-28.md). Handlers map to the app's EXISTING
    playback functions — no duplicated playback logic.
    ================================================================ */
 
@@ -7843,8 +7844,17 @@ function buildBackupPayload(includePin) {
   return backup;
 }
 
+/** Backup needs a browser that can save a download and open a file
+ * picker. The Android WebView APK (file://) and the iOS shell
+ * (capacitor://) have neither yet, and the WebView still reported
+ * success, so the section is hidden there until a native save/open
+ * bridge exists. */
+function backupAvailable() {
+  return /^https?:$/.test(location.protocol);
+}
+
 function exportConfig() {
-  if (!settingsOpen) return;
+  if (!settingsOpen || !backupAvailable()) return;
   try {
     var pinBox = document.getElementById('in-backup-pin');
     var includePin = !!(pinBox && pinBox.checked);
@@ -7932,7 +7942,7 @@ function applyImportedConfig(sanitized, pin) {
 
 /** Handle a chosen backup file: read, parse, validate, apply. */
 function importConfig(event) {
-  if (!settingsOpen) return;
+  if (!settingsOpen || !backupAvailable()) return;
   var input = event && event.target;
   var file = input && input.files && input.files[0];
   if (!file) return;
