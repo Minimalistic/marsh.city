@@ -3787,6 +3787,12 @@ function applyTheme() {
 const FIXED_VIEWPORT = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
 const ZOOMABLE_VIEWPORT = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
 
+/** Whether pinch-zoom is on. The touch and Safari gesture blockers ask
+    this at each event, so the switch takes effect without a reload. */
+function zoomAllowed() {
+  return cfg.zoom === 'on';
+}
+
 /** The two Setup switches that change the page itself: pinch-zoom (the
     viewport, rewritten live; browsers re-read it) and the header's Settings
     button. */
@@ -4378,8 +4384,11 @@ function updateSkipButtons() {
 function updateSimpleStop() {
   const isPlaying = !!playing;
   const isPaused = isPlaying && paused;
+  const wasClass = simpleStop.className;
   simpleStop.classList.toggle('active', isPlaying && !isPaused);
   simpleStop.classList.toggle('paused', isPaused);
+  // The bar is the page's bottom edge, and Safari doesn't see it change colour.
+  if (simpleStop.className !== wasClass) retintSafariBars();
   simpleStop.setAttribute('aria-disabled', isPlaying ? 'false' : 'true');
 
   const labelEl = document.getElementById('simple-stop-label');
@@ -4407,8 +4416,10 @@ const ADV_PLAY_SVG  = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidd
 function updateAdvTransport() {
   const isPlaying = !!playing;
   const isPaused = isPlaying && paused;
+  const wasClass = advTransport.className;
   advTransport.classList.toggle('has-playing', isPlaying && !isPaused);
   advTransport.classList.toggle('paused', isPaused);
+  if (advTransport.className !== wasClass) retintSafariBars();
 
   const pauseBtn = document.getElementById('adv-pause');
   if (pauseBtn) {
@@ -7512,9 +7523,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Prevent all touch-scroll on the main interface (no pull-to-refresh,
   // no rubber-banding). Allow scrolling only inside designated containers.
-  // Also block pinch-to-zoom (multi-touch) everywhere — this is a kiosk app.
+  // Also block pinch-to-zoom (multi-touch), unless Allow pinch to zoom is
+  // on: then a pinch goes through, and so does a one-finger drag while
+  // zoomed in, or the reader couldn't move around the enlarged page.
   document.addEventListener('touchmove', function(e) {
-    // Block pinch zoom (2+ fingers) unconditionally
+    if (zoomAllowed()) {
+      var zoomedIn = window.visualViewport && window.visualViewport.scale > 1.01;
+      if (e.touches.length > 1 || zoomedIn) return;
+    }
     if (e.touches.length > 1) { e.preventDefault(); return; }
     var el = e.target;
     while (el && el !== document.body) {
@@ -7528,10 +7544,13 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
   }, { passive: false });
 
-  // Safari-specific: block gesturestart (pinch/rotate gestures)
-  document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
-  document.addEventListener('gesturechange', function(e) { e.preventDefault(); });
-  document.addEventListener('gestureend', function(e) { e.preventDefault(); });
+  // Safari-specific: block gesturestart (pinch/rotate gestures). iOS
+  // ignores user-scalable=no, so these handlers are what keep it from
+  // zooming, and they must stand aside when zoom is allowed.
+  function blockGesture(e) { if (!zoomAllowed()) e.preventDefault(); }
+  document.addEventListener('gesturestart', blockGesture);
+  document.addEventListener('gesturechange', blockGesture);
+  document.addEventListener('gestureend', blockGesture);
 });
 
 
