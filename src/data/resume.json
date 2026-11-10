@@ -10,43 +10,37 @@
     "github": "https://github.com/Minimalistic",
     "githubLabel": "github.com/Minimalistic"
   },
-  "summary": "Director of Technology with 13+ years across IT, assistive technology services, and team leadership. Designs, ships, and operates production software by directing AI coding agents (Claude Code) - owning the product decisions, specification, testing, deployment, and users - including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. Restructured AT billing at a nonprofit, growing annual service revenue from $17K to over $200K within a year. ATACP-certified in assistive technology assessment. Sets the organization's guidance on safe staff use of AI.",
+  "summary": "Director of Technology at a nonprofit serving people with disabilities and older adults. 13+ years in IT, the last six in assistive technology and five leading teams. Restructured AT billing and grew annual service revenue from $17K to over $200K within a year. Designs, ships, and operates production software by directing AI coding agents (Claude Code), including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. ATACP-certified (CSUN).",
+  "sectionOrder": [
+    "experience",
+    "projects",
+    "skills",
+    "education"
+  ],
   "projects": [
     {
       "id": "whatcanhelp",
       "name": "WhatCanHelp",
       "href": "https://whatcanhelp.com",
       "featured": true,
-      "desc": " (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep a catalog of thousands of products affordable to maintain, with schema checks against fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted. Operated in production."
+      "desc": " (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep a catalog of thousands of products affordable to maintain, with schema checks against fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted and in production."
     },
     {
       "id": "radiogridxl",
       "name": "RadioGridXL",
       "href": "/projects/radiogridxl/",
-      "desc": " - internet radio for older adults and people with disabilities: large buttons, no accounts or ads, screen-reader support. Themes include a low-vision preset, a high-contrast mode (7:1 text) and an amber night theme for bedside use. Designed a technician-only settings panel so staff set up stations from a curated directory without exposing that complexity to the listener. Built with AI coding agents; deployed at my organization and piloted with older adults."
+      "desc": " - internet radio for older adults and people with disabilities, deployed at my organization and piloted with older adults. Large buttons, no accounts or ads, screen-reader support, and low-vision, high-contrast and night themes. Designed a technician-only settings panel so staff set up stations from a curated directory without exposing that complexity to the listener."
     },
     {
       "id": "buttongriddle",
       "name": "ButtonGriddle",
       "href": "/projects/buttongriddle/",
-      "desc": " - visual choice boards for tablets: each button is a photo of the person's own item and a phrase spoken aloud, with a Yes / No / Not sure screen so staff can check understanding. Staff and families build boards in a passcode-protected edit mode. Offline-first with no accounts; everything stays on the device. Built with AI coding agents; in beta."
+      "desc": " - visual choice boards for tablets: each button is a photo of the person's own item and a phrase spoken aloud, with a Yes / No / Not sure screen so staff can check understanding. Staff and families build boards in a passcode-protected edit mode. Offline-first with no accounts; everything stays on the device. In beta."
     },
     {
       "id": "mcp-servers",
       "name": "MCP Servers",
-      "desc": " - custom Model Context Protocol servers connecting Claude agents to self-hosted apps and everyday tools, with guardrails: hooks, sandboxing, approval gates on actions with side effects, and prompt-injection containment. Built with AI coding agents; in daily use."
-    },
-    {
-      "id": "mealdeck",
-      "name": "MealDeck",
-      "href": "/projects/mealdeck/",
-      "desc": " - meal-planning app for friends and family: grocery lists grouped by shared ingredients, hands-free voice cook mode, and AI recipe adaptation for dietary needs and serving sizes. Ran as a private beta."
-    },
-    {
-      "id": "petfeedr",
-      "name": "PetFeedr",
-      "href": "/projects/petfeedr/",
-      "desc": " - Raspberry Pi pet feeder built because the store-bought one tipped over and ran out of food; web interface for schedules and portions, feed-time randomization, one-command deploy. Running daily for about two years."
+      "desc": " - custom Model Context Protocol servers connecting Claude agents to self-hosted apps and everyday tools, with guardrails: hooks, sandboxing, approval gates on actions with side effects, and prompt-injection containment. In daily use."
     }
   ],
   "experience": [
@@ -58,7 +52,7 @@
       "bullets": [
         {
           "id": "lead-divisions",
-          "text": "Lead IT and Assistive Technology divisions for a nonprofit serving people with disabilities and aging populations, overseeing infrastructure, AT services, and an AT lending library partnered with the Minnesota STAR Program"
+          "text": "Lead the IT and Assistive Technology divisions of a ~20-staff nonprofit serving people with disabilities and older adults - infrastructure, AT services, and an AT lending library partnered with the Minnesota STAR Program"
         },
         {
           "id": "at-billing",
@@ -66,11 +60,7 @@
         },
         {
           "id": "org-leadership",
-          "text": "One of three organizational leaders reporting to the Executive Director; contribute to strategic planning, budgeting, and cross-department decision-making"
-        },
-        {
-          "id": "team",
-          "text": "Manage a team of three direct reports spanning IT support and assistive technology services"
+          "text": "One of three leaders reporting to the Executive Director; manage three direct reports across IT support and AT services, and contribute to strategic planning, budgeting, and cross-department decisions"
         },
         {
           "id": "m365-tenant",
@@ -78,7 +68,7 @@
         },
         {
           "id": "vendors",
-          "text": "Own vendor relationships across the technology stack - Microsoft 365 licensing, IBM MaaS360 for MDM, ticketing, and connectivity - from evaluation and initial setup through ongoing licensing"
+          "text": "Own vendor relationships from evaluation through renewal - Microsoft licensing, mobile device management, ticketing, and connectivity"
         },
         {
           "id": "power-automate",
@@ -94,7 +84,7 @@
         },
         {
           "id": "hipaa-policy",
-          "text": "Key contributor to the rewrite of the organization's HIPAA policy; run internal IT audits of systems, access, and devices as needed"
+          "text": "Contributed to the rewrite of the organization's HIPAA policy; run internal IT audits of systems, access, and devices"
         },
         {
           "id": "embed-clients",
@@ -114,7 +104,7 @@
       "bullets": [
         {
           "id": "systems-audit",
-          "text": "Conducted full systems audit; established documentation and standardized processes across the ~20-staff organization"
+          "text": "Conducted a full systems audit; established documentation and standardized processes across the organization"
         },
         {
           "id": "m365-migration",
@@ -122,7 +112,7 @@
         },
         {
           "id": "supervision",
-          "text": "Supervised two direct reports alongside hands-on IT management responsibilities"
+          "text": "Supervised two direct reports"
         },
         {
           "id": "disaster-recovery",
@@ -134,7 +124,7 @@
         },
         {
           "id": "request-tracking",
-          "text": "Set up a centralized request tracking system to streamline IT and AT workflows"
+          "text": "Set up a centralized request tracking system for IT and AT requests"
         }
       ]
     },
@@ -150,7 +140,7 @@
         },
         {
           "id": "training-conferences",
-          "text": "Trained staff and clients on AT usage; attended ATIA and Closing The Gap conferences"
+          "text": "Trained staff and clients on AT usage"
         }
       ]
     },
@@ -186,11 +176,11 @@
     },
     {
       "label": "Infrastructure",
-      "items": "Active Directory, Windows Server, Hyper-V, VMware/ESXi, Proxmox VE, DNS/DHCP, VPN, Firewall Management, Linux Administration, Tailscale"
+      "items": "Active Directory, Windows Server, Proxmox VE, DNS/DHCP, VPN, Firewall Management, Linux Administration, Tailscale"
     },
     {
       "label": "Security & Operations",
-      "items": "Disaster Recovery, Incident Response, Cloud Security, ServiceNow, FreshDesk, vendor and licensing management"
+      "items": "Disaster recovery planning, HIPAA policy, internal IT audits, FreshDesk, vendor and licensing management"
     },
     {
       "label": "Stack Shipped & Operated",
