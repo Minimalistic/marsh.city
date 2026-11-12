@@ -581,6 +581,7 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
   min-width: 44px;
   padding: 0 14px;
   margin-left: 12px;
+  flex-shrink: 0; /* a long name gives way, never the way into settings */
   border-radius: 10px;
   border: 2px solid var(--header-text);
   background: transparent;
@@ -631,8 +632,8 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
   align-items: center;
   gap: 12px;
   min-width: 0;
-  cursor: pointer;
 }
+#logo-area[role="button"] { cursor: pointer; }
 
 #logo-svg { flex-shrink: 0; width: 38px; height: 50px; }
 .logo-body { fill: #ffffff; transition: fill 0.3s; }
@@ -1052,10 +1053,9 @@ html[data-size="ultra"] .btn-emoji { font-size: var(--btn-emoji-size, 62px); }
   align-items: center;
   justify-content: center;
   gap: 14px;
-  /* Extend the bar's color through the bottom safe area (home indicator);
-     border-box keeps the 74px tap area, padding fills the inset below it. */
-  height: calc(74px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* The tap area stops above the home indicator; #simple-stop-inset
+     carries the bar's colour through the strip below it. */
+  height: 74px;
   width: 100%;
   border: none;
   border-top: 2px solid var(--stop-idle-border);
@@ -1068,6 +1068,17 @@ html.is-desktop #simple-stop { height: 80px; }
 #simple-stop.paused { background: var(--stop-paused-bg); border-top-color: var(--stop-paused-border); }
 #simple-stop.paused #simple-stop-label { color: var(--stop-paused-text); }
 #simple-stop:active { filter: brightness(1.2); }
+
+#simple-stop-inset {
+  flex-shrink: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background: var(--stop-idle-bg);
+  transition: background 0.3s, filter 0.2s;
+}
+html.is-desktop #simple-stop-inset { display: none; }
+#simple-stop.active + #simple-stop-inset { background: var(--stop-active-bg); }
+#simple-stop.paused + #simple-stop-inset { background: var(--stop-paused-bg); }
+#simple-stop:active + #simple-stop-inset { filter: brightness(1.2); }
 
 #simple-stop-square {
   width: 22px;
@@ -1311,6 +1322,28 @@ html.is-desktop .overlay-title { font-size: 34px; }
   max-width: 460px;
 }
 html.is-desktop .overlay-body { font-size: 20px; }
+
+/* The logo to practise on before the Settings button is hidden: it looks
+   like the header's, and it is a real button. */
+#hide-practice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 20px;
+  border-radius: 14px;
+  border: 2px solid var(--overlay-text);
+  background: transparent;
+  color: var(--overlay-text);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+#hide-practice svg { width: 44px; height: 44px; flex-shrink: 0; }
+#hide-practice:focus-visible { outline: 3px solid var(--overlay-text); outline-offset: 3px; }
+#hide-status { min-height: 1.5em; color: var(--overlay-text); }
+#hide-done[hidden] { display: none; }
 
 .overlay-btn {
   margin-top: 8px;
@@ -2588,7 +2621,7 @@ html.theme-fading, html.theme-fading * {
 }
 .reset-confirm-no:active { filter: brightness(0.9); }
 
-#discard-overlay { z-index: 200; position: fixed; }
+#discard-overlay, #hide-overlay { z-index: 200; position: fixed; } /* over the settings panel */
 
 #settings-version,
 #settings-credit {
@@ -2613,7 +2646,7 @@ html.theme-fading, html.theme-fading * {
     pointer-events: none;
   }
   .stream-btn:hover::after { background: rgba(255, 255, 255, 0.04); }
-  #simple-stop:hover { filter: brightness(1.15); }
+  #simple-stop:hover, #simple-stop:hover + #simple-stop-inset { filter: brightness(1.15); }
   .adv-btn:hover { color: var(--accent); }
   .chip:hover:not(.selected) { border-color: var(--accent); color: var(--settings-text); transform: scale(1.05); }
   .chip.selected:hover { filter: brightness(1.12); }
@@ -2714,9 +2747,9 @@ html.theme-fading, html.theme-fading * {
     <!-- Confirms setting or cancelling the timer, once. Never written when the timer ends. -->
     <span id="sleep-status" class="sr-only" role="status" aria-live="polite"></span>
     <span id="platform-badge" aria-hidden="true">Desktop Preview</span>
-    <!-- Shown by the "Show a Settings button" switch: one tap into settings
-         (through the PIN pad when there's a PIN) for anyone who can't do
-         five taps on the logo, such as a switch or voice user. -->
+    <!-- Shown by the "Show a Settings button" switch, which is on for a new
+         radio: one tap into settings (through the PIN pad when there's a
+         PIN). Hidden, five taps on the logo are the way in. -->
     <button type="button" id="settings-btn" hidden onclick="requestSettings()"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>Settings</button>
   </header>
 
@@ -2731,6 +2764,10 @@ html.theme-fading, html.theme-fading * {
     <div id="simple-stop-square" aria-hidden="true"></div>
     <span id="simple-stop-label">Stop</span>
   </button>
+  <!-- The home-indicator strip under the stop bar, in the bar's colour. It
+       isn't part of the button: iOS passes a tap on the home bar to the page,
+       and inside the button it paused or resumed the radio. -->
+  <div id="simple-stop-inset" aria-hidden="true"></div>
 
   <!-- ========== ADVANCED TRANSPORT BAR ========== -->
   <nav id="adv-transport" aria-label="Playback controls">
@@ -2787,6 +2824,22 @@ html.theme-fading, html.theme-fading * {
     <div style="display:flex; gap:12px; margin-top:8px;">
       <button class="reset-confirm-btn reset-confirm-no" onclick="cancelDiscard()">Go Back</button>
       <button class="reset-confirm-btn reset-confirm-yes" onclick="confirmDiscard()">Discard</button>
+    </div>
+  </div>
+
+  <!-- ========== HIDE THE SETTINGS BUTTON: PRACTISE THE WAY BACK IN ==========
+       Turning "Show a Settings button" off opens this. The switch goes off
+       only after five quick taps on the logo here, so nobody hides the
+       button without having done the other way in once. -->
+  <div class="overlay" id="hide-overlay" role="dialog" aria-modal="true" aria-labelledby="hide-overlay-title" aria-describedby="hide-overlay-body">
+    <div class="overlay-title" id="hide-overlay-title">Hide the Settings button?</div>
+    <div class="overlay-body" id="hide-overlay-body">To open settings again, tap the logo 5 times quickly. Try it now.</div>
+    <button type="button" id="hide-practice" onclick="hidePracticeTap()"><svg id="hide-practice-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><span id="hide-practice-name"></span></button>
+    <div class="overlay-body" id="hide-status" role="status" aria-live="polite"></div>
+    <div class="overlay-body" id="hide-instead">Hard to do? Keep the button and set a PIN.</div>
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button type="button" class="reset-confirm-btn reset-confirm-no" id="hide-cancel" onclick="cancelHide()">Cancel</button>
+      <button type="button" class="reset-confirm-btn reset-confirm-yes" id="hide-done" hidden onclick="finishHide()">Done</button>
     </div>
   </div>
 
@@ -2985,7 +3038,7 @@ html.theme-fading, html.theme-fading * {
         <div class="s-section s-switch-row">
           <div class="s-switch-text" aria-hidden="true">
             <div class="s-section-title" id="settingsbtn-label">Show a Settings button</div>
-            <div class="s-hint" id="settingsbtn-hint">For people setting up their own radio by voice, switch or screen reader. Set a PIN if the listener shouldn't change things.</div>
+            <div class="s-hint" id="settingsbtn-hint">Turn off if the listener might open settings by mistake and change things. To open them then, tap the logo 5 times quickly.</div>
           </div>
           <button type="button" class="s-switch" role="switch" data-switch="settingsButton" aria-checked="false" aria-labelledby="settingsbtn-label" aria-describedby="settingsbtn-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
         </div>
@@ -3013,7 +3066,7 @@ html.theme-fading, html.theme-fading * {
                control; the label also keeps the icon from being read out. -->
           <div class="backup-row">
             <button class="device-btn" onclick="exportConfig()" aria-label="Export Backup">&#128190; Export Backup</button>
-            <button class="device-btn" onclick="document.getElementById('import-file').click()" aria-label="Import Backup">&#128193; Import Backup</button>
+            <button class="device-btn" onclick="chooseBackupFile()" aria-label="Import Backup">&#128193; Import Backup</button>
           </div>
           <label class="s-check"><input type="checkbox" id="in-backup-pin"> Include the PIN (keep that file safe)</label>
           <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importConfig(event)" aria-hidden="true">
@@ -3056,7 +3109,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version">RadioGridXL v7.22.0</div>
+      <div id="settings-version">RadioGridXL v7.23.0</div>
       <!-- Who made it, from PROFILE.madeBy; plain text, never a link (promise-stays-radio). -->
       <div id="settings-credit" hidden></div>
     </section>
@@ -3306,7 +3359,7 @@ const cfg = {
   chime: 'on',
   resume: 'off',
   zoom: 'off',
-  settingsButton: 'off',
+  settingsButton: 'on', // a new radio only: loadSettings() hides it on any radio saved without it
   preset: 'Standard',
   orientation: PROFILE.orientation || 'auto',
   streams: JSON.parse(JSON.stringify(PROFILE.streams))
@@ -3650,6 +3703,11 @@ function loadSettings() {
     if (stored === null) {
       const start = osStartingTextSize();
       if (start) cfg.size = start;
+    } else {
+      // A radio that has been saved never grows a Settings button: one saved
+      // before the button existed, or with a corrupt config, keeps settings
+      // behind the logo. Only a saved 'on' below shows it.
+      cfg.settingsButton = 'off';
     }
     const s = JSON.parse(stored || '{}');
     storedConfigIsNewer = !!s && typeof s.v === 'number' && s.v > CFG_VERSION;
@@ -3795,10 +3853,32 @@ function zoomAllowed() {
 
 /** The two Setup switches that change the page itself: pinch-zoom (the
     viewport, rewritten live; browsers re-read it) and the header's Settings
-    button. */
+    button. With the button hidden, the logo is the way into settings. */
 function applyAccessOptions() {
   document.getElementById('viewport-meta').setAttribute('content', cfg.zoom === 'on' ? ZOOMABLE_VIEWPORT : FIXED_VIEWPORT);
-  document.getElementById('settings-btn').hidden = cfg.settingsButton !== 'on';
+  document.getElementById('settings-btn').hidden = !settingsButtonShown();
+  labelLogo();
+  document.getElementById('pin-hint').textContent = '4 digits, or blank for none.'
+    + (settingsButtonShown() ? '' : ' Tap the logo 5 times to open settings.');
+}
+
+function settingsButtonShown() {
+  return cfg.settingsButton === 'on';
+}
+
+/** The logo is a button only while five taps on it open settings; next to
+    a Settings button it's the radio's name and nothing to press. */
+function labelLogo() {
+  var logo = document.getElementById('logo-area');
+  if (settingsButtonShown()) {
+    logo.removeAttribute('role');
+    logo.removeAttribute('tabindex');
+    logo.removeAttribute('aria-label');
+    return;
+  }
+  logo.setAttribute('role', 'button');
+  logo.setAttribute('tabindex', '0');
+  logo.setAttribute('aria-label', cfg.orgName.replace(/\n/g, ' ') + ' — tap 5 times for settings');
 }
 
 /** Where to change the speaking voice on this device. Only the APK has an
@@ -3873,8 +3953,7 @@ function applyOrgName() {
   var lines = cfg.orgName.split('\n');
   el.innerHTML = lines.map(l => escHtml(l)).join('<br>');
   // Update aria-label with plain text version
-  document.getElementById('logo-area').setAttribute('aria-label',
-    cfg.orgName.replace(/\n/g, ' ') + ' — tap 5 times for settings');
+  labelLogo();
 }
 
 /**
@@ -3975,7 +4054,7 @@ function renderButtons() {
   var appH = appEl.clientHeight;
   var transportH = (advTrans && advTrans.classList.contains('visible'))
     ? advTrans.offsetHeight
-    : simpleStop.offsetHeight;
+    : simpleStop.offsetHeight + document.getElementById('simple-stop-inset').offsetHeight;
   // Height left for the buttons under the header as it is right now.
   function measureAvailH() {
     var h = appH - headerEl.offsetHeight - transportH;
@@ -4346,6 +4425,7 @@ function escAttr(t) {
 function updateMode() {
   const adv = cfg.advanced === 'on';
   simpleStop.style.display = adv ? 'none' : 'flex';
+  document.getElementById('simple-stop-inset').hidden = adv;
   advTransport.classList.toggle('visible', adv);
   updateSkipButtons();
 }
@@ -5829,7 +5909,12 @@ function doCloseSettings() {
     clearTimeout(tid);
     slidOut();
   });
-  restoreFocus(panel._returnFocus);
+  // The Settings button may have been switched on or off in this visit, so
+  // focus goes back to whichever way in is there now.
+  var opener = panel._returnFocus;
+  var settingsBtn = document.getElementById('settings-btn'), logo = document.getElementById('logo-area');
+  if (opener === settingsBtn || opener === logo) opener = settingsButtonShown() ? settingsBtn : logo;
+  restoreFocus(opener);
   panel._returnFocus = null;
 }
 
@@ -6116,7 +6201,61 @@ function syncControlsHint() {
 function toggleSwitch(sw) {
   if (sw.disabled) return;
   var group = sw.dataset.switch;
+  // Hiding the way into settings asks for the other way in first. Not on a
+  // radio saved with it hidden: whoever is here came in by the logo.
+  if (group === 'settingsButton' && cfg.settingsButton === 'on' && cfgSnapshot && cfgSnapshot.settingsButton === 'on') {
+    openHidePractice(sw);
+    return;
+  }
   cfg[group] = cfg[group] === 'on' ? 'off' : 'on';
+  syncChips();
+  applyAccessOptions();
+}
+
+/* Practising the way back in, before the Settings button is hidden. The
+   taps count as they do on the header's logo (22-pin.js): five, with no
+   gap of two seconds between them. */
+let hideTapCount = 0;
+let hideTapTimer = null;
+
+function openHidePractice(sw) {
+  var overlay = document.getElementById('hide-overlay');
+  var logo = document.getElementById('logo-svg'), copy = document.getElementById('hide-practice-logo');
+  copy.innerHTML = logo.innerHTML;
+  copy.setAttribute('viewBox', logo.getAttribute('viewBox'));
+  document.getElementById('hide-practice-name').textContent = cfg.orgName.replace(/\n/g, ' ');
+  document.getElementById('hide-status').textContent = '';
+  document.getElementById('hide-done').hidden = true;
+  hideTapCount = 0;
+  clearTimeout(hideTapTimer);
+  showOverlay(overlay);
+  overlay._returnFocus = sw; // Safari doesn't focus a tapped button, so name the switch
+}
+
+function hidePracticeTap() {
+  hideTapCount++;
+  clearTimeout(hideTapTimer);
+  hideTapTimer = setTimeout(() => { hideTapCount = 0; }, 2000);
+  if (hideTapCount < 5) return;
+  hideTapCount = 0;
+  clearTimeout(hideTapTimer);
+  var done = document.getElementById('hide-done');
+  if (!done.hidden) return; // already passed: say it once
+  document.getElementById('hide-status').textContent = 'Got it.';
+  done.hidden = false;
+  done.focus();
+}
+
+function cancelHide() {
+  clearTimeout(hideTapTimer);
+  hideOverlay(document.getElementById('hide-overlay'));
+}
+
+/** Done, after the practice passed: now the switch goes off. */
+function finishHide() {
+  if (document.getElementById('hide-done').hidden) return;
+  hideOverlay(document.getElementById('hide-overlay'));
+  cfg.settingsButton = 'off';
   syncChips();
   applyAccessOptions();
 }
@@ -6888,78 +7027,6 @@ async function radioBrowserHosts() {
   return names.slice(0, RB_TRIES - 1).concat(RB_DEFAULT_HOST);
 }
 
-/* ================================================================
-   HOW-TO GUIDE
-   The hosted build opens its guide (PROFILE.helpUrl, on marsh.city) in
-   an overlay. Hidden on file:// — the Android WebView blocks outside
-   pages, so the button would be dead there — and when the profile
-   names no guide (the Lighthouse build). The frame is only created on
-   tap, so nothing loads from the guide's site until someone asks.
-   ================================================================ */
-
-function helpAvailable() {
-  return /^https?:$/.test(location.protocol) &&
-    typeof PROFILE.helpUrl === 'string' && /^https:\/\//.test(PROFILE.helpUrl);
-}
-
-function openHelp() {
-  if (!helpAvailable()) return;
-  var overlay = document.getElementById('help-overlay');
-  var body = document.getElementById('help-body');
-  if (!body.firstChild) {
-    if (navigator.onLine === false) {
-      var msg = document.createElement('p');
-      msg.className = 'help-offline';
-      msg.textContent = 'The guide needs an internet connection. Connect and try again.';
-      body.appendChild(msg);
-    } else {
-      var frame = document.createElement('iframe');
-      frame.title = 'How to use this app';
-      // Empty sandbox: the guide is a static page, so it gets no scripts,
-      // forms, popups or same-origin access to this app's storage.
-      frame.setAttribute('sandbox', '');
-      frame.setAttribute('referrerpolicy', 'no-referrer');
-      frame.src = PROFILE.helpUrl;
-      body.appendChild(frame);
-    }
-  }
-  overlay.classList.add('open');
-  inertBehind(overlay);
-  overlay._focusTrap = function(e) { trapFocus(e, overlay); };
-  overlay.addEventListener('keydown', overlay._focusTrap);
-  document.getElementById('help-close').focus();
-}
-
-/** Close the guide; focus goes back to its button unless `moveFocus` is
-    false (settings timing out, which must not be read aloud). */
-function closeHelp(moveFocus = true) {
-  var overlay = document.getElementById('help-overlay');
-  if (overlay._focusTrap) {
-    overlay.removeEventListener('keydown', overlay._focusTrap);
-    overlay._focusTrap = null;
-  }
-  overlay.classList.remove('open');
-  releaseInert(overlay);
-  // Drop the frame (or offline notice) so every open starts fresh at the guide,
-  // even if a link inside it navigated the frame somewhere else.
-  document.getElementById('help-body').innerHTML = '';
-  if (moveFocus) document.getElementById('help-btn').focus();
-}
-
-/* ================================================================
-   FEEDBACK CARD
-   A QR code to a static page on marsh.city, for the setter-up's own
-   phone, with the address and email as plain text. Nothing is sent by
-   the app. Hosted builds only, and off unless the profile turns it on
-   (not Lighthouse).
-   ================================================================ */
-
-function showFeedbackCard() {
-  // Hosted only, like the guide (the generic APK is frozen without it).
-  var on = PROFILE.feedback === true && /^https?:$/.test(location.protocol);
-  document.getElementById('feedback-section').hidden = !on;
-}
-
 function openStreamBrowser() {
   var overlay = document.getElementById('stream-browser-overlay');
   overlay._returnFocus = document.activeElement;
@@ -7555,6 +7622,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 /* ================================================================
+   HOW-TO GUIDE
+   The hosted build opens its guide (PROFILE.helpUrl, on marsh.city) in
+   an overlay. Hidden on file:// — the Android WebView blocks outside
+   pages, so the button would be dead there — and when the profile
+   names no guide (the Lighthouse build). The frame is only created on
+   tap, so nothing loads from the guide's site until someone asks.
+   ================================================================ */
+
+function helpAvailable() {
+  return /^https?:$/.test(location.protocol) &&
+    typeof PROFILE.helpUrl === 'string' && /^https:\/\//.test(PROFILE.helpUrl);
+}
+
+function openHelp() {
+  if (!helpAvailable()) return;
+  var overlay = document.getElementById('help-overlay');
+  var body = document.getElementById('help-body');
+  if (!body.firstChild) {
+    if (navigator.onLine === false) {
+      var msg = document.createElement('p');
+      msg.className = 'help-offline';
+      msg.textContent = 'The guide needs an internet connection. Connect and try again.';
+      body.appendChild(msg);
+    } else {
+      var frame = document.createElement('iframe');
+      frame.title = 'How to use this app';
+      // Empty sandbox: the guide is a static page, so it gets no scripts,
+      // forms, popups or same-origin access to this app's storage.
+      frame.setAttribute('sandbox', '');
+      frame.setAttribute('referrerpolicy', 'no-referrer');
+      frame.src = PROFILE.helpUrl;
+      body.appendChild(frame);
+    }
+  }
+  overlay.classList.add('open');
+  inertBehind(overlay);
+  overlay._focusTrap = function(e) { trapFocus(e, overlay); };
+  overlay.addEventListener('keydown', overlay._focusTrap);
+  document.getElementById('help-close').focus();
+}
+
+/** Close the guide; focus goes back to its button unless `moveFocus` is
+    false (settings timing out, which must not be read aloud). */
+function closeHelp(moveFocus = true) {
+  var overlay = document.getElementById('help-overlay');
+  if (overlay._focusTrap) {
+    overlay.removeEventListener('keydown', overlay._focusTrap);
+    overlay._focusTrap = null;
+  }
+  overlay.classList.remove('open');
+  releaseInert(overlay);
+  // Drop the frame (or offline notice) so every open starts fresh at the guide,
+  // even if a link inside it navigated the frame somewhere else.
+  document.getElementById('help-body').innerHTML = '';
+  if (moveFocus) document.getElementById('help-btn').focus();
+}
+
+/* ================================================================
+   FEEDBACK CARD
+   A QR code to a static page on marsh.city, for the setter-up's own
+   phone, with the address and email as plain text. Nothing is sent by
+   the app. Hosted builds only, and off unless the profile turns it on
+   (not Lighthouse).
+   ================================================================ */
+
+function showFeedbackCard() {
+  // Hosted only, like the guide (the generic APK is frozen without it).
+  var on = PROFILE.feedback === true && /^https?:$/.test(location.protocol);
+  document.getElementById('feedback-section').hidden = !on;
+}
+
+/* ================================================================
    EMOJI PICKER
    Cross-platform popup for selecting stream icons. Uses a curated
    set of emoji organized by category. Works on Android, iOS, and
@@ -7824,12 +7963,23 @@ function setApplyStatus(msg) {
    rejected with a clear message and never corrupts the live config.
    ================================================================ */
 
+/** The status line's opening hint, kept so a new export or import can put
+ * it back instead of leaving the last result on screen. */
+var backupHint = null;
+
 /** Small status line under the Backup buttons. */
 function setBackupStatus(msg, isError) {
   var el = document.getElementById('backup-status');
   if (!el) return;
+  if (backupHint === null) backupHint = el.textContent;
   el.textContent = msg;
   el.style.color = isError ? 'var(--danger, #e66)' : '';
+}
+
+/** Back to the opening hint while the share sheet or picker is up, so an
+ * earlier "Backup saved." isn't read as this attempt's result. */
+function clearBackupStatus() {
+  if (backupHint !== null) setBackupStatus(backupHint, false);
 }
 
 /** Serialize the current config (same field list as saveSettings) + PIN. */
@@ -7863,13 +8013,20 @@ function buildBackupPayload(includePin) {
   return backup;
 }
 
+/** The iOS app's native save/open bridge (ios/App/App/BackupPlugin.swift),
+ * or null on the website and the Android APK. Capacitor injects it before
+ * this script runs, so the page itself stays free of any Capacitor code. */
+function nativeBackup() {
+  var cap = window.Capacitor;
+  return (cap && cap.Plugins && cap.Plugins.Backup) || null;
+}
+
 /** Backup needs a browser that can save a download and open a file
- * picker. The Android WebView APK (file://) and the iOS shell
- * (capacitor://) have neither yet, and the WebView still reported
- * success, so the section is hidden there until a native save/open
- * bridge exists. */
+ * picker, or the iOS app's native bridge. The Android WebView APK
+ * (file://) has neither, and it used to report success while saving
+ * nothing, so the section is hidden there. */
 function backupAvailable() {
-  return /^https?:$/.test(location.protocol);
+  return /^https?:$/.test(location.protocol) || !!nativeBackup();
 }
 
 function exportConfig() {
@@ -7878,6 +8035,24 @@ function exportConfig() {
     var pinBox = document.getElementById('in-backup-pin');
     var includePin = !!(pinBox && pinBox.checked);
     var backup = buildBackupPayload(includePin);
+    var native = nativeBackup();
+    if (native) {
+      // The share sheet answers once the person saves, sends or cancels, so
+      // the app can say what happened rather than "ready to save". Copy and
+      // AirDrop finish too, so only Save to Files is called "saved".
+      clearBackupStatus();
+      native.save({ text: JSON.stringify(backup, null, 2) }).then(function(result) {
+        if (result && result.saved) {
+          var done = result.toFiles ? 'Backup saved' : 'Backup sent';
+          setBackupStatus(includePin ? done + ' (includes PIN — store it securely).' : done + '.', false);
+        } else {
+          setBackupStatus('Backup not saved.', false);
+        }
+      }, function() {
+        setBackupStatus('Could not export backup on this device.', true);
+      });
+      return;
+    }
     var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -7910,6 +8085,9 @@ function applyImportedConfig(sanitized, pin) {
   stopPlayback();
 
   const before = JSON.parse(JSON.stringify(cfg));
+  // A backup with no Settings button in it came from a radio whose settings
+  // were behind the logo; it restores that way, as loadSettings() reads it.
+  cfg.settingsButton = 'off';
   Object.assign(cfg, sanitized);
   cfg.preset = matchingPresetName(); // a backup's preset name is a hint, like storage's
   const wasNewer = storedConfigIsNewer;
@@ -7959,7 +8137,30 @@ function applyImportedConfig(sanitized, pin) {
   return pinSaved ? true : 'pin-not-saved';
 }
 
-/** Handle a chosen backup file: read, parse, validate, apply. */
+/** Import Backup: the iOS app's Files picker, or the web file input. */
+function chooseBackupFile() {
+  if (!settingsOpen || !backupAvailable()) return;
+  var native = nativeBackup();
+  if (!native) {
+    document.getElementById('import-file').click();
+    return;
+  }
+  clearBackupStatus();
+  native.open().then(function(result) {
+    // Settings may have timed out while the picker was up; a restore then
+    // would change the radio with nobody looking at it.
+    if (!settingsOpen || !result || result.cancelled) return;
+    if (result.tooLarge || typeof result.text !== 'string') {
+      setBackupStatus('That file is not a RadioGridXL backup. Nothing was changed.', true);
+      return;
+    }
+    importBackupText(result.text);
+  }, function() {
+    setBackupStatus('Could not read that file. Nothing was changed.', true);
+  });
+}
+
+/** Handle a chosen backup file from the web file input: read, then import. */
 function importConfig(event) {
   if (!settingsOpen || !backupAvailable()) return;
   var input = event && event.target;
@@ -7968,64 +8169,7 @@ function importConfig(event) {
 
   var reader = new FileReader();
   reader.onload = function() {
-    var parsed;
-    try {
-      parsed = JSON.parse(reader.result);
-    } catch (e) {
-      setBackupStatus('That file is not valid JSON. Nothing was changed.', true);
-      input.value = '';
-      return;
-    }
-
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      setBackupStatus('That file is not a RadioGridXL backup. Nothing was changed.', true);
-      input.value = '';
-      return;
-    }
-
-    // A newer version's backup may use fields this version doesn't know;
-    // applying the rest would half-restore it without a word.
-    if (typeof parsed.v === 'number' && parsed.v > CFG_VERSION) {
-      setBackupStatus('This backup is from a newer version of RadioGridXL. Update the app first. Nothing was changed.', true);
-      input.value = '';
-      return;
-    }
-
-    // UNTRUSTED input — run through the shared allowlist. validateConfig()
-    // returns only the fields that pass; it never throws and never mass-assigns.
-    var sanitized = validateConfig(parsed);
-
-    // A backup with zero recognizable settings is almost certainly the wrong
-    // file. Reject rather than silently no-op against the live config.
-    if (Object.keys(sanitized).length === 0) {
-      setBackupStatus('No valid settings found in that file. Nothing was changed.', true);
-      input.value = '';
-      return;
-    }
-
-    var restored;
-    try {
-      restored = applyImportedConfig(sanitized, parsed.pin);
-      if (!restored) {
-        setBackupStatus("Couldn't save on this device, so nothing was changed.", true);
-        input.value = '';
-        return;
-      }
-    } catch (e) {
-      // validateConfig() should make this unreachable; if it isn't, say so
-      // rather than leave the technician looking at a silent half-restore.
-      console.error('[backup] restore failed:', e);
-      setBackupStatus("Couldn't finish restoring that backup. Check the settings before you close.", true);
-      input.value = '';
-      return;
-    }
-    // A technician restoring a backup to set a new PIN must not leave
-    // believing it took when storage refused it.
-    if (restored === 'pin-not-saved') {
-      setBackupStatus("Backup restored, but the PIN couldn't be saved on this device. The PIN hasn't changed.", true);
-    } else {
-      setBackupStatus('Backup restored.', false);
-    }
+    importBackupText(reader.result);
     input.value = '';  // allow re-importing the same file later
   };
   reader.onerror = function() {
@@ -8035,7 +8179,64 @@ function importConfig(event) {
   reader.readAsText(file);
 }
 
+/** Parse, validate and apply a backup's text. Both import paths end here. */
+function importBackupText(text) {
+  var parsed;
+  try {
+    // Some editors (Windows Notepad) save a byte-order mark. The web file
+    // reader drops it; the native picker hands it over as the first character.
+    if (typeof text === 'string' && text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    parsed = JSON.parse(text);
+  } catch (e) {
+    setBackupStatus('That file is not valid JSON. Nothing was changed.', true);
+    return;
+  }
 
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    setBackupStatus('That file is not a RadioGridXL backup. Nothing was changed.', true);
+    return;
+  }
+
+  // A newer version's backup may use fields this version doesn't know;
+  // applying the rest would half-restore it without a word.
+  if (typeof parsed.v === 'number' && parsed.v > CFG_VERSION) {
+    setBackupStatus('This backup is from a newer version of RadioGridXL. Update the app first. Nothing was changed.', true);
+    return;
+  }
+
+  // UNTRUSTED input — run through the shared allowlist. validateConfig()
+  // returns only the fields that pass; it never throws and never mass-assigns.
+  var sanitized = validateConfig(parsed);
+
+  // A backup with zero recognizable settings is almost certainly the wrong
+  // file. Reject rather than silently no-op against the live config.
+  if (Object.keys(sanitized).length === 0) {
+    setBackupStatus('No valid settings found in that file. Nothing was changed.', true);
+    return;
+  }
+
+  var restored;
+  try {
+    restored = applyImportedConfig(sanitized, parsed.pin);
+    if (!restored) {
+      setBackupStatus("Couldn't save on this device, so nothing was changed.", true);
+      return;
+    }
+  } catch (e) {
+    // validateConfig() should make this unreachable; if it isn't, say so
+    // rather than leave the technician looking at a silent half-restore.
+    console.error('[backup] restore failed:', e);
+    setBackupStatus("Couldn't finish restoring that backup. Check the settings before you close.", true);
+    return;
+  }
+  // A technician restoring a backup to set a new PIN must not leave
+  // believing it took when storage refused it.
+  if (restored === 'pin-not-saved') {
+    setBackupStatus("Backup restored, but the PIN couldn't be saved on this device. The PIN hasn't changed.", true);
+  } else {
+    setBackupStatus('Backup restored.', false);
+  }
+}
 /* ================================================================
    RESET TO DEFAULTS
    Two-tap confirm: first tap shows warning, second tap executes.
@@ -8073,7 +8274,7 @@ function executeReset() {
   cfg.chime = 'on';
   cfg.resume = 'off';
   cfg.zoom = 'off';
-  cfg.settingsButton = 'off';
+  cfg.settingsButton = 'on';
   cfg.orientation = PROFILE.orientation || 'auto';
   cfg.streams = JSON.parse(JSON.stringify(PROFILE.streams));
   cfg.preset = matchingPresetName();
@@ -8272,9 +8473,12 @@ function setPin(v) {
   }
 }
 
-// Logo tap counter — 5 taps within 2 seconds opens the PIN overlay
+// Logo tap counter — 5 taps within 2 seconds opens the PIN overlay. Only
+// while the Settings button is hidden: next to a visible button, a second,
+// secret way in would be a hidden feature.
 document.getElementById('logo-area').addEventListener('click', function (e) {
   e.stopPropagation();
+  if (settingsButtonShown()) return;
   tapCount++;
   clearTimeout(tapTimer);
   tapTimer = setTimeout(() => { tapCount = 0; }, 2000);

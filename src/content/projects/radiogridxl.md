@@ -83,6 +83,9 @@ flowchart TD
 
 ## Updates
 
+### 2026-11-12
+Released v7.23.0. A new radio now shows a Settings button in the top corner, so setting one up no longer starts with five secret taps on the logo. Once it's set up, you can hide the button so the listener can't open settings by mistake. Before it hides, the radio has you practise the way back in: five quick taps on the logo. A radio you've already set up doesn't change: its settings stay behind the logo until you turn the switch on. The guide has a new section on hiding the button.
+
 ### 2026-11-09
 Released v7.22.0, with two new switches in Settings for whoever sets a radio up. Allow pinch to zoom, under Look, lets someone who zooms in to read pinch the stations bigger. It's off unless you turn it on. Show a Settings button, under Setup, puts a Settings button in the top corner for people setting up their own radio by switch, voice or screen reader, where five quick taps on the logo are hard. It still asks for the PIN, so set one if the listener shouldn't change things. On phones, a recording's controls get a second row, so Back, Pause, Stop and Skip share one line with Sleep below. VoiceOver reads the connection status without saying "empty", opening Settings puts focus on its title, and the volume slider always says its current value.
 

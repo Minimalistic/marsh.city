@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGridXL
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.22.0
+appVersion: 7.23.0
 ---
 
 RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -16,9 +16,9 @@ Tap a station to play it, and tap it again to pause. The dot next to the name at
 
 ## Open settings
 
-Settings are hidden on purpose. To open them, **tap the logo in the top corner 5 times quickly**, within about two seconds. The logo is outlined on the screenshot above.
+To open settings, tap **Settings** in the top corner. The button is outlined on the screenshot above.
 
-If five quick taps are hard, say for someone setting up their own radio with a switch, by voice or with a screen reader, turn on **Show a Settings button** at the top of **Setup**. A **Settings** button then sits in the top corner and opens settings with one tap (it still asks for the PIN when there is one). Five taps on the logo keep working too. The button is easy for the listener to find too, so set a PIN if they shouldn't change things.
+If there is no Settings button, it has been hidden: tap the logo in the top corner 5 times quickly instead. See [Hide the Settings button](#hide-the-settings-button).
 
 ![The settings panel, open over the station buttons](/images/radiogridxl/guide/settings-open.webp)
 
@@ -34,7 +34,7 @@ If settings sit untouched for 3 minutes, the app asks **Still setting up?** Tap 
 
 ![The PIN keypad](/images/radiogridxl/guide/pin-pad.webp)
 
-If someone has set a PIN, five taps on the logo bring up a keypad instead. Enter the 4-digit PIN to get in. After 5 wrong tries the keypad locks for a little while and counts down the seconds, and the wait gets longer each time. See [Lock settings with a PIN](#lock-settings-with-a-pin) to set or remove one.
+If someone has set a PIN, opening settings brings up a keypad instead. Enter the 4-digit PIN to get in. After 5 wrong tries the keypad locks for a little while and counts down the seconds, and the wait gets longer each time. See [Lock settings with a PIN](#lock-settings-with-a-pin) to set or remove one.
 
 ## Change a station's stream URL
 
@@ -148,7 +148,7 @@ Buttons can also be pressed by what they show:
 
 - "Tap" and a station's full name, such as "Tap Jazz 88", plays it. While a station is paused, use its number to resume it.
 - "Tap Stop" stops the station. With Advanced controls, "Tap Pause", "Tap Sleep", and for recordings "Tap Back 15" and "Tap Skip 30".
-- "Tap Settings" opens settings, if **Show a Settings button** is on.
+- "Tap Settings" opens settings, unless the Settings button has been hidden.
 - "Show names" labels every button with what to say.
 
 For saying stations by name, give each one a short name that's easy to say and different from the others. Settings warns when two stations share a name, or when a station is named like a button, such as Stop.
@@ -166,9 +166,25 @@ Under **Buttons while playing**, in **Sound and controls**:
 
 ![The Setup PIN field in settings](/images/radiogridxl/guide/set-pin.webp)
 
-To keep anyone else out of settings, type a 4-digit PIN in **Setup PIN**, under **Setup**, and tap **Apply & Close**. From then on, five taps on the logo bring up the keypad. To remove the PIN, clear the field and apply.
+To keep anyone else out of settings, type a 4-digit PIN in **Setup PIN**, under **Setup**, and tap **Apply & Close**. From then on, opening settings brings up the keypad. To remove the PIN, clear the field and apply.
 
 Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser's saved data for marsh.city, which also erases your RadioGridXL stations and settings.
+
+## Hide the Settings button
+
+![The Show a Settings button switch in settings, turned off](/images/radiogridxl/guide/hide-button.webp)
+
+Once the radio is set up, you can hide the Settings button, so the listener can't open settings by mistake and change things. Turn off **Show a Settings button** at the top of **Setup**.
+
+![The practice step: a logo to tap five times before the button is hidden](/images/radiogridxl/guide/hide-practice.webp)
+
+The radio first asks you to practise the way back in. **Tap the logo it shows 5 times quickly.** When it says **Got it**, tap **Done**, then **Apply & Close**. If the taps are hard to do, tap **Cancel** and keep the button.
+
+With the button hidden, open settings by **tapping the logo in the top corner 5 times quickly**, within about two seconds. To bring the button back, open settings that way and turn the switch on again.
+
+Five quick taps are hard with a switch, by voice or with a screen reader. For someone who sets up their own radio that way, leave the button showing and use a PIN instead.
+
+A radio that was set up before the Settings button existed keeps its settings behind the logo until someone turns the switch on.
 
 ## Backup and restore
 
