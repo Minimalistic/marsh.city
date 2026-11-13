@@ -599,6 +599,12 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
      toggling .compact, and mid-transition it would read the old height. */
 }
 
+/* The iPhone retint strip (retintSafariBars) is taller than the header's top
+   padding: what's on the header sits above it, or the strip hides the top of
+   the logo and Settings button for a moment after every Stop or station tap.
+   The strip still paints the header's background, where Safari samples. */
+#header > :not(.sr-only) { position: relative; z-index: 2; }
+
 /* Compact header for tight viewports */
 #header.compact {
   padding: 4px 12px;
@@ -1097,6 +1103,13 @@ html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
   background: var(--stop-active-bg);
   border-top-color: var(--stop-active-border);
 }
+
+/* iPhone: the bars change colour at once, no fade. Safari colours its
+   home-bar strip from the bar, and is only told to look again once the colour
+   has settled (retintSafariBars), so a fade made the strip lag behind. The
+   press flash (filter) stays. */
+html.is-ios #simple-stop, html.is-ios #simple-stop-inset { transition: filter 0.2s; }
+html.is-ios #adv-transport, html.is-ios #simple-stop-square, html.is-ios #simple-stop-label, html.is-ios .adv-stop-square { transition: none; }
 
 #adv-left,
 #adv-right {
@@ -3907,10 +3920,14 @@ function snapTheme() {
    (no visible change) and take it away again: Safari re-reads both. The top
    strip has to reach below the status bar, where Safari samples. It waits
    out the colour fades (the stop bar's runs 0.3 s), or the bottom strip took
-   the old theme's colour mid-fade. */
+   the old theme's colour mid-fade. On an iPhone the stop and transport bars
+   don't fade (04-transport.css), so a Stop or a station tap waits only for
+   the paint: with the full wait, the home-bar strip lagged the bar. */
 const RETINT_HOLD_MS = 250;
 const RETINT_AFTER_MS = 350;
+const RETINT_SNAPPED_MS = 50;
 let retintTimer = null;
+let retintWait = 0;
 
 /** The painted background at the bottom edge: the first non-transparent
     one from the element there up. */
@@ -3923,10 +3940,14 @@ function bottomEdgeColour() {
   return 'var(--screen-bg)';
 }
 
-function retintSafariBars() {
+/** `afterMs` is how long the colour change takes to settle. A longer wait
+    already pending stands, so a quick retint never lands mid-fade. */
+function retintSafariBars(afterMs = RETINT_AFTER_MS) {
   if (!platform.isIOS) return;
+  if (retintTimer && retintWait > afterMs) return;
   clearTimeout(retintTimer);
-  retintTimer = setTimeout(addRetintStrips, RETINT_AFTER_MS);
+  retintWait = afterMs;
+  retintTimer = setTimeout(addRetintStrips, afterMs);
 }
 
 function addRetintStrips() {
@@ -4467,7 +4488,7 @@ function updateSimpleStop() {
   simpleStop.classList.toggle('active', isPlaying && !isPaused);
   simpleStop.classList.toggle('paused', isPaused);
   // The bar is the page's bottom edge, and Safari doesn't see it change colour.
-  if (simpleStop.className !== wasClass) retintSafariBars();
+  if (simpleStop.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
   simpleStop.setAttribute('aria-disabled', isPlaying ? 'false' : 'true');
 
   const labelEl = document.getElementById('simple-stop-label');
@@ -4498,7 +4519,7 @@ function updateAdvTransport() {
   const wasClass = advTransport.className;
   advTransport.classList.toggle('has-playing', isPlaying && !isPaused);
   advTransport.classList.toggle('paused', isPaused);
-  if (advTransport.className !== wasClass) retintSafariBars();
+  if (advTransport.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
 
   const pauseBtn = document.getElementById('adv-pause');
   if (pauseBtn) {
