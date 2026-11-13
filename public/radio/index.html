@@ -615,6 +615,7 @@ html.is-desktop:not(.fill-view) #platform-badge { display: block; }
   align-items: center;
   gap: 12px;
   min-width: 0;
+  margin-right: auto; /* everything after the name packs to the right end */
 }
 #logo-area[role="button"] { cursor: pointer; }
 
@@ -636,8 +637,12 @@ html.theme-light .logo-body { fill: #0c2039; }
 }
 html.is-desktop #org-name { font-size: 16px; }
 
-/* -- Connection status dot (idle / buffering / good / error) -- */
+/* -- Connection status dot (idle / buffering / good / error) --
+   Always the last thing in the header, at its right end, so it is in the
+   same place with the Settings button showing or hidden. The button and the
+   sleep countdown sit to its left. */
 #conn-dot {
+  order: 1;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -3099,7 +3104,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version">RadioGridXL v7.23.4</div>
+      <div id="settings-version">RadioGridXL v7.23.5</div>
       <!-- Who made it, from PROFILE.madeBy; never a link (promise-stays-radio).
            MarshWorks gets the brand kit's "made by" block; any other maker,
            and the MonoRadio and High Contrast themes, get the plain text line. -->
