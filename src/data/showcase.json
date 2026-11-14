@@ -2,6 +2,6 @@
   { "collection": "playground", "id": "driftglass", "image": "/images/driftglass/shoreline.webp" },
   { "collection": "projects", "id": "whatcanhelp", "image": "/images/whatcanhelp/landing.webp", "focus": "top" },
   { "collection": "playground", "id": "the-shallows", "image": "/images/the-shallows/tile.webp" },
-  { "collection": "projects", "id": "radiogridxl", "image": "/images/radiogridxl/grid-dark.webp", "focus": "top" },
+  { "collection": "projects", "id": "radiogridxl", "image": "/images/radiogridxl/page/grid.webp", "focus": "top" },
   { "collection": "playground", "id": "dailydungeon", "image": "/images/dailydungeon/tile.webp" }
 ]
