@@ -1,5 +1,5 @@
 {
-  "name": "RadioGridXL",
+  "name": "RadioGrid",
   "short_name": "RadioGrid",
   "description": "Single-screen radio streaming kiosk.",
   "display": "standalone",

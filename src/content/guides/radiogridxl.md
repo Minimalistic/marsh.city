@@ -1,12 +1,12 @@
 ---
-title: How to use RadioGridXL
+title: How to use RadioGrid
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.23.8
+appVersion: 7.24.0
 ---
 
-RadioGridXL is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
+RadioGrid is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
 
-**RadioGridXL saves your stations and settings inside the web browser you're using, on this device only.** Nothing is sent anywhere, and there's no account. If you open RadioGridXL on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for marsh.city, the website RadioGridXL runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
+**RadioGrid saves your stations and settings inside the web browser you're using, on this device only.** Nothing is sent anywhere, and there's no account. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for marsh.city, the website RadioGrid runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
 
 ## Listening
 
@@ -49,7 +49,7 @@ Each station has a row under **Stations**, at the top of settings. Tap a row to 
 
 The URL has to be a direct audio stream, usually starting with `https://` and often ending in `.mp3` or `.aac`. A station's website address won't work, and neither will most playlist files (`.pls`, `.m3u`). If all you have is a playlist file, open it in a text editor and copy the web address inside it.
 
-Links that start with `http://` (no "s") won't play on this website, because browsers block them on secure pages. That includes RadioGridXL on your home screen, since it's the same website. The app shows a warning under the field when that's the case. Look for an `https://` address for the station instead.
+Links that start with `http://` (no "s") won't play on this website, because browsers block them on secure pages. That includes RadioGrid on your home screen, since it's the same website. The app shows a warning under the field when that's the case. Look for an `https://` address for the station instead.
 
 **Volume Trim** evens out a station that's much louder or quieter than the others. 1.0 is normal, and lower numbers make that station quieter. Numbers above 1.0 only make it louder when **Volume**, under **Sound and controls**, is set below 100%. On iPhone and iPad, Volume Trim and the Volume slider don't appear: Apple doesn't let web apps change the volume, so use the side buttons.
 
@@ -168,7 +168,7 @@ Under **Buttons while playing**, in **Sound and controls**:
 
 To keep anyone else out of settings, type a 4-digit PIN in **Setup PIN**, under **Setup**, and tap **Apply & Close**. From then on, opening settings brings up the keypad. To remove the PIN, clear the field and apply.
 
-Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser's saved data for marsh.city, which also erases your RadioGridXL stations and settings.
+Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser's saved data for marsh.city, which also erases your RadioGrid stations and settings.
 
 ## Hide the Settings button
 
@@ -197,7 +197,7 @@ The PIN is only included if you tick **Include the PIN**. Anyone with that file 
 
 ## Install it as an app
 
-RadioGridXL can sit on your home screen like a regular app and open full screen:
+RadioGrid can sit on your home screen like a regular app and open full screen:
 
 - **iPhone or iPad (Safari):** tap the Share button, then **Add to Home Screen**.
 - **Android (Chrome):** tap the **⋮** menu, then **Add to Home screen** or **Install app**.
