@@ -2,7 +2,7 @@
 title: RadioGridXL
 description: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, deployed at a nonprofit.
 status: shipped
-repo: https://github.com/Minimalistic/RadioGridXL
+repo: https://github.com/Marshworks-dev/RadioGrid
 url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
