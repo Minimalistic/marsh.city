@@ -1034,6 +1034,10 @@ html[data-size="ultra"] .btn-emoji { font-size: var(--btn-emoji-size, 62px); }
      carries the bar's colour through the strip below it. */
   height: 74px;
   width: 100%;
+  /* Room at the sides for a paused "Resume <station>" label; the notch
+     side's inset in landscape. */
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
   border: none;
   border-top: 2px solid var(--stop-idle-border);
   background: var(--stop-idle-bg);
@@ -1072,6 +1076,12 @@ html.is-desktop #simple-stop-inset { display: none; }
   font-weight: 900;
   color: var(--stop-idle-text);
   letter-spacing: 0.04em;
+  /* A long name wraps inside the bar; fitSimpleStopLabel() shrinks it past
+     two lines. */
+  min-width: 0;
+  text-align: center;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
   transition: color 0.3s;
 }
 html.is-desktop #simple-stop-label { font-size: 23px; }
@@ -3530,7 +3540,7 @@ function init() {
   var resizeTimer;
   window.addEventListener('resize', function() {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(renderButtons, 100);
+    resizeTimer = setTimeout(function() { renderButtons(); fitSimpleStopLabel(); }, 100);
   });
 }
 
@@ -4503,6 +4513,22 @@ function updateSimpleStop() {
     labelEl.textContent = 'Stop';
     squareEl.style.display = '';
     simpleStop.setAttribute('aria-label', 'Stop playback');
+  }
+  fitSimpleStopLabel();
+}
+
+const STOP_LABEL_MIN_PX = 12;
+
+/** The bar's height is fixed, so a name too long for two lines steps the
+    label's font down until it fits. No-op without layout (jsdom). */
+function fitSimpleStopLabel() {
+  const labelEl = document.getElementById('simple-stop-label');
+  labelEl.style.fontSize = '';
+  const room = simpleStop.clientHeight - 4;
+  let size = parseFloat(getComputedStyle(labelEl).fontSize);
+  while (room > 0 && labelEl.offsetHeight > room && size > STOP_LABEL_MIN_PX) {
+    size -= 1;
+    labelEl.style.fontSize = size + 'px';
   }
 }
 
