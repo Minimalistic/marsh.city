@@ -10,7 +10,7 @@ updated: November 2026
 technology. Lately the work has been cleanup: reviewing the text page by page
 and refining what the site is, so it's more helpful to the people who use it.
 
-**[RadioGridXL](/projects/radiogridxl/)** is an internet radio app for older
+**[RadioGrid](/projects/radiogridxl/)** is an internet radio app for older
 adults and people with disabilities. Recent releases have been about access: a
 station plays when you say its name with Voice Control, and there's an optional
 Settings button for people setting up their own radio by switch, voice or

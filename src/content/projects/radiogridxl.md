@@ -1,22 +1,22 @@
 ---
-title: RadioGridXL
+title: RadioGrid
 description: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, deployed at a nonprofit.
 status: shipped
 repo: https://github.com/Marshworks-dev/RadioGrid
 url: https://marsh.city/radio/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-11-06
+updated: 2026-11-14
 image: /images/radiogridxl/page/grid.webp
-imageAlt: RadioGridXL — two large station buttons filling a dark screen
+imageAlt: RadioGrid — two large station buttons filling a dark screen
 hideTagline: true
 ---
 
-RadioGridXL is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where I'm the Director of Technology, for people who just want to listen to something without fighting the interface.
+RadioGrid is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it's deployed at the nonprofit where I'm the Director of Technology, for people who just want to listen to something without fighting the interface.
 
 ## The interface
 
-![RadioGridXL: two large station buttons filling a dark screen](/images/radiogridxl/page/grid.webp)
+![RadioGrid: two large station buttons filling a dark screen](/images/radiogridxl/page/grid.webp)
 
 Big buttons, one per station. Tap to play, tap again to pause. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there's one station or eight.
 
@@ -24,7 +24,7 @@ Big buttons, one per station. Tap to play, tap again to pause. The default dark 
 
 Add more stations and the layout shifts to a grid: two columns on a phone, up to four on a wide screen, with the first station spanning the top row when the count is odd. Each station gets its own color from eight palettes. No media query breakpoints - the grid math is pure viewport calculation.
 
-![RadioGridXL on a phone: the same stations stacked to fill a narrow screen](/images/radiogridxl/page/phone.webp)
+![RadioGrid on a phone: the same stations stacked to fill a narrow screen](/images/radiogridxl/page/phone.webp)
 
 ## Playback and controls
 
@@ -67,7 +67,7 @@ One HTML file. Around 8,000 lines of vanilla HTML, CSS, and JavaScript. Not how 
 
 A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
 
-<div id="radiogrid-deploy" class="mermaid-animated" data-animate-order="A,B,C,D,E,F,G" aria-label="RadioGridXL deployment pipeline: a single HTML source file and a profile config feed into a build script, producing a branded HTML file that deploys to Docker, Android APK, or as a local file.">
+<div id="radiogrid-deploy" class="mermaid-animated" data-animate-order="A,B,C,D,E,F,G" aria-label="RadioGrid deployment pipeline: a single HTML source file and a profile config feed into a build script, producing a branded HTML file that deploys to Docker, Android APK, or as a local file.">
 
 ```mermaid
 flowchart TD
@@ -82,6 +82,9 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-11-14
+Released v7.24.0: the app is now called RadioGrid, the same name as its code on GitHub. A radio still showing the old name, RadioGridXL, switches to the new one, and its stations, settings and links all stay as they were.
 
 ### 2026-11-12
 Released v7.23.0. A new radio now shows a Settings button in the top corner, so setting one up no longer starts with five secret taps on the logo. Once it's set up, you can hide the button so the listener can't open settings by mistake. Before it hides, the radio has you practise the way back in: five quick taps on the logo. A radio you've already set up doesn't change: its settings stay behind the logo until you turn the switch on. The guide has a new section on hiding the button.
