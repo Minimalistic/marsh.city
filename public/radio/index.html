@@ -1430,9 +1430,10 @@ html.is-desktop .overlay-body { font-size: 20px; }
 
 #in-pin { letter-spacing: 0.2em; font-size: 16px; padding: 10px 12px; }
 
-/* Short viewport — shrink PIN overlay to fit without scrolling */
+/* Short viewport: overlays fit without scrolling. Listener-facing text (sleep,
+   no network) keeps its size; space comes from padding, icons and layout. */
 @media (max-height: 480px) {
-  #pin-overlay { padding: 12px 16px; gap: 8px; }
+  .overlay { padding: 12px 16px; gap: 8px; }
   #pin-overlay .overlay-icon { font-size: 32px; }
   #pin-overlay .overlay-title { font-size: 20px; }
   #pin-overlay .overlay-body { font-size: 14px; }
@@ -1441,17 +1442,55 @@ html.is-desktop .overlay-body { font-size: 20px; }
   #pin-pad { gap: 4px; max-width: 240px; }
   .pin-key { padding: 8px 6px; font-size: 18px; border-radius: 8px; }
   .pin-key-wide { font-size: 12px; }
+  #sleep-overlay .overlay-icon { display: none; }
+  .sleep-options { grid-template-columns: repeat(5, auto); width: auto; max-width: none; gap: 8px; }
+  .sleep-options .sleep-opt:last-child:nth-child(odd) { grid-column: auto; }
+  .sleep-opt { padding: 12px 14px; min-width: 0; }
+  .sleep-opt.cancel { margin-top: 0; }
+  #hide-practice { min-height: 48px; padding: 6px 16px; }
 }
 
 /* Very short viewport (landscape phones) — further compact */
 @media (max-height: 360px) {
-  #pin-overlay { padding: 6px 12px; gap: 4px; }
+  .overlay { padding: 6px 12px; gap: 4px; }
   #pin-overlay .overlay-icon { display: none; }
   #pin-overlay .overlay-title { font-size: 16px; }
   #pin-overlay .overlay-body { font-size: 12px; }
   #pin-dots { margin: 0 0 4px; }
   .pin-dot { width: 12px; height: 12px; }
   .pin-key { padding: 6px 4px; font-size: 16px; }
+  #hide-practice svg { width: 32px; height: 32px; }
+}
+
+/* A radio turned sideways on an upright phone (force-landscape): the media
+   queries above read the screen's height, which stays tall, but the room
+   the overlays have is the screen's width. The same two steps, keyed on that. */
+@media (orientation: portrait) and (max-width: 480px) {
+  html[class*="force-landscape"] .overlay { padding: 12px 16px; gap: 8px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-icon { font-size: 32px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-title { font-size: 20px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-body { font-size: 14px; }
+  html[class*="force-landscape"] #pin-dots { margin: 2px 0 6px; gap: 8px; }
+  html[class*="force-landscape"] .pin-dot { width: 14px; height: 14px; }
+  html[class*="force-landscape"] #pin-pad { gap: 4px; max-width: 240px; }
+  html[class*="force-landscape"] .pin-key { padding: 8px 6px; font-size: 18px; border-radius: 8px; }
+  html[class*="force-landscape"] .pin-key-wide { font-size: 12px; }
+  html[class*="force-landscape"] #sleep-overlay .overlay-icon { display: none; }
+  html[class*="force-landscape"] .sleep-options { grid-template-columns: repeat(5, auto); width: auto; max-width: none; gap: 8px; }
+  html[class*="force-landscape"] .sleep-options .sleep-opt:last-child:nth-child(odd) { grid-column: auto; }
+  html[class*="force-landscape"] .sleep-opt { padding: 12px 14px; min-width: 0; }
+  html[class*="force-landscape"] .sleep-opt.cancel { margin-top: 0; }
+  html[class*="force-landscape"] #hide-practice { min-height: 48px; padding: 6px 16px; }
+}
+@media (orientation: portrait) and (max-width: 360px) {
+  html[class*="force-landscape"] .overlay { padding: 6px 12px; gap: 4px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-icon { display: none; }
+  html[class*="force-landscape"] #pin-overlay .overlay-title { font-size: 16px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-body { font-size: 12px; }
+  html[class*="force-landscape"] #pin-dots { margin: 0 0 4px; }
+  html[class*="force-landscape"] .pin-dot { width: 12px; height: 12px; }
+  html[class*="force-landscape"] .pin-key { padding: 6px 4px; font-size: 16px; }
+  html[class*="force-landscape"] #hide-practice svg { width: 32px; height: 32px; }
 }
 
 
@@ -2227,7 +2266,7 @@ html.theme-fading, html.theme-fading * {
 @media (max-height: 520px) {
   .stream-browser-results { flex: none; max-height: none; min-height: 0; overflow-y: visible; }
 }
-.stream-browser-title:focus, #settings-title:focus { outline: none; } /* focused by script only, never by Tab */
+.stream-browser-title:focus, #settings-title:focus, #pin-overlay-title:focus { outline: none; } /* focused by script only, never by Tab */
 .stream-browser-title {
   font-size: 15px;
   font-weight: 700;
@@ -2703,6 +2742,11 @@ html.theme-fading, html.theme-fading * {
     width: 100dvh;
     height: 100vw;
   }
+  /* The desktop preview, turned: its frame sizes (and 520px floor) and the
+     body's 100vh are for an upright window, so give them the turned one's. */
+  html.is-desktop[class*="force-landscape"] body { height: 100vw; }
+  html.is-desktop[class*="force-landscape"] #app { width: min(740px, 100vh); height: min(860px, 100vw); min-height: 0; }
+  html.is-desktop.fill-view[class*="force-landscape"] #app { width: 100vh; height: 100vw; }
   html.force-landscape-cw #settings-panel,
   html.force-landscape-ccw #settings-panel {
     width: min(360px, 100vh);
@@ -2864,13 +2908,15 @@ html.theme-fading, html.theme-fading * {
   <!-- ========== PIN OVERLAY (technician access gate) ========== -->
   <div class="overlay" id="pin-overlay" role="dialog" aria-modal="true" aria-labelledby="pin-overlay-title">
     <div class="overlay-icon" aria-hidden="true">&#128272;</div>
-    <div class="overlay-title" id="pin-overlay-title">Technician Access</div>
+    <div class="overlay-title" id="pin-overlay-title" tabindex="-1">Technician Access</div>
     <div class="overlay-body">Enter the setup PIN to continue.</div>
     <div id="pin-dots" aria-hidden="true">
       <span class="pin-dot"></span><span class="pin-dot"></span>
       <span class="pin-dot"></span><span class="pin-dot"></span>
     </div>
     <div id="pin-status" class="sr-only" role="status" aria-live="polite"></div>
+    <!-- Above the keypad: VoiceOver moves onto a new alert, and below it Cancel would be behind the cursor. -->
+    <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-bottom:4px;"></div>
     <div id="pin-pad" role="group" aria-label="PIN keypad">
       <button class="pin-key" onclick="pinKey('1')" aria-label="1">1</button>
       <button class="pin-key" onclick="pinKey('2')" aria-label="2">2</button>
@@ -2885,7 +2931,6 @@ html.theme-fading, html.theme-fading * {
       <button class="pin-key" onclick="pinKey('0')" aria-label="0">0</button>
       <button class="pin-key pin-key-wide" onclick="pinBackspace()" aria-label="Delete last digit">&#9003;</button>
     </div>
-    <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-top:4px;">&nbsp;</div>
     <!-- The lockout countdown: not a live region, or a screen reader would read every second. -->
     <div id="pin-wait" style="color:var(--danger);font-size:14px;font-weight:700;" hidden></div>
   </div>
@@ -3127,7 +3172,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version">RadioGrid v7.24.0</div>
+      <div id="settings-version">RadioGrid v7.24.1</div>
       <!-- Who made it, from PROFILE.madeBy; never a link (promise-stays-radio).
            MarshWorks gets the brand kit's "made by" block; any other maker,
            and the MonoRadio and High Contrast themes, get the plain text line. -->
@@ -8661,13 +8706,18 @@ function showPinOverlay() {
   // A lockout keeps running (and showing) if the pad is closed and reopened.
   if (!pinLocked) clearPinError();
   showOverlay(pinOverlay);
+  // The title, not the 1 key, so VoiceOver reads the dialog's name on open
+  // (runs after showOverlay's own first-button focus in the same frame).
+  requestAnimationFrame(() => { if (pinOverlay.classList.contains('visible')) document.getElementById('pin-overlay-title').focus(); });
   restartPinIdle();
 }
 
 /** Clear "Incorrect PIN" and the red dots. */
 function clearPinError() {
   pinWrongShown = false;
-  pinErrorEl.innerHTML = '&nbsp;';
+  // Only touch the alert when it has text: VoiceOver speaks any rewrite of an
+  // assertive region, and a blank one drowns out the dialog's own name.
+  if (pinErrorEl.textContent !== '') pinErrorEl.textContent = '';
   pinDots.forEach(d => d.classList.remove('wrong'));
 }
 
