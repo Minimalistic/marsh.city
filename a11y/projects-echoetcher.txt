@@ -1,0 +1,109 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/projects/echoetcher/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: EchoEtcher
+12. archived
+13. link: repo
+14. Updated Nov 2026 Written by
+15. link: Jason Marsh, resume
+16. Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
+17. I do most of my thinking while driving - working through problems, coming up with project ideas, planning next steps. The ideas are there, but capturing them in a usable form is hard, and scrubbing through a raw voice recording later isn’t much better.
+18. EchoEtcher watches a folder for audio files, transcribes them with Whisper running locally, processes the transcript through an LLM, and drops a clean, tagged Markdown note into Obsidian.
+19. heading level 2: What it does
+20. Record a voice memo - a thought, a project idea, a problem to work through. EchoEtcher picks it up automatically, transcribes it locally using Whisper, then sends the transcript through Ollama (or optionally Claude) to extract structure: headings, key points, tags, and clean prose. The result lands in Obsidian as a properly formatted note.
+21. For longer recordings, I chunk the audio with overlap to keep context across segments. A custom Whisper prompt guides transcription toward natural, conversational speech - proper punctuation and sentence structure rather than raw dictation output. It handles conversational speech well, though trailing off mid-thought still trips it up occasionally.
+22. heading level 2: How it works
+23. Voice memo
+24. File watcher
+25. Whisper transcription
+26. LLM formatting
+27. Obsidian note
+28. Python with a file watcher (watchdog) monitoring a configurable directory. Whisper runs locally - it auto-detects CUDA, MPS (Apple Silicon), or falls back to CPU. The processing pipeline supports multiple content types through a modular processor system, so audio and images can be handled differently.
+29. It runs as a background agent with configurable polling intervals, designed to run unattended and process files as they appear. Everything stays local unless the Claude formatting step is opted into.
+30. heading level 2: Updates
+31. heading level 3: 2026-11-02
+32. Shelved for now. This page stays up as a record of how it worked.
+33. heading level 3: 2026-04-26
+34. Currently offline while I work on some convenience improvements to the workflow. Was in regular use before that.
+35. [contentinfo] ©
+36. link: Jason Marsh
+37. link: email
+38. link: github
+39. link: linkedin
+40. link: source
+41. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "EchoEtcher" [level=1]
+    - text: archived
+    - link "repo":
+      - /url: https://github.com/Minimalistic/EchoEtcher
+    - text: Updated Nov 2026 Written by
+    - link "Jason Marsh, resume":
+      - /url: /resume/
+      - text: Jason Marsh
+    - paragraph: Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
+    - paragraph: I do most of my thinking while driving - working through problems, coming up with project ideas, planning next steps. The ideas are there, but capturing them in a usable form is hard, and scrubbing through a raw voice recording later isn’t much better.
+    - paragraph: EchoEtcher watches a folder for audio files, transcribes them with Whisper running locally, processes the transcript through an LLM, and drops a clean, tagged Markdown note into Obsidian.
+    - heading "What it does" [level=2]
+    - paragraph: "Record a voice memo - a thought, a project idea, a problem to work through. EchoEtcher picks it up automatically, transcribes it locally using Whisper, then sends the transcript through Ollama (or optionally Claude) to extract structure: headings, key points, tags, and clean prose. The result lands in Obsidian as a properly formatted note."
+    - paragraph: For longer recordings, I chunk the audio with overlap to keep context across segments. A custom Whisper prompt guides transcription toward natural, conversational speech - proper punctuation and sentence structure rather than raw dictation output. It handles conversational speech well, though trailing off mid-thought still trips it up occasionally.
+    - heading "How it works" [level=2]
+    - document:
+      - paragraph: Voice memo
+      - paragraph: File watcher
+      - paragraph: Whisper transcription
+      - paragraph: LLM formatting
+      - paragraph: Obsidian note
+    - paragraph: Python with a file watcher (watchdog) monitoring a configurable directory. Whisper runs locally - it auto-detects CUDA, MPS (Apple Silicon), or falls back to CPU. The processing pipeline supports multiple content types through a modular processor system, so audio and images can be handled differently.
+    - paragraph: It runs as a background agent with configurable polling intervals, designed to run unattended and process files as they appear. Everything stays local unless the Claude formatting step is opted into.
+    - heading "Updates" [level=2]
+    - heading "2026-11-02" [level=3]
+    - paragraph: Shelved for now. This page stays up as a record of how it worked.
+    - heading "2026-04-26" [level=3]
+    - paragraph: Currently offline while I work on some convenience improvements to the workflow. Was in regular use before that.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

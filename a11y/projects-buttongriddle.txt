@@ -1,0 +1,91 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/projects/buttongriddle/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: ButtonGriddle
+12. wip Updated Oct 2026 Written by
+13. link: Jason Marsh, resume
+14. link: Visit the live site
+15. ButtonGriddle turns a tablet into a set of choice boards - one per context (meals, activities, clothing) - where each button is a photo and a phrase. Tap a button and the tablet speaks it aloud. A Yes / No / Not sure check screen helps staff confirm understanding in the moment.
+16. image: The Meals board - a grid of colored choice buttons; tapping one speaks it aloud
+17. It supports communication, but it isn’t an AAC or speech-generating app. The goal is easier participation: fewer spoken directions to process, clearer choices, less guessing on both sides. Whoever supports the person - an OT, SLP, teacher, or family member - builds the boards in a passcode-protected edit mode: photos of the person’s actual items, custom phrases, drag-to-arrange grids. Day to day, staff just present choices.
+18. image: The Yes / No / Not sure check screen - three large buttons staff use to confirm understanding
+19. Boards are organized by context, so the tablet opens to a simple list - staff pick the situation, the person picks the choice.
+20. image: The board list - Meals, Drinks & Snacks, Activities, and Comfort context boards
+21. heading level 2: How it’s built
+22. Vanilla JavaScript PWA - no framework, no build step, no server, no dependencies. All storage is IndexedDB on the device, including photos; nothing is collected and there’s no account. Works fully offline after install.
+23. link: Product page →
+24. [contentinfo] ©
+25. link: Jason Marsh
+26. link: email
+27. link: github
+28. link: linkedin
+29. link: source
+30. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "ButtonGriddle" [level=1]
+    - text: wip Updated Oct 2026 Written by
+    - link "Jason Marsh, resume":
+      - /url: /resume/
+      - text: Jason Marsh
+    - link "Visit the live site":
+      - /url: https://marsh.city/buttongriddle/
+    - paragraph: ButtonGriddle turns a tablet into a set of choice boards - one per context (meals, activities, clothing) - where each button is a photo and a phrase. Tap a button and the tablet speaks it aloud. A Yes / No / Not sure check screen helps staff confirm understanding in the moment.
+    - paragraph:
+      - img "The Meals board - a grid of colored choice buttons; tapping one speaks it aloud"
+    - paragraph: "It supports communication, but it isn’t an AAC or speech-generating app. The goal is easier participation: fewer spoken directions to process, clearer choices, less guessing on both sides. Whoever supports the person - an OT, SLP, teacher, or family member - builds the boards in a passcode-protected edit mode: photos of the person’s actual items, custom phrases, drag-to-arrange grids. Day to day, staff just present choices."
+    - paragraph:
+      - img "The Yes / No / Not sure check screen - three large buttons staff use to confirm understanding"
+    - paragraph: Boards are organized by context, so the tablet opens to a simple list - staff pick the situation, the person picks the choice.
+    - paragraph:
+      - img "The board list - Meals, Drinks & Snacks, Activities, and Comfort context boards"
+    - heading "How it’s built" [level=2]
+    - paragraph: Vanilla JavaScript PWA - no framework, no build step, no server, no dependencies. All storage is IndexedDB on the device, including photos; nothing is collected and there’s no account. Works fully offline after install.
+    - paragraph:
+      - link "Product page →":
+        - /url: /buttongriddle/
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

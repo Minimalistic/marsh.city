@@ -1,0 +1,125 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/projects/marsh-city/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: marsh.city
+12. shipped
+13. link: repo
+14. Updated Nov 2026 Written by
+15. link: Jason Marsh, resume
+16. A personal site where adding content is a conversation, not a CMS.
+17. link: Visit the live site
+18. I needed a central place to point people - a resume that stays current, project pages that show what I’m actually building, and posts when something’s worth writing about. The problem with most personal sites is maintenance. They launch polished and rot within months because updating them feels like work on top of work.
+19. I solved that by making the whole site conversational. I describe a change to Claude Code in the terminal, it edits the Markdown, git push, GitHub Actions deploys.
+20. heading level 2: How it works
+21. The site is built with Astro - static generation from Markdown content collections. Each project, post, and playground item is a single
+22. .md
+23. file with frontmatter. The build produces plain HTML and deploys to GitHub Pages on every push to
+24. main
+25. .
+26. Content lives in
+27. src/content/
+28. organized by type. When I finish a work session on any project, I talk through what happened with Claude Code in the terminal and update the relevant pages in the same conversation. The site stays current because updating it has almost zero friction.
+29. heading level 2: Design
+30. The visual language is built around a monstera/forest palette - cream and deep greens in light mode, dark canopy tones at night. Lora for headings, Inter for body text. Dark mode gets a starfield with occasional shooting stars and fireflies that drift and scatter from the cursor.
+31. Behind the pages is a painted forest scene built from layers, and a View background option hides the page so the scene can be looked at on its own. There’s optional ambient sound, off until you turn it on: wind and birdsong by day, a breeze and crickets at night. The birds are northern Minnesota species, synthesized in the browser from spectrogram measurements, and which ones are around follows the month.
+32. Mermaid diagrams render client-side when a page needs them. Images open in a lightbox with pinch-to-zoom. A command palette (Cmd+K) lets you jump to any page instantly. All of it runs without a build step on the frontend - vanilla JS, no framework. Page counts are anonymous, with no cookies; the
+33. link: privacy page
+34. says exactly what’s counted.
+35. heading level 2: The workflow
+36. The site doubles as a journal. At the start of each session, Claude Code checks recent GitHub activity across my projects, surfaces what’s changed, and offers to update project pages or draft posts based on the conversation.
+37. This means the site reflects what I’m actually working on at any given time, not what I remembered to write up six months later.
+38. heading level 2: Updates
+39. heading level 3: 2026-09-27
+40. The menu button is touch-sized on phones now, and every item in it is a comfortable tap target. The site also has optional ambient sound, off until you turn it on in the menu: wind and birdsong by day, a soft breeze and sparse crickets at night, crossfading with the theme. It’s all synthesized live in the browser with Web Audio, so there are no audio files, and the sound code only downloads for people who switch it on.
+41. [contentinfo] ©
+42. link: Jason Marsh
+43. link: email
+44. link: github
+45. link: linkedin
+46. link: source
+47. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "marsh.city" [level=1]
+    - text: shipped
+    - link "repo":
+      - /url: https://github.com/Minimalistic/marsh.city
+    - text: Updated Nov 2026 Written by
+    - link "Jason Marsh, resume":
+      - /url: /resume/
+      - text: Jason Marsh
+    - paragraph: A personal site where adding content is a conversation, not a CMS.
+    - link "Visit the live site":
+      - /url: https://marsh.city
+    - paragraph: I needed a central place to point people - a resume that stays current, project pages that show what I’m actually building, and posts when something’s worth writing about. The problem with most personal sites is maintenance. They launch polished and rot within months because updating them feels like work on top of work.
+    - paragraph: I solved that by making the whole site conversational. I describe a change to Claude Code in the terminal, it edits the Markdown, git push, GitHub Actions deploys.
+    - heading "How it works" [level=2]
+    - paragraph:
+      - text: The site is built with Astro - static generation from Markdown content collections. Each project, post, and playground item is a single
+      - code: .md
+      - text: file with frontmatter. The build produces plain HTML and deploys to GitHub Pages on every push to
+      - code: main
+      - text: .
+    - paragraph:
+      - text: Content lives in
+      - code: src/content/
+      - text: organized by type. When I finish a work session on any project, I talk through what happened with Claude Code in the terminal and update the relevant pages in the same conversation. The site stays current because updating it has almost zero friction.
+    - heading "Design" [level=2]
+    - paragraph: The visual language is built around a monstera/forest palette - cream and deep greens in light mode, dark canopy tones at night. Lora for headings, Inter for body text. Dark mode gets a starfield with occasional shooting stars and fireflies that drift and scatter from the cursor.
+    - paragraph: "Behind the pages is a painted forest scene built from layers, and a View background option hides the page so the scene can be looked at on its own. There’s optional ambient sound, off until you turn it on: wind and birdsong by day, a breeze and crickets at night. The birds are northern Minnesota species, synthesized in the browser from spectrogram measurements, and which ones are around follows the month."
+    - paragraph:
+      - text: Mermaid diagrams render client-side when a page needs them. Images open in a lightbox with pinch-to-zoom. A command palette (Cmd+K) lets you jump to any page instantly. All of it runs without a build step on the frontend - vanilla JS, no framework. Page counts are anonymous, with no cookies; the
+      - link "privacy page":
+        - /url: /privacy/
+      - text: says exactly what’s counted.
+    - heading "The workflow" [level=2]
+    - paragraph: The site doubles as a journal. At the start of each session, Claude Code checks recent GitHub activity across my projects, surfaces what’s changed, and offers to update project pages or draft posts based on the conversation.
+    - paragraph: This means the site reflects what I’m actually working on at any given time, not what I remembered to write up six months later.
+    - heading "Updates" [level=2]
+    - heading "2026-09-27" [level=3]
+    - paragraph: "The menu button is touch-sized on phones now, and every item in it is a comfortable tap target. The site also has optional ambient sound, off until you turn it on in the menu: wind and birdsong by day, a soft breeze and sparse crickets at night, crossfading with the theme. It’s all synthesized live in the browser with Web Audio, so there are no audio files, and the sound code only downloads for people who switch it on."
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

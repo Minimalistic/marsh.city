@@ -1,0 +1,120 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/projects/mealdeck/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: MealDeck
+12. archived Updated Sep 2026 Written by
+13. link: Jason Marsh, resume
+14. Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
+15. link: Visit the live site
+16. MealDeck started as me seeing what I could get AI to do, and kept growing from there. I built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists, used by friends and family. I’m winding it down now.
+17. image: MealDeck landing page showing the recipe mosaic and waitlist call-to-action
+18. heading level 2: What it does
+19. Meal planning
+20. that groups recipes with overlapping ingredients so grocery runs are smaller and less goes to waste. Plan a week of meals and the shopping list builds itself around shared ingredients.
+21. image: MealDeck weekly meal plan view with month headers, holiday tags, and shopping list access
+22. Cook mode
+23. with voice control - hands-free, step-by-step instructions. Say “next” or “back” to navigate, “ingredients” to check the list.
+24. image: MealDeck recipe detail showing ingredients, cook mode button, and serving adjustment
+25. AI recipe adaptation
+26. modifies recipes for dietary needs, ingredient swaps, or serving size changes. The Anthropic API adjusts both the ingredient list and the instructions.
+27. Sharing
+28. - find and share recipes with friends and family, explore what other people are cooking.
+29. image: MealDeck recipe collection with featured carousel and new additions
+30. heading level 2: How it’s built
+31. Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic API powers recipe adaptation and natural language recipe import. No frameworks, no build step.
+32. heading level 2: Updates
+33. heading level 3: 2026-08-28
+34. Winding down. mealdeck.net is still up for now.
+35. heading level 3: 2026-04-26
+36. In active use with friends and family.
+37. [contentinfo] ©
+38. link: Jason Marsh
+39. link: email
+40. link: github
+41. link: linkedin
+42. link: source
+43. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "MealDeck" [level=1]
+    - text: archived Updated Sep 2026 Written by
+    - link "Jason Marsh, resume":
+      - /url: /resume/
+      - text: Jason Marsh
+    - paragraph: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
+    - link "Visit the live site":
+      - /url: https://mealdeck.net
+    - paragraph: MealDeck started as me seeing what I could get AI to do, and kept growing from there. I built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists, used by friends and family. I’m winding it down now.
+    - paragraph:
+      - img "MealDeck landing page showing the recipe mosaic and waitlist call-to-action"
+    - heading "What it does" [level=2]
+    - paragraph:
+      - strong: Meal planning
+      - text: that groups recipes with overlapping ingredients so grocery runs are smaller and less goes to waste. Plan a week of meals and the shopping list builds itself around shared ingredients.
+    - paragraph:
+      - img "MealDeck weekly meal plan view with month headers, holiday tags, and shopping list access"
+    - paragraph:
+      - strong: Cook mode
+      - text: with voice control - hands-free, step-by-step instructions. Say “next” or “back” to navigate, “ingredients” to check the list.
+    - paragraph:
+      - img "MealDeck recipe detail showing ingredients, cook mode button, and serving adjustment"
+    - paragraph:
+      - strong: AI recipe adaptation
+      - text: modifies recipes for dietary needs, ingredient swaps, or serving size changes. The Anthropic API adjusts both the ingredient list and the instructions.
+    - paragraph:
+      - strong: Sharing
+      - text: "- find and share recipes with friends and family, explore what other people are cooking."
+    - paragraph:
+      - img "MealDeck recipe collection with featured carousel and new additions"
+    - heading "How it’s built" [level=2]
+    - paragraph: Node.js and Express, SQLite, vanilla JavaScript on the frontend. The Anthropic API powers recipe adaptation and natural language recipe import. No frameworks, no build step.
+    - heading "Updates" [level=2]
+    - heading "2026-08-28" [level=3]
+    - paragraph: Winding down. mealdeck.net is still up for now.
+    - heading "2026-04-26" [level=3]
+    - paragraph: In active use with friends and family.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

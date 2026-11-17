@@ -1,0 +1,161 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/projects/petfeedr/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: PetFeedr
+12. shipped
+13. link: repo
+14. Updated Apr 2026 Written by
+15. link: Jason Marsh, resume
+16. Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment.
+17. I have two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn’t cutting it.
+18. columnheader: Store-bought
+19. columnheader: PetFeedr
+20. Power
+21. cell: 4x D batteries
+22. cell: USB-powered Pi
+23. Capacity
+24. cell: Small hopper, frequent refills
+25. cell: Custom hopper size
+26. Stability
+27. cell: Lightweight, cats knocked it over
+28. cell: Heavy, secured base
+29. Lid
+30. cell: Popped open on impact, food everywhere
+31. cell: Locking lid
+32. Programming
+33. cell: Tiny LCD, bad button ergonomics
+34. cell: Web interface from any device
+35. Schedule
+36. cell: Fixed times only
+37. cell: Randomization mode (±30 min)
+38. I built a Raspberry Pi-powered feeder with a web interface, microstepping motor control, and a deploy pipeline - admittedly a lot of engineering for two cats, but it’s been running reliably for about two years now.
+39. Click to enlarge
+40. heading level 2: What it does
+41. Configurable feeding schedule with portion sizes - small, medium, or large. An optional randomization mode shifts each feeding by up to 30 minutes daily so the cats don’t learn the exact schedule. (They figured out the general window anyway.)
+42. The web interface shows a visual timeline of today’s schedule, a 14-day activity log, and weekly stats with portion tracking. There’s a manual feed button for on-demand use. The whole thing installs as a PWA.
+43. image: PetFeedr dashboard in dark mode
+44. heading level 2: How it works
+45. Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DRV8825 driver. The motor runs at 1/16 microstepping for quiet operation, with an anti-jam agitation cycle that reverses slightly before each dispense. Portion control is calibrated to step count - 100 steps per quarter cup.
+46. image: PetFeedr settings sidebar showing feeding time configuration with portion sizes and randomization toggle
+47. The scheduling engine runs as a systemd service that auto-restarts on failure. A deploy script handles SSH-based updates with automatic backups. Runs headless on the local network.
+48. A simulation mode auto-detects missing GPIO and mocks it, so the web interface works on any machine during development.
+49. heading level 2: Updates
+50. heading level 3: 2026-04-26
+51. V1 has been running reliably for about two years. I’m exploring a v2 focused on simplifying the design, reducing cost, and improving the aesthetics.
+52. [contentinfo] ©
+53. link: Jason Marsh
+54. link: email
+55. link: github
+56. link: linkedin
+57. link: source
+58. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "PetFeedr" [level=1]
+    - text: shipped
+    - link "repo":
+      - /url: https://github.com/Minimalistic/PetFeedr
+    - text: Updated Apr 2026 Written by
+    - link "Jason Marsh, resume":
+      - /url: /resume/
+      - text: Jason Marsh
+    - paragraph: Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment.
+    - paragraph: I have two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn’t cutting it.
+    - table:
+      - rowgroup:
+        - row "Store-bought PetFeedr":
+          - columnheader
+          - columnheader "Store-bought"
+          - columnheader "PetFeedr"
+      - rowgroup:
+        - row "Power 4x D batteries USB-powered Pi":
+          - cell "Power":
+            - strong: Power
+          - cell "4x D batteries"
+          - cell "USB-powered Pi"
+        - row "Capacity Small hopper, frequent refills Custom hopper size":
+          - cell "Capacity":
+            - strong: Capacity
+          - cell "Small hopper, frequent refills"
+          - cell "Custom hopper size"
+        - row "Stability Lightweight, cats knocked it over Heavy, secured base":
+          - cell "Stability":
+            - strong: Stability
+          - cell "Lightweight, cats knocked it over"
+          - cell "Heavy, secured base"
+        - row "Lid Popped open on impact, food everywhere Locking lid":
+          - cell "Lid":
+            - strong: Lid
+          - cell "Popped open on impact, food everywhere"
+          - cell "Locking lid"
+        - row "Programming Tiny LCD, bad button ergonomics Web interface from any device":
+          - cell "Programming":
+            - strong: Programming
+          - cell "Tiny LCD, bad button ergonomics"
+          - cell "Web interface from any device"
+        - row "Schedule Fixed times only Randomization mode (±30 min)":
+          - cell "Schedule":
+            - strong: Schedule
+          - cell "Fixed times only"
+          - cell "Randomization mode (±30 min)"
+    - paragraph: I built a Raspberry Pi-powered feeder with a web interface, microstepping motor control, and a deploy pipeline - admittedly a lot of engineering for two cats, but it’s been running reliably for about two years now.
+    - text: Click to enlarge
+    - heading "What it does" [level=2]
+    - paragraph: Configurable feeding schedule with portion sizes - small, medium, or large. An optional randomization mode shifts each feeding by up to 30 minutes daily so the cats don’t learn the exact schedule. (They figured out the general window anyway.)
+    - paragraph: The web interface shows a visual timeline of today’s schedule, a 14-day activity log, and weekly stats with portion tracking. There’s a manual feed button for on-demand use. The whole thing installs as a PWA.
+    - paragraph:
+      - img "PetFeedr dashboard in dark mode"
+    - heading "How it works" [level=2]
+    - paragraph: Python and Flask on a Raspberry Pi, driving a NEMA 17 stepper motor through a DRV8825 driver. The motor runs at 1/16 microstepping for quiet operation, with an anti-jam agitation cycle that reverses slightly before each dispense. Portion control is calibrated to step count - 100 steps per quarter cup.
+    - paragraph:
+      - img "PetFeedr settings sidebar showing feeding time configuration with portion sizes and randomization toggle"
+    - paragraph: The scheduling engine runs as a systemd service that auto-restarts on failure. A deploy script handles SSH-based updates with automatic backups. Runs headless on the local network.
+    - paragraph: A simulation mode auto-detects missing GPIO and mocks it, so the web interface works on any machine during development.
+    - heading "Updates" [level=2]
+    - heading "2026-04-26" [level=3]
+    - paragraph: V1 has been running reliably for about two years. I’m exploring a v2 focused on simplifying the design, reducing cost, and improving the aesthetics.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

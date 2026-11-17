@@ -1,0 +1,230 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/projects/radiogridxl/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: RadioGrid
+12. shipped
+13. link: repo
+14. Updated Nov 2026 Written by
+15. link: Jason Marsh, resume
+16. link: Visit the live site
+17. link: How to use it
+18. RadioGrid is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it’s set up on tablets at the nonprofit where I’m the Director of Technology, for people who just want to listen to something without fighting the interface.
+19. heading level 2: The interface
+20. image: RadioGrid: two large station buttons filling a dark screen
+21. Big buttons, one per station. Tap to play, tap again to pause. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there’s one station or eight.
+22. image: Five stations in a grid, each with its own emoji and color, the first spanning the top
+23. Add more stations and the layout shifts to a grid: two columns on a phone, up to four on a wide screen, with the first station spanning the top row when the count is odd. Each station gets its own color from eight palettes. No media query breakpoints - the grid math is pure viewport calculation.
+24. image: RadioGrid on a phone: the same stations stacked to fill a narrow screen
+25. heading level 2: Playback and controls
+26. image: A station playing: a yellow ring and pause mark on its button, Advanced controls, and a sleep timer counting down
+27. When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. There are two control modes. Simple gives you a single stop button. Advanced adds station skip and a sleep timer, and splits stopping into two actions - a soft Pause that holds the stream so you can resume where you left off, and a full Stop. The transport icons are inline SVG rather than unicode glyphs, so iOS can’t swap in its own skeuomorphic emoji versions. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
+28. heading level 2: Technician settings
+29. image: The settings panel: presets, organization name and themes
+30. Five taps on the logo opens a PIN-protected settings panel - hidden enough that no one’s found it by accident yet. A technician can configure everything without exposing that complexity to the end user - theme, text size, volume cap, control mode, accessibility features, and the station list itself. Lockout escalates after failed PIN attempts.
+31. heading level 2: Stream browser
+32. image: The station browser: shelves of hand-picked stations, or a search of the Radio Browser directory
+33. The stream browser opens on six shelves of stations I picked: Calm & easy, Oldies, Classical, Jazz, News & talk, and Sleep. A script plays every one of them before each release. Past the shelves, it searches the Radio Browser API by name, country, state or region, and mood: Relaxing, Upbeat, Oldies, Classical, Jazz, Country, News & talk, Sports or Faith. Preview a station before adding it. A station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has, and any of them can be changed.
+34. heading level 2: Accessibility
+35. image: High Contrast Dark at the largest text size: black buttons with white edges, the playing station solid yellow
+36. I designed for older adults and people with disabilities from the start, and it shaped the architecture:
+37. [list, 10 items] Eight color palettes held to WCAG AA contrast in every state, checked by a test that reads the colors straight from the app
+38. A High Contrast theme (shown above) held to AAA: black, white and yellow, text at 7:1, and a playing station filled solid yellow. The Low Vision preset uses it
+39. MonoRadio, a quieter greyscale theme, and Night, dim amber with no blue for a bedside radio
+40. Full screen reader support - ARIA roles, labels, and live regions throughout
+41. Optional text-to-speech that announces playback actions via the Web Speech API
+42. Audio chimes on play/pause using Web Audio API oscillators
+43. Haptic feedback on Android
+44. Keyboard navigation with focus trapping in overlays
+45. An “Ultra” size mode that scales with viewport dimensions for low vision users
+46. Simple and Advanced transport modes to control cognitive load
+47. heading level 2: How it’s built
+48. One HTML file. Around 8,000 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
+49. A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There’s also an Android APK build path using Gradle.
+50. image: RadioGrid deployment pipeline: a single HTML source file and a profile config feed into a build script, producing a branded HTML file that deploys to Docker, Android APK, or as a local file.
+51. heading level 2: Updates
+52. heading level 3: 2026-11-14
+53. Released v7.24.0: the app is now called RadioGrid, the same name as its code on GitHub. A radio still showing the old name, RadioGridXL, switches to the new one, and its stations, settings and links all stay as they were.
+54. heading level 3: 2026-11-12
+55. Released v7.23.0. A new radio now shows a Settings button in the top corner, so setting one up no longer starts with five secret taps on the logo. Once it’s set up, you can hide the button so the listener can’t open settings by mistake. Before it hides, the radio has you practise the way back in: five quick taps on the logo. A radio you’ve already set up doesn’t change: its settings stay behind the logo until you turn the switch on. The guide has a new section on hiding the button.
+56. heading level 3: 2026-11-09
+57. Released v7.22.0, with two new switches in Settings for whoever sets a radio up. Allow pinch to zoom, under Look, lets someone who zooms in to read pinch the stations bigger. It’s off unless you turn it on. Show a Settings button, under Setup, puts a Settings button in the top corner for people setting up their own radio by switch, voice or screen reader, where five quick taps on the logo are hard. It still asks for the PIN, so set one if the listener shouldn’t change things. On phones, a recording’s controls get a second row, so Back, Pause, Stop and Skip share one line with Sleep below. VoiceOver reads the connection status without saying “empty”, opening Settings puts focus on its title, and the volume slider always says its current value.
+58. heading level 3: 2026-11-08
+59. Released v7.21.0, so a station can be played by saying its name. With Voice Control, “Tap Jazz 88” now plays Jazz 88. Each station button used to carry extra words in its hidden name, like “Play” and its description, which nobody would say out loud. Now the name is just the station, and VoiceOver reads the description after it. Numbers still work for every button and stay the first suggestion in the guide.
+60. Released v7.20.0, which makes the radio easier to run by voice. The skip and sleep buttons now show a word under their icons (Back 15, Skip 30 and Sleep), and both close buttons say Close, so someone using Voice Control on an iPhone, iPad or Mac can say what they see. The guide has a new section on using the radio by voice. It starts with numbers, which work for every button whatever a station is called. Settings warns when two stations share a name or a station is named like a button. In High Contrast light, the guide’s close button had turned invisible, and it shows again.
+61. heading level 3: 2026-11-07
+62. Released v7.19.0. Settings now close themselves when they’re left alone. After three minutes with no tap, the radio asks “Still setting up?”, and if nobody answers it goes back to the stations, so whoever set it up can walk away without leaving the listener stuck in settings. The feedback card now shows its web address and email as plain text, so a stray tap on the radio can’t open a website or an email app. The Stop label in the Dark theme is a touch lighter and easier to read.
+63. heading level 3: 2026-11-06
+64. Released v7.18.0. Settings now has a “Have feedback?” card with a code you scan with your phone. It opens a short page with an Email us button, so whoever set up a radio can tell me what confused them, even when the radio’s own device can’t send email.
+65. heading level 3: 2026-11-05
+66. Released v7.17.0, a reorganised settings panel: four groups (Stations, Look, Sound and controls, Setup), one tappable row per station, switches for voice and tones, theme swatches that look like station buttons, and an Apply button pinned to the bottom. Every saved setup loads exactly as before. Pausing live radio now lets go of the stream and resuming reconnects at the live point, which fixes stations getting stuck on iPhone after a quick pause and play.
+67. Released v7.16.0 after walking every setting on a simulated iPhone, an iPhone SE and an iPad, and fixing the thirty things that tripped me up. A thick ring now marks the playing station, Pause and Stop have labels, the sleep timer gained 60 minutes and a Cancel button, Apply refuses a broken station address, and removing a station offers Undo. Haptics only ever worked on Android, so on iPhone and iPad that setting is greyed out with the reason.
+68. heading level 3: 2026-10-28
+69. Released v7.15.3. Add station opens on its title with the keyboard down, so on a phone you see the shelves first and tap the search box when you want it.
+70. heading level 3: 2026-10-26
+71. Fourteen releases in one day, v7.7.0 through v7.15.2. The ones that matter:
+72. [list, 5 items] High Contrast, held to AAA with the playing station solid yellow, and Night, dim amber with no blue for a bedside radio
+73. A new logo that follows the theme
+74. A station browser that opens on six hand-picked shelves, with state and region search and mood chips
+75. Added stations arrive with an icon, a cleaned-up name, a plain description and a color of their own
+76. A whole-app audit: a paused or stopped radio stays silent through Wi-Fi drops and relaunches, so nothing comes back on its own at night
+77. Smaller fixes covered the iPhone notch, a hint when you tap a station in Preview, and a fade-in that kept climbing through a pause. The screenshots on this page now come from the app itself, retaken with each release.
+78. heading level 3: 2026-10-20
+79. Added a how-to guide (v7.6.0). Its steps run as tests against the real app, so a change that breaks a step fails the build.
+80. heading level 3: 2026-05-29
+81. Synced the live demo to v7.5.5: the Pause/Stop split in Advanced mode, inline SVG transport icons, and a re-centered home-screen icon.
+82. heading level 3: 2026-05-28
+83. Updated the live demo to v7.5.1. It’s now an installable PWA with lock-screen controls, auto-resume, offline caching, settings backup, accessibility presets and per-station loudness leveling. The demo moved from
+84. /radio.html
+85. to
+86. /radio/
+87. to keep the service worker scoped.
+88. heading level 3: 2026-04-26
+89. Shipped and deployed.
+90. [contentinfo] ©
+91. link: Jason Marsh
+92. link: email
+93. link: github
+94. link: linkedin
+95. link: source
+96. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "RadioGrid" [level=1]
+    - text: shipped
+    - link "repo":
+      - /url: https://github.com/Marshworks-dev/RadioGrid
+    - text: Updated Nov 2026 Written by
+    - link "Jason Marsh, resume":
+      - /url: /resume/
+      - text: Jason Marsh
+    - link "Visit the live site":
+      - /url: https://marsh.city/radio/
+    - link "How to use it":
+      - /url: /projects/radiogridxl/guide/
+    - paragraph: RadioGrid is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it’s set up on tablets at the nonprofit where I’m the Director of Technology, for people who just want to listen to something without fighting the interface.
+    - heading "The interface" [level=2]
+    - paragraph:
+      - 'img "RadioGrid: two large station buttons filling a dark screen"'
+    - paragraph: Big buttons, one per station. Tap to play, tap again to pause. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there’s one station or eight.
+    - paragraph:
+      - img "Five stations in a grid, each with its own emoji and color, the first spanning the top"
+    - paragraph: "Add more stations and the layout shifts to a grid: two columns on a phone, up to four on a wide screen, with the first station spanning the top row when the count is odd. Each station gets its own color from eight palettes. No media query breakpoints - the grid math is pure viewport calculation."
+    - paragraph:
+      - 'img "RadioGrid on a phone: the same stations stacked to fill a narrow screen"'
+    - heading "Playback and controls" [level=2]
+    - paragraph:
+      - 'img "A station playing: a yellow ring and pause mark on its button, Advanced controls, and a sleep timer counting down"'
+    - paragraph: When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. There are two control modes. Simple gives you a single stop button. Advanced adds station skip and a sleep timer, and splits stopping into two actions - a soft Pause that holds the stream so you can resume where you left off, and a full Stop. The transport icons are inline SVG rather than unicode glyphs, so iOS can’t swap in its own skeuomorphic emoji versions. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
+    - heading "Technician settings" [level=2]
+    - paragraph:
+      - 'img "The settings panel: presets, organization name and themes"'
+    - paragraph: Five taps on the logo opens a PIN-protected settings panel - hidden enough that no one’s found it by accident yet. A technician can configure everything without exposing that complexity to the end user - theme, text size, volume cap, control mode, accessibility features, and the station list itself. Lockout escalates after failed PIN attempts.
+    - heading "Stream browser" [level=2]
+    - paragraph:
+      - 'img "The station browser: shelves of hand-picked stations, or a search of the Radio Browser directory"'
+    - paragraph: "The stream browser opens on six shelves of stations I picked: Calm & easy, Oldies, Classical, Jazz, News & talk, and Sleep. A script plays every one of them before each release. Past the shelves, it searches the Radio Browser API by name, country, state or region, and mood: Relaxing, Upbeat, Oldies, Classical, Jazz, Country, News & talk, Sports or Faith. Preview a station before adding it. A station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has, and any of them can be changed."
+    - heading "Accessibility" [level=2]
+    - paragraph:
+      - 'img "High Contrast Dark at the largest text size: black buttons with white edges, the playing station solid yellow"'
+    - paragraph: "I designed for older adults and people with disabilities from the start, and it shaped the architecture:"
+    - list:
+      - listitem: Eight color palettes held to WCAG AA contrast in every state, checked by a test that reads the colors straight from the app
+      - listitem: "A High Contrast theme (shown above) held to AAA: black, white and yellow, text at 7:1, and a playing station filled solid yellow. The Low Vision preset uses it"
+      - listitem: MonoRadio, a quieter greyscale theme, and Night, dim amber with no blue for a bedside radio
+      - listitem: Full screen reader support - ARIA roles, labels, and live regions throughout
+      - listitem: Optional text-to-speech that announces playback actions via the Web Speech API
+      - listitem: Audio chimes on play/pause using Web Audio API oscillators
+      - listitem: Haptic feedback on Android
+      - listitem: Keyboard navigation with focus trapping in overlays
+      - listitem: An “Ultra” size mode that scales with viewport dimensions for low vision users
+      - listitem: Simple and Advanced transport modes to control cognitive load
+    - heading "How it’s built" [level=2]
+    - paragraph: One HTML file. Around 8,000 lines of vanilla HTML, CSS, and JavaScript. Not how anyone would recommend structuring an app, but the constraints justified it. Zero external dependencies. Copy the file to a device, open it in a browser, it works.
+    - paragraph: A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There’s also an Android APK build path using Gradle.
+    - 'img "RadioGrid deployment pipeline: a single HTML source file and a profile config feed into a build script, producing a branded HTML file that deploys to Docker, Android APK, or as a local file."'
+    - heading "Updates" [level=2]
+    - heading "2026-11-14" [level=3]
+    - paragraph: "Released v7.24.0: the app is now called RadioGrid, the same name as its code on GitHub. A radio still showing the old name, RadioGridXL, switches to the new one, and its stations, settings and links all stay as they were."
+    - heading "2026-11-12" [level=3]
+    - paragraph: "Released v7.23.0. A new radio now shows a Settings button in the top corner, so setting one up no longer starts with five secret taps on the logo. Once it’s set up, you can hide the button so the listener can’t open settings by mistake. Before it hides, the radio has you practise the way back in: five quick taps on the logo. A radio you’ve already set up doesn’t change: its settings stay behind the logo until you turn the switch on. The guide has a new section on hiding the button."
+    - heading "2026-11-09" [level=3]
+    - paragraph: Released v7.22.0, with two new switches in Settings for whoever sets a radio up. Allow pinch to zoom, under Look, lets someone who zooms in to read pinch the stations bigger. It’s off unless you turn it on. Show a Settings button, under Setup, puts a Settings button in the top corner for people setting up their own radio by switch, voice or screen reader, where five quick taps on the logo are hard. It still asks for the PIN, so set one if the listener shouldn’t change things. On phones, a recording’s controls get a second row, so Back, Pause, Stop and Skip share one line with Sleep below. VoiceOver reads the connection status without saying “empty”, opening Settings puts focus on its title, and the volume slider always says its current value.
+    - heading "2026-11-08" [level=3]
+    - paragraph: Released v7.21.0, so a station can be played by saying its name. With Voice Control, “Tap Jazz 88” now plays Jazz 88. Each station button used to carry extra words in its hidden name, like “Play” and its description, which nobody would say out loud. Now the name is just the station, and VoiceOver reads the description after it. Numbers still work for every button and stay the first suggestion in the guide.
+    - paragraph: Released v7.20.0, which makes the radio easier to run by voice. The skip and sleep buttons now show a word under their icons (Back 15, Skip 30 and Sleep), and both close buttons say Close, so someone using Voice Control on an iPhone, iPad or Mac can say what they see. The guide has a new section on using the radio by voice. It starts with numbers, which work for every button whatever a station is called. Settings warns when two stations share a name or a station is named like a button. In High Contrast light, the guide’s close button had turned invisible, and it shows again.
+    - heading "2026-11-07" [level=3]
+    - paragraph: Released v7.19.0. Settings now close themselves when they’re left alone. After three minutes with no tap, the radio asks “Still setting up?”, and if nobody answers it goes back to the stations, so whoever set it up can walk away without leaving the listener stuck in settings. The feedback card now shows its web address and email as plain text, so a stray tap on the radio can’t open a website or an email app. The Stop label in the Dark theme is a touch lighter and easier to read.
+    - heading "2026-11-06" [level=3]
+    - paragraph: Released v7.18.0. Settings now has a “Have feedback?” card with a code you scan with your phone. It opens a short page with an Email us button, so whoever set up a radio can tell me what confused them, even when the radio’s own device can’t send email.
+    - heading "2026-11-05" [level=3]
+    - paragraph: "Released v7.17.0, a reorganised settings panel: four groups (Stations, Look, Sound and controls, Setup), one tappable row per station, switches for voice and tones, theme swatches that look like station buttons, and an Apply button pinned to the bottom. Every saved setup loads exactly as before. Pausing live radio now lets go of the stream and resuming reconnects at the live point, which fixes stations getting stuck on iPhone after a quick pause and play."
+    - paragraph: Released v7.16.0 after walking every setting on a simulated iPhone, an iPhone SE and an iPad, and fixing the thirty things that tripped me up. A thick ring now marks the playing station, Pause and Stop have labels, the sleep timer gained 60 minutes and a Cancel button, Apply refuses a broken station address, and removing a station offers Undo. Haptics only ever worked on Android, so on iPhone and iPad that setting is greyed out with the reason.
+    - heading "2026-10-28" [level=3]
+    - paragraph: Released v7.15.3. Add station opens on its title with the keyboard down, so on a phone you see the shelves first and tap the search box when you want it.
+    - heading "2026-10-26" [level=3]
+    - paragraph: "Fourteen releases in one day, v7.7.0 through v7.15.2. The ones that matter:"
+    - list:
+      - listitem: High Contrast, held to AAA with the playing station solid yellow, and Night, dim amber with no blue for a bedside radio
+      - listitem: A new logo that follows the theme
+      - listitem: A station browser that opens on six hand-picked shelves, with state and region search and mood chips
+      - listitem: Added stations arrive with an icon, a cleaned-up name, a plain description and a color of their own
+      - listitem: "A whole-app audit: a paused or stopped radio stays silent through Wi-Fi drops and relaunches, so nothing comes back on its own at night"
+    - paragraph: Smaller fixes covered the iPhone notch, a hint when you tap a station in Preview, and a fade-in that kept climbing through a pause. The screenshots on this page now come from the app itself, retaken with each release.
+    - heading "2026-10-20" [level=3]
+    - paragraph: Added a how-to guide (v7.6.0). Its steps run as tests against the real app, so a change that breaks a step fails the build.
+    - heading "2026-05-29" [level=3]
+    - paragraph: "Synced the live demo to v7.5.5: the Pause/Stop split in Advanced mode, inline SVG transport icons, and a re-centered home-screen icon."
+    - heading "2026-05-28" [level=3]
+    - paragraph:
+      - text: Updated the live demo to v7.5.1. It’s now an installable PWA with lock-screen controls, auto-resume, offline caching, settings backup, accessibility presets and per-station loudness leveling. The demo moved from
+      - code: /radio.html
+      - text: to
+      - code: /radio/
+      - text: to keep the service worker scoped.
+    - heading "2026-04-26" [level=3]
+    - paragraph: Shipped and deployed.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/
