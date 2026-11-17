@@ -7,6 +7,11 @@
 //   node scripts/resume-pdf.mjs                          # canonical resume
 //   node scripts/resume-pdf.mjs --config path/to/job.json [--out dir]
 //   node scripts/resume-pdf.mjs ... --copy-to ~/Documents/Resumes
+//   node scripts/resume-pdf.mjs --site                   # npm run resume:site
+//
+// --site writes the canonical resume to public/Jason-Marsh-Resume.pdf, the
+// file the resume page's Download link points at, and records a fingerprint
+// of its inputs. Run it after any resume change; the tests fail until you do.
 //
 // --copy-to also drops the finished PDF in a second directory (the synced
 // folder applications get attached from), overwriting the copy there, so
@@ -34,6 +39,7 @@ import { tmpdir, homedir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { renderResume, applyVariant } from '../src/lib/resume-html.mjs';
+import { SITE_PDF, SITE_PDF_FINGERPRINT, resumePdfFingerprint } from '../src/lib/resume-pdf-inputs.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -43,6 +49,12 @@ function argValue(flag) {
   return i === -1 ? undefined : args[i + 1];
 }
 const configPath = argValue('--config');
+const site = args.includes('--site');
+// the site PDF is always the canonical resume at its fixed path
+if (site && (configPath || argValue('--out'))) {
+  console.error('--site takes no --config or --out');
+  process.exit(1);
+}
 const outDir = argValue('--out') ?? (configPath ? dirname(resolve(configPath)) : process.cwd());
 // the shell expands ~ only when it's unquoted at the start of a word, so handle it here too
 const copyToArg = argValue('--copy-to');
@@ -88,7 +100,7 @@ ${renderResume(variant)}
 html = html.replaceAll('src="/', `src="${pathToFileURL(join(root, 'public')).href}/`);
 
 const suffix = config.name ? `-${config.name}` : '';
-const outPdf = join(resolve(outDir), `marsh-resume${suffix}.pdf`);
+const outPdf = site ? join(root, SITE_PDF) : join(resolve(outDir), `marsh-resume${suffix}.pdf`);
 const tmpHtml = join(tmpdir(), `marsh-resume${suffix}.html`);
 writeFileSync(tmpHtml, html);
 
@@ -154,6 +166,11 @@ if (pages === 0) {
 if (pages > MAX_PAGES) {
   console.error(`${pages} pages, limit is ${MAX_PAGES}: cut bullets or projects (variant "exclude"), or shorten the summary`);
   process.exit(1);
+}
+
+if (site) {
+  writeFileSync(join(root, SITE_PDF_FINGERPRINT), `${resumePdfFingerprint(root)}\n`);
+  console.log(`fingerprint -> ${SITE_PDF_FINGERPRINT}`);
 }
 
 if (copyToDir && copyToDir !== resolve(outDir)) {

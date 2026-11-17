@@ -119,6 +119,9 @@
   color: var(--fg-soft);
   border: 1px solid var(--border);
   cursor: pointer;
+  display: inline-block;
+  line-height: 1.2;
+  text-decoration: none;
   position: relative;
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease,
     transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
@@ -131,6 +134,8 @@
   inset: -4px;
   z-index: -1;
 }
+/* it's a link styled as a button: no animated underline */
+.resume-download::after { display: none; }
 .resume-download:hover {
   color: var(--leaf);
   border-color: var(--leaf);
@@ -308,7 +313,8 @@
     font-size: 22pt;
     font-weight: 600;
     line-height: 1;
-    margin-bottom: 0.3em;
+    margin: 0 0 0.3em;
+    letter-spacing: normal;
   }
   .resume-print-contact {
     font-size: 8.5pt;
@@ -320,7 +326,6 @@
     margin: 0 0.35em;
     color: #888;
   }
-  h1 { display: none; }
 
   h2 {
     font-size: 11pt !important;

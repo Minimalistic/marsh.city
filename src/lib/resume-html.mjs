@@ -115,9 +115,12 @@ export function renderResume(data) {
   const sections = (data.sectionOrder || DEFAULT_SECTIONS)
     .map((key) => SECTIONS[key](data))
     .join('\n\n');
-  return `  <div class="resume-print-header" aria-hidden="true">
+  // The print header is display:none on screen, which already hides it from
+  // screen readers there. It must not be aria-hidden: in the tagged PDF that
+  // would drop the name and contact line from what a screen reader reads.
+  return `  <div class="resume-print-header">
     <div class="resume-print-id">
-      <div class="resume-print-name">${data.name}</div>
+      <h1 class="resume-print-name">${data.name}</h1>
       <p class="resume-print-contact">
         ${data.location.replace(/ /g, '&nbsp;')}
         <span class="sep">•</span>
@@ -139,7 +142,7 @@ export function renderResume(data) {
         <span class="resume-kicker">Resume</span>
         <h1>${data.name}</h1>
       </div>
-      <button class="resume-download" onclick="window.print()" aria-label="Print resume or save as PDF">Save as PDF</button>
+      <a class="resume-download" href="/Jason-Marsh-Resume.pdf" download>Download PDF</a>
     </div>
 
     <p class="resume-intro">
@@ -152,7 +155,7 @@ ${sections}
     <div class="resume-contact">
       <ul>
         <li>Email: <a href="mailto:${c.email}">${c.email}</a></li>
-        <li>LinkedIn: <a href="${c.linkedin}">jason-marsh</a></li>
+        <li>LinkedIn: <a href="${c.linkedin}">${c.linkedinLabel}</a></li>
         <li>GitHub: <a href="${c.github}">Minimalistic</a></li>
       </ul>
       <a href="/" class="resume-qr" aria-label="Link to marsh.city">

@@ -11,6 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "resume:pdf": "node scripts/resume-pdf.mjs",
+    "resume:site": "node scripts/resume-pdf.mjs --site",
     "test": "npm run build && npm run test:smoke",
     "test:smoke": "node --test tests/*.test.mjs"
   },

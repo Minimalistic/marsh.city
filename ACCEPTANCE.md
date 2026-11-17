@@ -1,6 +1,6 @@
 # Resume PDF download
 
-Status: building
+Status: shipped
 
 Intent: The resume page hands every visitor the same accessible, two-page PDF, instead of leaving each browser to print its own.
 
