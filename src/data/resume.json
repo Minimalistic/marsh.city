@@ -10,7 +10,7 @@
     "github": "https://github.com/Minimalistic",
     "githubLabel": "github.com/Minimalistic"
   },
-  "summary": "Director of Technology at a nonprofit serving people with disabilities and older adults. 13+ years in IT, the last six in assistive technology and five leading teams. Restructured AT billing and grew annual service revenue from $17K to over $200K within a year. Designs, ships, and operates production software by directing AI coding agents (Claude Code), including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. ATACP-certified (CSUN).",
+  "summary": "Director of Technology at a nonprofit serving people with disabilities and older adults. 14 years in IT, the last six in assistive technology and five leading teams. Restructured AT billing and grew annual service revenue from $17K to over $200K within a year. Designs, ships, and operates production software by directing AI coding agents (Claude Code), including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. ATACP-certified (CSUN).",
   "sectionOrder": [
     "experience",
     "projects",
@@ -72,15 +72,11 @@
         },
         {
           "id": "power-automate",
-          "text": "Automated internal operations with Power Automate - designed and built an expense and donation tracking system and staff-facing forms that feed into Excel"
+          "text": "Built expense and donation tracking in Power Automate - staff submit receipts and confirm card charges through forms that feed Excel, so the accountant no longer chases them by email"
         },
         {
-          "id": "copilot",
-          "text": "Evaluated Microsoft 365 Copilot and ran a three-person licensed pilot - onboarded and supported the cohort"
-        },
-        {
-          "id": "ai-guidance",
-          "text": "Set staff guidance on generative AI use - what AI tools are for and what client or health information never goes into them - through written guidance and staff meetings; developing an organization-wide AI safety training"
+          "id": "ai-adoption",
+          "text": "Set the organization's guidance on generative AI - what the tools are for and what client or health information never goes into them - and ran a three-person Microsoft 365 Copilot pilot that leadership still uses daily; wider rollout held on cost"
         },
         {
           "id": "hipaa-policy",
@@ -104,15 +100,11 @@
       "bullets": [
         {
           "id": "systems-audit",
-          "text": "Conducted a full systems audit; established documentation and standardized processes across the organization"
+          "text": "Supervised two direct reports; conducted a full systems audit and established documentation and standardized processes across the organization"
         },
         {
           "id": "m365-migration",
           "text": "Led cloud migration to Microsoft 365 and Azure AD during a building relocation, reducing annual IT costs by $15,000+"
-        },
-        {
-          "id": "supervision",
-          "text": "Supervised two direct reports"
         },
         {
           "id": "disaster-recovery",
@@ -124,7 +116,7 @@
         },
         {
           "id": "request-tracking",
-          "text": "Set up a centralized request tracking system for IT and AT requests"
+          "text": "Set up a centralized IT and AT request queue with Microsoft Forms and Excel"
         }
       ]
     },
@@ -136,11 +128,7 @@
       "bullets": [
         {
           "id": "at-eval",
-          "text": "Evaluated and configured assistive technology - screen readers, magnification tools, wearable devices - for clients with disabilities and aging-related needs"
-        },
-        {
-          "id": "training-conferences",
-          "text": "Trained staff and clients on AT usage"
+          "text": "Evaluated and configured assistive technology - screen readers, magnification tools, wearable devices - for clients with disabilities and aging-related needs, and trained clients and staff to use it"
         }
       ]
     },
@@ -168,7 +156,7 @@
     },
     {
       "label": "Assistive Technology",
-      "items": "AT assessment and fitting, screen readers, magnifiers, wearable AT, MN STAR lending library, WCAG AA"
+      "items": "AT assessment and fitting, screen readers, magnifiers, wearable AT, MN STAR lending library"
     },
     {
       "label": "Microsoft 365 & Automation",
