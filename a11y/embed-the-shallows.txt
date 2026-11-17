@@ -1,0 +1,20 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/embed/the-shallows/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. button: Feed
+2. button: Sound
+3. slider: Volume
+4. button: Advanced
+5. image: (no name)
+6. Rotate for the best view
+
+## Accessibility tree (Playwright WebKit)
+- button "Feed"
+- button "Sound":
+  - img
+  - text: Sound
+- slider "Volume": "50"
+- button "Advanced"
+- img
+- text: Rotate for the best view
