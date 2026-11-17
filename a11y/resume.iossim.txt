@@ -1,0 +1,89 @@
+# a11y-smoke iOS Simulator transcript
+# target: http://127.0.0.1:4873/resume/
+
+## Stops (real iOS WebKit accessibility tree, Safari on a simulated iPhone)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. button: Open menu
+4. [main] RESUME
+5. heading level 1: Jason Marsh
+6. link: Download PDF
+7. Director of Technology at a nonprofit serving people with disabilities and older adults. 14 years in IT, including six in assistive technology and five leading teams. Restructured AT billing and grew annual service revenue from $17K to over $200K within a year. Designs, ships, and operates production software by directing AI coding agents (Claude Code), including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. ATACP-certified (CSUN).
+8. heading level 2: Experience
+9. Director of Technology
+10. May 2025 – Present
+11. Lighthouse Center for Vital Living - Duluth, MN
+12. ["Lead the IT and Assistive Technology divisions of a ~20-staff nonprofit serving people with disabilities and older adults - infrastructure, AT services, and an AT lending library partnered with the Minnesota STAR Program"] • Lead the IT and Assistive Technology divisions of a ~20-staff nonprofit serving people with disabilities and older adults - infrastructure, AT services, and an AT lending library partnered with the Minnesota STAR Program
+13. ["Restructured AT billing operations and coached staff on proposals and invoicing, growing annual AT service revenue from $17K to over $200K within a year"] • Restructured AT billing operations and coached staff on proposals and invoicing, growing annual AT service revenue from $17K to over $200K within a year
+14. ["One of three leaders reporting to the Executive Director; manage three direct reports across IT support and AT services, and contribute to strategic planning, budgeting, and cross-department decisions"] • One of three leaders reporting to the Executive Director; manage three direct reports across IT support and AT services, and contribute to strategic planning, budgeting, and cross-department decisions
+15. ["Administer the full Microsoft 365 tenant - identity (Entra ID/Azure AD), conditional access, licensing, and endpoint management via Intune and MaaS360"] • Administer the full Microsoft 365 tenant - identity (Entra ID/Azure AD), conditional access, licensing, and endpoint management via Intune and MaaS360
+16. ["Own vendor relationships from evaluation through renewal - Microsoft licensing, mobile device management, ticketing, and connectivity"] • Own vendor relationships from evaluation through renewal - Microsoft licensing, mobile device management, ticketing, and connectivity
+17. ["Built expense and donation tracking in Power Automate - staff submit receipts and confirm card charges through forms that feed Excel, so the accountant no longer chases staff by email"] • Built expense and donation tracking in Power Automate - staff submit receipts and confirm card charges through forms that feed Excel, so the accountant no longer chases staff by email
+18. ["Set the organization's guidance on generative AI - what the tools are for and what client or health information stays out of them - and ran a three-person Microsoft 365 Copilot pilot; leadership still uses it, with wider rollout held on cost and timing"] • Set the organization's guidance on generative AI - what the tools are for and what client or health information stays out of them - and ran a three-person Microsoft 365 Copilot pilot; leadership still uses it, with wider rollout held on cost and timing
+19. ["Contributed to the rewrite of the organization's HIPAA policy; run internal IT audits of systems, access, and devices"] • Contributed to the rewrite of the organization's HIPAA policy; run internal IT audits of systems, access, and devices
+20. ["Work directly with clients to assess needs and recommend assistive technology, and serve as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use"] • Work directly with clients to assess needs and recommend assistive technology, and serve as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use
+21. ["Train staff on accessible documents - alt text, and how headings and document structure work for screen reader users"] • Train staff on accessible documents - alt text, and how headings and document structure work for screen reader users
+22. IT Manager & Accessibility Specialist
+23. Mar 2021 – May 2025
+24. Lighthouse Center for Vital Living - Duluth, MN
+25. ["Supervised two direct reports and standardized IT across the organization, starting with a full systems audit and documentation"] • Supervised two direct reports and standardized IT across the organization, starting with a full systems audit and documentation
+26. ["Led cloud migration to Microsoft 365 and Azure AD during a building relocation, reducing annual IT costs by $15,000+"] • Led cloud migration to Microsoft 365 and Azure AD during a building relocation, reducing annual IT costs by $15,000+
+27. ["Established disaster recovery procedures, security protocols, and a technology replacement plan"] • Established disaster recovery procedures, security protocols, and a technology replacement plan
+28. ["Managed endpoints via Microsoft Intune (Windows) and IBM MaaS360 (iOS/Android) for MDM, app deployment, and compliance"] • Managed endpoints via Microsoft Intune (Windows) and IBM MaaS360 (iOS/Android) for MDM, app deployment, and compliance
+29. ["Set up a centralized IT and AT request queue with Microsoft Forms and Excel"] • Set up a centralized IT and AT request queue with Microsoft Forms and Excel
+30. Accessible Technology Specialist
+31. Oct 2020 – Mar 2021
+32. Lighthouse Center for Vital Living - Duluth, MN
+33. ["Evaluated and configured assistive technology - screen readers, magnification tools, wearable devices - for clients with disabilities and aging-related needs, and trained clients and staff to use it"] • Evaluated and configured assistive technology - screen readers, magnification tools, wearable devices - for clients with disabilities and aging-related needs, and trained clients and staff to use it
+34. Technical Administrator
+35. Nov 2012 – Nov 2020
+36. Westside Pet Clinic - Duluth, MN
+37. ["Sole IT administrator for a small family-owned veterinary practice - eight years covering all hardware, networking, and software"] • Sole IT administrator for a small family-owned veterinary practice - eight years covering all hardware, networking, and software
+38. ["Led the clinic's transition from paper records to an electronic medical records system"] • Led the clinic's transition from paper records to an electronic medical records system
+39. heading level 2: Independent Projects
+40. ["(whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep a catalog of thousands of products affordable to maintain, with schema checks that catch fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted and in production."] link: WhatCanHelp
+41. (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep a catalog of thousands of products affordable to maintain, with schema checks that catch fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted and in production.
+42. ["- internet radio for older adults and people with disabilities, set up on tablets at my organization for clients to try. Large buttons, no accounts or ads, screen-reader support, and low-vision, high-contrast and night themes. Designed a technician-only settings panel so staff set up stations from a curated directory without exposing that complexity to the listener."] other: •
+43. link: RadioGrid
+44. - internet radio for older adults and people with disabilities, set up on tablets at my organization for clients to try. Large buttons, no accounts or ads, screen-reader support, and low-vision, high-contrast and night themes. Designed a technician-only settings panel so staff set up stations from a curated directory without exposing that complexity to the listener.
+45. ["- visual choice boards for tablets: each button is a photo of the person's own item and a phrase spoken aloud, with a Yes / No / Not sure screen so staff can check understanding. Staff and families build boards in a passcode-protected edit mode. Offline-first with no accounts; everything stays on the device. In beta."] other: •
+46. link: ButtonGriddle
+47. - visual choice boards for tablets: each button is a photo of the person's own item and a phrase spoken aloud, with a Yes / No / Not sure screen so staff can check understanding. Staff and families build boards in a passcode-protected edit mode. Offline-first with no accounts; everything stays on the device. In beta.
+48. ["MCP Servers - custom Model Context Protocol servers connecting Claude agents to self-hosted apps and everyday tools, with guardrails: hooks, sandboxing, approval gates on actions with side effects, and prompt-injection containment. In daily use."] • MCP Servers - custom Model Context Protocol servers connecting Claude agents to self-hosted apps and everyday tools, with guardrails: hooks, sandboxing, approval gates on actions with side effects, and prompt-injection containment. In daily use.
+49. heading level 2: Technical Skills
+50. AI Delivery
+51. Claude Code and AI coding agents - specification, code review, testing, and deployment of AI-built software; MCP servers, agent guardrails (hooks, sandboxing, prompt-injection containment); Claude API features in production (tool use, Batch API, prompt caching, structured outputs); Ollama local models, OpenAI Whisper, retrieval and embeddings
+52. Assistive Technology
+53. AT assessment and fitting, screen readers, magnifiers, wearable AT, MN STAR lending library
+54. Microsoft 365 & Automation
+55. Microsoft 365 tenant administration, Entra ID / Azure AD, Microsoft 365 Copilot, Power Automate, SharePoint, Teams, Microsoft Intune, IBM MaaS360
+56. Infrastructure
+57. Active Directory, Windows Server, Proxmox VE, DNS/DHCP, VPN, firewall management, Linux administration, Tailscale
+58. Security & Operations
+59. Disaster recovery planning, HIPAA policy, internal IT audits, FreshDesk, vendor and licensing management
+60. Stack Shipped & Operated
+61. Node.js, Express, SQLite, Python, vanilla-JS PWAs, Git, GitHub Actions, Docker, Caddy/PM2 self-hosting, PowerShell, Raspberry Pi/Arduino
+62. heading level 2: Education & Certifications
+63. Assistive Technology Applications Certificate (ATACP)
+64. 2025
+65. Network Admin & Cybersecurity (coursework)
+66. 2022
+67. Full Stack Web Developer Nanodegree
+68. 2018
+69. B.S. Video Game Art & Design
+70. 2010
+71. heading level 2: Get in touch
+72. ["Email:"] • Email:
+73. link: jason@marsh.city
+74. ["LinkedIn:"] • LinkedIn:
+75. link: linkedin.com/in/jason-marsh
+76. ["GitHub:"] • GitHub:
+77. link: Minimalistic
+78. link: Link to marsh.city
+79. [contentinfo] ©
+80. link: Jason Marsh
+81. link: email
+82. link: github
+83. link: linkedin
+84. link: source
+85. link: privacy

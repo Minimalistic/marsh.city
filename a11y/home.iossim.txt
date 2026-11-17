@@ -1,0 +1,92 @@
+# a11y-smoke iOS Simulator transcript
+# target: http://127.0.0.1:4873/
+
+## Stops (real iOS WebKit accessibility tree, Safari on a simulated iPhone)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. button: Open menu
+4. [main] heading level 1: Jason Marsh
+5. Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit. 13+ years in IT - infrastructure, assistive technology, and AI-integrated tools I design and build end to end.
+6. heading level 2: Selected Works
+7. A handful of my favorites.
+8. link: Driftglass Playground
+9. link: WhatCanHelp Project
+10. link: The Shallows Playground
+11. link: RadioGrid Project
+12. link: DailyDungeon Playground
+13. heading level 2: Projects
+14. link: View all projects
+15. heading level 3: RadioGrid
+16. heading level 3: shipped
+17. heading level 3: live demo
+18. link: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit.
+19. link: updated 3d ago
+20. link: vanilla-js
+21. link: accessibility
+22. link: html5
+23. link: pwa
+24. link: kiosk
+25. heading level 3: marsh.city
+26. heading level 3: shipped
+27. heading level 3: live demo
+28. link: A personal site where adding content is a conversation, not a CMS.
+29. link: updated 7d ago
+30. link: astro
+31. link: markdown
+32. link: github-actions
+33. link: pwa
+34. heading level 3: EchoEtcher
+35. heading level 3: archived
+36. link: Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
+37. link: updated 15d ago
+38. link: python
+39. link: whisper
+40. link: ollama
+41. link: obsidian
+42. link: ai
+43. heading level 3: ButtonGriddle
+44. heading level 3: wip
+45. heading level 3: live demo
+46. link: Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device.
+47. link: updated 21d ago
+48. link: vanilla-js
+49. link: pwa
+50. link: indexeddb
+51. link: assistive-tech
+52. heading level 3: WhatCanHelp
+53. heading level 3: shipped
+54. heading level 3: live demo
+55. link: A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
+56. link: updated 1mo ago
+57. link: node
+58. link: sqlite
+59. link: express
+60. link: vanilla-js
+61. link: claude-api
+62. link: accessibility
+63. link: at
+64. heading level 3: MealDeck
+65. heading level 3: archived
+66. heading level 3: live demo
+67. link: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
+68. link: updated 1mo ago
+69. link: node
+70. link: sqlite
+71. link: express
+72. link: vanilla-js
+73. link: claude-api
+74. heading level 2: Writing
+75. link: View all posts
+76. heading level 3: 287 commits to the sea
+77. link: May 3, 2026
+78. heading level 3: Framing the scene - what happens past 1200px
+79. link: Apr 14, 2026
+80. heading level 3: Building a radio app for people who don't want an app
+81. link: Apr 8, 2026
+82. [contentinfo] ©
+83. link: Jason Marsh
+84. link: email
+85. link: github
+86. link: linkedin
+87. link: source
+88. link: privacy
