@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -350,20 +350,19 @@
 346. button, so you can tell us what was confusing from your own phone, even when the radio’s device can’t send email. The page address and our email,
 347. link: radio@marsh.city
 348. , are written beside the code too. The radio itself never sends anything about you or your listening.
-349. link: ↑ Back to top
-350. [contentinfo] ©
-351. link: Jason Marsh
-352. link: email
-353. link: github
-354. link: linkedin
-355. link: source
-356. link: privacy
+349. [contentinfo] ©
+350. link: Jason Marsh
+351. link: email
+352. link: github
+353. link: linkedin
+354. link: source
+355. link: privacy
 
 ## Accessibility tree (Playwright WebKit)
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -843,8 +842,6 @@
       - link "radio@marsh.city":
         - /url: mailto:radio@marsh.city
       - text: ", are written beside the code too. The radio itself never sends anything about you or your listening."
-  - link "↑ Back to top":
-    - /url: "#guide-top"
 - contentinfo:
   - text: ©
   - link "Jason Marsh":

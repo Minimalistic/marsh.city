@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -19,22 +19,19 @@
 15. slider: Volume
 16. button: Advanced
 17. button: Toggle fullscreen
-18. button: Exit fullscreen
-19. image: (no name)
-20. Rotate for the best view
-21. [contentinfo] ©
-22. link: Jason Marsh
-23. link: email
-24. link: github
-25. link: linkedin
-26. link: source
-27. link: privacy
+18. [contentinfo] ©
+19. link: Jason Marsh
+20. link: email
+21. link: github
+22. link: linkedin
+23. link: source
+24. link: privacy
 
 ## Accessibility tree (Playwright WebKit)
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -60,9 +57,6 @@
     - slider "Volume": "50"
     - button "Advanced"
     - button "Toggle fullscreen"
-    - button "Exit fullscreen"
-    - img
-    - text: Rotate for the best view
 - contentinfo:
   - text: ©
   - link "Jason Marsh":

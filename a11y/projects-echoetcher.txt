@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -16,7 +16,7 @@
 12. archived
 13. link: repo
 14. Updated Nov 2026 Written by
-15. link: Jason Marsh, resume
+15. link: Jason Marsh , resume
 16. Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
 17. I do most of my thinking while driving - working through problems, coming up with project ideas, planning next steps. The ideas are there, but capturing them in a usable form is hard, and scrubbing through a raw voice recording later isn’t much better.
 18. EchoEtcher watches a folder for audio files, transcribes them with Whisper running locally, processes the transcript through an LLM, and drops a clean, tagged Markdown note into Obsidian.
@@ -48,7 +48,7 @@
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -70,9 +70,8 @@
     - link "repo":
       - /url: https://github.com/Minimalistic/EchoEtcher
     - text: Updated Nov 2026 Written by
-    - link "Jason Marsh, resume":
+    - link "Jason Marsh , resume":
       - /url: /resume/
-      - text: Jason Marsh
     - paragraph: Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
     - paragraph: I do most of my thinking while driving - working through problems, coming up with project ideas, planning next steps. The ideas are there, but capturing them in a usable form is hard, and scrubbing through a raw voice recording later isn’t much better.
     - paragraph: EchoEtcher watches a folder for audio files, transcribes them with Whisper running locally, processes the transcript through an LLM, and drops a clean, tagged Markdown note into Obsidian.

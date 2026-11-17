@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -14,7 +14,7 @@
 10. [main] progressbar: Reading progress
 11. heading level 1: WhatCanHelp
 12. shipped Updated Oct 2026 Written by
-13. link: Jason Marsh, resume
+13. link: Jason Marsh , resume
 14. A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
 15. link: Visit the live site
 16. I’m the Director of Technology at Lighthouse Center for Vital Living, a nonprofit in Duluth that serves people with disabilities and older adults. Part of that job is assistive technology: evaluating devices, setting them up for clients, running an AT lending library, and answering colleagues’ questions about what works. WhatCanHelp started from a question I kept coming back to: what would it look like if the AT industry had better discovery tools?
@@ -89,7 +89,7 @@
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -108,9 +108,8 @@
   - article:
     - heading "WhatCanHelp" [level=1]
     - text: shipped Updated Oct 2026 Written by
-    - link "Jason Marsh, resume":
+    - link "Jason Marsh , resume":
       - /url: /resume/
-      - text: Jason Marsh
     - paragraph: A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
     - link "Visit the live site":
       - /url: https://whatcanhelp.com

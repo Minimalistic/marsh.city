@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -26,30 +26,57 @@
 22. link: DailyDungeon Playground
 23. heading level 2: Projects
 24. link: View all projects
-25. link: RadioGrid shipped live demo Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit. updated 3d ago vanilla-js accessibility html5 pwa kiosk
-26. link: marsh.city shipped live demo A personal site where adding content is a conversation, not a CMS. updated 7d ago astro markdown github-actions pwa
-27. link: EchoEtcher archived Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization. updated 15d ago python whisper ollama obsidian ai
-28. link: ButtonGriddle wip live demo Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device. updated 21d ago vanilla-js pwa indexeddb assistive-tech
-29. link: WhatCanHelp shipped live demo A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it. updated 1mo ago node sqlite express vanilla-js claude-api accessibility at
-30. link: MealDeck archived live demo Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down. updated 1mo ago node sqlite express vanilla-js claude-api
-31. heading level 2: Writing
-32. link: View all posts
-33. link: 287 commits to the sea May 3, 2026
-34. link: Framing the scene - what happens past 1200px Apr 14, 2026
-35. link: Building a radio app for people who don't want an app Apr 8, 2026
-36. [contentinfo] ©
-37. link: Jason Marsh
-38. link: email
-39. link: github
-40. link: linkedin
-41. link: source
-42. link: privacy
+25. heading level 3: RadioGrid
+26. shipped live demo
+27. Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit.
+28. updated 3d ago
+29. vanilla-js accessibility html5 pwa kiosk
+30. heading level 3: marsh.city
+31. shipped live demo
+32. A personal site where adding content is a conversation, not a CMS.
+33. updated 7d ago
+34. astro markdown github-actions pwa
+35. heading level 3: EchoEtcher
+36. archived
+37. Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
+38. updated 15d ago
+39. python whisper ollama obsidian ai
+40. heading level 3: ButtonGriddle
+41. wip live demo
+42. Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device.
+43. updated 21d ago
+44. vanilla-js pwa indexeddb assistive-tech
+45. heading level 3: WhatCanHelp
+46. shipped live demo
+47. A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
+48. updated 1mo ago
+49. node sqlite express vanilla-js claude-api accessibility at
+50. heading level 3: MealDeck
+51. archived live demo
+52. Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
+53. updated 1mo ago
+54. node sqlite express vanilla-js claude-api
+55. heading level 2: Writing
+56. link: View all posts
+57. heading level 3: 287 commits to the sea
+58. May 3, 2026
+59. heading level 3: Framing the scene - what happens past 1200px
+60. Apr 14, 2026
+61. heading level 3: Building a radio app for people who don't want an app
+62. Apr 8, 2026
+63. [contentinfo] ©
+64. link: Jason Marsh
+65. link: email
+66. link: github
+67. link: linkedin
+68. link: source
+69. link: privacy
 
 ## Accessibility tree (Playwright WebKit)
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -86,58 +113,71 @@
   - heading "Projects" [level=2]
   - link "View all projects":
     - /url: /projects/
-    - text: View all
-  - link "RadioGrid shipped live demo Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit. updated 3d ago vanilla-js accessibility html5 pwa kiosk":
-    - /url: /projects/radiogridxl/
-    - heading "RadioGrid shipped live demo" [level=3]
+  - article:
+    - heading "RadioGrid" [level=3]:
+      - link "RadioGrid":
+        - /url: /projects/radiogridxl/
+    - text: shipped live demo
     - paragraph: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit.
     - paragraph: updated 3d ago
     - text: vanilla-js accessibility html5 pwa kiosk
-  - link "marsh.city shipped live demo A personal site where adding content is a conversation, not a CMS. updated 7d ago astro markdown github-actions pwa":
-    - /url: /projects/marsh-city/
-    - heading "marsh.city shipped live demo" [level=3]
+  - article:
+    - heading "marsh.city" [level=3]:
+      - link "marsh.city":
+        - /url: /projects/marsh-city/
+    - text: shipped live demo
     - paragraph: A personal site where adding content is a conversation, not a CMS.
     - paragraph: updated 7d ago
     - text: astro markdown github-actions pwa
-  - link "EchoEtcher archived Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization. updated 15d ago python whisper ollama obsidian ai":
-    - /url: /projects/echoetcher/
-    - heading "EchoEtcher archived" [level=3]
+  - article:
+    - heading "EchoEtcher" [level=3]:
+      - link "EchoEtcher":
+        - /url: /projects/echoetcher/
+    - text: archived
     - paragraph: Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
     - paragraph: updated 15d ago
     - text: python whisper ollama obsidian ai
-  - link "ButtonGriddle wip live demo Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device. updated 21d ago vanilla-js pwa indexeddb assistive-tech":
-    - /url: /projects/buttongriddle/
-    - heading "ButtonGriddle wip live demo" [level=3]
+  - article:
+    - heading "ButtonGriddle" [level=3]:
+      - link "ButtonGriddle":
+        - /url: /projects/buttongriddle/
+    - text: wip live demo
     - paragraph: Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device.
     - paragraph: updated 21d ago
     - text: vanilla-js pwa indexeddb assistive-tech
-  - link "WhatCanHelp shipped live demo A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it. updated 1mo ago node sqlite express vanilla-js claude-api accessibility at":
-    - /url: /projects/whatcanhelp/
-    - heading "WhatCanHelp shipped live demo" [level=3]
+  - article:
+    - heading "WhatCanHelp" [level=3]:
+      - link "WhatCanHelp":
+        - /url: /projects/whatcanhelp/
+    - text: shipped live demo
     - paragraph: A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
     - paragraph: updated 1mo ago
     - text: node sqlite express vanilla-js claude-api accessibility at
-  - link "MealDeck archived live demo Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down. updated 1mo ago node sqlite express vanilla-js claude-api":
-    - /url: /projects/mealdeck/
-    - heading "MealDeck archived live demo" [level=3]
+  - article:
+    - heading "MealDeck" [level=3]:
+      - link "MealDeck":
+        - /url: /projects/mealdeck/
+    - text: archived live demo
     - paragraph: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
     - paragraph: updated 1mo ago
     - text: node sqlite express vanilla-js claude-api
   - heading "Writing" [level=2]
   - link "View all posts":
     - /url: /posts/
-    - text: View all
-  - link "287 commits to the sea May 3, 2026":
-    - /url: /posts/287-commits-to-the-sea/
-    - heading "287 commits to the sea" [level=3]
+  - article:
+    - heading "287 commits to the sea" [level=3]:
+      - link "287 commits to the sea":
+        - /url: /posts/287-commits-to-the-sea/
     - paragraph: May 3, 2026
-  - link "Framing the scene - what happens past 1200px Apr 14, 2026":
-    - /url: /posts/framing-the-scene/
-    - heading "Framing the scene - what happens past 1200px" [level=3]
+  - article:
+    - heading "Framing the scene - what happens past 1200px" [level=3]:
+      - link "Framing the scene - what happens past 1200px":
+        - /url: /posts/framing-the-scene/
     - paragraph: Apr 14, 2026
-  - link "Building a radio app for people who don't want an app Apr 8, 2026":
-    - /url: /posts/building-radiogridxl/
-    - heading "Building a radio app for people who don't want an app" [level=3]
+  - article:
+    - heading "Building a radio app for people who don't want an app" [level=3]:
+      - link "Building a radio app for people who don't want an app":
+        - /url: /posts/building-radiogridxl/
     - paragraph: Apr 8, 2026
 - contentinfo:
   - text: ©

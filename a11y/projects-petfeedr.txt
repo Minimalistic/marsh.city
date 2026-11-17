@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -16,7 +16,7 @@
 12. shipped
 13. link: repo
 14. Updated Apr 2026 Written by
-15. link: Jason Marsh, resume
+15. link: Jason Marsh , resume
 16. Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment.
 17. I have two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn’t cutting it.
 18. columnheader: Store-bought
@@ -65,7 +65,7 @@
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -87,9 +87,8 @@
     - link "repo":
       - /url: https://github.com/Minimalistic/PetFeedr
     - text: Updated Apr 2026 Written by
-    - link "Jason Marsh, resume":
+    - link "Jason Marsh , resume":
       - /url: /resume/
-      - text: Jason Marsh
     - paragraph: Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment.
     - paragraph: I have two ragdoll cats - Frida and Charlie - and the store-bought feeder wasn’t cutting it.
     - table:

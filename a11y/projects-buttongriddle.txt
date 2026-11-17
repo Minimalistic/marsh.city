@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -14,7 +14,7 @@
 10. [main] progressbar: Reading progress
 11. heading level 1: ButtonGriddle
 12. wip Updated Oct 2026 Written by
-13. link: Jason Marsh, resume
+13. link: Jason Marsh , resume
 14. link: Visit the live site
 15. ButtonGriddle turns a tablet into a set of choice boards - one per context (meals, activities, clothing) - where each button is a photo and a phrase. Tap a button and the tablet speaks it aloud. A Yes / No / Not sure check screen helps staff confirm understanding in the moment.
 16. image: The Meals board - a grid of colored choice buttons; tapping one speaks it aloud
@@ -37,7 +37,7 @@
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -56,9 +56,8 @@
   - article:
     - heading "ButtonGriddle" [level=1]
     - text: wip Updated Oct 2026 Written by
-    - link "Jason Marsh, resume":
+    - link "Jason Marsh , resume":
       - /url: /resume/
-      - text: Jason Marsh
     - link "Visit the live site":
       - /url: https://marsh.city/buttongriddle/
     - paragraph: ButtonGriddle turns a tablet into a set of choice boards - one per context (meals, activities, clothing) - where each button is a photo and a phrase. Tap a button and the tablet speaks it aloud. A Yes / No / Not sure check screen helps staff confirm understanding in the moment.

@@ -6,8 +6,6 @@
 2. button: Sound
 3. slider: Volume
 4. button: Advanced
-5. image: (no name)
-6. Rotate for the best view
 
 ## Accessibility tree (Playwright WebKit)
 - button "Feed"
@@ -16,5 +14,3 @@
   - text: Sound
 - slider "Volume": "50"
 - button "Advanced"
-- img
-- text: Rotate for the best view

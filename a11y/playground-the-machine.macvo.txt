@@ -1,0 +1,23 @@
+# a11y-smoke macOS VoiceOver transcript
+# target: http://127.0.0.1:4873/playground/the-machine/
+
+## VoiceOver stops (real macOS VoiceOver in Safari)
+1. Skip to main content link
+2. navigation
+3. marsh.city home visited link
+4. projects link
+5. posts link
+6. playground current page link
+7. resume link
+8. about link
+9. Open command palette button
+10. Open menu collapsed button
+11. main
+12. Reading progress 3% progress indicator
+13. The Machine article
+14. The Machine heading level 1
+15. THE-MACHINE V1.0
+16. Every time you load this page, a different real-world system shows how it works - from DNS resolution to video streaming to what happens when you tap a credit card. Hit shuffle to explore another.
+17. How a Database Query Executes heading level 2
+18. SHUFFLE : SHOW A DIFFERENT SYSTEM button
+19. 1 of 10

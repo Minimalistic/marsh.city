@@ -1,0 +1,47 @@
+# a11y-smoke macOS VoiceOver transcript
+# target: http://127.0.0.1:4873/
+
+## VoiceOver stops (real macOS VoiceOver in Safari)
+1. Skip to main content link
+2. navigation
+3. marsh.city home visited link
+4. projects link
+5. posts link
+6. playground link
+7. resume link
+8. about link
+9. Open command palette button
+10. Open menu collapsed button
+11. main
+12. Jason Marsh heading level 1
+13. Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit. 13+ years in IT - infrastructure, assistive technology, and AI-integrated tools I design and build end to end.
+14. Selected Works heading level 2
+15. A handful of my favorites.
+16. Driftglass Playground link
+17. WhatCanHelp Project link
+18. The Shallows Playground visited link
+19. RadioGrid Project link
+20. DailyDungeon Playground link
+21. Projects heading level 2
+22. View all projects link
+23. RadioGrid article
+24. RadioGrid heading level 3
+25. shipped
+26. live demo
+27. Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit.
+28. updated 3d ago
+29. vanilla-js
+30. accessibility
+31. html5
+32. pwa
+33. kiosk
+34. marsh.city article
+35. marsh.city heading level 3
+36. shipped
+37. live demo
+38. A personal site where adding content is a conversation, not a CMS.
+39. updated 7d ago
+40. astro
+41. markdown
+42. github-actions
+43. pwa

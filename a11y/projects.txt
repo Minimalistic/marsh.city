@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -13,26 +13,54 @@
 9. button: Open menu
 10. [main] heading level 1: Projects
 11. Things I've built, am building, or have on the drawing board.
-12. link: RadioGrid shipped live demo Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit. updated 3d ago vanilla-js accessibility html5 pwa kiosk
-13. link: marsh.city shipped live demo A personal site where adding content is a conversation, not a CMS. updated 7d ago astro markdown github-actions pwa
-14. link: EchoEtcher archived Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization. updated 15d ago python whisper ollama obsidian ai
-15. link: ButtonGriddle wip live demo Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device. updated 21d ago vanilla-js pwa indexeddb assistive-tech
-16. link: WhatCanHelp shipped live demo A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it. updated 1mo ago node sqlite express vanilla-js claude-api accessibility at
-17. link: MealDeck archived live demo Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down. updated 1mo ago node sqlite express vanilla-js claude-api
-18. link: PetFeedr shipped Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment. updated 6mo ago python raspberry-pi iot flask pwa
-19. [contentinfo] ©
-20. link: Jason Marsh
-21. link: email
-22. link: github
-23. link: linkedin
-24. link: source
-25. link: privacy
+12. heading level 2: RadioGrid
+13. shipped live demo
+14. Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit.
+15. updated 3d ago
+16. vanilla-js accessibility html5 pwa kiosk
+17. heading level 2: marsh.city
+18. shipped live demo
+19. A personal site where adding content is a conversation, not a CMS.
+20. updated 7d ago
+21. astro markdown github-actions pwa
+22. heading level 2: EchoEtcher
+23. archived
+24. Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
+25. updated 15d ago
+26. python whisper ollama obsidian ai
+27. heading level 2: ButtonGriddle
+28. wip live demo
+29. Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device.
+30. updated 21d ago
+31. vanilla-js pwa indexeddb assistive-tech
+32. heading level 2: WhatCanHelp
+33. shipped live demo
+34. A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
+35. updated 1mo ago
+36. node sqlite express vanilla-js claude-api accessibility at
+37. heading level 2: MealDeck
+38. archived live demo
+39. Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
+40. updated 1mo ago
+41. node sqlite express vanilla-js claude-api
+42. heading level 2: PetFeedr
+43. shipped
+44. Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment.
+45. updated 6mo ago
+46. python raspberry-pi iot flask pwa
+47. [contentinfo] ©
+48. link: Jason Marsh
+49. link: email
+50. link: github
+51. link: linkedin
+52. link: source
+53. link: privacy
 
 ## Accessibility tree (Playwright WebKit)
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -49,45 +77,59 @@
 - main:
   - heading "Projects" [level=1]
   - paragraph: Things I've built, am building, or have on the drawing board.
-  - link "RadioGrid shipped live demo Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit. updated 3d ago vanilla-js accessibility html5 pwa kiosk":
-    - /url: /projects/radiogridxl/
-    - heading "RadioGrid shipped live demo" [level=2]
+  - article:
+    - heading "RadioGrid" [level=2]:
+      - link "RadioGrid":
+        - /url: /projects/radiogridxl/
+    - text: shipped live demo
     - paragraph: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit.
     - paragraph: updated 3d ago
     - text: vanilla-js accessibility html5 pwa kiosk
-  - link "marsh.city shipped live demo A personal site where adding content is a conversation, not a CMS. updated 7d ago astro markdown github-actions pwa":
-    - /url: /projects/marsh-city/
-    - heading "marsh.city shipped live demo" [level=2]
+  - article:
+    - heading "marsh.city" [level=2]:
+      - link "marsh.city":
+        - /url: /projects/marsh-city/
+    - text: shipped live demo
     - paragraph: A personal site where adding content is a conversation, not a CMS.
     - paragraph: updated 7d ago
     - text: astro markdown github-actions pwa
-  - link "EchoEtcher archived Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization. updated 15d ago python whisper ollama obsidian ai":
-    - /url: /projects/echoetcher/
-    - heading "EchoEtcher archived" [level=2]
+  - article:
+    - heading "EchoEtcher" [level=2]:
+      - link "EchoEtcher":
+        - /url: /projects/echoetcher/
+    - text: archived
     - paragraph: Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
     - paragraph: updated 15d ago
     - text: python whisper ollama obsidian ai
-  - link "ButtonGriddle wip live demo Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device. updated 21d ago vanilla-js pwa indexeddb assistive-tech":
-    - /url: /projects/buttongriddle/
-    - heading "ButtonGriddle wip live demo" [level=2]
+  - article:
+    - heading "ButtonGriddle" [level=2]:
+      - link "ButtonGriddle":
+        - /url: /projects/buttongriddle/
+    - text: wip live demo
     - paragraph: Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device.
     - paragraph: updated 21d ago
     - text: vanilla-js pwa indexeddb assistive-tech
-  - link "WhatCanHelp shipped live demo A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it. updated 1mo ago node sqlite express vanilla-js claude-api accessibility at":
-    - /url: /projects/whatcanhelp/
-    - heading "WhatCanHelp shipped live demo" [level=2]
+  - article:
+    - heading "WhatCanHelp" [level=2]:
+      - link "WhatCanHelp":
+        - /url: /projects/whatcanhelp/
+    - text: shipped live demo
     - paragraph: A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
     - paragraph: updated 1mo ago
     - text: node sqlite express vanilla-js claude-api accessibility at
-  - link "MealDeck archived live demo Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down. updated 1mo ago node sqlite express vanilla-js claude-api":
-    - /url: /projects/mealdeck/
-    - heading "MealDeck archived live demo" [level=2]
+  - article:
+    - heading "MealDeck" [level=2]:
+      - link "MealDeck":
+        - /url: /projects/mealdeck/
+    - text: archived live demo
     - paragraph: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
     - paragraph: updated 1mo ago
     - text: node sqlite express vanilla-js claude-api
-  - link "PetFeedr shipped Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment. updated 6mo ago python raspberry-pi iot flask pwa":
-    - /url: /projects/petfeedr/
-    - heading "PetFeedr shipped" [level=2]
+  - article:
+    - heading "PetFeedr" [level=2]:
+      - link "PetFeedr":
+        - /url: /projects/petfeedr/
+    - text: shipped
     - paragraph: Raspberry Pi automated pet feeder with a PWA web interface, smart scheduling with randomization, and one-command deployment.
     - paragraph: updated 6mo ago
     - text: python raspberry-pi iot flask pwa

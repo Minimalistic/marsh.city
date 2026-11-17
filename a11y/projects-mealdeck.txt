@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -14,7 +14,7 @@
 10. [main] progressbar: Reading progress
 11. heading level 1: MealDeck
 12. archived Updated Sep 2026 Written by
-13. link: Jason Marsh, resume
+13. link: Jason Marsh , resume
 14. Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
 15. link: Visit the live site
 16. MealDeck started as me seeing what I could get AI to do, and kept growing from there. I built a meal planning app for discovering and sharing recipes, planning meals, and generating grocery lists, used by friends and family. I’m winding it down now.
@@ -50,7 +50,7 @@
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -69,9 +69,8 @@
   - article:
     - heading "MealDeck" [level=1]
     - text: archived Updated Sep 2026 Written by
-    - link "Jason Marsh, resume":
+    - link "Jason Marsh , resume":
       - /url: /resume/
-      - text: Jason Marsh
     - paragraph: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
     - link "Visit the live site":
       - /url: https://mealdeck.net

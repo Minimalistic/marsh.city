@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -12,22 +12,25 @@
 8. button: Open command palette
 9. button: Open menu
 10. [main] heading level 1: Posts
-11. link: 287 commits to the sea May 3, 2026 — Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.
-12. link: Framing the scene - what happens past 1200px April 14, 2026 — How I solved the ultrawide viewport problem by treating a decorative background as a literal framed diorama.
-13. link: Building a radio app for people who don't want an app April 8, 2026 — Internet radio built for older adults and people with disabilities - accessibility-first, single-file, in use at a nonprofit.
-14. [contentinfo] ©
-15. link: Jason Marsh
-16. link: email
-17. link: github
-18. link: linkedin
-19. link: source
-20. link: privacy
+11. heading level 2: 287 commits to the sea
+12. May 3, 2026 — Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.
+13. heading level 2: Framing the scene - what happens past 1200px
+14. April 14, 2026 — How I solved the ultrawide viewport problem by treating a decorative background as a literal framed diorama.
+15. heading level 2: Building a radio app for people who don't want an app
+16. April 8, 2026 — Internet radio built for older adults and people with disabilities - accessibility-first, single-file, in use at a nonprofit.
+17. [contentinfo] ©
+18. link: Jason Marsh
+19. link: email
+20. link: github
+21. link: linkedin
+22. link: source
+23. link: privacy
 
 ## Accessibility tree (Playwright WebKit)
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -43,17 +46,20 @@
   - button "Open menu"
 - main:
   - heading "Posts" [level=1]
-  - link "287 commits to the sea May 3, 2026 — Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.":
-    - /url: /posts/287-commits-to-the-sea/
-    - heading "287 commits to the sea" [level=2]
+  - article:
+    - heading "287 commits to the sea" [level=2]:
+      - link "287 commits to the sea":
+        - /url: /posts/287-commits-to-the-sea/
     - paragraph: May 3, 2026 — Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.
-  - link "Framing the scene - what happens past 1200px April 14, 2026 — How I solved the ultrawide viewport problem by treating a decorative background as a literal framed diorama.":
-    - /url: /posts/framing-the-scene/
-    - heading "Framing the scene - what happens past 1200px" [level=2]
+  - article:
+    - heading "Framing the scene - what happens past 1200px" [level=2]:
+      - link "Framing the scene - what happens past 1200px":
+        - /url: /posts/framing-the-scene/
     - paragraph: April 14, 2026 — How I solved the ultrawide viewport problem by treating a decorative background as a literal framed diorama.
-  - link "Building a radio app for people who don't want an app April 8, 2026 — Internet radio built for older adults and people with disabilities - accessibility-first, single-file, in use at a nonprofit.":
-    - /url: /posts/building-radiogridxl/
-    - heading "Building a radio app for people who don't want an app" [level=2]
+  - article:
+    - heading "Building a radio app for people who don't want an app" [level=2]:
+      - link "Building a radio app for people who don't want an app":
+        - /url: /posts/building-radiogridxl/
     - paragraph: April 8, 2026 — Internet radio built for older adults and people with disabilities - accessibility-first, single-file, in use at a nonprofit.
 - contentinfo:
   - text: ©

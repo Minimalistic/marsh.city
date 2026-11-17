@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -16,7 +16,7 @@
 12. shipped
 13. link: repo
 14. Updated Nov 2026 Written by
-15. link: Jason Marsh, resume
+15. link: Jason Marsh , resume
 16. link: Visit the live site
 17. link: How to use it
 18. RadioGrid is an internet radio app built for older adults and people with disabilities. Big buttons, no account, no ads, nothing to set up. I built it as a single HTML file with no dependencies, no build step, and no backend, and it’s set up on tablets at the nonprofit where I’m the Director of Technology, for people who just want to listen to something without fighting the interface.
@@ -103,7 +103,7 @@
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -125,9 +125,8 @@
     - link "repo":
       - /url: https://github.com/Marshworks-dev/RadioGrid
     - text: Updated Nov 2026 Written by
-    - link "Jason Marsh, resume":
+    - link "Jason Marsh , resume":
       - /url: /resume/
-      - text: Jason Marsh
     - link "Visit the live site":
       - /url: https://marsh.city/radio/
     - link "How to use it":

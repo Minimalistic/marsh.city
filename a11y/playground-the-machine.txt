@@ -3,7 +3,7 @@
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. link: projects
 4. link: posts
 5. link: playground
@@ -15,10 +15,10 @@
 11. heading level 1: The Machine
 12. the-machine v1.0
 13. Every time you load this page, a different real-world system shows how it works - from DNS resolution to video streaming to what happens when you tap a credit card. Hit shuffle to explore another.
-14. heading level 2: How a Search Engine Works
-15. button: Shuffle: show a different system
+14. heading level 2: How OAuth Login Works
+15. button: shuffle : show a different system
 16. 1 of 10
-17. A web crawler follows links to discover pages, feeding discovered URLs back into a frontier queue. Pages are fetched, parsed for text and links, then content is extracted and indexed into an inverted index. PageRank scores the link graph. At query time, the parser tokenizes your search, the ranking engine retrieves candidates from the index, then an ML reranker applies learned signals - click-through rates, freshness, user context - before generating result snippets.
+17. Your app redirects the user to the authorization server, which displays a consent screen. On approval, an authorization code returns to your app's callback URL. Your server exchanges that short-lived code for access and refresh tokens at the token endpoint. The access token lets you call the user info endpoint to get profile data, which creates a session.
 18. how-it-works.md
 19. heading level 2: How it works
 20. Each system is a data object - nodes grouped into layers, edges defining connections. The diagram is generated from that data rather than drawn by hand.
@@ -47,7 +47,7 @@
 - link "Skip to main content":
   - /url: "#main"
 - navigation:
-  - link "marsh.city":
+  - link "marsh.city home":
     - /url: /
   - link "projects":
     - /url: /projects/
@@ -67,10 +67,10 @@
     - heading "The Machine" [level=1]
     - text: the-machine v1.0
     - paragraph: Every time you load this page, a different real-world system shows how it works - from DNS resolution to video streaming to what happens when you tap a credit card. Hit shuffle to explore another.
-    - heading "How a Search Engine Works" [level=2]
-    - 'button "Shuffle: show a different system"': shuffle
+    - heading "How OAuth Login Works" [level=2]
+    - 'button "shuffle : show a different system"'
     - text: 1 of 10
-    - paragraph: A web crawler follows links to discover pages, feeding discovered URLs back into a frontier queue. Pages are fetched, parsed for text and links, then content is extracted and indexed into an inverted index. PageRank scores the link graph. At query time, the parser tokenizes your search, the ranking engine retrieves candidates from the index, then an ML reranker applies learned signals - click-through rates, freshness, user context - before generating result snippets.
+    - paragraph: Your app redirects the user to the authorization server, which displays a consent screen. On approval, an authorization code returns to your app's callback URL. Your server exchanges that short-lived code for access and refresh tokens at the token endpoint. The access token lets you call the user info endpoint to get profile data, which creates a session.
     - text: how-it-works.md
     - heading "How it works" [level=2]
     - paragraph: Each system is a data object - nodes grouped into layers, edges defining connections. The diagram is generated from that data rather than drawn by hand.

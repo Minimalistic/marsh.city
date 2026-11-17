@@ -3,7 +3,7 @@
 
 ## Stops (real iOS WebKit accessibility tree, Safari on a simulated iPhone)
 1. link: Skip to main content
-2. [navigation] link: marsh.city
+2. [navigation] link: marsh.city home
 3. button: Open menu
 4. [main] RESUME
 5. heading level 1: Jason Marsh

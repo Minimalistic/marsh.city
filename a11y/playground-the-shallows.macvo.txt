@@ -1,0 +1,32 @@
+# a11y-smoke macOS VoiceOver transcript
+# target: http://127.0.0.1:4873/playground/the-shallows/
+
+## VoiceOver stops (real macOS VoiceOver in Safari)
+1. Skip to main content link
+2. navigation
+3. marsh.city home visited link
+4. projects link
+5. posts link
+6. playground current page link
+7. resume link
+8. about link
+9. Open command palette button
+10. Open menu collapsed button
+11. main
+12. Reading progress 0% progress indicator
+13. The Shallows article
+14. The Shallows heading level 1
+15. Warm water over sand and rock. A school of tuna moves as one - splitting around obstacles, merging back together, scattering when something bigger passes through.
+16. Feed toggle button
+17. Sound toggle button
+18. 50 Volume Volume slider
+19. Advanced toggle button
+20. Toggle fullscreen button
+21. content information
+22. ©
+23. Jason Marsh link
+24. email link
+25. github link
+26. linkedin link
+27. source link
+28. privacy link
