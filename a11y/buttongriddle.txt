@@ -1,0 +1,73 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/buttongriddle/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: ButtonGriddle
+11. Visual participation support for tablets. ButtonGriddle turns a tablet into a set of choice boards - one per context (meals, activities, clothing, whatever the day holds) - where each button is a photo and a phrase. Tap a button and the tablet speaks it aloud. A Yes / No / Not sure check screen helps staff confirm understanding in the moment.
+12. It supports communication, but it isn't an AAC or speech-generating app. The goal is easier participation: fewer spoken directions to process, clearer choices, less guessing on both sides. Whoever supports the person - an OT, SLP, teacher, DSP, or family member - builds the boards in a passcode-protected edit mode: snap photos of the person's actual items, set the phrases, arrange the grid. Day to day, staff just present choices.
+13. image: The Meals board - a grid of large colored choice buttons; tapping one speaks it aloud
+14. heading level 2: Everything stays on the device
+15. No account, no cloud, no tracking. The app works fully offline after install, and board photos leave the tablet only inside backup files you export yourself. There is nothing to sign up for and nothing being collected.
+16. heading level 2: Status
+17. Early prototype, in development. The web version is no longer available.
+18. ButtonGriddle is a general participation support tool, not a medical device.
+19. [contentinfo] ©
+20. link: Jason Marsh
+21. link: email
+22. link: github
+23. link: linkedin
+24. link: source
+25. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "ButtonGriddle" [level=1]
+  - paragraph: Visual participation support for tablets. ButtonGriddle turns a tablet into a set of choice boards - one per context (meals, activities, clothing, whatever the day holds) - where each button is a photo and a phrase. Tap a button and the tablet speaks it aloud. A Yes / No / Not sure check screen helps staff confirm understanding in the moment.
+  - paragraph: "It supports communication, but it isn't an AAC or speech-generating app. The goal is easier participation: fewer spoken directions to process, clearer choices, less guessing on both sides. Whoever supports the person - an OT, SLP, teacher, DSP, or family member - builds the boards in a passcode-protected edit mode: snap photos of the person's actual items, set the phrases, arrange the grid. Day to day, staff just present choices."
+  - img "The Meals board - a grid of large colored choice buttons; tapping one speaks it aloud"
+  - heading "Everything stays on the device" [level=2]
+  - paragraph: No account, no cloud, no tracking. The app works fully offline after install, and board photos leave the tablet only inside backup files you export yourself. There is nothing to sign up for and nothing being collected.
+  - heading "Status" [level=2]
+  - paragraph: Early prototype, in development. The web version is no longer available.
+  - paragraph:
+    - emphasis: ButtonGriddle is a general participation support tool, not a medical device.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

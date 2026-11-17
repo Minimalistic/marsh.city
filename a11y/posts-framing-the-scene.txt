@@ -1,0 +1,140 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/posts/framing-the-scene/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: Framing the scene - what happens past 1200px
+12. April 14, 2026
+13. This site has a fixed background scene - foliage, animated stars, fireflies drifting through a forest palette. It looks good on a laptop. On a 3440px ultrawide monitor, it fell apart.
+14. image: marsh.city at a standard viewport width - the scene fills the screen naturally
+15. The obvious fix is
+16. max-width
+17. on the content. I already had that. But the fixed visual layer - the foliage image, the star canvas, the firefly DOM elements - filled the full viewport. The foliage image scaled up until it was a blurry green smear. The stars spread out thin. The fireflies wandered into dead space on either side of the content column.
+18. heading level 2: The instinct that didn’t work
+19. The first thought was to let the visuals scale. Bigger viewport, bigger scene. But decorative backgrounds aren’t like content - they have a natural density. A star field that reads as “night sky” at 1200px reads as “seven dots on a dark rectangle” at 3400px. The foliage image had a maximum resolution it could cover before the mask started looking soft.
+20. The visual layer needed a hard cap. But black bars on the sides of a personal site would look like a projector that hasn’t been adjusted.
+21. heading level 2: A picture frame, not a letterbox
+22. image: On an ultrawide monitor, the decorative frame contains the scene - dark green with hatched texture and an inward shadow
+23. The solution I landed on: treat the capped visual layer as a literal framed scene. Beyond 1200px, the side margins become a decorative frame - dark green surface with a diagonal hatch texture, a bright rim where the frame meets the scene, and an inward-cast shadow selling depth. The whole thing reads as a recessed window into the forest, not a stretched image with awkward margins.
+24. The implementation is a single
+25. div.stage-frame
+26. with two pseudo-elements - one for each side. The frame width is calculated from CSS custom properties:
+27. --stage-max: 1200px; --stage-inset: max(0px, calc((100vw - var(--stage-max)) / 2));
+28. button: Copy code to clipboard
+29. On viewports under 1200px,
+30. --stage-inset
+31. resolves to zero and the frame elements have zero width. No media query needed - the frame doesn’t exist until there’s space for it.
+32. The hatch texture is a repeating-linear-gradient at a diagonal. The rim is a 1px border. The depth shadow is an inset box-shadow on the stage-facing edge. Three declarations for the depth illusion. Light mode gets a warm forest green, dark mode drops to near-black with a dimmer rim.
+33. heading level 2: Everything else had to respect the boundary
+34. The frame itself was simple. Most of the work was making every other fixed-position element aware of the stage bounds.
+35. The foliage container got
+36. left: var(--stage-inset)
+37. and
+38. width: var(--stage-width)
+39. instead of spanning the full viewport. The star canvas got the same treatment. These were straightforward swaps.
+40. Fireflies were trickier. They’re DOM elements with JavaScript-driven animation - they spawn at random positions and drift on sine curves. On an ultrawide viewport, they’d wander right off into the frame like they owned the place. I added a soft wall in the render loop - if a firefly’s computed position drifts past the stage boundary, its flee velocity gets clamped and dampened inward. The bounce is soft enough that you never notice them hitting an invisible wall.
+41. The spawn function got the same awareness - new fireflies only appear within the stage width, offset by
+42. --stage-inset
+43. converted to a pixel value in JS.
+44. heading level 2: A side effect I didn’t expect
+45. Constraining the visual layer to 1200px actually improved the resize behavior. Previously, the star canvas regenerated all star positions on every resize event - random positions mean the whole constellation shuffles when you drag a window edge. Now the resize handler rescales existing positions proportionally instead of re-randomizing them. The stars slide smoothly during a drag instead of flickering and redistributing. That fix would have been worth doing on its own, but I only noticed it because the frame work forced me to reason about boundary behavior.
+46. heading level 2: The tradeoff
+47. The frame adds one DOM element and about 60 lines of CSS. It’s invisible to anyone on a viewport under 1200px, which is most visitors. A fair amount of thought for a narrow use case, but I stare at this site on an ultrawide daily, so it earned the effort.
+48. Decorative fixed backgrounds have a natural scale they work at, and pretending otherwise makes them look worse as screens get bigger.
+49. [contentinfo] ©
+50. link: Jason Marsh
+51. link: email
+52. link: github
+53. link: linkedin
+54. link: source
+55. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "Framing the scene - what happens past 1200px" [level=1]
+    - paragraph: April 14, 2026
+    - paragraph: This site has a fixed background scene - foliage, animated stars, fireflies drifting through a forest palette. It looks good on a laptop. On a 3440px ultrawide monitor, it fell apart.
+    - paragraph:
+      - img "marsh.city at a standard viewport width - the scene fills the screen naturally"
+    - paragraph:
+      - text: The obvious fix is
+      - code: max-width
+      - text: on the content. I already had that. But the fixed visual layer - the foliage image, the star canvas, the firefly DOM elements - filled the full viewport. The foliage image scaled up until it was a blurry green smear. The stars spread out thin. The fireflies wandered into dead space on either side of the content column.
+    - heading "The instinct that didn’t work" [level=2]
+    - paragraph: The first thought was to let the visuals scale. Bigger viewport, bigger scene. But decorative backgrounds aren’t like content - they have a natural density. A star field that reads as “night sky” at 1200px reads as “seven dots on a dark rectangle” at 3400px. The foliage image had a maximum resolution it could cover before the mask started looking soft.
+    - paragraph: The visual layer needed a hard cap. But black bars on the sides of a personal site would look like a projector that hasn’t been adjusted.
+    - heading "A picture frame, not a letterbox" [level=2]
+    - paragraph:
+      - img "On an ultrawide monitor, the decorative frame contains the scene - dark green with hatched texture and an inward shadow"
+    - paragraph: "The solution I landed on: treat the capped visual layer as a literal framed scene. Beyond 1200px, the side margins become a decorative frame - dark green surface with a diagonal hatch texture, a bright rim where the frame meets the scene, and an inward-cast shadow selling depth. The whole thing reads as a recessed window into the forest, not a stretched image with awkward margins."
+    - paragraph:
+      - text: The implementation is a single
+      - code: div.stage-frame
+      - text: "with two pseudo-elements - one for each side. The frame width is calculated from CSS custom properties:"
+    - code: "--stage-max: 1200px; --stage-inset: max(0px, calc((100vw - var(--stage-max)) / 2));"
+    - button "Copy code to clipboard": copy
+    - paragraph:
+      - text: On viewports under 1200px,
+      - code: "--stage-inset"
+      - text: resolves to zero and the frame elements have zero width. No media query needed - the frame doesn’t exist until there’s space for it.
+    - paragraph: The hatch texture is a repeating-linear-gradient at a diagonal. The rim is a 1px border. The depth shadow is an inset box-shadow on the stage-facing edge. Three declarations for the depth illusion. Light mode gets a warm forest green, dark mode drops to near-black with a dimmer rim.
+    - heading "Everything else had to respect the boundary" [level=2]
+    - paragraph: The frame itself was simple. Most of the work was making every other fixed-position element aware of the stage bounds.
+    - paragraph:
+      - text: The foliage container got
+      - code: "left: var(--stage-inset)"
+      - text: and
+      - code: "width: var(--stage-width)"
+      - text: instead of spanning the full viewport. The star canvas got the same treatment. These were straightforward swaps.
+    - paragraph: Fireflies were trickier. They’re DOM elements with JavaScript-driven animation - they spawn at random positions and drift on sine curves. On an ultrawide viewport, they’d wander right off into the frame like they owned the place. I added a soft wall in the render loop - if a firefly’s computed position drifts past the stage boundary, its flee velocity gets clamped and dampened inward. The bounce is soft enough that you never notice them hitting an invisible wall.
+    - paragraph:
+      - text: The spawn function got the same awareness - new fireflies only appear within the stage width, offset by
+      - code: "--stage-inset"
+      - text: converted to a pixel value in JS.
+    - heading "A side effect I didn’t expect" [level=2]
+    - paragraph: Constraining the visual layer to 1200px actually improved the resize behavior. Previously, the star canvas regenerated all star positions on every resize event - random positions mean the whole constellation shuffles when you drag a window edge. Now the resize handler rescales existing positions proportionally instead of re-randomizing them. The stars slide smoothly during a drag instead of flickering and redistributing. That fix would have been worth doing on its own, but I only noticed it because the frame work forced me to reason about boundary behavior.
+    - heading "The tradeoff" [level=2]
+    - paragraph: The frame adds one DOM element and about 60 lines of CSS. It’s invisible to anyone on a viewport under 1200px, which is most visitors. A fair amount of thought for a narrow use case, but I stare at this site on an ultrawide daily, so it earned the effort.
+    - paragraph: Decorative fixed backgrounds have a natural scale they work at, and pretending otherwise makes them look worse as screens get bigger.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

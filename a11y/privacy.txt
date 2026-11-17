@@ -1,5 +1,5 @@
 # a11y-smoke transcript
-# target: /Users/jason/JasonsWorkspace/marsh.city/dist/privacy/index.html
+# target: http://127.0.0.1:4873/privacy/
 
 ## Swipe order (modeled iPhone VoiceOver)
 1. link: Skip to main content

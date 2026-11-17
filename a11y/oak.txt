@@ -1,0 +1,94 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/oak/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: Colophon
+11. This site is built with
+12. link: Astro
+13. - static generation from Markdown content collections - and deployed to GitHub Pages on every push to
+14. main
+15. . No CMS, no database, no admin panel. Each project, post, and playground item is a single Markdown file with frontmatter.
+16. heading level 2: Content is a conversation
+17. The part worth explaining is how the content gets written. I don't log into a dashboard to add a project or a post. I talk through what I've been working on with
+18. link: Claude Code
+19. in the terminal - Anthropic's CLI - and it edits the Markdown, runs the commands, and handles the commit. Adding a page takes about as long as describing the thing out loud.
+20. The ideas, the direction, and the decisions are mine. The implementation happens in that conversation - but I review what comes back, confirm it does what I intended, and decide what ships. It's closer to directing and reviewing than to typing every line, and the responsibility for the result stays with me.
+21. heading level 2: Why "/oak"
+22. This page used to introduce the AI as a named collaborator called Oak. I've since dropped the persona - it muddied whose work this is - but kept the URL, because the name still suits a site themed on monstera and forest. Consider it the colophon's old nickname.
+23. heading level 2: The rest of the stack
+24. Vanilla JavaScript on the frontend, no framework and no build step beyond Astro's. Mermaid diagrams render client-side when a page needs them. A command palette (Cmd+K) jumps to any page. Lora for headings, Inter for body text, JetBrains Mono for code, over a cream-and-forest palette with a dark canopy mode at night. Page counts are anonymous, with no cookies; the
+25. link: privacy page
+26. says exactly what's counted.
+27. [contentinfo] ©
+28. link: Jason Marsh
+29. link: email
+30. link: github
+31. link: linkedin
+32. link: source
+33. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "Colophon" [level=1]
+  - paragraph:
+    - text: This site is built with
+    - link "Astro":
+      - /url: https://astro.build
+    - text: "- static generation from Markdown content collections - and deployed to GitHub Pages on every push to"
+    - code: main
+    - text: . No CMS, no database, no admin panel. Each project, post, and playground item is a single Markdown file with frontmatter.
+  - heading "Content is a conversation" [level=2]
+  - paragraph:
+    - text: The part worth explaining is how the content gets written. I don't log into a dashboard to add a project or a post. I talk through what I've been working on with
+    - link "Claude Code":
+      - /url: https://claude.com/product/claude-code
+    - text: in the terminal - Anthropic's CLI - and it edits the Markdown, runs the commands, and handles the commit. Adding a page takes about as long as describing the thing out loud.
+  - paragraph: The ideas, the direction, and the decisions are mine. The implementation happens in that conversation - but I review what comes back, confirm it does what I intended, and decide what ships. It's closer to directing and reviewing than to typing every line, and the responsibility for the result stays with me.
+  - heading "Why \"/oak\"" [level=2]
+  - paragraph: This page used to introduce the AI as a named collaborator called Oak. I've since dropped the persona - it muddied whose work this is - but kept the URL, because the name still suits a site themed on monstera and forest. Consider it the colophon's old nickname.
+  - heading "The rest of the stack" [level=2]
+  - paragraph:
+    - text: Vanilla JavaScript on the frontend, no framework and no build step beyond Astro's. Mermaid diagrams render client-side when a page needs them. A command palette (Cmd+K) jumps to any page. Lora for headings, Inter for body text, JetBrains Mono for code, over a cream-and-forest palette with a dark canopy mode at night. Page counts are anonymous, with no cookies; the
+    - link "privacy page":
+      - /url: /privacy/
+    - text: says exactly what's counted.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

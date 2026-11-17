@@ -1,0 +1,71 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/posts/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: Posts
+11. link: 287 commits to the sea May 3, 2026 — Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.
+12. link: Framing the scene - what happens past 1200px April 14, 2026 — How I solved the ultrawide viewport problem by treating a decorative background as a literal framed diorama.
+13. link: Building a radio app for people who don't want an app April 8, 2026 — Internet radio built for older adults and people with disabilities - accessibility-first, single-file, in use at a nonprofit.
+14. [contentinfo] ©
+15. link: Jason Marsh
+16. link: email
+17. link: github
+18. link: linkedin
+19. link: source
+20. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "Posts" [level=1]
+  - link "287 commits to the sea May 3, 2026 — Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.":
+    - /url: /posts/287-commits-to-the-sea/
+    - heading "287 commits to the sea" [level=2]
+    - paragraph: May 3, 2026 — Building a living canvas ecosystem through conversation, one commit at a time - schooling fish, procedural waves, and emergent behavior.
+  - link "Framing the scene - what happens past 1200px April 14, 2026 — How I solved the ultrawide viewport problem by treating a decorative background as a literal framed diorama.":
+    - /url: /posts/framing-the-scene/
+    - heading "Framing the scene - what happens past 1200px" [level=2]
+    - paragraph: April 14, 2026 — How I solved the ultrawide viewport problem by treating a decorative background as a literal framed diorama.
+  - link "Building a radio app for people who don't want an app April 8, 2026 — Internet radio built for older adults and people with disabilities - accessibility-first, single-file, in use at a nonprofit.":
+    - /url: /posts/building-radiogridxl/
+    - heading "Building a radio app for people who don't want an app" [level=2]
+    - paragraph: April 8, 2026 — Internet radio built for older adults and people with disabilities - accessibility-first, single-file, in use at a nonprofit.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

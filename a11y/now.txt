@@ -1,0 +1,100 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/now/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: Now
+11. What I'm focused on right now. Inspired by
+12. link: nownownow.com
+13. .
+14. heading level 2: Building
+15. link: WhatCanHelp
+16. is a free site for finding assistive technology. Lately the work has been cleanup: reviewing the text page by page and refining what the site is, so it’s more helpful to the people who use it.
+17. link: RadioGrid
+18. is an internet radio app for older adults and people with disabilities. Recent releases have been about access: a station plays when you say its name with Voice Control, and there’s an optional Settings button for people setting up their own radio by switch, voice or screen reader. The code is now
+19. link: open source on GitHub
+20. , under the GPL.
+21. marsh.city
+22. is this site. I’m rewriting the older pages so they read like me.
+23. heading level 2: Working
+24. Director of Technology at Lighthouse Center for Vital Living, an assistive technology and older adult services nonprofit in Duluth, MN. I handle assistive technology evaluation and the infrastructure, and keep everything running.
+25. heading level 2: Exploring
+26. AI integration and assistive technology roles, on teams building real products with LLMs.
+27. Updated November 2026
+28. [contentinfo] ©
+29. link: Jason Marsh
+30. link: email
+31. link: github
+32. link: linkedin
+33. link: source
+34. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "Now" [level=1]
+  - paragraph:
+    - text: What I'm focused on right now. Inspired by
+    - link "nownownow.com":
+      - /url: https://nownownow.com/about
+    - text: .
+  - heading "Building" [level=2]
+  - paragraph:
+    - strong:
+      - link "WhatCanHelp":
+        - /url: /projects/whatcanhelp/
+    - text: "is a free site for finding assistive technology. Lately the work has been cleanup: reviewing the text page by page and refining what the site is, so it’s more helpful to the people who use it."
+  - paragraph:
+    - strong:
+      - link "RadioGrid":
+        - /url: /projects/radiogridxl/
+    - text: "is an internet radio app for older adults and people with disabilities. Recent releases have been about access: a station plays when you say its name with Voice Control, and there’s an optional Settings button for people setting up their own radio by switch, voice or screen reader. The code is now"
+    - link "open source on GitHub":
+      - /url: https://github.com/Marshworks-dev/RadioGrid
+    - text: ", under the GPL."
+  - paragraph:
+    - strong: marsh.city
+    - text: is this site. I’m rewriting the older pages so they read like me.
+  - heading "Working" [level=2]
+  - paragraph: Director of Technology at Lighthouse Center for Vital Living, an assistive technology and older adult services nonprofit in Duluth, MN. I handle assistive technology evaluation and the infrastructure, and keep everything running.
+  - heading "Exploring" [level=2]
+  - paragraph: AI integration and assistive technology roles, on teams building real products with LLMs.
+  - paragraph: Updated November 2026
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

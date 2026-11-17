@@ -1,0 +1,240 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/posts/287-commits-to-the-sea/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: 287 commits to the sea
+12. May 3, 2026
+13. It’s spring in Duluth, which means it’s gray and 40 degrees and the lake is still too cold to touch. I wanted warm water. So I built some.
+14. button: Feed
+15. button: Sound
+16. slider: Volume
+17. button: Advanced
+18. image: (no name)
+19. Rotate for the best view
+20. link: The Shallows
+21. is an interactive canvas simulation - a cropped view down into tropical shallows where schooling fish dodge predators, waves wrap around reef rocks, and procedural audio ties the whole thing together. It started as 20 lines of boid logic called “Tidepool” and grew into a 314KB single-file ecosystem over 287 commits. Here’s how it got there.
+22. heading level 2: The fish come first
+23. The very first version had fish and a tidal current. That’s it. They moved, but they didn’t
+24. behave
+25. . Getting from “animated dots” to “things that feel alive” meant giving each fish something like needs - borrowing from The Sims more than from physics.
+26. If you’ve played
+27. link: SimLife
+28. or
+29. link: El-Fish
+30. - Maxis-era sims where simple creature rules produced complex behavior - that’s the lineage here. A fish with no food around and no predator nearby wants to stick with its school and roam. A fish near food wants to eat, but not if the big fish is between it and the pellet. A curious fish wanders off. A lazy one trails behind. Stack enough of these simple drives and you get emergent behavior that’s fun to watch - the rules interact in ways you never explicitly programmed.
+31. image: Two schools of fish sweep through the scene, navigating around reef rocks and seaweed
+32. Some specific problems that took more iterations than expected:
+33. Edge behavior.
+34. Fish ramming into the viewport edge looks terrible. I added an offscreen buffer - fish can swim 30% beyond the visible area - plus a gentle pull toward center-crossing paths so the school regularly sweeps through the interesting part of the frame. Without that, they’d cluster in a corner and the scene would feel dead.
+35. The white flash.
+36. When a fish turns sharply enough while panicking, it briefly flashes white - simulating the side of its body catching light. Before that, tight turns just looked like geometry pivoting. With it, you can read the school’s panic from across the screen.
+37. Avoidance gradients.
+38. Early collision avoidance was binary - fish either ignored rocks or bounced off them like pinballs. Neither looked natural. The fix was multiple gradient envelopes: a wide outer zone where fish gently steer away (like they can see the rock coming), a tighter zone where they turn more aggressively, and a hard boundary they truly can’t cross. Three simple zones, but the result is fish that look like they’re
+39. anticipating
+40. obstacles rather than reacting to them.
+41. heading level 2: Building a world around them
+42. The environment grew organically. Fish needed something to swim around, so I added rocks. Rocks needed to sit on something, so I added sand. Sand needed to feel like it was underwater, so I added ripples. Then a depth gradient - darker in the top-left (deeper), lighter bottom-right (shallower) - and suddenly the flat canvas had a sense of space.
+43. image: Close-up of reef rocks, seaweed, and the subtle sand ripple texture between two reef formations
+44. The sand ripples alone took about ten commits. Too prominent and they competed with the fish. Wrong color temperature and they looked like a texture from a different scene. Too sharp and they read as drawn lines rather than light refracting through moving water. The final version uses thick blurred strokes at very low opacity, built up in layers. You mostly notice them when they’re missing.
+45. I have a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - the
+46. absence
+47. of that interaction reads as fake to anyone who’s spent time watching real water, even if nobody could name what’s missing.
+48. heading level 2: Predator and prey
+49. image: A school of fish near the reef as a wave washes through the scene
+50. The predator (a barracuda) exists to create drama in an otherwise meditative scene. It cruises slowly - gentle course corrections, in no hurry - until it spots a straggler. Then a burst of speed, bubbles trailing behind, and the school explodes into panic mode.
+51. Getting the predator’s temperament right mattered more than getting its movement physics right. Too aggressive and it dominates the scene - the fish are permanently terrified, the calm never returns. Too passive and it’s just a big shape drifting through. The sweet spot is a predator that’s mostly lazy but occasionally
+52. decides
+53. to hunt, creating these punctuated moments of chaos in an otherwise flowing scene.
+54. The kill animation went through revisions. I tried blood first - red particles dispersing from the bite. It looked fine technically but completely broke the vibe. This is supposed to be something you leave running in the background, something pleasant to glance at. Blood made it feel violent rather than natural.
+55. The solution: sparkly scales spray out from the impact, glinting as they slowly spread and sink. And then - the part that really tied it together - those drifting scales become food that the other fish want to eat. So after the moment of panic, the school cautiously returns to pick at the remnants. The whole cycle takes maybe fifteen seconds.
+56. Seagulls were added for visual variety - they cast dynamic shadows on the water as they circle. Their wing animation still needs work (canvas-drawn bird wings are surprisingly hard to make look right), but the shadows moving across the school create nice moments of the fish briefly scattering from what’s probably just a shape overhead.
+57. heading level 2: The waves
+58. I tried two approaches. The first attempt used particle-based wave fronts - thousands of individual particles forming a wave shape. It looked interesting in screenshots but never hit the right balance of performance and aesthetics in motion. The particles either looked sparse and unconvincing or tanked the framerate. I reverted it.
+59. image: Reef rocks up close - textured crowns, wave lines wrapping around obstacles, a fish school at the edge
+60. The line-based approach that stuck uses fewer elements but pays more attention to how they interact with the environment. The waves deflect and wrap around reef rocks, leaving wake patterns behind obstacles. Getting that wrap behavior right was satisfying - water flowing around geometry rather than through it.
+61. Wave frequency and power became tunable parameters later, but the core visual goal was always: something that reads as “waves” at a glance without demanding attention. Background motion that your eye can rest on.
+62. heading level 2: Sound without loops
+63. The audio is entirely procedural - white noise shaped through bandpass filters, modulated by LFOs, with stereo panning that follows the wave’s position across the screen. No audio files, no loops.
+64. The reason: I can’t listen to looping ambient audio without my brain pattern-matching the loop point. Once you hear where the clip repeats, you can’t unhear it - and then the relaxation is gone, replaced by anticipation of the seam. Noise machines, ambient YouTube videos, sleep apps - they all have this problem if the loop is short enough.
+65. Procedural audio isn’t immune to repetition, but tying the sound generation to the visual wave state means the audio shifts when the visuals shift. Change the wave frequency and the sound follows. It’s shaped noise rather than any deep simulation of ocean acoustics, but the connection to what’s on screen breaks up the patterns enough that your brain doesn’t lock onto a loop.
+66. heading level 2: How the back-and-forth actually works
+67. This project was built entirely through conversation - I orchestrated, Claude Code implemented. 287 commits over many sessions, each one typically scoped to a single system - “today I’m working on fish schooling” or “today I’m fixing how sand looks.”
+68. The workflow in practice: open the simulation, look at it, identify what feels wrong, describe it, iterate, and check the change actually did what I wanted before moving on. The whole loop runs through conversation. Some sessions start with a specific goal (“make the predator less aggressive”) and others start with just staring at the canvas until something catches your eye (“why do the fish bunch up in that corner?”).
+69. A few lessons from doing this 287 times:
+70. Scope sessions tightly.
+71. Working on fish behavior and wave rendering in the same session means if something goes wrong, your git history is a tangle and rolling back loses the good stuff mixed in with the bad. One system per session. Commit often.
+72. The communication challenge is real.
+73. Describing what looks wrong about an animation is hard. “The fish move too mechanically” - what does that mean exactly? Sometimes it took several attempts to find the right framing. Videos would help but don’t translate well to a text-based tool. You end up developing a vocabulary: “the turn is too tight,” “the acceleration is instant instead of ramping,” “it looks like it’s on rails.”
+74. End sessions on a good note.
+75. If the last thing that happened was something breaking and not getting fixed, the curiosity to return fades. Ending on a small win - even just one tweak that makes the scene noticeably better - keeps the momentum alive for next time.
+76. Know when to throw things away.
+77. The particle waves. Some visual effects that tanked performance. A blood system that worked fine but felt wrong. Sunk cost doesn’t apply here - if it doesn’t serve the thing you’re making, revert it and move on.
+78. heading level 2: Where this leaves me
+79. My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would’ve meant hiring someone. The result is one 314KB file, built for momentum over maintainability. For a decorative canvas you leave running in the background, that’s the right call: I’ll never need to extend it, just glance at it. Fair trade for a cartoony ocean.
+80. The bigger question is still open. If someone with limited programming experience can build this in a few weeks of evening sessions, and it would’ve been a respectable solo side project three or four years ago, then the next six months should be interesting, as people with deep programming expertise start finishing their more ambitious projects.
+81. Or we’ll all be pets for an ASI. Hopefully they find
+82. link: meatbags
+83. novel in some way.
+84. link: Try The Shallows
+85. - or
+86. link: launch it fullscreen
+87. .
+88. [contentinfo] ©
+89. link: Jason Marsh
+90. link: email
+91. link: github
+92. link: linkedin
+93. link: source
+94. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "287 commits to the sea" [level=1]
+    - paragraph: May 3, 2026
+    - paragraph: It’s spring in Duluth, which means it’s gray and 40 degrees and the lake is still too cold to touch. I wanted warm water. So I built some.
+    - iframe:
+      - button "Feed"
+      - button "Sound":
+        - img
+        - text: Sound
+      - slider "Volume": "50"
+      - button "Advanced"
+      - img
+      - text: Rotate for the best view
+    - paragraph:
+      - link "The Shallows":
+        - /url: /playground/the-shallows/
+      - text: is an interactive canvas simulation - a cropped view down into tropical shallows where schooling fish dodge predators, waves wrap around reef rocks, and procedural audio ties the whole thing together. It started as 20 lines of boid logic called “Tidepool” and grew into a 314KB single-file ecosystem over 287 commits. Here’s how it got there.
+    - heading "The fish come first" [level=2]
+    - paragraph:
+      - text: The very first version had fish and a tidal current. That’s it. They moved, but they didn’t
+      - emphasis: behave
+      - text: . Getting from “animated dots” to “things that feel alive” meant giving each fish something like needs - borrowing from The Sims more than from physics.
+    - paragraph:
+      - text: If you’ve played
+      - link "SimLife":
+        - /url: https://en.wikipedia.org/wiki/SimLife
+      - text: or
+      - link "El-Fish":
+        - /url: https://en.wikipedia.org/wiki/El-Fish
+      - text: "- Maxis-era sims where simple creature rules produced complex behavior - that’s the lineage here. A fish with no food around and no predator nearby wants to stick with its school and roam. A fish near food wants to eat, but not if the big fish is between it and the pellet. A curious fish wanders off. A lazy one trails behind. Stack enough of these simple drives and you get emergent behavior that’s fun to watch - the rules interact in ways you never explicitly programmed."
+    - paragraph:
+      - img "Two schools of fish sweep through the scene, navigating around reef rocks and seaweed"
+    - paragraph: "Some specific problems that took more iterations than expected:"
+    - paragraph:
+      - strong: Edge behavior.
+      - text: Fish ramming into the viewport edge looks terrible. I added an offscreen buffer - fish can swim 30% beyond the visible area - plus a gentle pull toward center-crossing paths so the school regularly sweeps through the interesting part of the frame. Without that, they’d cluster in a corner and the scene would feel dead.
+    - paragraph:
+      - strong: The white flash.
+      - text: When a fish turns sharply enough while panicking, it briefly flashes white - simulating the side of its body catching light. Before that, tight turns just looked like geometry pivoting. With it, you can read the school’s panic from across the screen.
+    - paragraph:
+      - strong: Avoidance gradients.
+      - text: "Early collision avoidance was binary - fish either ignored rocks or bounced off them like pinballs. Neither looked natural. The fix was multiple gradient envelopes: a wide outer zone where fish gently steer away (like they can see the rock coming), a tighter zone where they turn more aggressively, and a hard boundary they truly can’t cross. Three simple zones, but the result is fish that look like they’re"
+      - emphasis: anticipating
+      - text: obstacles rather than reacting to them.
+    - heading "Building a world around them" [level=2]
+    - paragraph: The environment grew organically. Fish needed something to swim around, so I added rocks. Rocks needed to sit on something, so I added sand. Sand needed to feel like it was underwater, so I added ripples. Then a depth gradient - darker in the top-left (deeper), lighter bottom-right (shallower) - and suddenly the flat canvas had a sense of space.
+    - paragraph:
+      - img "Close-up of reef rocks, seaweed, and the subtle sand ripple texture between two reef formations"
+    - paragraph: The sand ripples alone took about ten commits. Too prominent and they competed with the fish. Wrong color temperature and they looked like a texture from a different scene. Too sharp and they read as drawn lines rather than light refracting through moving water. The final version uses thick blurred strokes at very low opacity, built up in layers. You mostly notice them when they’re missing.
+    - paragraph:
+      - text: "I have a side hobby of testing water in video games. Loading up a new game and going straight to the nearest river to see: does the water flow around the rocks, or is it just a texture scrolling underneath geometry that ignores it? Do footstep splashes respond to depth? Do waves interact with the shoreline or clip through it? That sensibility drove a lot of the environmental work here. The waves needed to wrap around reef rocks - the"
+      - emphasis: absence
+      - text: of that interaction reads as fake to anyone who’s spent time watching real water, even if nobody could name what’s missing.
+    - heading "Predator and prey" [level=2]
+    - paragraph:
+      - img "A school of fish near the reef as a wave washes through the scene"
+    - paragraph: The predator (a barracuda) exists to create drama in an otherwise meditative scene. It cruises slowly - gentle course corrections, in no hurry - until it spots a straggler. Then a burst of speed, bubbles trailing behind, and the school explodes into panic mode.
+    - paragraph:
+      - text: Getting the predator’s temperament right mattered more than getting its movement physics right. Too aggressive and it dominates the scene - the fish are permanently terrified, the calm never returns. Too passive and it’s just a big shape drifting through. The sweet spot is a predator that’s mostly lazy but occasionally
+      - emphasis: decides
+      - text: to hunt, creating these punctuated moments of chaos in an otherwise flowing scene.
+    - paragraph: The kill animation went through revisions. I tried blood first - red particles dispersing from the bite. It looked fine technically but completely broke the vibe. This is supposed to be something you leave running in the background, something pleasant to glance at. Blood made it feel violent rather than natural.
+    - paragraph: "The solution: sparkly scales spray out from the impact, glinting as they slowly spread and sink. And then - the part that really tied it together - those drifting scales become food that the other fish want to eat. So after the moment of panic, the school cautiously returns to pick at the remnants. The whole cycle takes maybe fifteen seconds."
+    - paragraph: Seagulls were added for visual variety - they cast dynamic shadows on the water as they circle. Their wing animation still needs work (canvas-drawn bird wings are surprisingly hard to make look right), but the shadows moving across the school create nice moments of the fish briefly scattering from what’s probably just a shape overhead.
+    - heading "The waves" [level=2]
+    - paragraph: I tried two approaches. The first attempt used particle-based wave fronts - thousands of individual particles forming a wave shape. It looked interesting in screenshots but never hit the right balance of performance and aesthetics in motion. The particles either looked sparse and unconvincing or tanked the framerate. I reverted it.
+    - paragraph:
+      - img "Reef rocks up close - textured crowns, wave lines wrapping around obstacles, a fish school at the edge"
+    - paragraph: The line-based approach that stuck uses fewer elements but pays more attention to how they interact with the environment. The waves deflect and wrap around reef rocks, leaving wake patterns behind obstacles. Getting that wrap behavior right was satisfying - water flowing around geometry rather than through it.
+    - paragraph: "Wave frequency and power became tunable parameters later, but the core visual goal was always: something that reads as “waves” at a glance without demanding attention. Background motion that your eye can rest on."
+    - heading "Sound without loops" [level=2]
+    - paragraph: The audio is entirely procedural - white noise shaped through bandpass filters, modulated by LFOs, with stereo panning that follows the wave’s position across the screen. No audio files, no loops.
+    - paragraph: "The reason: I can’t listen to looping ambient audio without my brain pattern-matching the loop point. Once you hear where the clip repeats, you can’t unhear it - and then the relaxation is gone, replaced by anticipation of the seam. Noise machines, ambient YouTube videos, sleep apps - they all have this problem if the loop is short enough."
+    - paragraph: Procedural audio isn’t immune to repetition, but tying the sound generation to the visual wave state means the audio shifts when the visuals shift. Change the wave frequency and the sound follows. It’s shaped noise rather than any deep simulation of ocean acoustics, but the connection to what’s on screen breaks up the patterns enough that your brain doesn’t lock onto a loop.
+    - heading "How the back-and-forth actually works" [level=2]
+    - paragraph: This project was built entirely through conversation - I orchestrated, Claude Code implemented. 287 commits over many sessions, each one typically scoped to a single system - “today I’m working on fish schooling” or “today I’m fixing how sand looks.”
+    - paragraph: "The workflow in practice: open the simulation, look at it, identify what feels wrong, describe it, iterate, and check the change actually did what I wanted before moving on. The whole loop runs through conversation. Some sessions start with a specific goal (“make the predator less aggressive”) and others start with just staring at the canvas until something catches your eye (“why do the fish bunch up in that corner?”)."
+    - paragraph: "A few lessons from doing this 287 times:"
+    - paragraph:
+      - strong: Scope sessions tightly.
+      - text: Working on fish behavior and wave rendering in the same session means if something goes wrong, your git history is a tangle and rolling back loses the good stuff mixed in with the bad. One system per session. Commit often.
+    - paragraph:
+      - strong: The communication challenge is real.
+      - text: "Describing what looks wrong about an animation is hard. “The fish move too mechanically” - what does that mean exactly? Sometimes it took several attempts to find the right framing. Videos would help but don’t translate well to a text-based tool. You end up developing a vocabulary: “the turn is too tight,” “the acceleration is instant instead of ramping,” “it looks like it’s on rails.”"
+    - paragraph:
+      - strong: End sessions on a good note.
+      - text: If the last thing that happened was something breaking and not getting fixed, the curiosity to return fades. Ending on a small win - even just one tweak that makes the scene noticeably better - keeps the momentum alive for next time.
+    - paragraph:
+      - strong: Know when to throw things away.
+      - text: The particle waves. Some visual effects that tanked performance. A blood system that worked fine but felt wrong. Sunk cost doesn’t apply here - if it doesn’t serve the thing you’re making, revert it and move on.
+    - heading "Where this leaves me" [level=2]
+    - paragraph: "My coding has always been pragmatic - Python scripts, HTML apps, tools built as a means to an end rather than software engineering as a craft. AI lets me chase a pent-up curiosity about development that previously would’ve meant hiring someone. The result is one 314KB file, built for momentum over maintainability. For a decorative canvas you leave running in the background, that’s the right call: I’ll never need to extend it, just glance at it. Fair trade for a cartoony ocean."
+    - paragraph: The bigger question is still open. If someone with limited programming experience can build this in a few weeks of evening sessions, and it would’ve been a respectable solo side project three or four years ago, then the next six months should be interesting, as people with deep programming expertise start finishing their more ambitious projects.
+    - paragraph:
+      - text: Or we’ll all be pets for an ASI. Hopefully they find
+      - link "meatbags":
+        - /url: https://starwars.fandom.com/wiki/Meatbag/Legends
+      - text: novel in some way.
+    - separator
+    - paragraph:
+      - emphasis:
+        - link "Try The Shallows":
+          - /url: /playground/the-shallows/
+        - text: "- or"
+        - link "launch it fullscreen":
+          - /url: /playground/the-shallows/#fullscreen
+        - text: .
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

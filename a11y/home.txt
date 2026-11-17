@@ -1,0 +1,155 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: Jason Marsh
+11. Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit.
+12. 13+ years in IT
+13. - infrastructure, assistive technology, and
+14. AI-integrated tools
+15. I design and build end to end.
+16. heading level 2: Selected Works
+17. A handful of my favorites.
+18. link: Driftglass Playground
+19. link: WhatCanHelp Project
+20. link: The Shallows Playground
+21. link: RadioGrid Project
+22. link: DailyDungeon Playground
+23. heading level 2: Projects
+24. link: View all projects
+25. link: RadioGrid shipped live demo Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit. updated 3d ago vanilla-js accessibility html5 pwa kiosk
+26. link: marsh.city shipped live demo A personal site where adding content is a conversation, not a CMS. updated 7d ago astro markdown github-actions pwa
+27. link: EchoEtcher archived Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization. updated 15d ago python whisper ollama obsidian ai
+28. link: ButtonGriddle wip live demo Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device. updated 21d ago vanilla-js pwa indexeddb assistive-tech
+29. link: WhatCanHelp shipped live demo A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it. updated 1mo ago node sqlite express vanilla-js claude-api accessibility at
+30. link: MealDeck archived live demo Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down. updated 1mo ago node sqlite express vanilla-js claude-api
+31. heading level 2: Writing
+32. link: View all posts
+33. link: 287 commits to the sea May 3, 2026
+34. link: Framing the scene - what happens past 1200px Apr 14, 2026
+35. link: Building a radio app for people who don't want an app Apr 8, 2026
+36. [contentinfo] ©
+37. link: Jason Marsh
+38. link: email
+39. link: github
+40. link: linkedin
+41. link: source
+42. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "Jason Marsh" [level=1]
+  - paragraph:
+    - text: Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit.
+    - strong: 13+ years in IT
+    - text: "- infrastructure, assistive technology, and"
+    - strong: AI-integrated tools
+    - text: I design and build end to end.
+  - heading "Selected Works" [level=2]
+  - paragraph: A handful of my favorites.
+  - link "Driftglass Playground":
+    - /url: /playground/driftglass/
+  - link "WhatCanHelp Project":
+    - /url: /projects/whatcanhelp/
+  - link "The Shallows Playground":
+    - /url: /playground/the-shallows/
+  - link "RadioGrid Project":
+    - /url: /projects/radiogridxl/
+  - link "DailyDungeon Playground":
+    - /url: /playground/dailydungeon/
+  - heading "Projects" [level=2]
+  - link "View all projects":
+    - /url: /projects/
+    - text: View all
+  - link "RadioGrid shipped live demo Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit. updated 3d ago vanilla-js accessibility html5 pwa kiosk":
+    - /url: /projects/radiogridxl/
+    - heading "RadioGrid shipped live demo" [level=3]
+    - paragraph: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit.
+    - paragraph: updated 3d ago
+    - text: vanilla-js accessibility html5 pwa kiosk
+  - link "marsh.city shipped live demo A personal site where adding content is a conversation, not a CMS. updated 7d ago astro markdown github-actions pwa":
+    - /url: /projects/marsh-city/
+    - heading "marsh.city shipped live demo" [level=3]
+    - paragraph: A personal site where adding content is a conversation, not a CMS.
+    - paragraph: updated 7d ago
+    - text: astro markdown github-actions pwa
+  - link "EchoEtcher archived Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization. updated 15d ago python whisper ollama obsidian ai":
+    - /url: /projects/echoetcher/
+    - heading "EchoEtcher archived" [level=3]
+    - paragraph: Voice memos to structured Obsidian notes - local Whisper transcription piped through a local LLM for formatting, tagging, and organization.
+    - paragraph: updated 15d ago
+    - text: python whisper ollama obsidian ai
+  - link "ButtonGriddle wip live demo Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device. updated 21d ago vanilla-js pwa indexeddb assistive-tech":
+    - /url: /projects/buttongriddle/
+    - heading "ButtonGriddle wip live demo" [level=3]
+    - paragraph: Visual participation support for tablets - customizable choice boards where tapping a photo button speaks it aloud, with a Yes / No / Not sure check screen. Offline-first, everything stays on the device.
+    - paragraph: updated 21d ago
+    - text: vanilla-js pwa indexeddb assistive-tech
+  - link "WhatCanHelp shipped live demo A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it. updated 1mo ago node sqlite express vanilla-js claude-api accessibility at":
+    - /url: /projects/whatcanhelp/
+    - heading "WhatCanHelp shipped live demo" [level=3]
+    - paragraph: A free tool for finding assistive technology, borrowing it before you buy, and working out who might pay for it.
+    - paragraph: updated 1mo ago
+    - text: node sqlite express vanilla-js claude-api accessibility at
+  - link "MealDeck archived live demo Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down. updated 1mo ago node sqlite express vanilla-js claude-api":
+    - /url: /projects/mealdeck/
+    - heading "MealDeck archived live demo" [level=3]
+    - paragraph: Meal planning with smart grocery grouping, hands-free cook mode, and AI recipe adaptation. Winding down.
+    - paragraph: updated 1mo ago
+    - text: node sqlite express vanilla-js claude-api
+  - heading "Writing" [level=2]
+  - link "View all posts":
+    - /url: /posts/
+    - text: View all
+  - link "287 commits to the sea May 3, 2026":
+    - /url: /posts/287-commits-to-the-sea/
+    - heading "287 commits to the sea" [level=3]
+    - paragraph: May 3, 2026
+  - link "Framing the scene - what happens past 1200px Apr 14, 2026":
+    - /url: /posts/framing-the-scene/
+    - heading "Framing the scene - what happens past 1200px" [level=3]
+    - paragraph: Apr 14, 2026
+  - link "Building a radio app for people who don't want an app Apr 8, 2026":
+    - /url: /posts/building-radiogridxl/
+    - heading "Building a radio app for people who don't want an app" [level=3]
+    - paragraph: Apr 8, 2026
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

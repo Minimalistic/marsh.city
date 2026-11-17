@@ -1,0 +1,121 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/posts/building-radiogridxl/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: Building a radio app for people who don't want an app
+12. April 8, 2026
+13. I built RadioGridXL for the people mainstream music apps tend to leave behind - older adults and people with disabilities. Big buttons, no account, no ads. Pick a station and listen.
+14. image: RadioGridXL default view - two large station buttons filling the screen
+15. It’s a single HTML file. No dependencies, no build step, no backend. Open the file in a browser and it works. That constraint shaped everything that followed, because it meant I could deploy it anywhere - and the people I was building for don’t have IT support standing by.
+16. heading level 2: Who it’s for
+17. I’m the Director of Technology at a nonprofit that serves older adults and people with disabilities, so the problem was right in front of me from the start: mainstream apps assume a level of technical comfort many clients don’t have. Spotify is overwhelming if you just want to hear jazz. Even a basic podcast app has too many screens, too many options, too much text.
+18. A profile system brands and pre-configures the app for each deployment - the version running at Lighthouse Center has curated stations, a locked-down settings panel behind a technician PIN, and large touch targets sized for users who may have limited dexterity or vision.
+19. It’s in use with older adults there now. The feedback so far: people use it. They don’t ask for help with it.
+20. heading level 2: Designing accessibility-first
+21. The accessibility features shaped the architecture from the start.
+22. image: High-contrast monochrome theme for maximum readability
+23. Screen readers drove the HTML structure.
+24. Every interactive element has an ARIA role and label. Live regions announce playback changes. Focus management traps keyboard navigation inside overlays. For some users, this is the only way they experience the app.
+25. Voice feedback changed the interaction model.
+26. Optional text-to-speech announces “Now playing Jazz FM” or “Paused” through the Web Speech API. Audio chimes give non-visual confirmation of actions. These features exist because I watched someone try to use a music app without being able to see the screen.
+27. The sizing algorithm came from real constraints.
+28. The app measures the viewport and calculates button sizes dynamically - no breakpoints. One station fills the screen. Eight stations arrange into a grid. This matters because the deployment targets range from old Android tablets to modern iPads, and the interface needs to work across all of them without configuration.
+29. image: The same interface on a phone - buttons stack vertically to fill the narrow viewport
+30. heading level 2: The single-file bet
+31. Keeping everything in one HTML file removed most of the deployment problems. There’s no server to maintain, no dependency to update, no CDN to go down. The app can run from a local file, a Docker container, or a USB drive. For a kiosk deployment in a nonprofit with limited IT resources, that reliability matters more than architectural elegance.
+32. The cost is maintainability: around 4,600 lines in one file is not how anyone would recommend writing software. But I’ve never had a dependency conflict take it down, never needed a security patch for someone else’s package, and anyone can understand the whole thing by reading one file.
+33. heading level 2: What’s next
+34. When I first wrote this, the open question was Service Worker caching for environments with unreliable internet. That one’s done - RadioGridXL grew into a PWA. It installs to the home screen, keeps audio controls on the lock screen, auto-resumes after a dropped connection, and caches its app shell so a flaky network doesn’t leave you staring at a blank page. Settings backup and restore came along with it, plus per-stream loudness leveling so stations don’t jump in volume.
+35. The piece still missing is a web-based editor for the profile system, so other organizations can create branded deployments without touching code. That’s the next real one.
+36. If you want to try it, there’s a
+37. link: live demo on this site
+38. . Five taps on the logo opens the settings - the default PIN is empty, just hit enter.
+39. [contentinfo] ©
+40. link: Jason Marsh
+41. link: email
+42. link: github
+43. link: linkedin
+44. link: source
+45. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "Building a radio app for people who don't want an app" [level=1]
+    - paragraph: April 8, 2026
+    - paragraph: I built RadioGridXL for the people mainstream music apps tend to leave behind - older adults and people with disabilities. Big buttons, no account, no ads. Pick a station and listen.
+    - paragraph:
+      - img "RadioGridXL default view - two large station buttons filling the screen"
+    - paragraph: It’s a single HTML file. No dependencies, no build step, no backend. Open the file in a browser and it works. That constraint shaped everything that followed, because it meant I could deploy it anywhere - and the people I was building for don’t have IT support standing by.
+    - heading "Who it’s for" [level=2]
+    - paragraph: "I’m the Director of Technology at a nonprofit that serves older adults and people with disabilities, so the problem was right in front of me from the start: mainstream apps assume a level of technical comfort many clients don’t have. Spotify is overwhelming if you just want to hear jazz. Even a basic podcast app has too many screens, too many options, too much text."
+    - paragraph: A profile system brands and pre-configures the app for each deployment - the version running at Lighthouse Center has curated stations, a locked-down settings panel behind a technician PIN, and large touch targets sized for users who may have limited dexterity or vision.
+    - paragraph: "It’s in use with older adults there now. The feedback so far: people use it. They don’t ask for help with it."
+    - heading "Designing accessibility-first" [level=2]
+    - paragraph: The accessibility features shaped the architecture from the start.
+    - paragraph:
+      - img "High-contrast monochrome theme for maximum readability"
+    - paragraph:
+      - strong: Screen readers drove the HTML structure.
+      - text: Every interactive element has an ARIA role and label. Live regions announce playback changes. Focus management traps keyboard navigation inside overlays. For some users, this is the only way they experience the app.
+    - paragraph:
+      - strong: Voice feedback changed the interaction model.
+      - text: Optional text-to-speech announces “Now playing Jazz FM” or “Paused” through the Web Speech API. Audio chimes give non-visual confirmation of actions. These features exist because I watched someone try to use a music app without being able to see the screen.
+    - paragraph:
+      - strong: The sizing algorithm came from real constraints.
+      - text: The app measures the viewport and calculates button sizes dynamically - no breakpoints. One station fills the screen. Eight stations arrange into a grid. This matters because the deployment targets range from old Android tablets to modern iPads, and the interface needs to work across all of them without configuration.
+    - paragraph:
+      - img "The same interface on a phone - buttons stack vertically to fill the narrow viewport"
+    - heading "The single-file bet" [level=2]
+    - paragraph: Keeping everything in one HTML file removed most of the deployment problems. There’s no server to maintain, no dependency to update, no CDN to go down. The app can run from a local file, a Docker container, or a USB drive. For a kiosk deployment in a nonprofit with limited IT resources, that reliability matters more than architectural elegance.
+    - paragraph: "The cost is maintainability: around 4,600 lines in one file is not how anyone would recommend writing software. But I’ve never had a dependency conflict take it down, never needed a security patch for someone else’s package, and anyone can understand the whole thing by reading one file."
+    - heading "What’s next" [level=2]
+    - paragraph: When I first wrote this, the open question was Service Worker caching for environments with unreliable internet. That one’s done - RadioGridXL grew into a PWA. It installs to the home screen, keeps audio controls on the lock screen, auto-resumes after a dropped connection, and caches its app shell so a flaky network doesn’t leave you staring at a blank page. Settings backup and restore came along with it, plus per-stream loudness leveling so stations don’t jump in volume.
+    - paragraph: The piece still missing is a web-based editor for the profile system, so other organizations can create branded deployments without touching code. That’s the next real one.
+    - paragraph:
+      - text: If you want to try it, there’s a
+      - link "live demo on this site":
+        - /url: /radio/
+      - text: . Five taps on the logo opens the settings - the default PIN is empty, just hit enter.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

@@ -1,0 +1,135 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/about/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: About
+11. image: Jason Marsh, headshot portrait
+12. I’m Jason - Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit in Duluth, Minnesota, with 13+ years in IT. I manage infrastructure, lead assistive technology services, and run an AT lending library. The people we serve are older adults, people with disabilities, and anyone who needs help navigating technology. I hold an Assistive Technology Applications Certificate from CSUN.
+13. Outside that job I build software on my own time. The biggest is
+14. link: WhatCanHelp
+15. , a free tool for finding assistive technology. Smaller ones: a
+16. link: radio app
+17. I set up on tablets at my organization for people to try, a
+18. link: Raspberry Pi pet feeder
+19. , and
+20. link: tablet choice boards
+21. that speak the button you tap. Most of it is Node, SQLite and plain JavaScript, with Python for machine learning and automation.
+22. I’ve been fascinated with computers since I was a kid - learned to fix them because I broke them. Art and design started in my teens, which led to a B.S. in Game Art & Design, then time as a concept artist doing noir-style western illustrations. Software came through years of self-teaching after that. The whole path still shapes how I work: I think visually, I design for the person using the thing, and I see projects through from architecture to interface.
+23. For a more detailed look at my experience and skills, check out my
+24. link: resume
+25. .
+26. heading level 2: How I build
+27. I orchestrate, AI implements. Most of what’s here - the production apps, this site, the project pages - I build by working through
+28. link: Claude Code
+29. in the terminal. I make the calls on architecture, design, and tradeoffs; I read what comes back, test it, and send it back when it’s wrong. It’s still programming, and I’m responsible for what ships.
+30. link: More on how the site is built.
+31. heading level 2: Get in touch
+32. I’m interested in AI integration, assistive technology, and the places they overlap. If something here catches your attention, reach out.
+33. [list, 4 items] Email:
+34. link: jason@marsh.city
+35. LinkedIn:
+36. link: linkedin.com/in/jason-marsh
+37. GitHub:
+38. link: Minimalistic
+39. Art:
+40. link: ArtStation
+41. [contentinfo] ©
+42. link: Jason Marsh
+43. link: email
+44. link: github
+45. link: linkedin
+46. link: source
+47. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "About" [level=1]
+  - img "Jason Marsh, headshot portrait"
+  - paragraph: I’m Jason - Director of Technology at Lighthouse Center for Vital Living, an assistive technology & older adult services nonprofit in Duluth, Minnesota, with 13+ years in IT. I manage infrastructure, lead assistive technology services, and run an AT lending library. The people we serve are older adults, people with disabilities, and anyone who needs help navigating technology. I hold an Assistive Technology Applications Certificate from CSUN.
+  - paragraph:
+    - text: Outside that job I build software on my own time. The biggest is
+    - link "WhatCanHelp":
+      - /url: /projects/whatcanhelp/
+    - text: ", a free tool for finding assistive technology. Smaller ones: a"
+    - link "radio app":
+      - /url: /projects/radiogridxl/
+    - text: I set up on tablets at my organization for people to try, a
+    - link "Raspberry Pi pet feeder":
+      - /url: /projects/petfeedr/
+    - text: ", and"
+    - link "tablet choice boards":
+      - /url: /projects/buttongriddle/
+    - text: that speak the button you tap. Most of it is Node, SQLite and plain JavaScript, with Python for machine learning and automation.
+  - paragraph: "I’ve been fascinated with computers since I was a kid - learned to fix them because I broke them. Art and design started in my teens, which led to a B.S. in Game Art & Design, then time as a concept artist doing noir-style western illustrations. Software came through years of self-teaching after that. The whole path still shapes how I work: I think visually, I design for the person using the thing, and I see projects through from architecture to interface."
+  - paragraph:
+    - text: For a more detailed look at my experience and skills, check out my
+    - link "resume":
+      - /url: /resume/
+    - text: .
+  - heading "How I build" [level=2]
+  - paragraph:
+    - text: I orchestrate, AI implements. Most of what’s here - the production apps, this site, the project pages - I build by working through
+    - link "Claude Code":
+      - /url: https://claude.com/product/claude-code
+    - text: in the terminal. I make the calls on architecture, design, and tradeoffs; I read what comes back, test it, and send it back when it’s wrong. It’s still programming, and I’m responsible for what ships.
+    - link "More on how the site is built.":
+      - /url: /oak/
+  - heading "Get in touch" [level=2]
+  - paragraph: I’m interested in AI integration, assistive technology, and the places they overlap. If something here catches your attention, reach out.
+  - list:
+    - listitem:
+      - text: "Email:"
+      - link "jason@marsh.city":
+        - /url: mailto:jason@marsh.city
+    - listitem:
+      - text: "LinkedIn:"
+      - link "linkedin.com/in/jason-marsh":
+        - /url: https://www.linkedin.com/in/jason-marsh
+    - listitem:
+      - text: "GitHub:"
+      - link "Minimalistic":
+        - /url: https://github.com/Minimalistic
+    - listitem:
+      - text: "Art:"
+      - link "ArtStation":
+        - /url: https://jasonhmarsh.artstation.com
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/
