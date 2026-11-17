@@ -1,0 +1,106 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/playground/the-machine/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: The Machine
+12. the-machine v1.0
+13. Every time you load this page, a different real-world system shows how it works - from DNS resolution to video streaming to what happens when you tap a credit card. Hit shuffle to explore another.
+14. heading level 2: How a Search Engine Works
+15. button: Shuffle: show a different system
+16. 1 of 10
+17. A web crawler follows links to discover pages, feeding discovered URLs back into a frontier queue. Pages are fetched, parsed for text and links, then content is extracted and indexed into an inverted index. PageRank scores the link graph. At query time, the parser tokenizes your search, the ranking engine retrieves candidates from the index, then an ML reranker applies learned signals - click-through rates, freshness, user context - before generating result snippets.
+18. how-it-works.md
+19. heading level 2: How it works
+20. Each system is a data object - nodes grouped into layers, edges defining connections. The diagram is generated from that data rather than drawn by hand.
+21. // each system defines its architecture as data { title: 'How a Web Page Loads', desc: 'Your browser checks its cache, resolves DNS...', // nodes are organized into semantic layers // mermaid renders them as subgraphs layers: [ { name: 'Client', nodes: [ { id: 'BR', label: 'Browser' }, { id: 'CA', label: 'Browser Cache' } ]}, { name: 'Resolution', nodes: [ { id: 'DNS', label: 'DNS Resolver' }, { id: 'TLS', label: 'TLS Handshake' } ]}, // ...more layers ], // edges define data flow between nodes // the animation follows these in order edges: [ { f: 'BR', t: 'CA', l: 'check cache' }, { f: 'CA', t: 'DNS', l: 'cache miss' }, { f: 'DNS', t: 'TLS', l: 'IP address' }, // ...more edges ] }
+22. button: Copy code to clipboard
+23. At render time, this data compiles into
+24. link: Mermaid
+25. flowchart syntax - subgraphs for layers, styled nodes, labeled edges. Mermaid handles the layout algorithm and SVG generation.
+26. // compiled output sent to mermaid.render() flowchart TD subgraph sg0["Client"] BR(["Browser"]) CA(["Browser Cache"]) end subgraph sg1["Resolution"] DNS[/"DNS Resolver"/] TLS[/"TLS Handshake"/] end BR -->|check cache| CA CA -->|cache miss| DNS DNS -->|IP address| TLS
+27. button: Copy code to clipboard
+28. The animation system walks the SVG after mermaid renders it. Nodes start invisible, then fade in one by one. Edges draw themselves using
+29. stroke-dashoffset
+30. transitions. Arrowheads are hidden until their edge finishes drawing. The whole sequence chains through
+31. setTimeout
+32. callbacks - each step triggers the next.
+33. There are 10 systems, about 500 lines of data in all. Diagrams animate in on scroll and appear instantly on shuffle.
+34. [contentinfo] ©
+35. link: Jason Marsh
+36. link: email
+37. link: github
+38. link: linkedin
+39. link: source
+40. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "The Machine" [level=1]
+    - text: the-machine v1.0
+    - paragraph: Every time you load this page, a different real-world system shows how it works - from DNS resolution to video streaming to what happens when you tap a credit card. Hit shuffle to explore another.
+    - heading "How a Search Engine Works" [level=2]
+    - 'button "Shuffle: show a different system"': shuffle
+    - text: 1 of 10
+    - paragraph: A web crawler follows links to discover pages, feeding discovered URLs back into a frontier queue. Pages are fetched, parsed for text and links, then content is extracted and indexed into an inverted index. PageRank scores the link graph. At query time, the parser tokenizes your search, the ranking engine retrieves candidates from the index, then an ML reranker applies learned signals - click-through rates, freshness, user context - before generating result snippets.
+    - text: how-it-works.md
+    - heading "How it works" [level=2]
+    - paragraph: Each system is a data object - nodes grouped into layers, edges defining connections. The diagram is generated from that data rather than drawn by hand.
+    - code: "// each system defines its architecture as data { title: 'How a Web Page Loads', desc: 'Your browser checks its cache, resolves DNS...', // nodes are organized into semantic layers // mermaid renders them as subgraphs layers: [ { name: 'Client', nodes: [ { id: 'BR', label: 'Browser' }, { id: 'CA', label: 'Browser Cache' } ]}, { name: 'Resolution', nodes: [ { id: 'DNS', label: 'DNS Resolver' }, { id: 'TLS', label: 'TLS Handshake' } ]}, // ...more layers ], // edges define data flow between nodes // the animation follows these in order edges: [ { f: 'BR', t: 'CA', l: 'check cache' }, { f: 'CA', t: 'DNS', l: 'cache miss' }, { f: 'DNS', t: 'TLS', l: 'IP address' }, // ...more edges ] }"
+    - button "Copy code to clipboard": copy
+    - paragraph:
+      - text: At render time, this data compiles into
+      - link "Mermaid":
+        - /url: https://mermaid.js.org
+      - text: flowchart syntax - subgraphs for layers, styled nodes, labeled edges. Mermaid handles the layout algorithm and SVG generation.
+    - code: // compiled output sent to mermaid.render() flowchart TD subgraph sg0["Client"] BR(["Browser"]) CA(["Browser Cache"]) end subgraph sg1["Resolution"] DNS[/"DNS Resolver"/] TLS[/"TLS Handshake"/] end BR -->|check cache| CA CA -->|cache miss| DNS DNS -->|IP address| TLS
+    - button "Copy code to clipboard": copy
+    - paragraph:
+      - text: The animation system walks the SVG after mermaid renders it. Nodes start invisible, then fade in one by one. Edges draw themselves using
+      - code: stroke-dashoffset
+      - text: transitions. Arrowheads are hidden until their edge finishes drawing. The whole sequence chains through
+      - code: setTimeout
+      - text: callbacks - each step triggers the next.
+    - paragraph: There are 10 systems, about 500 lines of data in all. Diagrams animate in on scroll and appear instantly on shuffle.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

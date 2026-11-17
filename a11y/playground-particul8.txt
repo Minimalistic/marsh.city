@@ -1,0 +1,301 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/playground/particul8/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: Particul8
+12. Type in the box. Each word (or character, or sentence, your call) becomes a shape, and a few thousand particles spring from one shape to the next. Emoji bring their own colors. A blank line is an empty keyframe, so “blank, word, blank” makes a clip that loops in from nothing and back out. Everything below the stage previews live, so drag things around until it looks right, then copy a link that reproduces it exactly.
+13. When it looks right, export it. MP4 up to 4K renders in the browser, frame-exact from the same seed you’re watching. GIF for the places that only take GIFs. A zipped PNG sequence with a transparent background for compositing over something else. Or a single HTML file that plays at any size with nothing to install. If you’d rather put it on your own page, the embed code is one script tag and one element, and it loads the engine from here the way a web font would.
+14. 1 / 3
+15. button: Previous shape
+16. button: Play or pause
+17. button: Next shape
+18. button: Fullscreen
+19. heading level 3: Type something
+20. textbox: Text to animate
+21. heading level 3: Text
+22. Font
+23. combobox: Font
+24. Weight
+25. combobox: Weight
+26. Step through
+27. combobox: Step through
+28. Hold
+29. 1.2s
+30. slider: Hold
+31. heading level 3: Particles
+32. Count
+33. 3000
+34. slider: Count
+35. Size
+36. 0.7
+37. slider: Size
+38. Shape
+39. combobox: Shape
+40. Color mode
+41. combobox: Color mode
+42. Text color
+43. textbox: Text color
+44. Glow
+45. 0.50
+46. slider: Glow
+47. Trails
+48. 0.35
+49. slider: Trails
+50. Scatter
+51. 0.00
+52. slider: Scatter
+53. heading level 3: Motion
+54. Transition
+55. combobox: Transition
+56. Flow angle
+57. 0°
+58. slider: Flow angle
+59. Speed
+60. 0.70
+61. slider: Speed
+62. Damping
+63. 0.50
+64. slider: Damping
+65. Sweep
+66. 0.30
+67. slider: Sweep
+68. Turbulence
+69. 0.40
+70. slider: Turbulence
+71. Wobble
+72. 0.15
+73. slider: Wobble
+74. heading level 3: Look
+75. Background
+76. textbox: Background
+77. Transit color
+78. textbox: Transit color
+79. Transit blend
+80. 0.50
+81. slider: Transit blend
+82. Seed
+83. spinbutton: Seed
+84. button: Reroll
+85. heading level 3: Presets
+86. button: Monstera
+87. button: Ember
+88. button: Ocean
+89. button: Neon
+90. button: Wick
+91. button: Ink
+92. button [disabled]: Undo
+93. button [disabled]: Redo
+94. button: Reset
+95. button: Copy share link
+96. heading level 3: Export
+97. Format
+98. combobox: Format
+99. Size
+100. combobox: Size
+101. Frame rate
+102. combobox: Frame rate
+103. Quality
+104. 9.8 Mbps
+105. slider: 0.7
+106. button: Export
+107. 9.0 s · 270 frames · 1920 × 1080 · sizing…
+108. button: Copy embed code
+109. button: Copy iframe code
+110. Paste on any page. The engine loads from marsh.city, like a web font.
+111. [contentinfo] ©
+112. link: Jason Marsh
+113. link: email
+114. link: github
+115. link: linkedin
+116. link: source
+117. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "Particul8" [level=1]
+    - paragraph: Type in the box. Each word (or character, or sentence, your call) becomes a shape, and a few thousand particles spring from one shape to the next. Emoji bring their own colors. A blank line is an empty keyframe, so “blank, word, blank” makes a clip that loops in from nothing and back out. Everything below the stage previews live, so drag things around until it looks right, then copy a link that reproduces it exactly.
+    - paragraph: When it looks right, export it. MP4 up to 4K renders in the browser, frame-exact from the same seed you’re watching. GIF for the places that only take GIFs. A zipped PNG sequence with a transparent background for compositing over something else. Or a single HTML file that plays at any size with nothing to install. If you’d rather put it on your own page, the embed code is one script tag and one element, and it loads the engine from here the way a web font would.
+    - text: 1 / 3
+    - button "Previous shape"
+    - button "Play or pause"
+    - button "Next shape"
+    - button "Fullscreen"
+    - heading "Type something" [level=3]
+    - textbox "Text to animate": Hello 🌿 World
+    - heading "Text" [level=3]
+    - text: Font
+    - combobox "Font":
+      - option "Lora" [selected]
+      - option "Inter"
+      - option "JetBrains Mono"
+      - option "Fraunces"
+      - option "Playfair Display"
+      - option "Bebas Neue"
+      - option "Pacifico"
+      - option "Monoton"
+      - option "Rubik Mono One"
+      - option "Space Mono"
+      - option "Georgia"
+      - option "Impact"
+      - option "Arial Black"
+      - option "Courier New"
+      - option "Comic Sans MS"
+      - option "system-ui"
+    - text: Weight
+    - combobox "Weight":
+      - option "Regular" [selected]
+      - option "Bold"
+      - option "Black"
+    - text: Step through
+    - combobox "Step through":
+      - option "By character"
+      - option "By word" [selected]
+      - option "By sentence"
+      - option "All at once"
+    - text: Hold
+    - status: 1.2s
+    - slider "Hold": "1.2"
+    - heading "Particles" [level=3]
+    - text: Count
+    - status: "3000"
+    - slider "Count": "3000"
+    - text: Size
+    - status: "0.7"
+    - slider "Size": "0.7"
+    - text: Shape
+    - combobox "Shape":
+      - option "Circle" [selected]
+      - option "Square"
+    - text: Color mode
+    - combobox "Color mode":
+      - option "Sampled from text" [selected]
+      - option "Solid"
+      - option "Palette"
+    - text: Text color
+    - textbox "Text color": "#8db860"
+    - text: Glow
+    - status: "0.50"
+    - slider "Glow": "0.5"
+    - text: Trails
+    - status: "0.35"
+    - slider "Trails": "0.35"
+    - text: Scatter
+    - status: "0.00"
+    - slider "Scatter": "0"
+    - heading "Motion" [level=3]
+    - text: Transition
+    - combobox "Transition":
+      - option "Flow" [selected]
+      - option "Radial"
+      - option "Nearest"
+      - option "Scatter"
+      - option "Wick"
+    - text: Flow angle
+    - status: 0°
+    - slider "Flow angle": "0"
+    - text: Speed
+    - status: "0.70"
+    - slider "Speed": "0.7"
+    - text: Damping
+    - status: "0.50"
+    - slider "Damping": "0.5"
+    - text: Sweep
+    - status: "0.30"
+    - slider "Sweep": "0.3"
+    - text: Turbulence
+    - status: "0.40"
+    - slider "Turbulence": "0.4"
+    - text: Wobble
+    - status: "0.15"
+    - slider "Wobble": "0.15"
+    - heading "Look" [level=3]
+    - text: Background
+    - textbox "Background": "#0c150f"
+    - text: Transit color
+    - textbox "Transit color": "#ffd28a"
+    - text: Transit blend
+    - status: "0.50"
+    - slider "Transit blend": "0.5"
+    - text: Seed
+    - spinbutton "Seed": "1"
+    - button "Reroll"
+    - heading "Presets" [level=3]
+    - button "Monstera"
+    - button "Ember"
+    - button "Ocean"
+    - button "Neon"
+    - button "Wick"
+    - button "Ink"
+    - button "Undo" [disabled]
+    - button "Redo" [disabled]
+    - button "Reset"
+    - button "Copy share link"
+    - heading "Export" [level=3]
+    - text: Format
+    - combobox "Format":
+      - option "Video (MP4)" [selected]
+      - option "GIF"
+      - option "PNG sequence (zip)"
+      - option "Standalone HTML"
+    - text: Size
+    - combobox "Size":
+      - option "1280 × 720"
+      - option "1920 × 1080" [selected]
+      - option "3840 × 2160"
+      - option "1080 × 1080 square"
+      - option "1080 × 1920 vertical"
+    - text: Frame rate
+    - combobox "Frame rate":
+      - option "30 fps" [selected]
+      - option "60 fps"
+    - text: Quality
+    - status "Quality": 9.8 Mbps
+    - slider: "0.7"
+    - button "Export"
+    - text: 9.0 s · 270 frames · 1920 × 1080 · sizing…
+    - button "Copy embed code"
+    - button "Copy iframe code"
+    - text: Paste on any page. The engine loads from marsh.city, like a web font.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

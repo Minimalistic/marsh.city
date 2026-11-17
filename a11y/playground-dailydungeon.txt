@@ -1,0 +1,91 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/playground/dailydungeon/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: DailyDungeon
+12. I like old-school games, and Shattered Pixel Dungeon got me wanting to make my own spin on one. DailyDungeon is that: a dungeon crawl played one floor at a time, built so I can keep adding whatever I find interesting.
+13. You pick a Warden or a Lamplighter and head down. Tap a tile to walk there, tap a monster next to you to fight it, touch and hold anything to see what it is. HP doesn’t come back on its own, so supplies matter. Most floors have an omen that changes the rules a little. Die, and you can try the floor again, but what you found there waits in a grave sack where you fell.
+14. button: Start DailyDungeon
+15. link: Open DailyDungeon full screen
+16. It’s made for phones: open it full screen and use Add to Home Screen, and it plays like an app, offline too, with your saved game kept safer than in a browser tab.
+17. heading level 2: The daily version
+18. The version here is single-player. The one I play with a friend is a daily floor: we both get the same floor, each of us plays it whenever it suits, and the next one opens once we’ve both finished. I wanted a roguelike to play low-pressure with a friend, and async because that’s what fits around everything else.
+19. heading level 2: SpriteLab
+20. Every sprite in the game is 8×8 pixels from one 19-color palette, with at most five colors in any one sprite. They’re drawn in SpriteLab, a small editor I built for the game’s art. It lists every sprite the game needs, lets me mark each one Keep or Redo with a note, and opens any of them for pixel editing. A save goes straight into the game, so a redrawn monster is there the next time the game loads.
+21. image: SpriteLab's sprite list: filters for To review, Redo, Keep, Edited and Missing above the Player card, which shows the player's four facings with Keep, Redo and Edit pixels buttons and a note box.
+22. image: SpriteLab's pixel editor on the player's front view: an 8 by 8 grid, a line reading Colors: 4 of 5, the 19-color palette, and Pick color, Swap color, Mirror and Undo buttons.
+23. Give it a try. If you have any feedback, feel free to
+24. link: email me
+25. .
+26. [contentinfo] ©
+27. link: Jason Marsh
+28. link: email
+29. link: github
+30. link: linkedin
+31. link: source
+32. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "DailyDungeon" [level=1]
+    - paragraph: "I like old-school games, and Shattered Pixel Dungeon got me wanting to make my own spin on one. DailyDungeon is that: a dungeon crawl played one floor at a time, built so I can keep adding whatever I find interesting."
+    - paragraph: You pick a Warden or a Lamplighter and head down. Tap a tile to walk there, tap a monster next to you to fight it, touch and hold anything to see what it is. HP doesn’t come back on its own, so supplies matter. Most floors have an omen that changes the rules a little. Die, and you can try the floor again, but what you found there waits in a grave sack where you fell.
+    - button "Start DailyDungeon"
+    - paragraph:
+      - link "Open DailyDungeon full screen":
+        - /url: /dungeon/
+    - paragraph: "It’s made for phones: open it full screen and use Add to Home Screen, and it plays like an app, offline too, with your saved game kept safer than in a browser tab."
+    - heading "The daily version" [level=2]
+    - paragraph: "The version here is single-player. The one I play with a friend is a daily floor: we both get the same floor, each of us plays it whenever it suits, and the next one opens once we’ve both finished. I wanted a roguelike to play low-pressure with a friend, and async because that’s what fits around everything else."
+    - heading "SpriteLab" [level=2]
+    - paragraph: Every sprite in the game is 8×8 pixels from one 19-color palette, with at most five colors in any one sprite. They’re drawn in SpriteLab, a small editor I built for the game’s art. It lists every sprite the game needs, lets me mark each one Keep or Redo with a note, and opens any of them for pixel editing. A save goes straight into the game, so a redrawn monster is there the next time the game loads.
+    - 'img "SpriteLab''s sprite list: filters for To review, Redo, Keep, Edited and Missing above the Player card, which shows the player''s four facings with Keep, Redo and Edit pixels buttons and a note box."'
+    - 'img "SpriteLab''s pixel editor on the player''s front view: an 8 by 8 grid, a line reading Colors: 4 of 5, the 19-color palette, and Pick color, Swap color, Mirror and Undo buttons."'
+    - paragraph:
+      - text: Give it a try. If you have any feedback, feel free to
+      - link "email me":
+        - /url: mailto:jason@marsh.city
+      - text: .
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

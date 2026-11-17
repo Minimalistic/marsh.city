@@ -1,0 +1,79 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/playground/the-shallows/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: The Shallows
+12. Warm water over sand and rock. A school of tuna moves as one - splitting around obstacles, merging back together, scattering when something bigger passes through.
+13. button: Feed
+14. button: Sound
+15. slider: Volume
+16. button: Advanced
+17. button: Toggle fullscreen
+18. button: Exit fullscreen
+19. image: (no name)
+20. Rotate for the best view
+21. [contentinfo] ©
+22. link: Jason Marsh
+23. link: email
+24. link: github
+25. link: linkedin
+26. link: source
+27. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "The Shallows" [level=1]
+    - paragraph: Warm water over sand and rock. A school of tuna moves as one - splitting around obstacles, merging back together, scattering when something bigger passes through.
+    - button "Feed"
+    - button "Sound":
+      - img
+      - text: Sound
+    - slider "Volume": "50"
+    - button "Advanced"
+    - button "Toggle fullscreen"
+    - button "Exit fullscreen"
+    - img
+    - text: Rotate for the best view
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

@@ -1,0 +1,62 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/playground/tadpole-pond/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: Tadpole Pond
+12. A shallow pond. The tadpoles have rudimentary needs - they get hungry, scrounge for food, rest, and startle when you hover your cursor over them. Their bodies flex and bend as they swim. Each one is doing its own thing.
+13. [contentinfo] ©
+14. link: Jason Marsh
+15. link: email
+16. link: github
+17. link: linkedin
+18. link: source
+19. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "Tadpole Pond" [level=1]
+    - paragraph: A shallow pond. The tadpoles have rudimentary needs - they get hungry, scrounge for food, rest, and startle when you hover your cursor over them. Their bodies flex and bend as they swim. Each one is doing its own thing.
+    - paragraph
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

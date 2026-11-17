@@ -1,0 +1,117 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/playground/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: Playground
+11. Experiments, toys, and things that don't fit anywhere else.
+12. link: DailyDungeon A small pixel-art roguelike for phones. One floor at a time, every sprite drawn by hand.
+13. link: Driftglass Slow aerial scenes, generated live, with ambient sound.
+14. link: Particul8 Type anything - words, emoji, both - and watch a cloud of particles morph from one shape to the next. Every slider previews live, and it exports to video, GIF, or a page of its own.
+15. link: Tadpole Pond A shallow pond full of wriggly tadpoles with tiny brains. Hover to spook them.
+16. link: The Machine Real-world system architectures, animated and explained - a different system every time you hit shuffle.
+17. link: The Shallows A living canvas of schooling fish, circling seagulls, and a patient predator in warm tropical water.
+18. heading level 2: Art series
+19. AI-generated image series. Each one frames the work with its own conceit.
+20. link: Mission 04 — The Coal Forest5 pieces Aux's quietest deployment - the Carboniferous, roughly 310 million years before present. A coal-forest swamp under an oxygen-thick sky, and a probe that, given nothing to prove, chose to be still.
+21. link: Mission 01 — The Mammoth Steppe5 pieces Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
+22. link: Mission 02 — The Devonian Reef5 pieces Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.
+23. link: Mission 03 — The Cretaceous Floodplain5 pieces Aux's deepest reach yet - Late Cretaceous, roughly 68 million years before present. A warm floodplain in the last great age of the dinosaurs, documented by a probe that has stopped taking a subject list.
+24. link: The Chronoscope Program7 pieces Origin, hardware, and calibration record of XR-Auspex-001 - the cloaked observational probe behind every Chronoscope dispatch.
+25. [contentinfo] ©
+26. link: Jason Marsh
+27. link: email
+28. link: github
+29. link: linkedin
+30. link: source
+31. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "Playground" [level=1]
+  - paragraph: Experiments, toys, and things that don't fit anywhere else.
+  - link "DailyDungeon A small pixel-art roguelike for phones. One floor at a time, every sprite drawn by hand.":
+    - /url: /playground/dailydungeon/
+    - heading "DailyDungeon" [level=2]
+    - paragraph: A small pixel-art roguelike for phones. One floor at a time, every sprite drawn by hand.
+  - link "Driftglass Slow aerial scenes, generated live, with ambient sound.":
+    - /url: /playground/driftglass/
+    - heading "Driftglass" [level=2]
+    - paragraph: Slow aerial scenes, generated live, with ambient sound.
+  - link "Particul8 Type anything - words, emoji, both - and watch a cloud of particles morph from one shape to the next. Every slider previews live, and it exports to video, GIF, or a page of its own.":
+    - /url: /playground/particul8/
+    - heading "Particul8" [level=2]
+    - paragraph: Type anything - words, emoji, both - and watch a cloud of particles morph from one shape to the next. Every slider previews live, and it exports to video, GIF, or a page of its own.
+  - link "Tadpole Pond A shallow pond full of wriggly tadpoles with tiny brains. Hover to spook them.":
+    - /url: /playground/tadpole-pond/
+    - heading "Tadpole Pond" [level=2]
+    - paragraph: A shallow pond full of wriggly tadpoles with tiny brains. Hover to spook them.
+  - link "The Machine Real-world system architectures, animated and explained - a different system every time you hit shuffle.":
+    - /url: /playground/the-machine/
+    - heading "The Machine" [level=2]
+    - paragraph: Real-world system architectures, animated and explained - a different system every time you hit shuffle.
+  - link "The Shallows A living canvas of schooling fish, circling seagulls, and a patient predator in warm tropical water.":
+    - /url: /playground/the-shallows/
+    - heading "The Shallows" [level=2]
+    - paragraph: A living canvas of schooling fish, circling seagulls, and a patient predator in warm tropical water.
+  - heading "Art series" [level=2]
+  - paragraph: AI-generated image series. Each one frames the work with its own conceit.
+  - link "Mission 04 — The Coal Forest5 pieces Aux's quietest deployment - the Carboniferous, roughly 310 million years before present. A coal-forest swamp under an oxygen-thick sky, and a probe that, given nothing to prove, chose to be still.":
+    - /url: /art/mission-04-coal-forest/
+    - heading "Mission 04 — The Coal Forest5 pieces" [level=3]
+    - paragraph: Aux's quietest deployment - the Carboniferous, roughly 310 million years before present. A coal-forest swamp under an oxygen-thick sky, and a probe that, given nothing to prove, chose to be still.
+  - link "Mission 01 — The Mammoth Steppe5 pieces Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.":
+    - /url: /art/mission-01-mammoth-steppe/
+    - heading "Mission 01 — The Mammoth Steppe5 pieces" [level=3]
+    - paragraph: Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
+  - link "Mission 02 — The Devonian Reef5 pieces Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.":
+    - /url: /art/mission-02-devonian-reef/
+    - heading "Mission 02 — The Devonian Reef5 pieces" [level=3]
+    - paragraph: Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.
+  - link "Mission 03 — The Cretaceous Floodplain5 pieces Aux's deepest reach yet - Late Cretaceous, roughly 68 million years before present. A warm floodplain in the last great age of the dinosaurs, documented by a probe that has stopped taking a subject list.":
+    - /url: /art/mission-03-cretaceous-floodplain/
+    - heading "Mission 03 — The Cretaceous Floodplain5 pieces" [level=3]
+    - paragraph: Aux's deepest reach yet - Late Cretaceous, roughly 68 million years before present. A warm floodplain in the last great age of the dinosaurs, documented by a probe that has stopped taking a subject list.
+  - link "The Chronoscope Program7 pieces Origin, hardware, and calibration record of XR-Auspex-001 - the cloaked observational probe behind every Chronoscope dispatch.":
+    - /url: /art/the-chronoscope-program/
+    - heading "The Chronoscope Program7 pieces" [level=3]
+    - paragraph: Origin, hardware, and calibration record of XR-Auspex-001 - the cloaked observational probe behind every Chronoscope dispatch.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

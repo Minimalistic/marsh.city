@@ -1,0 +1,71 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/playground/driftglass/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: Driftglass
+12. A slower, quieter follow-up to The Shallows. Four scenes: a nebula, clouds over the ocean, open water, and a shoreline. Everything is generated as it plays, sound included.
+13. It opens on the shoreline. Try the other three from the dock at the bottom - each has its own look and sound.
+14. Sound starts off; tap the speaker to turn it on.
+15. button: Start Driftglass
+16. link: Open Driftglass full screen
+17. [contentinfo] ©
+18. link: Jason Marsh
+19. link: email
+20. link: github
+21. link: linkedin
+22. link: source
+23. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "Driftglass" [level=1]
+    - paragraph: "A slower, quieter follow-up to The Shallows. Four scenes: a nebula, clouds over the ocean, open water, and a shoreline. Everything is generated as it plays, sound included."
+    - paragraph: It opens on the shoreline. Try the other three from the dock at the bottom - each has its own look and sound.
+    - paragraph: Sound starts off; tap the speaker to turn it on.
+    - button "Start Driftglass"
+    - paragraph:
+      - link "Open Driftglass full screen":
+        - /url: /driftglass/
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/
