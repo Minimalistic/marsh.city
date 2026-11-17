@@ -224,7 +224,7 @@
 
 @page {
   size: letter;
-  margin: 0.6in;
+  margin: 0.5in;
 }
 
 @media print {
@@ -260,7 +260,7 @@
     margin: 0 !important;
     max-width: none !important;
     font-size: 10.5pt !important;
-    line-height: 1.45 !important;
+    line-height: 1.4 !important;
   }
   /* the screen 65ch readability cap (and frost padding) leaves a dead right
      quarter on a printed page — let text run to the page margins */
