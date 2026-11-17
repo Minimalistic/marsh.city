@@ -143,6 +143,14 @@ try {
 const pages = (readFileSync(outPdf, 'latin1').match(/\/Type \/Page\b(?!s)/g) || []).length;
 console.log(`${outPdf}${pages ? ` (${pages} page${pages === 1 ? '' : 's'})` : ''}`);
 
+// A resume over two pages fails the run and never reaches --copy-to, so an
+// overlong PDF can't land in the folder applications get attached from.
+const MAX_PAGES = 2;
+if (pages > MAX_PAGES) {
+  console.error(`${pages} pages, limit is ${MAX_PAGES}: cut bullets or projects (variant "exclude"), or shorten the summary`);
+  process.exit(1);
+}
+
 if (copyToDir && copyToDir !== resolve(outDir)) {
   const copied = join(copyToDir, `marsh-resume${suffix}.pdf`);
   copyFileSync(outPdf, copied);
