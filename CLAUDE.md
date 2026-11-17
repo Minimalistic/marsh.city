@@ -64,6 +64,17 @@ Cream/forest palette in `src/styles/global.css`. Light + dark mode via `prefers-
 
 **Do not change layout, navigation, design tokens, or component structure without explicitly asking Jason.** Freely add/edit content.
 
+## Screen reader transcripts (`a11y/`)
+
+One a11y-smoke transcript per site page, named by path (`/projects/petfeedr/` → `a11y/projects-petfeedr.txt`, home → `home.txt`). Always run against the built site over a local server on port 4873, never a `dist/` file: from `file://` the root-relative CSS and scripts don't load, so hidden content reads as visible.
+
+```
+npm run build && python3 -m http.server 4873 --bind 127.0.0.1 --directory dist
+node ~/JasonsWorkspace/a11y-smoke/bin/a11y-smoke.mjs http://127.0.0.1:4873/resume/ --out a11y/resume.txt
+```
+
+The apps under `public/` (radio, dungeon, ButtonGriddle app, driftglass, tavela) have no transcripts here; they're checked in their own repos. After a resume change, also run `npm run resume:site` (regenerates the downloadable PDF; a test fails until you do).
+
 ## DNS — DO NOT TOUCH WITHOUT WARNING
 
 Email and web DNS records are configured on this domain. **Never suggest DNS changes without explicitly flagging that MX/TXT records must be left alone.**
