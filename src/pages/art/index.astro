@@ -16,13 +16,13 @@ const series = (await getCollection('art'))
   </div>
   <div class="art-series-grid">
     {series.map((s) => (
-      <a class="card art-series-card" href={`/art/${s.id}/`}>
+      <article class="card art-series-card">
         {s.data.cover && (
           <div class="art-series-cover" style={`background-image: url(${s.data.cover})`} aria-hidden="true"></div>
         )}
-        <h2>{s.data.title}<span class="meta art-count">{s.data.images.length} {s.data.images.length === 1 ? 'piece' : 'pieces'}</span></h2>
+        <div class="card-head"><h2><a class="card-link" href={`/art/${s.id}/`}>{s.data.title}</a></h2><span class="meta art-count">{s.data.images.length} {s.data.images.length === 1 ? 'piece' : 'pieces'}</span></div>
         <p class="meta">{s.data.description}</p>
-      </a>
+      </article>
     ))}
   </div>
 </Base>

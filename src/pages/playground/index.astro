@@ -11,10 +11,10 @@ const artSeries = (await getCollection('art'))
     <p class="meta">Experiments, toys, and things that don't fit anywhere else.</p>
   </div>
   {items.map((item) => (
-    <a class="card" href={`/playground/${item.id}/`}>
-      <h2>{item.data.title}</h2>
+    <article class="card">
+      <h2><a class="card-link" href={`/playground/${item.id}/`}>{item.data.title}</a></h2>
       <p class="meta">{item.data.description}</p>
-    </a>
+    </article>
   ))}
 
   {artSeries.length > 0 && (
@@ -22,10 +22,10 @@ const artSeries = (await getCollection('art'))
       <h2 class="playground-subhead">Art series</h2>
       <p class="meta playground-subhead-meta">AI-generated image series. Each one frames the work with its own conceit.</p>
       {artSeries.map((s) => (
-        <a class="card" href={`/art/${s.id}/`}>
-          <h3>{s.data.title}<span class="meta art-piece-count">{s.data.images.length} {s.data.images.length === 1 ? 'piece' : 'pieces'}</span></h3>
+        <article class="card">
+          <div class="card-head"><h3><a class="card-link" href={`/art/${s.id}/`}>{s.data.title}</a></h3><span class="meta art-piece-count">{s.data.images.length} {s.data.images.length === 1 ? 'piece' : 'pieces'}</span></div>
           <p class="meta">{s.data.description}</p>
-        </a>
+        </article>
       ))}
     </>
   )}

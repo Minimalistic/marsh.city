@@ -17,7 +17,7 @@ const guide = await getEntry('guides', project.id);
     <span class="status">{project.data.status}</span>
     {project.data.repo && <a href={project.data.repo} class="project-link">repo</a>}
     {project.data.updated && <span class="meta">Updated {project.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>}
-    <span class="byline">Written by <a href="/resume/" aria-label="Jason Marsh, resume">Jason Marsh</a></span>
+    <span class="byline">Written by <a href="/resume/">Jason Marsh<span class="sr-only">, resume</span></a></span>
   </div>
   {!project.data.hideTagline && <p class="tagline">{project.data.description}</p>}
   {(project.data.url || guide) && (

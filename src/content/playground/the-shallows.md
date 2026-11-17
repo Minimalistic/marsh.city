@@ -57,6 +57,9 @@ Warm water over sand and rock. A school of tuna moves as one - splitting around 
 </div>
 </div>
 <style>
+/* the display rules below would otherwise override the hidden attribute,
+   leaving the exit-fullscreen button and rotate hint exposed to screen readers */
+.pool-tool[hidden], .pool-rotate-hint[hidden], .pool-advanced-panel[hidden] { display: none; }
 .pool-tool {
   height: 28px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
   background: rgba(0,0,0,0.45); cursor: pointer;

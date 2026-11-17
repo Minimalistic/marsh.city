@@ -321,7 +321,10 @@ hr {
   outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
-.card:focus-visible {
+/* the card's title link is the focus target; the ring goes round the card */
+.card-link:focus-visible { outline: none; }
+.card:has(.card-link:focus-visible) {
+  outline: 2px solid var(--leaf);
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -898,6 +901,38 @@ footer.site-foot a:hover {
 .card h3 {
   margin: 0 0 0.4rem;
   font-size: 1.3rem;
+}
+/* Only the title is a link, stretched over the whole card, so a screen
+   reader gets one link per card. When the whole card was an <a>, iPhone
+   VoiceOver split it into a "link" stop per paragraph and tag and read the
+   badges as headings. */
+.card-link,
+.card-link:hover {
+  color: inherit;
+  position: static;
+}
+.card-link::after,
+.card-link:hover::after {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  background: none;
+  transition: none;
+}
+/* title plus badges on one line: the badges sit beside the heading, not in it */
+.card-head {
+  margin: 0 0 0.4rem;
+  /* what the badges used to inherit from the heading they sat in */
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.card-head h2,
+.card-head h3 {
+  display: inline;
+  margin: 0;
 }
 .card .meta {
   color: var(--fg-soft);
