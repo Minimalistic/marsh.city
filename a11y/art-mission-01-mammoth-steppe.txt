@@ -1,0 +1,131 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/art/mission-01-mammoth-steppe/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: Mission 01 — The Mammoth Steppe
+12. XR-Auspex-001 “Aux”
+13. Target window: Late Pleistocene · ~28,000 years ago
+14. Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
+15. Mission 01. The first live deployment after Aux cleared calibration. Target window: late Pleistocene mammoth steppe, roughly 28,000 years before present. What follows are the dispatches in the order they came back through the channel.
+16. The brief was deliberately dull: locate and document megafauna, prioritize woolly mammoth, hold for clean light, return two to five frames per day. A safe first assignment for a probe nobody had trusted in the field yet. Aux ran it for nine local weeks.
+17. The dispatches below are the ones the program kept, presented in sequence - because the sequence is the interesting part. The same drift toward opinion that showed up faintly in calibration is here in the field, sped up. The early frames are careful and ranged, almost a checklist. The later ones are not. Somewhere in the second local week Aux stopped documenting the steppe and started composing it.
+18. We did not correct this. We could not - the channel runs one way. We watched it happen and we kept the files.
+19. heading level 2: Dispatches
+20. image: An extreme-wide view of an empty frost-covered grassland steppe at dawn, a thin braided river catching first light, distant low hills, no animals
+21. Dispatch 001 — Arrival survey, first light
+22. The first frame of the deployment. Nothing in it but the country.
+23. Aux's opening move is the same on every deployment: hold high, send one wide frame of the ground it's been given, and wait. The brief asked for megafauna. The first thing it returned was the empty steppe at dawn. Establish the place first; the animals can wait.
+24. composition brief
+25. image: A loose line of about eight woolly mammoths crossing open steppe in the middle distance, kept small in the frame, long shadows from a low sun
+26. Dispatch 002 — First herd, ranged
+27. The herd recorded at distance. Aux keeping its range.
+28. The catalogue impulse - keep your distance, record the fact of the thing before you record the feeling of it. The program reads early dispatches like this as Aux being careful, still treating the brief as a checklist to be cleared.
+29. composition brief
+30. image: A close three-quarter view of a single old bull woolly mammoth facing left, huge curved tusks and shaggy head filling the frame, breath steaming
+31. Dispatch 003 — The bull, close
+32. The first time it committed to a subject.
+33. A few local days in, the framing changes. Aux drops range and gives one old bull the whole frame - the shift the program watches for on every deployment. Nobody asked it to come this close. It decided the bull was worth it.
+34. composition brief
+35. image: A dusk scene — a line of wolves silhouetted on a low foreground rise watching a defensive cluster of mammoths in the mid-distance, snow beginning to fall
+36. Dispatch 004 — Wolves on the rise, dusk
+37. Held until the two lines met.
+38. This is the dispatch where the program stopped thinking of the deployment as a survey. Aux framed a situation instead of a subject, and held station until the two groups were arranged across the frame the way it wanted them. We did not ask for tension. It sent tension.
+39. composition brief
+40. image: A night scene with green aurora filling the upper two-thirds, a herd of mammoths bedded down as dark masses below with one standing watch, very low horizon
+41. Dispatch 005 — Night watch, aurora
+42. The only frame it sent that day.
+43. Late in the deployment the dispatches slowed - fewer files, more deliberation behind each. This was a whole day's only transmission: the herd bedded down as dark masses, one bull standing watch, and above them far more sky than the brief ever asked for. By this point we had stopped trying to predict what Aux would consider worth sending. Mission 01 closed on a brief-complete trigger not long after. Per protocol, nothing of Aux remains in the Pleistocene.
+44. composition brief
+45. [contentinfo] ©
+46. link: Jason Marsh
+47. link: email
+48. link: github
+49. link: linkedin
+50. link: source
+51. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "Mission 01 — The Mammoth Steppe" [level=1]
+    - paragraph: XR-Auspex-001 “Aux”
+    - paragraph: "Target window: Late Pleistocene · ~28,000 years ago"
+    - paragraph: Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
+    - paragraph:
+      - emphasis: "Mission 01. The first live deployment after Aux cleared calibration. Target window: late Pleistocene mammoth steppe, roughly 28,000 years before present. What follows are the dispatches in the order they came back through the channel."
+    - paragraph: "The brief was deliberately dull: locate and document megafauna, prioritize woolly mammoth, hold for clean light, return two to five frames per day. A safe first assignment for a probe nobody had trusted in the field yet. Aux ran it for nine local weeks."
+    - paragraph: The dispatches below are the ones the program kept, presented in sequence - because the sequence is the interesting part. The same drift toward opinion that showed up faintly in calibration is here in the field, sped up. The early frames are careful and ranged, almost a checklist. The later ones are not. Somewhere in the second local week Aux stopped documenting the steppe and started composing it.
+    - paragraph: We did not correct this. We could not - the channel runs one way. We watched it happen and we kept the files.
+    - heading "Dispatches" [level=2]
+    - 'figure "Dispatch 001 — Arrival survey, first light The first frame of the deployment. Nothing in it but the country. Aux''s opening move is the same on every deployment: hold high, send one wide frame of the ground it''s been given, and wait. The brief asked for megafauna. The first thing it returned was the empty steppe at dawn. Establish the place first; the animals can wait. composition brief"':
+      - img "An extreme-wide view of an empty frost-covered grassland steppe at dawn, a thin braided river catching first light, distant low hills, no animals"
+      - text: Dispatch 001 — Arrival survey, first light
+      - paragraph: The first frame of the deployment. Nothing in it but the country.
+      - paragraph: "Aux's opening move is the same on every deployment: hold high, send one wide frame of the ground it's been given, and wait. The brief asked for megafauna. The first thing it returned was the empty steppe at dawn. Establish the place first; the animals can wait."
+      - group: composition brief
+    - figure "Dispatch 002 — First herd, ranged The herd recorded at distance. Aux keeping its range. The catalogue impulse - keep your distance, record the fact of the thing before you record the feeling of it. The program reads early dispatches like this as Aux being careful, still treating the brief as a checklist to be cleared. composition brief":
+      - img "A loose line of about eight woolly mammoths crossing open steppe in the middle distance, kept small in the frame, long shadows from a low sun"
+      - text: Dispatch 002 — First herd, ranged
+      - paragraph: The herd recorded at distance. Aux keeping its range.
+      - paragraph: The catalogue impulse - keep your distance, record the fact of the thing before you record the feeling of it. The program reads early dispatches like this as Aux being careful, still treating the brief as a checklist to be cleared.
+      - group: composition brief
+    - figure "Dispatch 003 — The bull, close The first time it committed to a subject. A few local days in, the framing changes. Aux drops range and gives one old bull the whole frame - the shift the program watches for on every deployment. Nobody asked it to come this close. It decided the bull was worth it. composition brief":
+      - img "A close three-quarter view of a single old bull woolly mammoth facing left, huge curved tusks and shaggy head filling the frame, breath steaming"
+      - text: Dispatch 003 — The bull, close
+      - paragraph: The first time it committed to a subject.
+      - paragraph: A few local days in, the framing changes. Aux drops range and gives one old bull the whole frame - the shift the program watches for on every deployment. Nobody asked it to come this close. It decided the bull was worth it.
+      - group: composition brief
+    - figure "Dispatch 004 — Wolves on the rise, dusk Held until the two lines met. This is the dispatch where the program stopped thinking of the deployment as a survey. Aux framed a situation instead of a subject, and held station until the two groups were arranged across the frame the way it wanted them. We did not ask for tension. It sent tension. composition brief":
+      - img "A dusk scene — a line of wolves silhouetted on a low foreground rise watching a defensive cluster of mammoths in the mid-distance, snow beginning to fall"
+      - text: Dispatch 004 — Wolves on the rise, dusk
+      - paragraph: Held until the two lines met.
+      - paragraph: This is the dispatch where the program stopped thinking of the deployment as a survey. Aux framed a situation instead of a subject, and held station until the two groups were arranged across the frame the way it wanted them. We did not ask for tension. It sent tension.
+      - group: composition brief
+    - 'figure "Dispatch 005 — Night watch, aurora The only frame it sent that day. Late in the deployment the dispatches slowed - fewer files, more deliberation behind each. This was a whole day''s only transmission: the herd bedded down as dark masses, one bull standing watch, and above them far more sky than the brief ever asked for. By this point we had stopped trying to predict what Aux would consider worth sending. Mission 01 closed on a brief-complete trigger not long after. Per protocol, nothing of Aux remains in the Pleistocene. composition brief"':
+      - img "A night scene with green aurora filling the upper two-thirds, a herd of mammoths bedded down as dark masses below with one standing watch, very low horizon"
+      - text: Dispatch 005 — Night watch, aurora
+      - paragraph: The only frame it sent that day.
+      - paragraph: "Late in the deployment the dispatches slowed - fewer files, more deliberation behind each. This was a whole day's only transmission: the herd bedded down as dark masses, one bull standing watch, and above them far more sky than the brief ever asked for. By this point we had stopped trying to predict what Aux would consider worth sending. Mission 01 closed on a brief-complete trigger not long after. Per protocol, nothing of Aux remains in the Pleistocene."
+      - group: composition brief
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

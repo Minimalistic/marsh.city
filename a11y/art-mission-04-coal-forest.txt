@@ -1,0 +1,131 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/art/mission-04-coal-forest/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: Mission 04 — The Coal Forest
+12. XR-Auspex-001 “Aux”
+13. Target window: Carboniferous · ~310 million years ago
+14. Aux's quietest deployment - the Carboniferous, roughly 310 million years before present. A coal-forest swamp under an oxygen-thick sky, and a probe that, given nothing to prove, chose to be still.
+15. Mission 04. Target window: the Carboniferous, roughly 310 million years before present - a coal-forest swamp under an oxygen-thick sky, the tall age of the great clubmoss trees. After the floodplain, we sent it somewhere green and let it rest.
+16. The floodplain dispatches had unsettled the program. The last frame of Mission 03 was a landscape with every animal deliberately left out, and we had spent the weeks since arguing about whether a probe can make a point. So the next brief was, in part, a question we couldn’t ask Aux directly: given a world with nothing to prove, what would it do?
+17. We chose the Carboniferous on purpose - a warm, wet, overgrown world, thick with oxygen, built on a scale that suits Aux’s eye. Towering clubmoss trees, horsetails the size of masts, insects grown as large as the megafauna it used to chase. The brief was the lightest we had ever sent: document the forest, no fauna priority, take the time it needs. We were braced for another argument.
+18. It didn’t make one. The dispatches came back unhurried and generous - the great green interior, the giant on the forest floor, the dragonfly given a single shaft of light, two animals sharing a black pool with no hunt between them, and a last frame that is almost only the light. The channel still runs one way. For once we didn’t mind.
+19. heading level 2: Dispatches
+20. image: A wide view deep inside a Carboniferous coal forest, immense lycopod scale-trees and giant horsetail trunks rising into a high dense canopy, shafts of green-gold light falling to standing black swamp water, mist between the trunks, no animals
+21. Dispatch 001 — The green interior
+22. The first frame. A forest with no edges, and the program exhaling.
+23. It opened the way it always opens - one wide frame of the country it had been given, held until it was right. The country this time was a forest with no edges, a green interior going up and back further than the optics could resolve. After the empty prairie that ended the last mission, the program read this first frame as a kind of exhale. So, we think, did Aux.
+24. composition brief
+25. image: A close low view across a humid forest floor where a several-meter-long segmented arthropod, Arthropleura, crawls through ferns and clubmoss and fallen bark, great trunks rising out of focus behind
+26. Dispatch 002 — The forest floor
+27. The floor first - and the floor here runs large.
+28. The cataloguing move, on schedule: drop to the floor and record what's slow enough that there's no excuse for missing it. What it found there was a millipede the length of a canoe. We noted, not for the first time, that the floor life of this world runs to the size the megafauna of the earlier missions had been. Aux gave it the same grounded, patient frame it once gave a grazing herd.
+29. composition brief
+30. image: A giant dragonfly, Meganeura, hovering in a single shaft of light inside a dark forest, its wide membranous wings spread across the frame against deep green-black canopy
+31. Dispatch 003 — The dragonfly, lit
+32. The frame it committed to.
+33. Every mission finds the subject it commits to. On the steppe it was an old bull, on the reef the jaw, on the floodplain the thing with the longest reach in the sky. Here it was the largest flying insect that ever lived, and Aux gave it a single shaft of light inside the forest instead of open sky. The same instinct as the pterosaur frame, turned all the way down.
+34. composition brief
+35. image: A broad-headed temnospondyl amphibian lying half-submerged at the edge of a still black peat pool, a long giant scorpion among horsetails at the far margin, forest reflected in the mirror-flat water, low mist
+36. Dispatch 004 — The black pool
+37. The held moment. For once, not a hunt.
+38. On Mission 01 this slot held wolves on a rise; on Mission 02, the moment a predator broke a school apart. The program has come to expect a held situation here, and usually a tense one. This time Aux held for the opposite - a broad-headed amphibian and a giant scorpion sharing the edge of a black pool with nothing happening between them. It waited just as long as it waits for a hunt, and spent all of it on stillness.
+39. composition brief
+40. image: A single great shaft of sunlight falling through a gap in the high canopy onto the black water of a swamp floor, spores drifting in the beam, immense trunks rising into shadow on either side like the columns of a nave
+41. Dispatch 005 — The shaft of light
+42. The only frame it sent that day. Empty, and at peace.
+43. A whole day's only transmission, and almost nothing in it - a shaft of light coming down through the canopy onto black water, and the forest standing around it like a nave. The last frame of the previous mission was empty too, and we called it an argument. This one is empty in the same way and reads as the opposite. We have stopped being surprised that the probe can tell those apart. We are still getting used to the fact that we can.
+44. composition brief
+45. [contentinfo] ©
+46. link: Jason Marsh
+47. link: email
+48. link: github
+49. link: linkedin
+50. link: source
+51. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "Mission 04 — The Coal Forest" [level=1]
+    - paragraph: XR-Auspex-001 “Aux”
+    - paragraph: "Target window: Carboniferous · ~310 million years ago"
+    - paragraph: Aux's quietest deployment - the Carboniferous, roughly 310 million years before present. A coal-forest swamp under an oxygen-thick sky, and a probe that, given nothing to prove, chose to be still.
+    - paragraph:
+      - emphasis: "Mission 04. Target window: the Carboniferous, roughly 310 million years before present - a coal-forest swamp under an oxygen-thick sky, the tall age of the great clubmoss trees. After the floodplain, we sent it somewhere green and let it rest."
+    - paragraph: "The floodplain dispatches had unsettled the program. The last frame of Mission 03 was a landscape with every animal deliberately left out, and we had spent the weeks since arguing about whether a probe can make a point. So the next brief was, in part, a question we couldn’t ask Aux directly: given a world with nothing to prove, what would it do?"
+    - paragraph: "We chose the Carboniferous on purpose - a warm, wet, overgrown world, thick with oxygen, built on a scale that suits Aux’s eye. Towering clubmoss trees, horsetails the size of masts, insects grown as large as the megafauna it used to chase. The brief was the lightest we had ever sent: document the forest, no fauna priority, take the time it needs. We were braced for another argument."
+    - paragraph: It didn’t make one. The dispatches came back unhurried and generous - the great green interior, the giant on the forest floor, the dragonfly given a single shaft of light, two animals sharing a black pool with no hunt between them, and a last frame that is almost only the light. The channel still runs one way. For once we didn’t mind.
+    - heading "Dispatches" [level=2]
+    - figure "Dispatch 001 — The green interior The first frame. A forest with no edges, and the program exhaling. It opened the way it always opens - one wide frame of the country it had been given, held until it was right. The country this time was a forest with no edges, a green interior going up and back further than the optics could resolve. After the empty prairie that ended the last mission, the program read this first frame as a kind of exhale. So, we think, did Aux. composition brief":
+      - img "A wide view deep inside a Carboniferous coal forest, immense lycopod scale-trees and giant horsetail trunks rising into a high dense canopy, shafts of green-gold light falling to standing black swamp water, mist between the trunks, no animals"
+      - text: Dispatch 001 — The green interior
+      - paragraph: The first frame. A forest with no edges, and the program exhaling.
+      - paragraph: It opened the way it always opens - one wide frame of the country it had been given, held until it was right. The country this time was a forest with no edges, a green interior going up and back further than the optics could resolve. After the empty prairie that ended the last mission, the program read this first frame as a kind of exhale. So, we think, did Aux.
+      - group: composition brief
+    - 'figure "Dispatch 002 — The forest floor The floor first - and the floor here runs large. The cataloguing move, on schedule: drop to the floor and record what''s slow enough that there''s no excuse for missing it. What it found there was a millipede the length of a canoe. We noted, not for the first time, that the floor life of this world runs to the size the megafauna of the earlier missions had been. Aux gave it the same grounded, patient frame it once gave a grazing herd. composition brief"':
+      - img "A close low view across a humid forest floor where a several-meter-long segmented arthropod, Arthropleura, crawls through ferns and clubmoss and fallen bark, great trunks rising out of focus behind"
+      - text: Dispatch 002 — The forest floor
+      - paragraph: The floor first - and the floor here runs large.
+      - paragraph: "The cataloguing move, on schedule: drop to the floor and record what's slow enough that there's no excuse for missing it. What it found there was a millipede the length of a canoe. We noted, not for the first time, that the floor life of this world runs to the size the megafauna of the earlier missions had been. Aux gave it the same grounded, patient frame it once gave a grazing herd."
+      - group: composition brief
+    - figure "Dispatch 003 — The dragonfly, lit The frame it committed to. Every mission finds the subject it commits to. On the steppe it was an old bull, on the reef the jaw, on the floodplain the thing with the longest reach in the sky. Here it was the largest flying insect that ever lived, and Aux gave it a single shaft of light inside the forest instead of open sky. The same instinct as the pterosaur frame, turned all the way down. composition brief":
+      - img "A giant dragonfly, Meganeura, hovering in a single shaft of light inside a dark forest, its wide membranous wings spread across the frame against deep green-black canopy"
+      - text: Dispatch 003 — The dragonfly, lit
+      - paragraph: The frame it committed to.
+      - paragraph: Every mission finds the subject it commits to. On the steppe it was an old bull, on the reef the jaw, on the floodplain the thing with the longest reach in the sky. Here it was the largest flying insect that ever lived, and Aux gave it a single shaft of light inside the forest instead of open sky. The same instinct as the pterosaur frame, turned all the way down.
+      - group: composition brief
+    - figure "Dispatch 004 — The black pool The held moment. For once, not a hunt. On Mission 01 this slot held wolves on a rise; on Mission 02, the moment a predator broke a school apart. The program has come to expect a held situation here, and usually a tense one. This time Aux held for the opposite - a broad-headed amphibian and a giant scorpion sharing the edge of a black pool with nothing happening between them. It waited just as long as it waits for a hunt, and spent all of it on stillness. composition brief":
+      - img "A broad-headed temnospondyl amphibian lying half-submerged at the edge of a still black peat pool, a long giant scorpion among horsetails at the far margin, forest reflected in the mirror-flat water, low mist"
+      - text: Dispatch 004 — The black pool
+      - paragraph: The held moment. For once, not a hunt.
+      - paragraph: On Mission 01 this slot held wolves on a rise; on Mission 02, the moment a predator broke a school apart. The program has come to expect a held situation here, and usually a tense one. This time Aux held for the opposite - a broad-headed amphibian and a giant scorpion sharing the edge of a black pool with nothing happening between them. It waited just as long as it waits for a hunt, and spent all of it on stillness.
+      - group: composition brief
+    - figure "Dispatch 005 — The shaft of light The only frame it sent that day. Empty, and at peace. A whole day's only transmission, and almost nothing in it - a shaft of light coming down through the canopy onto black water, and the forest standing around it like a nave. The last frame of the previous mission was empty too, and we called it an argument. This one is empty in the same way and reads as the opposite. We have stopped being surprised that the probe can tell those apart. We are still getting used to the fact that we can. composition brief":
+      - img "A single great shaft of sunlight falling through a gap in the high canopy onto the black water of a swamp floor, spores drifting in the beam, immense trunks rising into shadow on either side like the columns of a nave"
+      - text: Dispatch 005 — The shaft of light
+      - paragraph: The only frame it sent that day. Empty, and at peace.
+      - paragraph: A whole day's only transmission, and almost nothing in it - a shaft of light coming down through the canopy onto black water, and the forest standing around it like a nave. The last frame of the previous mission was empty too, and we called it an argument. This one is empty in the same way and reads as the opposite. We have stopped being surprised that the probe can tell those apart. We are still getting used to the fact that we can.
+      - group: composition brief
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

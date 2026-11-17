@@ -1,0 +1,83 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/art/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] heading level 1: Art
+11. AI-generated images, grouped by series. An experiment in collaborating with the machine on visuals instead of code.
+12. link: Mission 04 — The Coal Forest5 pieces Aux's quietest deployment - the Carboniferous, roughly 310 million years before present. A coal-forest swamp under an oxygen-thick sky, and a probe that, given nothing to prove, chose to be still.
+13. link: Mission 03 — The Cretaceous Floodplain5 pieces Aux's deepest reach yet - Late Cretaceous, roughly 68 million years before present. A warm floodplain in the last great age of the dinosaurs, documented by a probe that has stopped taking a subject list.
+14. link: Mission 02 — The Devonian Reef5 pieces Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.
+15. link: Mission 01 — The Mammoth Steppe5 pieces Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
+16. link: The Chronoscope Program7 pieces Origin, hardware, and calibration record of XR-Auspex-001 - the cloaked observational probe behind every Chronoscope dispatch.
+17. [contentinfo] ©
+18. link: Jason Marsh
+19. link: email
+20. link: github
+21. link: linkedin
+22. link: source
+23. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - heading "Art" [level=1]
+  - paragraph: AI-generated images, grouped by series. An experiment in collaborating with the machine on visuals instead of code.
+  - link "Mission 04 — The Coal Forest5 pieces Aux's quietest deployment - the Carboniferous, roughly 310 million years before present. A coal-forest swamp under an oxygen-thick sky, and a probe that, given nothing to prove, chose to be still.":
+    - /url: /art/mission-04-coal-forest/
+    - heading "Mission 04 — The Coal Forest5 pieces" [level=2]
+    - paragraph: Aux's quietest deployment - the Carboniferous, roughly 310 million years before present. A coal-forest swamp under an oxygen-thick sky, and a probe that, given nothing to prove, chose to be still.
+  - link "Mission 03 — The Cretaceous Floodplain5 pieces Aux's deepest reach yet - Late Cretaceous, roughly 68 million years before present. A warm floodplain in the last great age of the dinosaurs, documented by a probe that has stopped taking a subject list.":
+    - /url: /art/mission-03-cretaceous-floodplain/
+    - heading "Mission 03 — The Cretaceous Floodplain5 pieces" [level=2]
+    - paragraph: Aux's deepest reach yet - Late Cretaceous, roughly 68 million years before present. A warm floodplain in the last great age of the dinosaurs, documented by a probe that has stopped taking a subject list.
+  - link "Mission 02 — The Devonian Reef5 pieces Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.":
+    - /url: /art/mission-02-devonian-reef/
+    - heading "Mission 02 — The Devonian Reef5 pieces" [level=2]
+    - paragraph: Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.
+  - link "Mission 01 — The Mammoth Steppe5 pieces Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.":
+    - /url: /art/mission-01-mammoth-steppe/
+    - heading "Mission 01 — The Mammoth Steppe5 pieces" [level=2]
+    - paragraph: Aux's first live deployment after calibration - late Pleistocene, roughly 28,000 years before present. The dispatches, in the order they came back.
+  - link "The Chronoscope Program7 pieces Origin, hardware, and calibration record of XR-Auspex-001 - the cloaked observational probe behind every Chronoscope dispatch.":
+    - /url: /art/the-chronoscope-program/
+    - heading "The Chronoscope Program7 pieces" [level=2]
+    - paragraph: Origin, hardware, and calibration record of XR-Auspex-001 - the cloaked observational probe behind every Chronoscope dispatch.
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

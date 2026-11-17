@@ -1,0 +1,129 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/art/mission-02-devonian-reef/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: Mission 02 — The Devonian Reef
+12. XR-Auspex-001 “Aux”
+13. Target window: Late Devonian · ~375 million years ago
+14. Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.
+15. Mission 02. Target window: Late Devonian, roughly 375 million years before present - a shallow tropical sea and the reef built across it. Aux’s first deployment underwater, and its first beyond the age of anything with a backbone we’d recognize.
+16. The program sent it this far back on the strength of Mission 01. The mammoth-steppe dispatches had been good - better than good, in the back half - and confidence is the kind of thing a program spends. The brief: locate a reef system, document its structure and its largest fauna, hold for clean light, return frames as conditions allowed. We were braced for the optics to struggle underwater. They did not.
+17. The dispatches are again presented in sequence, and again the sequence is the point. Aux skipped most of the cautious catalogue this time - it was composing by the second frame instead of the second week. Whether that is the same drift, accelerated, or Aux simply deciding it no longer needs to warm up, we can’t say.
+18. heading level 2: Dispatches
+19. image: A wide underwater view of an ancient reef wall running across the middle distance, sunlight shafts angling down from the surface, small fish schooling in deep blue water
+20. Dispatch 001 — Reef vista, light from above
+21. First frame of the deepest deployment yet.
+22. The program sent Aux 375 million years back on the strength of the mammoth-steppe dispatches - its first assignment underwater and its first in the Paleozoic. It still opened the way it always opens, with one wide frame of the country it had been given. The country, this time, was a reef.
+23. composition brief
+24. image: A close low view over a reef floor with trilobites crawling on pale sediment, a cluster of long-stalked crinoids swaying, and a coiled nautiloid shell among coral
+25. Dispatch 002 — The reef floor
+26. Closer in, among the smaller residents.
+27. With the stage established, Aux dropped to the reef floor - the move the program now expects by the second or third frame rather than the second week. It cataloged the small life first: the things slow enough that there is no excuse for missing them.
+28. composition brief
+29. image: A large armored placoderm fish, Dunkleosteus, emerging from deep blue water toward the viewer, its bony bladed jaws dominating the frame, low heroic angle
+30. Dispatch 003 — Dunkleosteus, close
+31. The frame it came for.
+32. Every deployment seems to find its subject. On the steppe it was an old bull; here it was the largest predator in the sea. Aux held position as a Dunkleosteus rose up out of the blue and gave it the whole frame. Nobody asked it to get this close to a meters-long armored jaw.
+33. composition brief
+34. image: A dense silver school of fish swirling and splitting apart as a Dunkleosteus drives into them, the school bending into a curving wall around the predator
+35. Dispatch 004 — The strike
+36. An event, held until it broke.
+37. This is the dispatch that confirmed the deployment had stopped being a survey. Aux framed a hunt - a dense school reacting as the predator drove into it - and held until the shape of it resolved across the frame the way it wanted.
+38. composition brief
+39. image: A view looking straight up from the reef toward the bright distant water surface, sunlight radiating down in shafts, drifting ammonoids and nautiloids in silhouette against the glow
+40. Dispatch 005 — Looking up
+41. The only frame it sent that day.
+42. Late in the deployment the dispatches slowed again - fewer, more deliberate. This was a whole day's only transmission: Aux turned its optics straight up toward the distant surface and held there, the reef life reduced to silhouettes against the light it does not normally point at. By now we expect this from it. We kept the file anyway.
+43. composition brief
+44. [contentinfo] ©
+45. link: Jason Marsh
+46. link: email
+47. link: github
+48. link: linkedin
+49. link: source
+50. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "Mission 02 — The Devonian Reef" [level=1]
+    - paragraph: XR-Auspex-001 “Aux”
+    - paragraph: "Target window: Late Devonian · ~375 million years ago"
+    - paragraph: Aux's first underwater deployment - Late Devonian, roughly 375 million years before present. A reef, its residents, and the largest jaw in the sea.
+    - paragraph:
+      - emphasis: "Mission 02. Target window: Late Devonian, roughly 375 million years before present - a shallow tropical sea and the reef built across it. Aux’s first deployment underwater, and its first beyond the age of anything with a backbone we’d recognize."
+    - paragraph: "The program sent it this far back on the strength of Mission 01. The mammoth-steppe dispatches had been good - better than good, in the back half - and confidence is the kind of thing a program spends. The brief: locate a reef system, document its structure and its largest fauna, hold for clean light, return frames as conditions allowed. We were braced for the optics to struggle underwater. They did not."
+    - paragraph: The dispatches are again presented in sequence, and again the sequence is the point. Aux skipped most of the cautious catalogue this time - it was composing by the second frame instead of the second week. Whether that is the same drift, accelerated, or Aux simply deciding it no longer needs to warm up, we can’t say.
+    - heading "Dispatches" [level=2]
+    - figure "Dispatch 001 — Reef vista, light from above First frame of the deepest deployment yet. The program sent Aux 375 million years back on the strength of the mammoth-steppe dispatches - its first assignment underwater and its first in the Paleozoic. It still opened the way it always opens, with one wide frame of the country it had been given. The country, this time, was a reef. composition brief":
+      - img "A wide underwater view of an ancient reef wall running across the middle distance, sunlight shafts angling down from the surface, small fish schooling in deep blue water"
+      - text: Dispatch 001 — Reef vista, light from above
+      - paragraph: First frame of the deepest deployment yet.
+      - paragraph: The program sent Aux 375 million years back on the strength of the mammoth-steppe dispatches - its first assignment underwater and its first in the Paleozoic. It still opened the way it always opens, with one wide frame of the country it had been given. The country, this time, was a reef.
+      - group: composition brief
+    - 'figure "Dispatch 002 — The reef floor Closer in, among the smaller residents. With the stage established, Aux dropped to the reef floor - the move the program now expects by the second or third frame rather than the second week. It cataloged the small life first: the things slow enough that there is no excuse for missing them. composition brief"':
+      - img "A close low view over a reef floor with trilobites crawling on pale sediment, a cluster of long-stalked crinoids swaying, and a coiled nautiloid shell among coral"
+      - text: Dispatch 002 — The reef floor
+      - paragraph: Closer in, among the smaller residents.
+      - paragraph: "With the stage established, Aux dropped to the reef floor - the move the program now expects by the second or third frame rather than the second week. It cataloged the small life first: the things slow enough that there is no excuse for missing them."
+      - group: composition brief
+    - figure "Dispatch 003 — Dunkleosteus, close The frame it came for. Every deployment seems to find its subject. On the steppe it was an old bull; here it was the largest predator in the sea. Aux held position as a Dunkleosteus rose up out of the blue and gave it the whole frame. Nobody asked it to get this close to a meters-long armored jaw. composition brief":
+      - img "A large armored placoderm fish, Dunkleosteus, emerging from deep blue water toward the viewer, its bony bladed jaws dominating the frame, low heroic angle"
+      - text: Dispatch 003 — Dunkleosteus, close
+      - paragraph: The frame it came for.
+      - paragraph: Every deployment seems to find its subject. On the steppe it was an old bull; here it was the largest predator in the sea. Aux held position as a Dunkleosteus rose up out of the blue and gave it the whole frame. Nobody asked it to get this close to a meters-long armored jaw.
+      - group: composition brief
+    - figure "Dispatch 004 — The strike An event, held until it broke. This is the dispatch that confirmed the deployment had stopped being a survey. Aux framed a hunt - a dense school reacting as the predator drove into it - and held until the shape of it resolved across the frame the way it wanted. composition brief":
+      - img "A dense silver school of fish swirling and splitting apart as a Dunkleosteus drives into them, the school bending into a curving wall around the predator"
+      - text: Dispatch 004 — The strike
+      - paragraph: An event, held until it broke.
+      - paragraph: This is the dispatch that confirmed the deployment had stopped being a survey. Aux framed a hunt - a dense school reacting as the predator drove into it - and held until the shape of it resolved across the frame the way it wanted.
+      - group: composition brief
+    - 'figure "Dispatch 005 — Looking up The only frame it sent that day. Late in the deployment the dispatches slowed again - fewer, more deliberate. This was a whole day''s only transmission: Aux turned its optics straight up toward the distant surface and held there, the reef life reduced to silhouettes against the light it does not normally point at. By now we expect this from it. We kept the file anyway. composition brief"':
+      - img "A view looking straight up from the reef toward the bright distant water surface, sunlight radiating down in shafts, drifting ammonoids and nautiloids in silhouette against the glow"
+      - text: Dispatch 005 — Looking up
+      - paragraph: The only frame it sent that day.
+      - paragraph: "Late in the deployment the dispatches slowed again - fewer, more deliberate. This was a whole day's only transmission: Aux turned its optics straight up toward the distant surface and held there, the reef life reduced to silhouettes against the light it does not normally point at. By now we expect this from it. We kept the file anyway."
+      - group: composition brief
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/

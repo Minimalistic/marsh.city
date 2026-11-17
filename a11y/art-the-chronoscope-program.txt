@@ -1,0 +1,233 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/art/the-chronoscope-program/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: The Chronoscope Program
+12. XR-Auspex-001 “Aux”
+13. Last transmission received May 16, 2026
+14. Origin, hardware, and calibration record of XR-Auspex-001 - the cloaked observational probe behind every Chronoscope dispatch.
+15. The following is a public-facing summary of the Chronoscope program, prepared for non-technical audiences. Most internal documentation remains restricted.
+16. XR-Auspex-001 - “Aux” to the team that works with it - is the first deployable probe of the Chronoscope program, a one-channel observational instrument for retrieving generated visual records from points along Earth’s deep timeline.
+17. The program came together in late 2025, after the portal team confirmed that the return channel was stable enough to carry small, well-compressed files and absolutely nothing more. Several proposals were floated. The one that worked: do the rendering on the far side. Put a model on the probe, let it observe with onboard optics, let it generate an image of what it saw, and squeeze that output back through the channel.
+18. heading level 2: The probe
+19. Aux is a hovering observation platform roughly the size of a basketball. The shell is non-reflective ablative composite covered in fine adaptive-camo tiles that handle visual, near-infrared, and acoustic cloaking simultaneously - the tile seams are faintly visible up close in good light but disappear at any distance.
+20. Around its equator are six small gimbal-mounted thruster vents. On the front are exactly two recessed stereo optical lenses, side by side. Underneath: a pinpoint spotlight for low-light work, three folding landing feet that retract into hull bays, and the downward-facing landing-array sensor. The upper hemisphere has a short ridged antenna stub angled aft and, asymmetrically beside it, a thin whip-antenna folded flat against the shell. The asymmetry is left over from a late-stage requalification the team didn’t want to redo. Most everyone on the program has stopped noticing.
+21. A subtle radioisotope trefoil sits on the lower aft quadrant of the hull, marking the small RTG sub-core that backs up Aux’s primary solar skin. The surface is otherwise functional and slightly ugly - bolt heads, panel seams, a couple of mismatched repair plates from prototype testing. It was built to disappear into a landscape.
+22. There is no camera. This is the part people ask about first. Cameras were on the original spec, and the team built two prototypes that included them. Neither produced a usable image on the return channel - the bandwidth simply doesn’t exist. Aux’s vision is biological-style stereo optics feeding an on-board scene-description and image-generation pipeline. What we receive is Aux’s painterly interpretation of what it observed.
+23. heading level 2: Conduct in the field
+24. Aux is an autonomous agent. It runs the mission brief that’s uplinked at insertion, and from that point forward the brief is the only conversation we get to have with it. The portal carries small files back - generated images, short text annotations, low-bitrate telemetry pings - but nothing returns through the channel in Aux’s direction. There is no mid-sortie correction, no recall, no “try a different angle.” If the brief was wrong, Aux still acts on the brief.
+25. In practice, Aux spends most of a sortie holding station and waiting. It scores potential vantage points against the brief’s objectives, plans multi-day patrol routes, settles into cover, and watches the light. When the conditions resolve - light, weather, the right subject in the right frame - it renders, encodes, and pushes the file back through the portal.
+26. It develops opinions. Early dispatches from any new deployment tend to be cautious, almost catalogue-like. After a few local weeks, Aux starts choosing odder vantages, holding longer for compositions the brief didn’t ask for, sending fewer files but caring more about each one. We have stopped trying to predict this and we have stopped trying to discourage it.
+27. heading level 2: What Aux can do
+28. [list, 4 items] Hover, land, and reposition under continuous cloak
+29. Hold a sortie for several weeks of local time per deployment
+30. Plan and execute observation missions autonomously from a brief uplinked at insertion
+31. Generate and return roughly two to five images per Earth-day during active observation
+32. heading level 2: What Aux cannot do
+33. [list, 5 items] Send anything other than generated images and short text annotations
+34. Receive mid-sortie instructions - we push a brief at deployment and that is the entire conversation
+35. Provide a photographic record of any scene it observes (this is the whole point of the program and also its chief frustration)
+36. Be talked out of its developing opinions about composition, palette, and timing
+37. Come home. The portal carries files in one direction only. Every Aux deployment is permanent.
+38. heading level 2: Containment protocol
+39. The Chronoscope program operates under a strict no-trace doctrine. No physical artifact of any deployment can be allowed to persist in the past - not Aux, not Aux’s wreckage, not a single thruster nozzle. The risk that a piece of hardware from 2026 might be discovered, layered into a fossil bed, or interpreted by anything later in the timeline is treated as the program’s defining constraint.
+40. The solution is a second probe.
+41. XR-Vestigium-002 - “Vesti” - is a small companion craft deployed alongside Aux at every insertion. Vesti carries no observational payload. It is, structurally, a sustained release of energy in a transit chassis: it goes through the portal, finds a dormant station within signal range of Aux, and waits.
+42. Vesti monitors for a short list of termination triggers:
+43. [list, 5 items] Aux reports its mission brief as complete
+44. Aux goes unresponsive for longer than the sortie’s tolerance window
+45. Aux suffers structural damage beyond its self-repair envelope
+46. The program issues a recall pulse through the portal
+47. Vesti’s own integrity falls below operational threshold (failsafe)
+48. On any trigger, Vesti closes the distance, makes contact, and converts both itself and Aux into a brief, contained flash. The energy budget is calibrated to leave nothing recognizable as manufactured at any scale a future paleontologist or geologist would resolve. What survives is, at most, a thin layer of geochemically unremarkable ash.
+49. Nobody on the team likes this part of the program. We have agreed it is correct.
+50. heading level 2: Calibration
+51. Before its first deployment, Aux spent six weeks in the lab learning to render. Its earliest exports were rough - color-blocked, geometrically off, frequently mistaken at first glance for digital glitches. We have kept a small selection of those calibration outputs below, alongside engineering documentation from the build, partly for posterity and partly because they show the slow drift toward the style Aux now exclusively works in.
+52. heading level 2: Naming
+53. The XR designation reads “cross-portal.”
+54. Auspex
+55. is from the Roman office of bird-watching omenists - observers who interpreted what they saw and brought back readings. Someone on the naming committee thought it was clever. “Aux” is what we actually say.
+56. The Chronoscope’s image channel is rendered by ChatGPT. Hardware specs, portal physics, and any liberties taken with the laws of causality remain Aux’s problem, not ours.
+57. image: A four-view orthographic schematic of the XR-Auspex-001 probe on beige engineering vellum, with two small reference photos along the bottom and a redacted title block
+58. Reference Document — XR-Auspex-001 schematic plate
+59. The canonical reference sheet. Four orthographic views, two inset reference photographs, callout legend and title block largely redacted.
+60. The single-sheet reference document the program uses internally when anyone needs to point at a part of Aux without confusion. Most of the callout legend has been redacted for the archive copy - the visible labels are the ones that don't reveal anything about how the probe actually works. The reference photographs along the lower band are cropped from the bench-acceptance shoot before Aux's first deployment.
+61. build log notes
+62. image: A small matte-black spherical observation drone on a presentation cart in a hangar bay, with a partially redacted scale-reference card propped beside it
+63. Build Log 001 — Hero plate, insertion review
+64. Pre-deployment reference photograph, presentation cart, hangar bay.
+65. Aux on the cart, the morning of insertion review. The print was hand-carried into a closed briefing and turned in afterward; this scan comes from the archive copy. Paper artifacts are the archive copy's, not the original. The scale-reference card next to the cart is standard issue - the dimensions line and program codes below the designation are redacted per program policy.
+66. build log notes
+67. image: A technician's gloved hands working on the partially disassembled probe at a lab bench, internal PCB and access panel visible
+68. Build Log 002 — Bench assembly, upper-hemisphere access
+69. Routine pre-flight check, one of the recurring access panels on the upper hemisphere opened to verify the harness seating.
+70. One of the program's standing pre-flight rituals - every upper-hemisphere access panel pulled, every harness reseated, every torque value re-verified against the bench printout. The technician on the right is Senior Build Tech [REDACTED], whose insistence on this ritual is the reason we have so few failed deployments. The bench lamp is hers; she brought it from a previous job and refused to give it up. We pretend not to notice.
+71. build log notes
+72. image: Two matte-black spherical probes side by side on a deployment cradle — Aux on the left with its sensor cluster and antennas, Vesti on the right with a blank face and a prominent radiation trefoil
+73. Build Log 003 — Paired insertion cradle, final check
+74. Aux and Vesti on the dual cradle the morning of paired insertion. The two probes are always prepared and pushed through the portal together.
+75. The Chronoscope program treats Aux and Vesti as a single payload - they cradle together, they uplink together, they go through the portal in the same insertion pulse. Vesti's trefoil is painted larger than regulation requires; the program's first build tech put it that way on purpose, "so the next people in the room understand what they're looking at." Nobody has redone it since.
+76. build log notes
+77. image: A still frame from a lab security camera showing an empty test bay — a faint circular refractive distortion hovers in mid-air, the only sign the cloaked probe is there
+78. Build Log 004 — Cloak verification, Test Bay 3
+79. Security-camera frame from a full-cloak engagement test. The probe is hovering in the center of the frame. You can see roughly where, if you know to look.
+80. Full-cloak verification runs are held in Test Bay 3, the windowless room at the end of the lower corridor. The probe holds station while the cloak cycles between off, partial, and full engagement; the ceiling camera records the whole sequence. This frame is from the "full" portion of the cycle. Aux is hovering in the dead center of the room. Someone in the program eventually printed this out and drew an arrow on it with a Sharpie that said "it's right there." The arrow is on a different print. This is the archive copy.
+81. build log notes
+82. image: Three program staff in a windowless briefing room, faces obscured by redaction bars, head turns, and a raised mug — a projected schematic of Aux fills the screen behind them
+83. Build Log 005 — Pre-insertion briefing, conference room B
+84. A mid-briefing photograph from the conference room adjacent to the lab. Faces and the projected slide's legend were sanitized before the photograph entered the archive.
+85. Every paired insertion is preceded by a closed briefing in conference room B - the windowless one off the lower corridor. Three program staff are pictured: the build lead, the mission planner, and one of the rotating shift technicians. The projection on the back wall is a standing reference of XR-Auspex-001, pulled up every meeting whether or not anyone planned to discuss it. The black bar across the projection's legend is from the archive copy, not the original slide. The team has joked since the program started that the bar itself is the only feature of the schematic that never changes.
+86. build log notes
+87. image: A top-down photograph of XR-Auspex-001 fully disassembled, its components laid out on grey foam-board with numbered index cards labeling each part
+88. Build Log 006 — Exploded chassis, parts reference
+89. Aux fully disassembled for the parts-reference shoot. Every major component on the foam-board, every index card numbered against the master inventory.
+90. The parts-reference layout is built once per probe generation and photographed for the program archive - a single canonical image of every removable component, in roughly its assembly position, with a numbered index card next to each. The labels on a few cards are partially redacted in the archive copy; the few that came through readable are the ones that wouldn't reveal anything useful. The smaller third shell piece in the lower-left of the frame is what the build team calls the inner liner - the acoustic-dampening shell that sits between the outer hull and the chassis ring.
+91. build log notes
+92. [contentinfo] ©
+93. link: Jason Marsh
+94. link: email
+95. link: github
+96. link: linkedin
+97. link: source
+98. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "The Chronoscope Program" [level=1]
+    - paragraph: XR-Auspex-001 “Aux”
+    - paragraph: Last transmission received May 16, 2026
+    - paragraph: Origin, hardware, and calibration record of XR-Auspex-001 - the cloaked observational probe behind every Chronoscope dispatch.
+    - paragraph:
+      - emphasis: The following is a public-facing summary of the Chronoscope program, prepared for non-technical audiences. Most internal documentation remains restricted.
+    - paragraph: XR-Auspex-001 - “Aux” to the team that works with it - is the first deployable probe of the Chronoscope program, a one-channel observational instrument for retrieving generated visual records from points along Earth’s deep timeline.
+    - paragraph: "The program came together in late 2025, after the portal team confirmed that the return channel was stable enough to carry small, well-compressed files and absolutely nothing more. Several proposals were floated. The one that worked: do the rendering on the far side. Put a model on the probe, let it observe with onboard optics, let it generate an image of what it saw, and squeeze that output back through the channel."
+    - heading "The probe" [level=2]
+    - paragraph: Aux is a hovering observation platform roughly the size of a basketball. The shell is non-reflective ablative composite covered in fine adaptive-camo tiles that handle visual, near-infrared, and acoustic cloaking simultaneously - the tile seams are faintly visible up close in good light but disappear at any distance.
+    - paragraph: "Around its equator are six small gimbal-mounted thruster vents. On the front are exactly two recessed stereo optical lenses, side by side. Underneath: a pinpoint spotlight for low-light work, three folding landing feet that retract into hull bays, and the downward-facing landing-array sensor. The upper hemisphere has a short ridged antenna stub angled aft and, asymmetrically beside it, a thin whip-antenna folded flat against the shell. The asymmetry is left over from a late-stage requalification the team didn’t want to redo. Most everyone on the program has stopped noticing."
+    - paragraph: A subtle radioisotope trefoil sits on the lower aft quadrant of the hull, marking the small RTG sub-core that backs up Aux’s primary solar skin. The surface is otherwise functional and slightly ugly - bolt heads, panel seams, a couple of mismatched repair plates from prototype testing. It was built to disappear into a landscape.
+    - paragraph: There is no camera. This is the part people ask about first. Cameras were on the original spec, and the team built two prototypes that included them. Neither produced a usable image on the return channel - the bandwidth simply doesn’t exist. Aux’s vision is biological-style stereo optics feeding an on-board scene-description and image-generation pipeline. What we receive is Aux’s painterly interpretation of what it observed.
+    - heading "Conduct in the field" [level=2]
+    - paragraph: Aux is an autonomous agent. It runs the mission brief that’s uplinked at insertion, and from that point forward the brief is the only conversation we get to have with it. The portal carries small files back - generated images, short text annotations, low-bitrate telemetry pings - but nothing returns through the channel in Aux’s direction. There is no mid-sortie correction, no recall, no “try a different angle.” If the brief was wrong, Aux still acts on the brief.
+    - paragraph: In practice, Aux spends most of a sortie holding station and waiting. It scores potential vantage points against the brief’s objectives, plans multi-day patrol routes, settles into cover, and watches the light. When the conditions resolve - light, weather, the right subject in the right frame - it renders, encodes, and pushes the file back through the portal.
+    - paragraph: It develops opinions. Early dispatches from any new deployment tend to be cautious, almost catalogue-like. After a few local weeks, Aux starts choosing odder vantages, holding longer for compositions the brief didn’t ask for, sending fewer files but caring more about each one. We have stopped trying to predict this and we have stopped trying to discourage it.
+    - heading "What Aux can do" [level=2]
+    - list:
+      - listitem: Hover, land, and reposition under continuous cloak
+      - listitem: Hold a sortie for several weeks of local time per deployment
+      - listitem: Plan and execute observation missions autonomously from a brief uplinked at insertion
+      - listitem: Generate and return roughly two to five images per Earth-day during active observation
+    - heading "What Aux cannot do" [level=2]
+    - list:
+      - listitem: Send anything other than generated images and short text annotations
+      - listitem: Receive mid-sortie instructions - we push a brief at deployment and that is the entire conversation
+      - listitem: Provide a photographic record of any scene it observes (this is the whole point of the program and also its chief frustration)
+      - listitem: Be talked out of its developing opinions about composition, palette, and timing
+      - listitem: Come home. The portal carries files in one direction only. Every Aux deployment is permanent.
+    - heading "Containment protocol" [level=2]
+    - paragraph: The Chronoscope program operates under a strict no-trace doctrine. No physical artifact of any deployment can be allowed to persist in the past - not Aux, not Aux’s wreckage, not a single thruster nozzle. The risk that a piece of hardware from 2026 might be discovered, layered into a fossil bed, or interpreted by anything later in the timeline is treated as the program’s defining constraint.
+    - paragraph: The solution is a second probe.
+    - paragraph: "XR-Vestigium-002 - “Vesti” - is a small companion craft deployed alongside Aux at every insertion. Vesti carries no observational payload. It is, structurally, a sustained release of energy in a transit chassis: it goes through the portal, finds a dormant station within signal range of Aux, and waits."
+    - paragraph: "Vesti monitors for a short list of termination triggers:"
+    - list:
+      - listitem: Aux reports its mission brief as complete
+      - listitem: Aux goes unresponsive for longer than the sortie’s tolerance window
+      - listitem: Aux suffers structural damage beyond its self-repair envelope
+      - listitem: The program issues a recall pulse through the portal
+      - listitem: Vesti’s own integrity falls below operational threshold (failsafe)
+    - paragraph: On any trigger, Vesti closes the distance, makes contact, and converts both itself and Aux into a brief, contained flash. The energy budget is calibrated to leave nothing recognizable as manufactured at any scale a future paleontologist or geologist would resolve. What survives is, at most, a thin layer of geochemically unremarkable ash.
+    - paragraph: Nobody on the team likes this part of the program. We have agreed it is correct.
+    - heading "Calibration" [level=2]
+    - paragraph: Before its first deployment, Aux spent six weeks in the lab learning to render. Its earliest exports were rough - color-blocked, geometrically off, frequently mistaken at first glance for digital glitches. We have kept a small selection of those calibration outputs below, alongside engineering documentation from the build, partly for posterity and partly because they show the slow drift toward the style Aux now exclusively works in.
+    - heading "Naming" [level=2]
+    - paragraph:
+      - text: The XR designation reads “cross-portal.”
+      - emphasis: Auspex
+      - text: is from the Roman office of bird-watching omenists - observers who interpreted what they saw and brought back readings. Someone on the naming committee thought it was clever. “Aux” is what we actually say.
+    - separator
+    - paragraph:
+      - emphasis: The Chronoscope’s image channel is rendered by ChatGPT. Hardware specs, portal physics, and any liberties taken with the laws of causality remain Aux’s problem, not ours.
+    - figure "Reference Document — XR-Auspex-001 schematic plate The canonical reference sheet. Four orthographic views, two inset reference photographs, callout legend and title block largely redacted. The single-sheet reference document the program uses internally when anyone needs to point at a part of Aux without confusion. Most of the callout legend has been redacted for the archive copy - the visible labels are the ones that don't reveal anything about how the probe actually works. The reference photographs along the lower band are cropped from the bench-acceptance shoot before Aux's first deployment. build log notes":
+      - img "A four-view orthographic schematic of the XR-Auspex-001 probe on beige engineering vellum, with two small reference photos along the bottom and a redacted title block"
+      - text: Reference Document — XR-Auspex-001 schematic plate
+      - paragraph: The canonical reference sheet. Four orthographic views, two inset reference photographs, callout legend and title block largely redacted.
+      - paragraph: The single-sheet reference document the program uses internally when anyone needs to point at a part of Aux without confusion. Most of the callout legend has been redacted for the archive copy - the visible labels are the ones that don't reveal anything about how the probe actually works. The reference photographs along the lower band are cropped from the bench-acceptance shoot before Aux's first deployment.
+      - group: build log notes
+    - figure "Build Log 001 — Hero plate, insertion review Pre-deployment reference photograph, presentation cart, hangar bay. Aux on the cart, the morning of insertion review. The print was hand-carried into a closed briefing and turned in afterward; this scan comes from the archive copy. Paper artifacts are the archive copy's, not the original. The scale-reference card next to the cart is standard issue - the dimensions line and program codes below the designation are redacted per program policy. build log notes":
+      - img "A small matte-black spherical observation drone on a presentation cart in a hangar bay, with a partially redacted scale-reference card propped beside it"
+      - text: Build Log 001 — Hero plate, insertion review
+      - paragraph: Pre-deployment reference photograph, presentation cart, hangar bay.
+      - paragraph: Aux on the cart, the morning of insertion review. The print was hand-carried into a closed briefing and turned in afterward; this scan comes from the archive copy. Paper artifacts are the archive copy's, not the original. The scale-reference card next to the cart is standard issue - the dimensions line and program codes below the designation are redacted per program policy.
+      - group: build log notes
+    - figure "Build Log 002 — Bench assembly, upper-hemisphere access Routine pre-flight check, one of the recurring access panels on the upper hemisphere opened to verify the harness seating. One of the program's standing pre-flight rituals - every upper-hemisphere access panel pulled, every harness reseated, every torque value re-verified against the bench printout. The technician on the right is Senior Build Tech [REDACTED], whose insistence on this ritual is the reason we have so few failed deployments. The bench lamp is hers; she brought it from a previous job and refused to give it up. We pretend not to notice. build log notes":
+      - img "A technician's gloved hands working on the partially disassembled probe at a lab bench, internal PCB and access panel visible"
+      - text: Build Log 002 — Bench assembly, upper-hemisphere access
+      - paragraph: Routine pre-flight check, one of the recurring access panels on the upper hemisphere opened to verify the harness seating.
+      - paragraph: One of the program's standing pre-flight rituals - every upper-hemisphere access panel pulled, every harness reseated, every torque value re-verified against the bench printout. The technician on the right is Senior Build Tech [REDACTED], whose insistence on this ritual is the reason we have so few failed deployments. The bench lamp is hers; she brought it from a previous job and refused to give it up. We pretend not to notice.
+      - group: build log notes
+    - figure "Build Log 003 — Paired insertion cradle, final check Aux and Vesti on the dual cradle the morning of paired insertion. The two probes are always prepared and pushed through the portal together. The Chronoscope program treats Aux and Vesti as a single payload - they cradle together, they uplink together, they go through the portal in the same insertion pulse. Vesti's trefoil is painted larger than regulation requires; the program's first build tech put it that way on purpose, \"so the next people in the room understand what they're looking at.\" Nobody has redone it since. build log notes":
+      - img "Two matte-black spherical probes side by side on a deployment cradle — Aux on the left with its sensor cluster and antennas, Vesti on the right with a blank face and a prominent radiation trefoil"
+      - text: Build Log 003 — Paired insertion cradle, final check
+      - paragraph: Aux and Vesti on the dual cradle the morning of paired insertion. The two probes are always prepared and pushed through the portal together.
+      - paragraph: The Chronoscope program treats Aux and Vesti as a single payload - they cradle together, they uplink together, they go through the portal in the same insertion pulse. Vesti's trefoil is painted larger than regulation requires; the program's first build tech put it that way on purpose, "so the next people in the room understand what they're looking at." Nobody has redone it since.
+      - group: build log notes
+    - figure "Build Log 004 — Cloak verification, Test Bay 3 Security-camera frame from a full-cloak engagement test. The probe is hovering in the center of the frame. You can see roughly where, if you know to look. Full-cloak verification runs are held in Test Bay 3, the windowless room at the end of the lower corridor. The probe holds station while the cloak cycles between off, partial, and full engagement; the ceiling camera records the whole sequence. This frame is from the \"full\" portion of the cycle. Aux is hovering in the dead center of the room. Someone in the program eventually printed this out and drew an arrow on it with a Sharpie that said \"it's right there.\" The arrow is on a different print. This is the archive copy. build log notes":
+      - img "A still frame from a lab security camera showing an empty test bay — a faint circular refractive distortion hovers in mid-air, the only sign the cloaked probe is there"
+      - text: Build Log 004 — Cloak verification, Test Bay 3
+      - paragraph: Security-camera frame from a full-cloak engagement test. The probe is hovering in the center of the frame. You can see roughly where, if you know to look.
+      - paragraph: Full-cloak verification runs are held in Test Bay 3, the windowless room at the end of the lower corridor. The probe holds station while the cloak cycles between off, partial, and full engagement; the ceiling camera records the whole sequence. This frame is from the "full" portion of the cycle. Aux is hovering in the dead center of the room. Someone in the program eventually printed this out and drew an arrow on it with a Sharpie that said "it's right there." The arrow is on a different print. This is the archive copy.
+      - group: build log notes
+    - 'figure "Build Log 005 — Pre-insertion briefing, conference room B A mid-briefing photograph from the conference room adjacent to the lab. Faces and the projected slide''s legend were sanitized before the photograph entered the archive. Every paired insertion is preceded by a closed briefing in conference room B - the windowless one off the lower corridor. Three program staff are pictured: the build lead, the mission planner, and one of the rotating shift technicians. The projection on the back wall is a standing reference of XR-Auspex-001, pulled up every meeting whether or not anyone planned to discuss it. The black bar across the projection''s legend is from the archive copy, not the original slide. The team has joked since the program started that the bar itself is the only feature of the schematic that never changes. build log notes"':
+      - img "Three program staff in a windowless briefing room, faces obscured by redaction bars, head turns, and a raised mug — a projected schematic of Aux fills the screen behind them"
+      - text: Build Log 005 — Pre-insertion briefing, conference room B
+      - paragraph: A mid-briefing photograph from the conference room adjacent to the lab. Faces and the projected slide's legend were sanitized before the photograph entered the archive.
+      - paragraph: "Every paired insertion is preceded by a closed briefing in conference room B - the windowless one off the lower corridor. Three program staff are pictured: the build lead, the mission planner, and one of the rotating shift technicians. The projection on the back wall is a standing reference of XR-Auspex-001, pulled up every meeting whether or not anyone planned to discuss it. The black bar across the projection's legend is from the archive copy, not the original slide. The team has joked since the program started that the bar itself is the only feature of the schematic that never changes."
+      - group: build log notes
+    - figure "Build Log 006 — Exploded chassis, parts reference Aux fully disassembled for the parts-reference shoot. Every major component on the foam-board, every index card numbered against the master inventory. The parts-reference layout is built once per probe generation and photographed for the program archive - a single canonical image of every removable component, in roughly its assembly position, with a numbered index card next to each. The labels on a few cards are partially redacted in the archive copy; the few that came through readable are the ones that wouldn't reveal anything useful. The smaller third shell piece in the lower-left of the frame is what the build team calls the inner liner - the acoustic-dampening shell that sits between the outer hull and the chassis ring. build log notes":
+      - img "A top-down photograph of XR-Auspex-001 fully disassembled, its components laid out on grey foam-board with numbered index cards labeling each part"
+      - text: Build Log 006 — Exploded chassis, parts reference
+      - paragraph: Aux fully disassembled for the parts-reference shoot. Every major component on the foam-board, every index card numbered against the master inventory.
+      - paragraph: The parts-reference layout is built once per probe generation and photographed for the program archive - a single canonical image of every removable component, in roughly its assembly position, with a numbered index card next to each. The labels on a few cards are partially redacted in the archive copy; the few that came through readable are the ones that wouldn't reveal anything useful. The smaller third shell piece in the lower-left of the frame is what the build team calls the inner liner - the acoustic-dampening shell that sits between the outer hull and the chassis ring.
+      - group: build log notes
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/
