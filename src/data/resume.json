@@ -10,7 +10,7 @@
     "github": "https://github.com/Minimalistic",
     "githubLabel": "github.com/Minimalistic"
   },
-  "summary": "Director of Technology at a nonprofit serving people with disabilities and older adults. 14 years in IT, the last six in assistive technology and five leading teams. Restructured AT billing and grew annual service revenue from $17K to over $200K within a year. Designs, ships, and operates production software by directing AI coding agents (Claude Code), including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. ATACP-certified (CSUN).",
+  "summary": "Director of Technology at a nonprofit serving people with disabilities and older adults. 14 years in IT, including six in assistive technology and five leading teams. Restructured AT billing and grew annual service revenue from $17K to over $200K within a year. Designs, ships, and operates production software by directing AI coding agents (Claude Code), including WhatCanHelp, a free assistive-technology discovery site covering thousands of products. ATACP-certified (CSUN).",
   "sectionOrder": [
     "experience",
     "projects",
@@ -23,13 +23,13 @@
       "name": "WhatCanHelp",
       "href": "https://whatcanhelp.com",
       "featured": true,
-      "desc": " (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep a catalog of thousands of products affordable to maintain, with schema checks against fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted and in production."
+      "desc": " (whatcanhelp.com) - free assistive-technology discovery site for families, clients, and AT professionals who otherwise search vendor catalogs one at a time. Specified and shipped a freeform needs intake that returns a matched shortlist, complexity ratings so users know what setup a device needs, state-by-state borrowing and funding directories, and PDF reports for funding meetings and IEP appendices. Chose batch AI classification with prompt caching to keep a catalog of thousands of products affordable to maintain, with schema checks that catch fabricated product data. Built with AI coding agents; Node/Express + SQLite, self-hosted and in production."
     },
     {
       "id": "radiogridxl",
       "name": "RadioGrid",
       "href": "/projects/radiogridxl/",
-      "desc": " - internet radio for older adults and people with disabilities, deployed at my organization and piloted with older adults. Large buttons, no accounts or ads, screen-reader support, and low-vision, high-contrast and night themes. Designed a technician-only settings panel so staff set up stations from a curated directory without exposing that complexity to the listener."
+      "desc": " - internet radio for older adults and people with disabilities, deployed at my organization and piloted there. Large buttons, no accounts or ads, screen-reader support, and low-vision, high-contrast and night themes. Designed a technician-only settings panel so staff set up stations from a curated directory without exposing that complexity to the listener."
     },
     {
       "id": "buttongriddle",
@@ -72,11 +72,11 @@
         },
         {
           "id": "power-automate",
-          "text": "Built expense and donation tracking in Power Automate - staff submit receipts and confirm card charges through forms that feed Excel, so the accountant no longer chases them by email"
+          "text": "Built expense and donation tracking in Power Automate - staff submit receipts and confirm card charges through forms that feed Excel, so the accountant no longer chases staff by email"
         },
         {
           "id": "ai-adoption",
-          "text": "Set the organization's guidance on generative AI - what the tools are for and what client or health information never goes into them - and ran a three-person Microsoft 365 Copilot pilot that leadership still uses daily; wider rollout held on cost"
+          "text": "Set the organization's guidance on generative AI - what the tools are for and what client or health information stays out of them - and ran a three-person Microsoft 365 Copilot pilot; leadership still uses it, with wider rollout held on cost and timing"
         },
         {
           "id": "hipaa-policy",
@@ -84,7 +84,7 @@
         },
         {
           "id": "embed-clients",
-          "text": "Embed with clients to assess needs and recommend assistive-technology solutions, and act as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use"
+          "text": "Work directly with clients to assess needs and recommend assistive technology, and serve as the in-house tech resource for colleagues - setting up technology on-site and training staff on the tools they use"
         },
         {
           "id": "accessible-docs-training",
@@ -100,7 +100,7 @@
       "bullets": [
         {
           "id": "systems-audit",
-          "text": "Supervised two direct reports; conducted a full systems audit and established documentation and standardized processes across the organization"
+          "text": "Supervised two direct reports and standardized IT across the organization, starting with a full systems audit and documentation"
         },
         {
           "id": "m365-migration",
@@ -164,7 +164,7 @@
     },
     {
       "label": "Infrastructure",
-      "items": "Active Directory, Windows Server, Proxmox VE, DNS/DHCP, VPN, Firewall Management, Linux Administration, Tailscale"
+      "items": "Active Directory, Windows Server, Proxmox VE, DNS/DHCP, VPN, firewall management, Linux administration, Tailscale"
     },
     {
       "label": "Security & Operations",
