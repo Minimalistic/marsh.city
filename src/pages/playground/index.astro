@@ -12,7 +12,7 @@ const artSeries = (await getCollection('art'))
   </div>
   {items.map((item) => (
     <a class="card" href={`/playground/${item.id}/`}>
-      <h3>{item.data.title}</h3>
+      <h2>{item.data.title}</h2>
       <p class="meta">{item.data.description}</p>
     </a>
   ))}

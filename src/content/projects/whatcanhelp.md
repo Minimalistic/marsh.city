@@ -85,7 +85,7 @@ Node.js and Express, SQLite, and plain JavaScript in the browser. The Anthropic 
 
 Products are tagged across seven dimensions: need, product type, platform, setup tier, price band, funding eligibility and age range. A product can sit under several needs without being duplicated.
 
-<div id="whatcanhelp-pipeline" class="mermaid-animated" data-animate-order="A,B,C,D,E,F,G" aria-label="WhatCanHelp data pipeline: scrapers feed product data into SQLite, Claude writes descriptions and classifications, then Match uses that data to produce a shortlist and PDF report.">
+<div id="whatcanhelp-pipeline" class="mermaid-animated" role="img" data-animate-order="A,B,C,D,E,F,G" aria-label="WhatCanHelp data pipeline: scrapers feed product data into SQLite, Claude writes descriptions and classifications, then Match uses that data to produce a shortlist and PDF report.">
 
 ```mermaid
 flowchart TD

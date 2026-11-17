@@ -14,8 +14,8 @@ and refining what the site is, so it's more helpful to the people who use it.
 adults and people with disabilities. Recent releases have been about access: a
 station plays when you say its name with Voice Control, and there's an optional
 Settings button for people setting up their own radio by switch, voice or
-screen reader. The code is now open source on
-[GitHub](https://github.com/Marshworks-dev/RadioGrid), under the GPL.
+screen reader. The code is now
+[open source on GitHub](https://github.com/Marshworks-dev/RadioGrid), under the GPL.
 
 **marsh.city** is this site. I'm rewriting the older pages so they read like
 me.

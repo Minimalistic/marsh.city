@@ -266,6 +266,12 @@ pre {
   position: relative;
 }
 
+/* Shiki writes the light theme's colors inline and the dark theme's as
+   --shiki-dark; switch to those in the dark scheme (set as data-theme by
+   the head script, like every other dark rule here). */
+:root[data-theme="dark"] .astro-code,
+:root[data-theme="dark"] .astro-code span { color: var(--shiki-dark) !important; }
+
 /* --- code copy button --- */
 
 .code-copy {
@@ -887,6 +893,8 @@ footer.site-foot a:hover {
   box-shadow: var(--shadow), var(--shadow-glow);
   transform: translateY(-1px);
 }
+/* h2 on index pages (cards sit right under the h1), h3 under a section h2 */
+.card h2,
 .card h3 {
   margin: 0 0 0.4rem;
   font-size: 1.3rem;
@@ -1005,7 +1013,8 @@ footer.site-foot a:hover {
   font-size: 0.85rem;
   padding: 0.5em 1.25em;
   border-radius: var(--radius-sm);
-  background: var(--leaf);
+  /* --accent, not --leaf: cream text on leaf green is 2.6:1 in the light scheme */
+  background: var(--accent);
   color: var(--bg);
   text-decoration: none;
   font-weight: 500;
@@ -1015,7 +1024,7 @@ footer.site-foot a:hover {
 }
 
 .live-demo-btn:hover {
-  background: var(--leaf-bright);
+  background: color-mix(in srgb, var(--accent) 80%, var(--accent-bright));
   transform: translateY(-1px);
   box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--leaf) 30%, transparent);
 }

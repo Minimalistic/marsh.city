@@ -41,6 +41,6 @@ I'm interested in AI integration, assistive technology, and the places they
 overlap. If something here catches your attention, reach out.
 
 - Email: [jason@marsh.city](mailto:jason@marsh.city)
-- LinkedIn: [jason-marsh](https://www.linkedin.com/in/jason-marsh)
+- LinkedIn: [linkedin.com/in/jason-marsh](https://www.linkedin.com/in/jason-marsh)
 - GitHub: [Minimalistic](https://github.com/Minimalistic)
 - Art: [ArtStation](https://jasonhmarsh.artstation.com)

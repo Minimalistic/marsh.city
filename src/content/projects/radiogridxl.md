@@ -67,7 +67,7 @@ One HTML file. Around 8,000 lines of vanilla HTML, CSS, and JavaScript. Not how 
 
 A profile system supports branded variants - a build script swaps in custom station lists, logos, and PINs for different deployments. The Lighthouse Center deployment runs as a Docker container. There's also an Android APK build path using Gradle.
 
-<div id="radiogrid-deploy" class="mermaid-animated" data-animate-order="A,B,C,D,E,F,G" aria-label="RadioGrid deployment pipeline: a single HTML source file and a profile config feed into a build script, producing a branded HTML file that deploys to Docker, Android APK, or as a local file.">
+<div id="radiogrid-deploy" class="mermaid-animated" role="img" data-animate-order="A,B,C,D,E,F,G" aria-label="RadioGrid deployment pipeline: a single HTML source file and a profile config feed into a build script, producing a branded HTML file that deploys to Docker, Android APK, or as a local file.">
 
 ```mermaid
 flowchart TD

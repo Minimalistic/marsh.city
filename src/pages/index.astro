@@ -76,7 +76,7 @@ const showcase = await Promise.all(showcaseList.map(async (item, i) => {
 
   <div class="section-header">
     <h2>Projects</h2>
-    <a href="/projects/">View all</a>
+    <a href="/projects/" aria-label="View all projects">View all</a>
   </div>
   {projects.map((p) => {
     const ago = p.data.updated ? (() => {
@@ -89,7 +89,7 @@ const showcase = await Promise.all(showcaseList.map(async (item, i) => {
     })() : null;
     return (
       <a class="card" href={`/projects/${p.id}/`}>
-        <h3>{p.data.title}<span class={`status status-${p.data.status}`} aria-label={({ idea: 'Idea', wip: 'Work in progress', shipped: 'Shipped', archived: 'Archived' })[p.data.status]}>{p.data.status}</span>{p.data.url && <span class="demo-badge">live demo</span>}</h3>
+        <h3>{p.data.title}<span class={`status status-${p.data.status}`}>{p.data.status}</span>{p.data.url && <span class="demo-badge">live demo</span>}</h3>
         <p class="meta">{p.data.description}</p>
         {ago && <p class="meta" style="margin-top:0.25rem;font-size:0.78rem;color:var(--fg-muted)">updated {ago}</p>}
         {p.data.tags && p.data.tags.length > 0 && (
@@ -105,7 +105,7 @@ const showcase = await Promise.all(showcaseList.map(async (item, i) => {
     <>
       <div class="section-header">
         <h2>Writing</h2>
-        <a href="/posts/">View all</a>
+        <a href="/posts/" aria-label="View all posts">View all</a>
       </div>
       {posts.map((p) => (
         <a class="card" href={`/posts/${p.id}/`}>

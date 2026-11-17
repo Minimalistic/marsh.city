@@ -26,7 +26,9 @@ export default defineConfig({
   },
   markdown: {
     shikiConfig: {
-      theme: 'github-dark-dimmed',
+      // one palette per color scheme: the dark theme's pale text was
+      // unreadable (1.7:1) on the light scheme's cream code background
+      themes: { light: 'github-light-high-contrast', dark: 'github-dark-dimmed' },
       wrap: true,
     },
     // Astro 7 defaults to its own Sätteri processor, which has no rehype hook;

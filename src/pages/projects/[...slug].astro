@@ -14,10 +14,10 @@ const guide = await getEntry('guides', project.id);
 ---
 <Post title={project.data.title} description={project.data.description} image={project.data.image} imageAlt={project.data.imageAlt} wide>
   <div class="project-meta">
-    <span class="status" aria-label={({ idea: 'Idea', wip: 'Work in progress', shipped: 'Shipped', archived: 'Archived' })[project.data.status]}>{project.data.status}</span>
+    <span class="status">{project.data.status}</span>
     {project.data.repo && <a href={project.data.repo} class="project-link">repo</a>}
     {project.data.updated && <span class="meta">Updated {project.data.updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>}
-    <span class="byline">Written by <a href="/resume/">Jason Marsh</a></span>
+    <span class="byline">Written by <a href="/resume/" aria-label="Jason Marsh, resume">Jason Marsh</a></span>
   </div>
   {!project.data.hideTagline && <p class="tagline">{project.data.description}</p>}
   {(project.data.url || guide) && (
