@@ -146,6 +146,11 @@ console.log(`${outPdf}${pages ? ` (${pages} page${pages === 1 ? '' : 's'})` : ''
 // A resume over two pages fails the run and never reaches --copy-to, so an
 // overlong PDF can't land in the folder applications get attached from.
 const MAX_PAGES = 2;
+// a count of 0 means the PDF's page objects weren't readable, not that it fits
+if (pages === 0) {
+  console.error(`could not count the pages in ${outPdf}: check it by hand (limit is ${MAX_PAGES})`);
+  process.exit(1);
+}
 if (pages > MAX_PAGES) {
   console.error(`${pages} pages, limit is ${MAX_PAGES}: cut bullets or projects (variant "exclude"), or shorten the summary`);
   process.exit(1);
