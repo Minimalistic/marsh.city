@@ -11,8 +11,8 @@ I hold an Assistive Technology Applications Certificate from CSUN.
 
 Outside that job I build software on my own time. The biggest is
 [WhatCanHelp](/projects/whatcanhelp/), a free tool for finding assistive
-technology. Smaller ones: a [radio app](/projects/radiogridxl/) piloted with
-older adults at my organization, a [Raspberry Pi pet feeder](/projects/petfeedr/),
+technology. Smaller ones: a [radio app](/projects/radiogridxl/) I set up on
+tablets at my organization for people to try, a [Raspberry Pi pet feeder](/projects/petfeedr/),
 and [tablet choice boards](/projects/buttongriddle/) that speak the button you
 tap. Most of it is Node,
 SQLite and plain JavaScript, with Python for machine learning and automation.

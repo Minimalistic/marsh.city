@@ -1,6 +1,6 @@
 ---
 title: Building a radio app for people who don't want an app
-description: Internet radio built for older adults and people with disabilities - accessibility-first, single-file, deployed at a nonprofit.
+description: Internet radio built for older adults and people with disabilities - accessibility-first, single-file, in use at a nonprofit.
 date: 2026-04-09
 tags: [accessibility, vanilla-js, building]
 image: /images/radiogridxl/grid-dark.webp
