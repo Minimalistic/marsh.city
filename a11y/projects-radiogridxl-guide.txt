@@ -1,0 +1,861 @@
+# a11y-smoke transcript
+# target: http://127.0.0.1:4873/projects/radiogridxl/guide/
+
+## Swipe order (modeled iPhone VoiceOver)
+1. link: Skip to main content
+2. [navigation] link: marsh.city
+3. link: projects
+4. link: posts
+5. link: playground
+6. link: resume
+7. link: about
+8. button: Open command palette
+9. button: Open menu
+10. [main] progressbar: Reading progress
+11. heading level 1: How to use RadioGrid
+12. link: ← RadioGrid
+13. Screenshots from v7.24.1
+14. link: Open the app
+15. [navigation "Contents"] Contents
+16. [list, 14 items] link: Listening
+17. link: Open settings
+18. link: Change a station’s stream URL
+19. link: Add a station
+20. link: Change a station’s icon and color
+21. link: Reorder or remove stations
+22. link: Change the theme
+23. link: Make it easier to see and use
+24. link: Simple or Advanced controls
+25. link: Lock settings with a PIN
+26. link: Hide the Settings button
+27. link: Backup and restore
+28. link: Install it as an app
+29. link: Send us feedback
+30. RadioGrid is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
+31. RadioGrid saves your stations and settings inside the web browser you’re using, on this device only.
+32. Nothing is sent anywhere, and there’s no account. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser’s saved data for marsh.city, the website RadioGrid runs on. To move a setup between devices, use
+33. link: Backup and restore
+34. . On iPhone and iPad, the Home Screen app counts as a different browser, so
+35. link: add it to your Home Screen
+36. before you set it up.
+37. heading level 2: Listening
+38. image: The main screen with two large station buttons
+39. Tap a station to play it, and tap it again to pause. The dot in the top right corner turns green while a station is playing. At the bottom of the screen there’s a Stop button.
+40. heading level 2: Open settings
+41. To open settings, tap
+42. Settings
+43. in the top corner. The button is outlined on the screenshot above.
+44. If there is no Settings button, it has been hidden: tap the logo in the top corner 5 times quickly instead. See
+45. link: Hide the Settings button
+46. .
+47. image: The settings panel, open over the station buttons
+48. The panel slides in from the side. It has four groups:
+49. Stations
+50. ,
+51. Look
+52. ,
+53. Sound and controls
+54. and
+55. Setup
+56. . Scroll to see them all. Most changes show up behind the panel right away, so you can see what they’ll look like, and when one tap changes other settings too (a preset, say), those settings light up briefly so you can see what moved.
+57. Nothing is saved until you tap Apply & Close
+58. , which stays pinned at the bottom of the panel (on a phone turned sideways, at the top next to Preview). If you close the panel with the × instead, the app asks whether to throw your changes away.
+59. image: The Apply & Close button pinned at the bottom of settings
+60. If settings sit untouched for 3 minutes, the app asks
+61. Still setting up?
+62. Tap anywhere on it to carry on. If nobody taps within 30 seconds, settings close and go back to the stations, and changes you haven’t applied are thrown away, so the listener is never left looking at settings. A station that was playing keeps playing, and a paused one stays paused. The PIN keypad closes by itself after a minute with no tap.
+63. heading level 3: If it asks for a PIN
+64. image: The PIN keypad
+65. If someone has set a PIN, opening settings brings up a keypad instead. Enter the 4-digit PIN to get in. After 5 wrong tries the keypad locks for a little while and counts down the seconds, and the wait gets longer each time. See
+66. link: Lock settings with a PIN
+67. to set or remove one.
+68. heading level 2: Change a station’s stream URL
+69. image: A station opened in settings, with its stream address field
+70. Each station has a row under
+71. Stations
+72. , at the top of settings. Tap a row to open that station’s details under it, and tap it again to close them. To point a button at a different station:
+73. [list, 4 items] Open settings and tap the station under
+74. Stations
+75. .
+76. Replace the
+77. Stream address
+78. with the new one.
+79. Change the
+80. Name
+81. (the big text on the button) and the
+82. Description
+83. (the smaller line under it) to match.
+84. Tap
+85. Apply & Close
+86. .
+87. The URL has to be a direct audio stream, usually starting with
+88. https://
+89. and often ending in
+90. .mp3
+91. or
+92. .aac
+93. . A station’s website address won’t work, and neither will most playlist files (
+94. .pls
+95. ,
+96. .m3u
+97. ). If all you have is a playlist file, open it in a text editor and copy the web address inside it.
+98. Links that start with
+99. http://
+100. (no “s”) won’t play on this website, because browsers block them on secure pages. That includes RadioGrid on your home screen, since it’s the same website. The app shows a warning under the field when that’s the case. Look for an
+101. https://
+102. address for the station instead.
+103. Volume Trim
+104. evens out a station that’s much louder or quieter than the others. 1.0 is normal, and lower numbers make that station quieter. Numbers above 1.0 only make it louder when
+105. Volume
+106. , under
+107. Sound and controls
+108. , is set below 100%. On iPhone and iPad, Volume Trim and the Volume slider don’t appear: Apple doesn’t let web apps change the volume, so use the side buttons.
+109. heading level 2: Add a station
+110. You can have up to 8 stations. There are two ways to add one. Removed one by mistake? Tap
+111. Undo
+112. right after.
+113. Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it for someone else.
+114. heading level 3: Find a station
+115. image: The station browser opening on six shelves: Calm & easy, Oldies, Classical, Jazz, News & talk and Sleep
+116. [list, 4 items] In settings, under
+117. Stations
+118. , tap
+119. Browse stations
+120. .
+121. Tap a shelf, such as
+122. Jazz
+123. or
+124. Sleep
+125. , for a short list of hand-picked stations. Or tap a mood, such as
+126. Relaxing
+127. or
+128. News & talk
+129. , to search the directory for that kind of station. You can also search by name, or pick a country (then a state or region, if you like) and tap
+130. Search
+131. ; a mood narrows those searches too.
+132. Tap a station’s play button to hear it first, then tap
+133. + Add
+134. . It changes to
+135. Added
+136. , and you can add more from the same list. A station that’s already on this radio says
+137. Added
+138. too. Close the browser when you’re done.
+139. Each station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has. Change any of them if you like, then tap
+140. Apply & Close
+141. .
+142. The shelf stations are checked before each release of the app. Searches go to the free, community-run
+143. link: Radio Browser
+144. directory, so they need an internet connection. Each station is listed once, and stations failing the directory’s own check are left out. On this website the browser only lists stations with secure (https://) addresses, because browsers block the others here.
+145. heading level 3: Type one in
+146. image: A new station with its name and stream address filled in
+147. [list, 3 items] Under
+148. Stations
+149. , tap
+150. Add by address
+151. . A new station called “New Stream” opens at the bottom, ready for its address.
+152. Fill in the
+153. Stream address
+154. ,
+155. Name
+156. and
+157. Description
+158. . The address has to start with https:// (or http://).
+159. Tap
+160. Apply & Close
+161. . If a station has no address, or one that doesn’t start that way, settings stays open and says which one to fix.
+162. With 5 or more stations the button text gets smaller to fit, and on a small screen buttons may show only their icon, so give every station an icon.
+163. heading level 2: Change a station’s icon and color
+164. image: The row of color choices for a station
+165. Open a station’s row, then tap the
+166. Icon
+167. box to pick an emoji, and tap a swatch under
+168. Button Color
+169. to color its button. There are eight colors, and all of them are readable in both light and dark themes.
+170. heading level 2: Reorder or remove stations
+171. image: The Move up, Move down and Remove buttons under an open station
+172. Open a station’s row. Under its details are three buttons:
+173. [list, 2 items] Move up
+174. and
+175. Move down
+176. move the station. It slides to its new place, and the order in settings is the order of the buttons on screen.
+177. Remove
+178. removes the station, with an
+179. Undo
+180. right after. The app always keeps at least one.
+181. heading level 2: Change the theme
+182. image: The theme choices in settings
+183. Under
+184. Look
+185. ,
+186. Theme
+187. shows four looks, each drawn like a small station button. Pick one, then
+188. Dark
+189. ,
+190. Light
+191. or
+192. Auto
+193. (Auto follows your device’s own light or dark setting, and switches to High Contrast when the device is set to increase contrast):
+194. [list, 4 items] Classic
+195. : the standard colors, with each station its own color.
+196. MonoRadio
+197. : quieter grey versions, with every station the same color.
+198. High Contrast
+199. : black, white and yellow, with the most contrast and the station that’s playing filled solid yellow. Good for low vision.
+200. Night
+201. : dim amber on black, with no blue, for a radio by the bed. It keeps the screen from lighting up the room. Night has no Dark or Light, so those switch off.
+202. The screen behind the panel changes as soon as you tap, so you can compare. Tap
+203. Apply & Close
+204. to keep it.
+205. heading level 2: Make it easier to see and use
+206. heading level 3: Accessibility presets
+207. image: The accessibility preset choices
+208. Starting point
+209. , at the top of
+210. Look
+211. , sets several options in one tap:
+212. [list, 3 items] Standard
+213. : Auto theme, Large text, with tones and vibration on.
+214. Low Vision
+215. : the High Contrast Dark theme, Ultra text, and spoken announcements. If you use VoiceOver or TalkBack, turn
+216. Voice announcements
+217. off afterwards, so the app doesn’t talk over your screen reader.
+218. Simplest
+219. : X-Large text with no tones, vibration or announcements.
+220. All three use Simple controls.
+221. Pick the closest one, then fine-tune anything below it. Once you change something by hand, the preset shows as
+222. Custom
+223. .
+224. heading level 3: Text size
+225. image: The text size choices
+226. Text size
+227. has Normal, Large, X-Large and Ultra, each showing how big it is. Ultra is the largest, which suits a tablet across the room.
+228. heading level 3: Zoom
+229. Allow pinch to zoom
+230. , at the end of
+231. Look
+232. , lets the listener pinch the screen to make everything bigger, for anyone who zooms in to read. It’s off unless you turn it on, so a hand that pinches by accident can’t leave the radio zoomed in. The zoom built into the phone or tablet itself (Zoom on iPhone and iPad, Magnification on Android) works either way.
+233. Under
+234. Sound and controls
+235. are switches:
+236. Voice announcements
+237. (speaks “Now playing…” and so on aloud),
+238. Audio tones
+239. (a short chime when playback starts or stops),
+240. Auto-resume
+241. (when the app opens, starts the station again if it was playing when the app closed) and
+242. Haptic feedback
+243. (a small buzz on tap, on Android phones and tablets only; elsewhere it’s greyed out with the reason).
+244. heading level 3: Use it by voice
+245. Someone who can’t touch the screen can run the radio by speaking, with the Voice Control built into iPhone, iPad and Mac. Whoever sets the radio up turns it on: on an iPhone or iPad,
+246. Settings › Accessibility › Voice Control
+247. ; on a Mac,
+248. System Settings › Accessibility › Voice Control
+249. . It needs the device’s microphone, and it listens on the device.
+250. The surest way is by number. On an iPhone or iPad, also turn on
+251. Voice Control › Overlay › Item Numbers
+252. : every button then keeps a small number beside it, and “Tap 2” presses button 2, whatever it’s called. On a Mac, say “Show numbers” first, then the number.
+253. Numbers and names on screen need sight. For a listener who can’t see the screen, use VoiceOver (
+254. Settings › Accessibility › VoiceOver
+255. ), which reads each station and button aloud.
+256. Buttons can also be pressed by what they show:
+257. [list, 4 items] “Tap” and a station’s full name, such as “Tap Jazz 88”, plays it. While a station is paused, use its number to resume it.
+258. “Tap Stop” stops the station. With Advanced controls, “Tap Pause”, “Tap Sleep”, and for recordings “Tap Back 15” and “Tap Skip 30”.
+259. “Tap Settings” opens settings, unless the Settings button has been hidden.
+260. “Show names” labels every button with what to say.
+261. For saying stations by name, give each one a short name that’s easy to say and different from the others. Settings warns when two stations share a name, or when a station is named like a button, such as Stop.
+262. heading level 2: Simple or Advanced controls
+263. image: The Advanced controls bar at the bottom of the screen
+264. Under
+265. Buttons while playing
+266. , in
+267. Sound and controls
+268. :
+269. [list, 2 items] Simple
+270. shows a single Stop button. Best for most listeners.
+271. Advanced
+272. adds separate Pause and Stop buttons and a
+273. sleep timer
+274. (the clock button, labelled Sleep) that stops playback after 15 minutes to 4 hours.
+275. Back 15
+276. and
+277. Skip 30
+278. show up only for recordings with a set length, not live radio.
+279. heading level 2: Lock settings with a PIN
+280. image: The Setup PIN field in settings
+281. To keep anyone else out of settings, type a 4-digit PIN in
+282. Setup PIN
+283. , under
+284. Setup
+285. , and tap
+286. Apply & Close
+287. . From then on, opening settings brings up the keypad. To remove the PIN, clear the field and apply.
+288. Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser’s saved data for marsh.city, which also erases your RadioGrid stations and settings.
+289. heading level 2: Hide the Settings button
+290. image: The Show a Settings button switch in settings, turned off
+291. Once the radio is set up, you can hide the Settings button, so the listener can’t open settings by mistake and change things. Turn off
+292. Show a Settings button
+293. at the top of
+294. Setup
+295. .
+296. image: The practice step: a logo to tap five times before the button is hidden
+297. The radio first asks you to practise the way back in.
+298. Tap the logo it shows 5 times quickly.
+299. When it says
+300. Got it
+301. , tap
+302. Done
+303. , then
+304. Apply & Close
+305. . If the taps are hard to do, tap
+306. Cancel
+307. and keep the button.
+308. With the button hidden, open settings by
+309. tapping the logo in the top corner 5 times quickly
+310. , within about two seconds. To bring the button back, open settings that way and turn the switch on again.
+311. Five quick taps are hard with a switch, by voice or with a screen reader. For someone who sets up their own radio that way, leave the button showing and use a PIN instead.
+312. A radio that was set up before the Settings button existed keeps its settings behind the logo until someone turns the switch on.
+313. heading level 2: Backup and restore
+314. image: The Backup section
+315. [list, 2 items] Export Backup
+316. saves your stations and settings to a file.
+317. Import Backup
+318. loads a backup file, on this device or another one.
+319. The PIN is only included if you tick
+320. Include the PIN
+321. . Anyone with that file could get into settings, so keep it somewhere safe.
+322. heading level 2: Install it as an app
+323. RadioGrid can sit on your home screen like a regular app and open full screen:
+324. [list, 3 items] iPhone or iPad (Safari):
+325. tap the Share button, then
+326. Add to Home Screen
+327. .
+328. Android (Chrome):
+329. tap the
+330. ⋮
+331. menu, then
+332. Add to Home screen
+333. or
+334. Install app
+335. .
+336. Computer (Chrome or Edge):
+337. click the install icon at the right end of the address bar.
+338. On Android and on computers, the installed app keeps the same stations and settings as the browser you installed it from. On iPhone and iPad it starts fresh, so set up your stations in the Home Screen app. If you already set them up in Safari,
+339. link: Backup and restore
+340. moves them across.
+341. heading level 2: Send us feedback
+342. At the bottom of settings,
+343. Have feedback?
+344. shows a code you can scan with your phone’s camera. It opens a short page with an
+345. Email us
+346. button, so you can tell us what was confusing from your own phone, even when the radio’s device can’t send email. The page address and our email,
+347. link: radio@marsh.city
+348. , are written beside the code too. The radio itself never sends anything about you or your listening.
+349. link: ↑ Back to top
+350. [contentinfo] ©
+351. link: Jason Marsh
+352. link: email
+353. link: github
+354. link: linkedin
+355. link: source
+356. link: privacy
+
+## Accessibility tree (Playwright WebKit)
+- link "Skip to main content":
+  - /url: "#main"
+- navigation:
+  - link "marsh.city":
+    - /url: /
+  - link "projects":
+    - /url: /projects/
+  - link "posts":
+    - /url: /posts/
+  - link "playground":
+    - /url: /playground/
+  - link "resume":
+    - /url: /resume/
+  - link "about":
+    - /url: /about/
+  - button "Open command palette"
+  - button "Open menu"
+- main:
+  - progressbar "Reading progress"
+  - article:
+    - heading "How to use RadioGrid" [level=1]
+    - link "← RadioGrid":
+      - /url: /projects/radiogridxl/
+    - text: Screenshots from v7.24.1
+    - link "Open the app":
+      - /url: https://marsh.city/radio/
+    - navigation "Contents":
+      - paragraph: Contents
+      - list:
+        - listitem:
+          - link "Listening":
+            - /url: "#listening"
+        - listitem:
+          - link "Open settings":
+            - /url: "#open-settings"
+        - listitem:
+          - link "Change a station’s stream URL":
+            - /url: "#change-a-stations-stream-url"
+        - listitem:
+          - link "Add a station":
+            - /url: "#add-a-station"
+        - listitem:
+          - link "Change a station’s icon and color":
+            - /url: "#change-a-stations-icon-and-color"
+        - listitem:
+          - link "Reorder or remove stations":
+            - /url: "#reorder-or-remove-stations"
+        - listitem:
+          - link "Change the theme":
+            - /url: "#change-the-theme"
+        - listitem:
+          - link "Make it easier to see and use":
+            - /url: "#make-it-easier-to-see-and-use"
+        - listitem:
+          - link "Simple or Advanced controls":
+            - /url: "#simple-or-advanced-controls"
+        - listitem:
+          - link "Lock settings with a PIN":
+            - /url: "#lock-settings-with-a-pin"
+        - listitem:
+          - link "Hide the Settings button":
+            - /url: "#hide-the-settings-button"
+        - listitem:
+          - link "Backup and restore":
+            - /url: "#backup-and-restore"
+        - listitem:
+          - link "Install it as an app":
+            - /url: "#install-it-as-an-app"
+        - listitem:
+          - link "Send us feedback":
+            - /url: "#send-us-feedback"
+    - paragraph: "RadioGrid is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident."
+    - paragraph:
+      - strong: RadioGrid saves your stations and settings inside the web browser you’re using, on this device only.
+      - text: Nothing is sent anywhere, and there’s no account. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser’s saved data for marsh.city, the website RadioGrid runs on. To move a setup between devices, use
+      - link "Backup and restore":
+        - /url: "#backup-and-restore"
+      - text: . On iPhone and iPad, the Home Screen app counts as a different browser, so
+      - link "add it to your Home Screen":
+        - /url: "#install-it-as-an-app"
+      - text: before you set it up.
+    - heading "Listening" [level=2]
+    - paragraph:
+      - img "The main screen with two large station buttons"
+    - paragraph: Tap a station to play it, and tap it again to pause. The dot in the top right corner turns green while a station is playing. At the bottom of the screen there’s a Stop button.
+    - heading "Open settings" [level=2]
+    - paragraph:
+      - text: To open settings, tap
+      - strong: Settings
+      - text: in the top corner. The button is outlined on the screenshot above.
+    - paragraph:
+      - text: "If there is no Settings button, it has been hidden: tap the logo in the top corner 5 times quickly instead. See"
+      - link "Hide the Settings button":
+        - /url: "#hide-the-settings-button"
+      - text: .
+    - paragraph:
+      - img "The settings panel, open over the station buttons"
+    - paragraph:
+      - text: "The panel slides in from the side. It has four groups:"
+      - strong: Stations
+      - text: ","
+      - strong: Look
+      - text: ","
+      - strong: Sound and controls
+      - text: and
+      - strong: Setup
+      - text: . Scroll to see them all. Most changes show up behind the panel right away, so you can see what they’ll look like, and when one tap changes other settings too (a preset, say), those settings light up briefly so you can see what moved.
+    - paragraph:
+      - strong: Nothing is saved until you tap Apply & Close
+      - text: ", which stays pinned at the bottom of the panel (on a phone turned sideways, at the top next to Preview). If you close the panel with the × instead, the app asks whether to throw your changes away."
+    - paragraph:
+      - img "The Apply & Close button pinned at the bottom of settings"
+    - paragraph:
+      - text: If settings sit untouched for 3 minutes, the app asks
+      - strong: Still setting up?
+      - text: Tap anywhere on it to carry on. If nobody taps within 30 seconds, settings close and go back to the stations, and changes you haven’t applied are thrown away, so the listener is never left looking at settings. A station that was playing keeps playing, and a paused one stays paused. The PIN keypad closes by itself after a minute with no tap.
+    - heading "If it asks for a PIN" [level=3]
+    - paragraph:
+      - img "The PIN keypad"
+    - paragraph:
+      - text: If someone has set a PIN, opening settings brings up a keypad instead. Enter the 4-digit PIN to get in. After 5 wrong tries the keypad locks for a little while and counts down the seconds, and the wait gets longer each time. See
+      - link "Lock settings with a PIN":
+        - /url: "#lock-settings-with-a-pin"
+      - text: to set or remove one.
+    - heading "Change a station’s stream URL" [level=2]
+    - paragraph:
+      - img "A station opened in settings, with its stream address field"
+    - paragraph:
+      - text: Each station has a row under
+      - strong: Stations
+      - text: ", at the top of settings. Tap a row to open that station’s details under it, and tap it again to close them. To point a button at a different station:"
+    - list:
+      - listitem:
+        - text: Open settings and tap the station under
+        - strong: Stations
+        - text: .
+      - listitem:
+        - text: Replace the
+        - strong: Stream address
+        - text: with the new one.
+      - listitem:
+        - text: Change the
+        - strong: Name
+        - text: (the big text on the button) and the
+        - strong: Description
+        - text: (the smaller line under it) to match.
+      - listitem:
+        - text: Tap
+        - strong: Apply & Close
+        - text: .
+    - paragraph:
+      - text: The URL has to be a direct audio stream, usually starting with
+      - code: https://
+      - text: and often ending in
+      - code: .mp3
+      - text: or
+      - code: .aac
+      - text: . A station’s website address won’t work, and neither will most playlist files (
+      - code: .pls
+      - text: ","
+      - code: .m3u
+      - text: ). If all you have is a playlist file, open it in a text editor and copy the web address inside it.
+    - paragraph:
+      - text: Links that start with
+      - code: http://
+      - text: (no “s”) won’t play on this website, because browsers block them on secure pages. That includes RadioGrid on your home screen, since it’s the same website. The app shows a warning under the field when that’s the case. Look for an
+      - code: https://
+      - text: address for the station instead.
+    - paragraph:
+      - strong: Volume Trim
+      - text: evens out a station that’s much louder or quieter than the others. 1.0 is normal, and lower numbers make that station quieter. Numbers above 1.0 only make it louder when
+      - strong: Volume
+      - text: ", under"
+      - strong: Sound and controls
+      - text: ", is set below 100%. On iPhone and iPad, Volume Trim and the Volume slider don’t appear: Apple doesn’t let web apps change the volume, so use the side buttons."
+    - heading "Add a station" [level=2]
+    - paragraph:
+      - text: You can have up to 8 stations. There are two ways to add one. Removed one by mistake? Tap
+      - strong: Undo
+      - text: right after.
+    - paragraph: Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it for someone else.
+    - heading "Find a station" [level=3]
+    - paragraph:
+      - 'img "The station browser opening on six shelves: Calm & easy, Oldies, Classical, Jazz, News & talk and Sleep"'
+    - list:
+      - listitem:
+        - text: In settings, under
+        - strong: Stations
+        - text: ", tap"
+        - strong: Browse stations
+        - text: .
+      - listitem:
+        - text: Tap a shelf, such as
+        - strong: Jazz
+        - text: or
+        - strong: Sleep
+        - text: ", for a short list of hand-picked stations. Or tap a mood, such as"
+        - strong: Relaxing
+        - text: or
+        - strong: News & talk
+        - text: ", to search the directory for that kind of station. You can also search by name, or pick a country (then a state or region, if you like) and tap"
+        - strong: Search
+        - text: ; a mood narrows those searches too.
+      - listitem:
+        - text: Tap a station’s play button to hear it first, then tap
+        - strong: + Add
+        - text: . It changes to
+        - strong: Added
+        - text: ", and you can add more from the same list. A station that’s already on this radio says"
+        - strong: Added
+        - text: too. Close the browser when you’re done.
+      - listitem:
+        - text: Each station arrives with a short name, an icon for its kind of music, a one-line description and a color no other station has. Change any of them if you like, then tap
+        - strong: Apply & Close
+        - text: .
+    - paragraph:
+      - text: The shelf stations are checked before each release of the app. Searches go to the free, community-run
+      - link "Radio Browser":
+        - /url: https://www.radio-browser.info/
+      - text: directory, so they need an internet connection. Each station is listed once, and stations failing the directory’s own check are left out. On this website the browser only lists stations with secure (https://) addresses, because browsers block the others here.
+    - heading "Type one in" [level=3]
+    - paragraph:
+      - img "A new station with its name and stream address filled in"
+    - list:
+      - listitem:
+        - text: Under
+        - strong: Stations
+        - text: ", tap"
+        - strong: Add by address
+        - text: . A new station called “New Stream” opens at the bottom, ready for its address.
+      - listitem:
+        - text: Fill in the
+        - strong: Stream address
+        - text: ","
+        - strong: Name
+        - text: and
+        - strong: Description
+        - text: . The address has to start with https:// (or http://).
+      - listitem:
+        - text: Tap
+        - strong: Apply & Close
+        - text: . If a station has no address, or one that doesn’t start that way, settings stays open and says which one to fix.
+    - paragraph: With 5 or more stations the button text gets smaller to fit, and on a small screen buttons may show only their icon, so give every station an icon.
+    - heading "Change a station’s icon and color" [level=2]
+    - paragraph:
+      - img "The row of color choices for a station"
+    - paragraph:
+      - text: Open a station’s row, then tap the
+      - strong: Icon
+      - text: box to pick an emoji, and tap a swatch under
+      - strong: Button Color
+      - text: to color its button. There are eight colors, and all of them are readable in both light and dark themes.
+    - heading "Reorder or remove stations" [level=2]
+    - paragraph:
+      - img "The Move up, Move down and Remove buttons under an open station"
+    - paragraph: "Open a station’s row. Under its details are three buttons:"
+    - list:
+      - listitem:
+        - strong: Move up
+        - text: and
+        - strong: Move down
+        - text: move the station. It slides to its new place, and the order in settings is the order of the buttons on screen.
+      - listitem:
+        - strong: Remove
+        - text: removes the station, with an
+        - strong: Undo
+        - text: right after. The app always keeps at least one.
+    - heading "Change the theme" [level=2]
+    - paragraph:
+      - img "The theme choices in settings"
+    - paragraph:
+      - text: Under
+      - strong: Look
+      - text: ","
+      - strong: Theme
+      - text: shows four looks, each drawn like a small station button. Pick one, then
+      - strong: Dark
+      - text: ","
+      - strong: Light
+      - text: or
+      - strong: Auto
+      - text: "(Auto follows your device’s own light or dark setting, and switches to High Contrast when the device is set to increase contrast):"
+    - list:
+      - listitem:
+        - strong: Classic
+        - text: ": the standard colors, with each station its own color."
+      - listitem:
+        - strong: MonoRadio
+        - text: ": quieter grey versions, with every station the same color."
+      - listitem:
+        - strong: High Contrast
+        - text: ": black, white and yellow, with the most contrast and the station that’s playing filled solid yellow. Good for low vision."
+      - listitem:
+        - strong: Night
+        - text: ": dim amber on black, with no blue, for a radio by the bed. It keeps the screen from lighting up the room. Night has no Dark or Light, so those switch off."
+    - paragraph:
+      - text: The screen behind the panel changes as soon as you tap, so you can compare. Tap
+      - strong: Apply & Close
+      - text: to keep it.
+    - heading "Make it easier to see and use" [level=2]
+    - heading "Accessibility presets" [level=3]
+    - paragraph:
+      - img "The accessibility preset choices"
+    - paragraph:
+      - strong: Starting point
+      - text: ", at the top of"
+      - strong: Look
+      - text: ", sets several options in one tap:"
+    - list:
+      - listitem:
+        - strong: Standard
+        - text: ": Auto theme, Large text, with tones and vibration on."
+      - listitem:
+        - strong: Low Vision
+        - text: ": the High Contrast Dark theme, Ultra text, and spoken announcements. If you use VoiceOver or TalkBack, turn"
+        - strong: Voice announcements
+        - text: off afterwards, so the app doesn’t talk over your screen reader.
+      - listitem:
+        - strong: Simplest
+        - text: ": X-Large text with no tones, vibration or announcements."
+    - paragraph: All three use Simple controls.
+    - paragraph:
+      - text: Pick the closest one, then fine-tune anything below it. Once you change something by hand, the preset shows as
+      - strong: Custom
+      - text: .
+    - heading "Text size" [level=3]
+    - paragraph:
+      - img "The text size choices"
+    - paragraph:
+      - strong: Text size
+      - text: has Normal, Large, X-Large and Ultra, each showing how big it is. Ultra is the largest, which suits a tablet across the room.
+    - heading "Zoom" [level=3]
+    - paragraph:
+      - strong: Allow pinch to zoom
+      - text: ", at the end of"
+      - strong: Look
+      - text: ", lets the listener pinch the screen to make everything bigger, for anyone who zooms in to read. It’s off unless you turn it on, so a hand that pinches by accident can’t leave the radio zoomed in. The zoom built into the phone or tablet itself (Zoom on iPhone and iPad, Magnification on Android) works either way."
+    - paragraph:
+      - text: Under
+      - strong: Sound and controls
+      - text: "are switches:"
+      - strong: Voice announcements
+      - text: (speaks “Now playing…” and so on aloud),
+      - strong: Audio tones
+      - text: (a short chime when playback starts or stops),
+      - strong: Auto-resume
+      - text: (when the app opens, starts the station again if it was playing when the app closed) and
+      - strong: Haptic feedback
+      - text: (a small buzz on tap, on Android phones and tablets only; elsewhere it’s greyed out with the reason).
+    - heading "Use it by voice" [level=3]
+    - paragraph:
+      - text: "Someone who can’t touch the screen can run the radio by speaking, with the Voice Control built into iPhone, iPad and Mac. Whoever sets the radio up turns it on: on an iPhone or iPad,"
+      - strong: Settings › Accessibility › Voice Control
+      - text: ; on a Mac,
+      - strong: System Settings › Accessibility › Voice Control
+      - text: . It needs the device’s microphone, and it listens on the device.
+    - paragraph:
+      - text: The surest way is by number. On an iPhone or iPad, also turn on
+      - strong: Voice Control › Overlay › Item Numbers
+      - text: ": every button then keeps a small number beside it, and “Tap 2” presses button 2, whatever it’s called. On a Mac, say “Show numbers” first, then the number."
+    - paragraph:
+      - text: Numbers and names on screen need sight. For a listener who can’t see the screen, use VoiceOver (
+      - strong: Settings › Accessibility › VoiceOver
+      - text: ), which reads each station and button aloud.
+    - paragraph: "Buttons can also be pressed by what they show:"
+    - list:
+      - listitem: “Tap” and a station’s full name, such as “Tap Jazz 88”, plays it. While a station is paused, use its number to resume it.
+      - listitem: “Tap Stop” stops the station. With Advanced controls, “Tap Pause”, “Tap Sleep”, and for recordings “Tap Back 15” and “Tap Skip 30”.
+      - listitem: “Tap Settings” opens settings, unless the Settings button has been hidden.
+      - listitem: “Show names” labels every button with what to say.
+    - paragraph: For saying stations by name, give each one a short name that’s easy to say and different from the others. Settings warns when two stations share a name, or when a station is named like a button, such as Stop.
+    - heading "Simple or Advanced controls" [level=2]
+    - paragraph:
+      - img "The Advanced controls bar at the bottom of the screen"
+    - paragraph:
+      - text: Under
+      - strong: Buttons while playing
+      - text: ", in"
+      - strong: Sound and controls
+      - text: ":"
+    - list:
+      - listitem:
+        - strong: Simple
+        - text: shows a single Stop button. Best for most listeners.
+      - listitem:
+        - strong: Advanced
+        - text: adds separate Pause and Stop buttons and a
+        - strong: sleep timer
+        - text: (the clock button, labelled Sleep) that stops playback after 15 minutes to 4 hours.
+        - strong: Back 15
+        - text: and
+        - strong: Skip 30
+        - text: show up only for recordings with a set length, not live radio.
+    - heading "Lock settings with a PIN" [level=2]
+    - paragraph:
+      - img "The Setup PIN field in settings"
+    - paragraph:
+      - text: To keep anyone else out of settings, type a 4-digit PIN in
+      - strong: Setup PIN
+      - text: ", under"
+      - strong: Setup
+      - text: ", and tap"
+      - strong: Apply & Close
+      - text: . From then on, opening settings brings up the keypad. To remove the PIN, clear the field and apply.
+    - paragraph: Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser’s saved data for marsh.city, which also erases your RadioGrid stations and settings.
+    - heading "Hide the Settings button" [level=2]
+    - paragraph:
+      - img "The Show a Settings button switch in settings, turned off"
+    - paragraph:
+      - text: Once the radio is set up, you can hide the Settings button, so the listener can’t open settings by mistake and change things. Turn off
+      - strong: Show a Settings button
+      - text: at the top of
+      - strong: Setup
+      - text: .
+    - paragraph:
+      - 'img "The practice step: a logo to tap five times before the button is hidden"'
+    - paragraph:
+      - text: The radio first asks you to practise the way back in.
+      - strong: Tap the logo it shows 5 times quickly.
+      - text: When it says
+      - strong: Got it
+      - text: ", tap"
+      - strong: Done
+      - text: ", then"
+      - strong: Apply & Close
+      - text: . If the taps are hard to do, tap
+      - strong: Cancel
+      - text: and keep the button.
+    - paragraph:
+      - text: With the button hidden, open settings by
+      - strong: tapping the logo in the top corner 5 times quickly
+      - text: ", within about two seconds. To bring the button back, open settings that way and turn the switch on again."
+    - paragraph: Five quick taps are hard with a switch, by voice or with a screen reader. For someone who sets up their own radio that way, leave the button showing and use a PIN instead.
+    - paragraph: A radio that was set up before the Settings button existed keeps its settings behind the logo until someone turns the switch on.
+    - heading "Backup and restore" [level=2]
+    - paragraph:
+      - img "The Backup section"
+    - list:
+      - listitem:
+        - strong: Export Backup
+        - text: saves your stations and settings to a file.
+      - listitem:
+        - strong: Import Backup
+        - text: loads a backup file, on this device or another one.
+    - paragraph:
+      - text: The PIN is only included if you tick
+      - strong: Include the PIN
+      - text: . Anyone with that file could get into settings, so keep it somewhere safe.
+    - heading "Install it as an app" [level=2]
+    - paragraph: "RadioGrid can sit on your home screen like a regular app and open full screen:"
+    - list:
+      - listitem:
+        - strong: "iPhone or iPad (Safari):"
+        - text: tap the Share button, then
+        - strong: Add to Home Screen
+        - text: .
+      - listitem:
+        - strong: "Android (Chrome):"
+        - text: tap the
+        - strong: ⋮
+        - text: menu, then
+        - strong: Add to Home screen
+        - text: or
+        - strong: Install app
+        - text: .
+      - listitem:
+        - strong: "Computer (Chrome or Edge):"
+        - text: click the install icon at the right end of the address bar.
+    - paragraph:
+      - text: On Android and on computers, the installed app keeps the same stations and settings as the browser you installed it from. On iPhone and iPad it starts fresh, so set up your stations in the Home Screen app. If you already set them up in Safari,
+      - link "Backup and restore":
+        - /url: "#backup-and-restore"
+      - text: moves them across.
+    - heading "Send us feedback" [level=2]
+    - paragraph:
+      - text: At the bottom of settings,
+      - strong: Have feedback?
+      - text: shows a code you can scan with your phone’s camera. It opens a short page with an
+      - strong: Email us
+      - text: button, so you can tell us what was confusing from your own phone, even when the radio’s device can’t send email. The page address and our email,
+      - link "radio@marsh.city":
+        - /url: mailto:radio@marsh.city
+      - text: ", are written beside the code too. The radio itself never sends anything about you or your listening."
+  - link "↑ Back to top":
+    - /url: "#guide-top"
+- contentinfo:
+  - text: ©
+  - link "Jason Marsh":
+    - /url: /about/
+  - link "email":
+    - /url: mailto:jason@marsh.city
+  - link "github":
+    - /url: https://github.com/Minimalistic
+  - link "linkedin":
+    - /url: https://www.linkedin.com/in/jason-marsh
+  - link "source":
+    - /url: https://github.com/Minimalistic/marsh.city
+  - link "privacy":
+    - /url: /privacy/
