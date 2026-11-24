@@ -3,10 +3,10 @@ title: RadioGrid
 description: Internet radio designed for older adults and people with disabilities - zero-dependency, single-file, built with accessibility first, in use at a nonprofit.
 status: shipped
 repo: https://github.com/Marshworks-dev/RadioGrid
-url: https://marsh.city/radio/
+url: https://radio.marshworks.dev/
 tags: [vanilla-js, accessibility, html5, pwa, kiosk]
 started: 2026-03-01
-updated: 2026-11-14
+updated: 2026-11-23
 image: /images/radiogridxl/page/grid.webp
 imageAlt: RadioGrid — two large station buttons filling a dark screen
 hideTagline: true
@@ -82,6 +82,9 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-11-23
+Released v7.25.0: RadioGrid has its own address now, radio.marshworks.dev. A browser keeps each address's saved stations apart, so a radio set up at marsh.city/radio shows where it went and stops playing; Export Backup there and Import Backup at the new address carry its stations across.
 
 ### 2026-11-14
 Released v7.24.0: the app is now called RadioGrid, the same name as its code on GitHub. A radio still showing the old name, RadioGridXL, switches to the new one, and its stations, settings and links all stay as they were.

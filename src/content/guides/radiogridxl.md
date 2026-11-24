@@ -1,12 +1,12 @@
 ---
 title: How to use RadioGrid
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.24.1
+appVersion: 7.25.0
 ---
 
 RadioGrid is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
 
-**RadioGrid saves your stations and settings inside the web browser you're using, on this device only.** Nothing is sent anywhere, and there's no account. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for marsh.city, the website RadioGrid runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
+**RadioGrid saves your stations and settings inside the web browser you're using, on this device only.** Nothing is sent anywhere, and there's no account. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for radio.marshworks.dev, the website RadioGrid runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
 
 ## Listening
 
@@ -168,7 +168,7 @@ Under **Buttons while playing**, in **Sound and controls**:
 
 To keep anyone else out of settings, type a 4-digit PIN in **Setup PIN**, under **Setup**, and tap **Apply & Close**. From then on, opening settings brings up the keypad. To remove the PIN, clear the field and apply.
 
-Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser's saved data for marsh.city, which also erases your RadioGrid stations and settings.
+Write the PIN down somewhere. If you forget it, the only way back into settings is to clear your browser's saved data for radio.marshworks.dev, which also erases your RadioGrid stations and settings.
 
 ## Hide the Settings button
 
@@ -194,6 +194,16 @@ A radio that was set up before the Settings button existed keeps its settings be
 - **Import Backup** loads a backup file, on this device or another one.
 
 The PIN is only included if you tick **Include the PIN**. Anyone with that file could get into settings, so keep it somewhere safe.
+
+### If your radio says it has moved
+
+RadioGrid used to live at marsh.city/radio. It now lives at **radio.marshworks.dev**. A radio set up at the old address shows "This radio has moved" instead of its stations, and no longer plays. Your stations are still saved there, and the browser keeps each address's settings apart, so you carry them across yourself:
+
+1. On the radio, open settings. The PIN still works if you set one.
+2. Tap **Export Backup** in the "This radio has moved" card. Tick **Include the PIN** under Backup first if you want it too.
+3. On the same device, open radio.marshworks.dev in the web browser.
+4. Open settings there, tap **Import Backup** and pick the file.
+5. [Add it to your Home Screen](#install-it-as-an-app), and remove the old one.
 
 ## Install it as an app
 

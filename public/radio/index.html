@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="radiogrid-moved" content="radio.marshworks.dev">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src http: https: blob:; connect-src 'self' https://*.api.radio-browser.info; frame-src https://marsh.city; base-uri 'none'; form-action 'none'">
 <meta name="viewport" id="viewport-meta" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <!-- PWA shell: relative manifest href keeps the file fully self-contained (no http URLs). -->
@@ -1649,6 +1650,7 @@ html.is-desktop .overlay-body { font-size: 20px; }
 
 /* -- Groups: Stations, Look, Sound and controls, Setup -- */
 .s-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+.s-group[hidden] { display: none; } /* display:flex above would beat the hidden attribute (the moved card) */
 .s-group-head { display: flex; align-items: baseline; gap: 8px; }
 .s-group-title { margin: 0; flex: 1; font-size: 20px; font-weight: 800; color: var(--settings-text); }
 .s-group-count { font-size: 13px; font-weight: 700; color: var(--settings-label); }
@@ -1792,8 +1794,8 @@ html.is-desktop .overlay-body { font-size: 20px; }
    light-on-dark codes. */
 .feedback-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .feedback-qr { width: 128px; height: 128px; flex-shrink: 0; border-radius: 6px; }
-.feedback-text { flex: 1 1 215px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-/* 215px fits the longer address (marsh.city/radio/feedback, 15px bold) on
+.feedback-text { flex: 1 1 235px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* 235px fits the longer address (radio.marshworks.dev/feedback, 231px at 15px bold) on
    one line; when the column beside the QR is narrower, the text moves under
    the QR at full width rather than breaking an address mid-way. */
 /* Text, not links (see the markup): no underline or accent colour, so it
@@ -1925,6 +1927,29 @@ html.is-ios .ios-hide { display: none; }
   text-align: right;
 }
 
+
+/* Moved: the last build at marsh.city/radio (24-moved.js). The screen takes
+   the stations' place, with no Stop bar since nothing can play there. */
+html.is-moved #simple-stop,
+html.is-moved #simple-stop-inset,
+html.is-moved #adv-transport,
+html.is-moved .sb-result-play { display: none !important; } /* previews: nothing plays here */
+#moved-screen {
+  margin: auto;
+  max-width: 32em;
+  padding: 24px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--header-text);
+  overflow-wrap: anywhere;
+}
+#moved-screen span { display: block; }
+#moved-screen span + span { margin-top: 0.6em; font-size: 20px; font-weight: 600; }
+.moved-card-lead { margin: 0 0 10px; color: var(--settings-text); font-size: 16px; line-height: 1.45; }
+.moved-steps { margin: 0 0 14px; padding-left: 1.4em; color: var(--settings-text); font-size: 16px; line-height: 1.5; }
+.moved-steps li + li { margin-top: 4px; }
 /* -- Stream editor -- */
 /* One row per station; its fields fold out under it. */
 .stream-entry { position: relative; border-bottom: 1px solid var(--settings-border); }
@@ -2947,6 +2972,23 @@ html.theme-fading, html.theme-fading * {
 
     <div id="settings-body">
 
+    <!-- ===== Moved: the last build at marsh.city/radio only (24-moved.js).
+         The address is plain text, never a link (PROMISES.md). ===== -->
+    <section class="s-group" id="moved-card" hidden>
+      <h2 class="s-group-title" id="g-moved">This radio has moved</h2>
+      <div class="s-card s-section moved-card-body">
+        <p class="moved-card-lead">Its new address is <strong id="moved-card-address"></strong>. Nothing saved here moves across by itself. To bring the stations and settings along:</p>
+        <ol class="moved-steps">
+          <li>Tap Export Backup, here.</li>
+          <li id="moved-card-open"></li>
+          <li>In settings there, tap Import Backup and pick the file.</li>
+          <li>Add the new one to the home screen.</li>
+          <li>Remove this one from the home screen.</li>
+        </ol>
+        <button class="device-btn" onclick="exportConfig()" aria-label="Export Backup">&#128190; Export Backup</button>
+      </div>
+    </section>
+
     <!-- ===== Stations ===== -->
     <section class="s-group">
       <div class="s-group-head">
@@ -3148,10 +3190,10 @@ html.theme-fading, html.theme-fading * {
         <div class="s-section" id="feedback-section" role="group" aria-labelledby="feedback-title" hidden>
           <div class="s-section-title" id="feedback-title">Have feedback?</div>
           <div class="feedback-row">
-            <!-- === FEEDBACK QR — make-feedback-qr.mjs writes this === --><svg class="feedback-qr" id="feedback-qr" viewBox="0 0 37 37" role="img" aria-label="QR code: opens marsh.city/radio/feedback on your phone" shape-rendering="crispEdges"><rect width="37" height="37" fill="#ffffff"/><path fill="#000000" d="M4 4h7v1h-7zM14 4h1v1h-1zM16 4h1v1h-1zM19 4h2v1h-2zM22 4h1v1h-1zM26 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM12 5h3v1h-3zM17 5h2v1h-2zM20 5h1v1h-1zM22 5h1v1h-1zM26 5h1v1h-1zM32 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM12 6h2v1h-2zM17 6h1v1h-1zM19 6h1v1h-1zM24 6h1v1h-1zM26 6h1v1h-1zM28 6h3v1h-3zM32 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM12 7h2v1h-2zM20 7h2v1h-2zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h3v1h-3zM32 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM15 8h2v1h-2zM19 8h6v1h-6zM26 8h1v1h-1zM28 8h3v1h-3zM32 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM24 9h1v1h-1zM26 9h1v1h-1zM32 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h7v1h-7zM12 11h3v1h-3zM16 11h1v1h-1zM18 11h3v1h-3zM4 12h1v1h-1zM10 12h1v1h-1zM12 12h2v1h-2zM15 12h2v1h-2zM21 12h2v1h-2zM25 12h2v1h-2zM29 12h3v1h-3zM4 13h1v1h-1zM6 13h1v1h-1zM9 13h1v1h-1zM11 13h4v1h-4zM17 13h1v1h-1zM20 13h4v1h-4zM27 13h2v1h-2zM30 13h2v1h-2zM5 14h1v1h-1zM7 14h1v1h-1zM10 14h1v1h-1zM15 14h1v1h-1zM17 14h5v1h-5zM25 14h3v1h-3zM5 15h2v1h-2zM9 15h1v1h-1zM12 15h2v1h-2zM17 15h1v1h-1zM19 15h2v1h-2zM23 15h1v1h-1zM28 15h2v1h-2zM5 16h2v1h-2zM9 16h3v1h-3zM13 16h1v1h-1zM17 16h1v1h-1zM20 16h1v1h-1zM23 16h1v1h-1zM25 16h2v1h-2zM32 16h1v1h-1zM4 17h1v1h-1zM12 17h4v1h-4zM19 17h1v1h-1zM22 17h3v1h-3zM26 17h3v1h-3zM31 17h2v1h-2zM4 18h2v1h-2zM8 18h1v1h-1zM10 18h3v1h-3zM14 18h2v1h-2zM19 18h3v1h-3zM24 18h1v1h-1zM26 18h1v1h-1zM29 18h2v1h-2zM4 19h1v1h-1zM7 19h3v1h-3zM13 19h2v1h-2zM16 19h1v1h-1zM19 19h2v1h-2zM22 19h2v1h-2zM28 19h1v1h-1zM30 19h1v1h-1zM32 19h1v1h-1zM5 20h1v1h-1zM7 20h1v1h-1zM10 20h1v1h-1zM13 20h1v1h-1zM15 20h2v1h-2zM21 20h1v1h-1zM23 20h1v1h-1zM27 20h1v1h-1zM29 20h2v1h-2zM4 21h1v1h-1zM6 21h1v1h-1zM11 21h2v1h-2zM15 21h1v1h-1zM17 21h4v1h-4zM22 21h2v1h-2zM26 21h3v1h-3zM30 21h3v1h-3zM4 22h3v1h-3zM8 22h6v1h-6zM16 22h1v1h-1zM19 22h1v1h-1zM21 22h1v1h-1zM23 22h1v1h-1zM25 22h2v1h-2zM28 22h2v1h-2zM32 22h1v1h-1zM4 23h1v1h-1zM6 23h1v1h-1zM8 23h2v1h-2zM12 23h3v1h-3zM16 23h2v1h-2zM19 23h1v1h-1zM25 23h2v1h-2zM28 23h1v1h-1zM4 24h1v1h-1zM10 24h2v1h-2zM16 24h1v1h-1zM18 24h2v1h-2zM21 24h1v1h-1zM23 24h6v1h-6zM30 24h3v1h-3zM12 25h3v1h-3zM16 25h1v1h-1zM18 25h2v1h-2zM22 25h3v1h-3zM28 25h2v1h-2zM4 26h7v1h-7zM13 26h1v1h-1zM15 26h1v1h-1zM19 26h2v1h-2zM23 26h2v1h-2zM26 26h1v1h-1zM28 26h3v1h-3zM4 27h1v1h-1zM10 27h1v1h-1zM13 27h2v1h-2zM16 27h1v1h-1zM18 27h1v1h-1zM23 27h2v1h-2zM28 27h1v1h-1zM32 27h1v1h-1zM4 28h1v1h-1zM6 28h3v1h-3zM10 28h1v1h-1zM15 28h6v1h-6zM23 28h7v1h-7zM31 28h2v1h-2zM4 29h1v1h-1zM6 29h3v1h-3zM10 29h1v1h-1zM14 29h1v1h-1zM17 29h4v1h-4zM22 29h1v1h-1zM25 29h1v1h-1zM29 29h2v1h-2zM32 29h1v1h-1zM4 30h1v1h-1zM6 30h3v1h-3zM10 30h1v1h-1zM13 30h1v1h-1zM15 30h2v1h-2zM18 30h2v1h-2zM23 30h1v1h-1zM25 30h7v1h-7zM4 31h1v1h-1zM10 31h1v1h-1zM13 31h1v1h-1zM18 31h3v1h-3zM22 31h2v1h-2zM27 31h4v1h-4zM32 31h1v1h-1zM4 32h7v1h-7zM12 32h2v1h-2zM16 32h1v1h-1zM18 32h2v1h-2zM21 32h1v1h-1zM23 32h1v1h-1zM27 32h1v1h-1zM30 32h1v1h-1z"/></svg><!-- === END FEEDBACK QR === -->
+            <!-- === FEEDBACK QR — make-feedback-qr.mjs writes this === --><svg class="feedback-qr" id="feedback-qr" viewBox="0 0 37 37" role="img" aria-label="QR code: opens radio.marshworks.dev/feedback on your phone" shape-rendering="crispEdges"><rect width="37" height="37" fill="#ffffff"/><path fill="#000000" d="M4 4h7v1h-7zM13 4h1v1h-1zM16 4h4v1h-4zM21 4h3v1h-3zM26 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM13 5h2v1h-2zM16 5h2v1h-2zM19 5h1v1h-1zM26 5h1v1h-1zM32 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM15 6h2v1h-2zM18 6h4v1h-4zM23 6h1v1h-1zM26 6h1v1h-1zM28 6h3v1h-3zM32 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM14 7h3v1h-3zM19 7h1v1h-1zM22 7h3v1h-3zM26 7h1v1h-1zM28 7h3v1h-3zM32 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM13 8h3v1h-3zM18 8h3v1h-3zM26 8h1v1h-1zM28 8h3v1h-3zM32 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM12 9h2v1h-2zM15 9h1v1h-1zM19 9h3v1h-3zM23 9h1v1h-1zM26 9h1v1h-1zM32 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h7v1h-7zM14 11h2v1h-2zM18 11h7v1h-7zM4 12h1v1h-1zM7 12h1v1h-1zM9 12h2v1h-2zM12 12h2v1h-2zM15 12h1v1h-1zM20 12h1v1h-1zM22 12h2v1h-2zM25 12h1v1h-1zM27 12h1v1h-1zM4 13h1v1h-1zM9 13h1v1h-1zM13 13h2v1h-2zM20 13h1v1h-1zM24 13h3v1h-3zM29 13h1v1h-1zM32 13h1v1h-1zM4 14h1v1h-1zM6 14h1v1h-1zM9 14h3v1h-3zM13 14h1v1h-1zM15 14h2v1h-2zM21 14h1v1h-1zM23 14h1v1h-1zM25 14h7v1h-7zM6 15h1v1h-1zM8 15h1v1h-1zM12 15h1v1h-1zM14 15h2v1h-2zM18 15h1v1h-1zM26 15h1v1h-1zM28 15h1v1h-1zM30 15h2v1h-2zM6 16h1v1h-1zM8 16h5v1h-5zM14 16h3v1h-3zM20 16h2v1h-2zM26 16h1v1h-1zM29 16h1v1h-1zM31 16h2v1h-2zM4 17h1v1h-1zM9 17h1v1h-1zM12 17h5v1h-5zM21 17h1v1h-1zM23 17h3v1h-3zM5 18h4v1h-4zM10 18h3v1h-3zM16 18h1v1h-1zM20 18h2v1h-2zM25 18h1v1h-1zM27 18h6v1h-6zM5 19h2v1h-2zM8 19h1v1h-1zM12 19h2v1h-2zM17 19h5v1h-5zM23 19h1v1h-1zM25 19h2v1h-2zM29 19h1v1h-1zM31 19h1v1h-1zM4 20h3v1h-3zM8 20h4v1h-4zM13 20h2v1h-2zM16 20h3v1h-3zM21 20h1v1h-1zM24 20h2v1h-2zM31 20h1v1h-1zM5 21h1v1h-1zM7 21h2v1h-2zM14 21h1v1h-1zM16 21h1v1h-1zM20 21h1v1h-1zM25 21h3v1h-3zM29 21h1v1h-1zM32 21h1v1h-1zM4 22h1v1h-1zM6 22h2v1h-2zM9 22h3v1h-3zM13 22h2v1h-2zM17 22h1v1h-1zM25 22h1v1h-1zM27 22h2v1h-2zM31 22h2v1h-2zM7 23h1v1h-1zM9 23h1v1h-1zM11 23h2v1h-2zM15 23h1v1h-1zM17 23h1v1h-1zM19 23h1v1h-1zM21 23h3v1h-3zM26 23h2v1h-2zM31 23h2v1h-2zM4 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM10 24h1v1h-1zM12 24h1v1h-1zM15 24h2v1h-2zM18 24h1v1h-1zM20 24h1v1h-1zM24 24h5v1h-5zM30 24h1v1h-1zM12 25h1v1h-1zM14 25h1v1h-1zM17 25h1v1h-1zM20 25h3v1h-3zM24 25h1v1h-1zM28 25h1v1h-1zM30 25h3v1h-3zM4 26h7v1h-7zM13 26h6v1h-6zM20 26h2v1h-2zM24 26h1v1h-1zM26 26h1v1h-1zM28 26h1v1h-1zM31 26h1v1h-1zM4 27h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM17 27h1v1h-1zM19 27h2v1h-2zM24 27h1v1h-1zM28 27h5v1h-5zM4 28h1v1h-1zM6 28h3v1h-3zM10 28h1v1h-1zM13 28h2v1h-2zM16 28h1v1h-1zM18 28h1v1h-1zM20 28h3v1h-3zM24 28h5v1h-5zM31 28h2v1h-2zM4 29h1v1h-1zM6 29h3v1h-3zM10 29h1v1h-1zM12 29h1v1h-1zM14 29h2v1h-2zM17 29h2v1h-2zM24 29h1v1h-1zM26 29h6v1h-6zM4 30h1v1h-1zM6 30h3v1h-3zM10 30h1v1h-1zM13 30h1v1h-1zM16 30h1v1h-1zM18 30h1v1h-1zM20 30h1v1h-1zM28 30h3v1h-3zM32 30h1v1h-1zM4 31h1v1h-1zM10 31h1v1h-1zM13 31h2v1h-2zM16 31h2v1h-2zM20 31h3v1h-3zM24 31h2v1h-2zM27 31h2v1h-2zM31 31h1v1h-1zM4 32h7v1h-7zM12 32h3v1h-3zM16 32h3v1h-3zM21 32h1v1h-1zM24 32h2v1h-2zM28 32h1v1h-1zM31 32h1v1h-1z"/></svg><!-- === END FEEDBACK QR === -->
             <div class="feedback-text">
               <div class="s-hint" id="feedback-hint">Scan with your phone to tell us what confused you.</div>
-              <div class="feedback-address" id="feedback-page-address">marsh.city/<wbr>radio/<wbr>feedback</div>
+              <div class="feedback-address" id="feedback-page-address">radio.<wbr>marshworks.dev/<wbr>feedback</div>
               <div class="s-hint feedback-or">or email</div>
               <div class="feedback-address" id="feedback-mail-address">radio@<wbr>marsh.city</div>
             </div>
@@ -3172,7 +3214,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version">RadioGrid v7.24.1</div>
+      <div id="settings-version">RadioGrid v7.25.0</div>
       <!-- Who made it, from PROFILE.madeBy; never a link (promise-stays-radio).
            MarshWorks gets the brand kit's "made by" block; any other maker,
            and the MonoRadio and High Contrast themes, get the plain text line. -->
@@ -3524,6 +3566,7 @@ function init() {
   document.getElementById('backup-section').hidden = !backupAvailable();
   showFeedbackCard();
   showHapticsAvailability();
+  if (movedTo()) showMovedCard(movedTo());
 
   // The Device buttons need the APK's bridge (see openDeviceSettings). A
   // phone or tablet browser gets a pointer to its Settings app instead, and
@@ -3602,6 +3645,8 @@ function maybeAutoResume() {
     // Checked first so the flag is always used up. An update reload runs only
     // while nothing plays, so it forgets the station too (see APP UPDATES).
     if (isUpdateReload()) { forgetLastStation(); return null; }
+    // The moved build at the old address never plays (24-moved.js).
+    if (movedTo()) return null;
     // Resume is off, so nothing plays now: forget the station too, or turning
     // Resume on later would restart it at a launch it wasn't playing before.
     if (cfg.resume !== 'on') { forgetLastStation(); return null; }
@@ -4119,6 +4164,8 @@ function textLines(text, px, width) {
 }
 
 function renderButtons() {
+  // The old address's last build shows where the radio went instead (24-moved.js).
+  if (movedTo()) { renderMoved(movedTo()); return; }
   const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
   // A station with no address can't play, so the listener never sees it.
   // Settings shows it (its preview is how a new one gets set up), and Apply
@@ -4730,6 +4777,7 @@ function reloadActive() {
     Tapping the active stream toggles pause/resume; while it is reconnecting
     after an error, a tap retries it now instead of pausing silence. */
 function playStream(id) {
+  if (movedTo()) return; // the old address's last build is no longer a radio (24-moved.js)
   cancelRetry();
   autoplayBlocked = false;
   retryCount = 0;
@@ -7706,6 +7754,7 @@ function syncBrowserCap() {
 
 function toggleSbPreview(url, btn) {
   if (typeof url !== 'string' || !url || !isValidStreamUrl(url)) return;
+  if (movedTo()) return; // nothing plays at the old address (24-moved.js)
   if (sbPreviewAudio && sbPreviewAudio.src === url) {
     stopSbPreview();
     return;
@@ -8953,6 +9002,50 @@ init();
   });
 })();
 
+/* ================================================================
+   MOVED (the last build at marsh.city/radio only)
+   That build carries a radiogrid-moved meta tag naming the new host, which
+   the marsh.city sync injects (hosted-build.mjs markMoved) and no other build has (the Netlify
+   deploy refuses a build with it). There the radio stops being a radio: the
+   grid gives way to one line saying where it went, nothing plays, and
+   settings opens with the steps to move it, Export Backup included, so
+   nothing saved is lost. Saved keys are never touched.
+   A station already playing when this build arrives is never cut off: the
+   silent update only reloads while nothing plays (APP UPDATES).
+   Function declarations only: init() runs before this file's top level.
+   ================================================================ */
+
+/** The new address when this is the moved build served over http(s), else ''.
+    file:// (the APK) and the iOS shell never count, whatever the page holds. */
+function movedTo() {
+  if (!/^https?:$/.test(location.protocol)) return '';
+  var meta = document.querySelector('meta[name="radiogrid-moved"]');
+  var host = meta ? (meta.getAttribute('content') || '') : '';
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) ? host : '';
+}
+
+/** The moved screen in place of the stations. Plain text: not a link, not a
+    live region, and nothing takes focus, so it's read once in swipe order. */
+function renderMoved(host) {
+  document.documentElement.classList.add('is-moved');
+  var main = document.getElementById('buttons');
+  main.setAttribute('aria-label', 'This radio has moved');
+  var line = document.createElement('p');
+  line.id = 'moved-screen';
+  var where = document.createElement('span');
+  where.textContent = 'This radio has moved to ' + host + '.';
+  var ask = document.createElement('span');
+  ask.textContent = ' Please ask the person who set it up to change it.';
+  line.append(where, ask);
+  main.replaceChildren(line);
+}
+
+/** The card at the top of settings: the new address and the steps. */
+function showMovedCard(host) {
+  document.getElementById('moved-card').hidden = false;
+  document.getElementById('moved-card-address').textContent = host;
+  document.getElementById('moved-card-open').textContent = 'On this device, open ' + host + ' in the web browser.';
+}
 </script>
 </body>
 </html>
