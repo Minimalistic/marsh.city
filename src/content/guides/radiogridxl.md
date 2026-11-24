@@ -1,7 +1,7 @@
 ---
 title: How to use RadioGrid
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.25.0
+appVersion: 7.26.0
 ---
 
 RadioGrid is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
@@ -12,7 +12,11 @@ RadioGrid is built for the person listening: big buttons, one per station, nothi
 
 ![The main screen with two large station buttons](/images/radiogridxl/guide/home.webp)
 
-Tap a station to play it, and tap it again to pause. The dot in the top right corner turns green while a station is playing. At the bottom of the screen there's a Stop button.
+Tap a station to play it. Tap **Stop**, at the bottom of the screen, to stop it. That's the whole rule, for every station.
+
+While a station starts, its button says **Starting…**. Once it plays, the button lights up with a speaker mark, and the dot in the top right corner turns green. Tapping the playing station again does no harm: it keeps playing, and the Stop button lights up for a moment to show where to stop it.
+
+If a phone call or another app cuts the radio off, the station goes quiet and its button says **Tap to play**. One tap brings it back. Recordings (a station with a set length, not live radio) carry on from where they stopped when you tap them again.
 
 ## Open settings
 
@@ -28,7 +32,7 @@ The panel slides in from the side. It has four groups: **Stations**, **Look**, *
 
 ![The Apply & Close button pinned at the bottom of settings](/images/radiogridxl/guide/apply.webp)
 
-If settings sit untouched for 3 minutes, the app asks **Still setting up?** Tap anywhere on it to carry on. If nobody taps within 30 seconds, settings close and go back to the stations, and changes you haven't applied are thrown away, so the listener is never left looking at settings. A station that was playing keeps playing, and a paused one stays paused. The PIN keypad closes by itself after a minute with no tap.
+If settings sit untouched for 3 minutes, the app asks **Still setting up?** Tap anywhere on it to carry on. If nobody taps within 30 seconds, settings close and go back to the stations, and changes you haven't applied are thrown away, so the listener is never left looking at settings. A station that was playing keeps playing, and a quiet one stays quiet. The PIN keypad closes by itself after a minute with no tap.
 
 ### If it asks for a PIN
 
@@ -146,8 +150,8 @@ Numbers and names on screen need sight. For a listener who can't see the screen,
 
 Buttons can also be pressed by what they show:
 
-- "Tap" and a station's full name, such as "Tap Jazz 88", plays it. While a station is paused, use its number to resume it.
-- "Tap Stop" stops the station. With Advanced controls, "Tap Pause", "Tap Sleep", and for recordings "Tap Back 15" and "Tap Skip 30".
+- "Tap" and a station's full name, such as "Tap Jazz 88", plays it.
+- "Tap Stop" stops the station. With Advanced controls, "Tap Sleep", and for recordings "Tap Pause", "Tap Back 15" and "Tap Skip 30".
 - "Tap Settings" opens settings, unless the Settings button has been hidden.
 - "Show names" labels every button with what to say.
 
@@ -160,7 +164,7 @@ For saying stations by name, give each one a short name that's easy to say and d
 Under **Buttons while playing**, in **Sound and controls**:
 
 - **Simple** shows a single Stop button. Best for most listeners.
-- **Advanced** adds separate Pause and Stop buttons and a **sleep timer** (the clock button, labelled Sleep) that stops playback after 15 minutes to 4 hours. **Back 15** and **Skip 30** show up only for recordings with a set length, not live radio.
+- **Advanced** adds a **sleep timer** (the clock button, labelled Sleep) that stops playback after 15 minutes to 4 hours. For recordings with a set length, not live radio, it also shows **Pause**, **Back 15** and **Skip 30**. Live radio can't really pause, so it only has Stop.
 
 ## Lock settings with a PIN
 

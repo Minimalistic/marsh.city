@@ -18,7 +18,7 @@ RadioGrid is an internet radio app built for older adults and people with disabi
 
 ![RadioGrid: two large station buttons filling a dark screen](/images/radiogridxl/page/grid.webp)
 
-Big buttons, one per station. Tap to play, tap again to pause. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there's one station or eight.
+Big buttons, one per station. Tap a station to play it, and tap Stop to stop it. The default dark theme keeps the focus on the station buttons - each one gets an emoji icon, a color, and a subtitle. The layout measures available viewport space and calculates button sizing dynamically, filling the screen whether there's one station or eight.
 
 ![Five stations in a grid, each with its own emoji and color, the first spanning the top](/images/radiogridxl/page/grid-full.webp)
 
@@ -28,9 +28,9 @@ Add more stations and the layout shifts to a grid: two columns on a phone, up to
 
 ## Playback and controls
 
-![A station playing: a yellow ring and pause mark on its button, Advanced controls, and a sleep timer counting down](/images/radiogridxl/page/now-playing.webp)
+![A station playing: a yellow ring and speaker mark on its button, Advanced controls, and a sleep timer counting down](/images/radiogridxl/page/now-playing.webp)
 
-When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. There are two control modes. Simple gives you a single stop button. Advanced adds station skip and a sleep timer, and splits stopping into two actions - a soft Pause that holds the stream so you can resume where you left off, and a full Stop. The transport icons are inline SVG rather than unicode glyphs, so iOS can't swap in its own skeuomorphic emoji versions. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
+When a station is playing, the interface shifts - the active button highlights, a connection dot in the header turns green, and the transport bar lights up. Every control has one job: a station button only plays its station, and Stop only stops it. Tap the playing station again and it keeps playing while Stop lights up for a moment, so a shaky or repeated tap never silences the radio. There are two control modes. Simple gives you a single Stop button. Advanced adds a sleep timer, and for recordings Pause, Back 15 and Skip 30. Live radio gets Stop alone, because pausing a live stream only ever meant reconnecting to it later. The transport icons are inline SVG rather than unicode glyphs, so iOS can't swap in its own skeuomorphic emoji versions. Wake Lock keeps the screen on during playback. Auto-retry handles dropped connections with up to four attempts before showing an error.
 
 ## Technician settings
 
@@ -55,7 +55,7 @@ I designed for older adults and people with disabilities from the start, and it 
 - MonoRadio, a quieter greyscale theme, and Night, dim amber with no blue for a bedside radio
 - Full screen reader support - ARIA roles, labels, and live regions throughout
 - Optional text-to-speech that announces playback actions via the Web Speech API
-- Audio chimes on play/pause using Web Audio API oscillators
+- Audio chimes on start/stop using Web Audio API oscillators
 - Haptic feedback on Android
 - Keyboard navigation with focus trapping in overlays
 - An "Ultra" size mode that scales with viewport dimensions for low vision users
@@ -82,6 +82,9 @@ flowchart TD
 </div>
 
 ## Updates
+
+### 2026-11-24
+Released v7.26.0: each control has one job now. Tapping a station plays it, and Stop stops it. A second tap on the playing station used to pause it, and that's the tap people make by accident, with a shaky hand or while a station takes a few seconds to start. Now the station keeps playing and Stop lights up for a moment to show where off is. A station cut off by a phone call says "Tap to play", and one tap brings it back. Recordings still pause in Advanced mode, and carry on from where they stopped.
 
 ### 2026-11-23
 Released v7.25.0: RadioGrid has its own address now, radio.marshworks.dev. A browser keeps each address's saved stations apart, so a radio set up at marsh.city/radio shows where it went and stops playing; Export Backup there and Import Backup at the new address carry its stations across.

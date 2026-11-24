@@ -35,8 +35,8 @@
   /* Text on an accent fill (Search, + Add, Apply): dark on a light accent,
      white where the accent is dark (MonoRadio Light, High Contrast Light). */
   --on-accent: #111111;
-  /* Marks drawn on a stream button to show its state: the ▮▮/▶ glyph and the
-     paused ring. Light theme swaps in white (see there). */
+  /* Marks drawn on a stream button to show its state: the playing mark.
+     Light theme swaps in white (see there). */
   --btn-mark: var(--accent);
   /* A station that gave up: a grey that sits back from the page, with text
      that still holds 4.5:1. MonoRadio keeps its own background. */
@@ -789,10 +789,10 @@ html.theme-light .btn-emoji { filter: grayscale(1) contrast(2) brightness(0.8); 
   color: var(--btn-mark);
   flex-shrink: 0;
 }
-/* The playing/paused glyph has its own size: renderButtons() keeps room for
+/* The playing mark has its own size: renderButtons() keeps room for
    it on every button, and compact mode, which has no title, still shows it. */
 .stream-btn.active .btn-state { opacity: 1; font-size: var(--btn-glyph-size, 24px); letter-spacing: 0; }
-.stream-btn.paused .btn-state { opacity: 1; font-size: var(--btn-glyph-size, 24px); letter-spacing: 0; }
+.btn-state .playing-mark { display: block; }
 /* A station that gave up: greyed out by colour, not by fading. A fade to 40%
    took "Not available. Tap to try again." down to about 2:1 with it.
    !important beats the inline station colour, as MonoRadio's does. */
@@ -822,14 +822,6 @@ html.theme-light .btn-emoji { filter: grayscale(1) contrast(2) brightness(0.8); 
   line-height: 1;
 }
 
-/* Paused stream styling — a dashed ring, so paused differs from playing by
-   shape as well as colour. It used to fade the whole button to 70%, which
-   took its text below 4.5:1. border-box sizing keeps the button's size. */
-.stream-btn.paused {
-  border: 3px dashed var(--btn-mark);
-}
-.stream-btn.paused .btn-state { opacity: 1; }
-
 /* -- MonoRadio button overrides -- */
 /* One background for every station, so the edge is what shows where a
    button is: 2px at 3:1 against the page (WCAG 1.4.11). */
@@ -844,11 +836,6 @@ html[class*="theme-mono"] .stream-btn.active {
   background: var(--mono-btn-active-bg) !important;
   border-color: var(--accent);
   box-shadow: 0 0 12px var(--mono-btn-glow), inset 0 0 0 5px var(--accent);
-  filter: none;
-}
-html[class*="theme-mono"] .stream-btn.paused {
-  background: var(--mono-btn-bg) !important;
-  border: 2px dashed var(--accent);
   filter: none;
 }
 html[class*="theme-mono"] .btn-label { color: var(--mono-btn-text); }
@@ -882,8 +869,7 @@ html.is-desktop.theme-mono-light body { background: #d8d6d2; }
 
 /* -- High Contrast button overrides -- every station alike, told apart by
    name and emoji; the state shows by fill and shape: idle a solid 3px
-   edge, playing solid yellow in a two-band ring, paused dashes, failed a
-   grey edge and name. Every state keeps the 3px border, so nothing shifts. */
+   edge, playing solid yellow in a two-band ring, failed a grey edge and name. Every state keeps the 3px border, so nothing shifts. */
 html[class*="theme-contrast"] .stream-btn {
   background: var(--hc-btn-bg) !important;
   border: 3px solid var(--hc-btn-edge);
@@ -892,11 +878,6 @@ html[class*="theme-contrast"] .stream-btn.active {
   background: var(--hc-btn-active-bg) !important;
   border-color: var(--hc-btn-ring-outer);
   box-shadow: inset 0 0 0 4px var(--hc-btn-ring-inner);
-  filter: none;
-}
-html[class*="theme-contrast"] .stream-btn.paused {
-  background: var(--hc-btn-bg) !important;
-  border: 3px dashed var(--accent);
   filter: none;
 }
 html[class*="theme-contrast"] .stream-btn.failed { border-color: var(--btn-failed-text); filter: none; }
@@ -945,7 +926,7 @@ html.is-desktop.theme-contrast-light body { background: #c0c0c0; }
 
 /* -- Night button overrides -- every station alike in dim amber; the edge
    (3:1 against the page) shows where a button is, playing warms the
-   background and rings it, paused dashes it. */
+   background and rings it. */
 html.theme-night .stream-btn {
   background: var(--night-btn-bg) !important;
   border: 2px solid var(--night-btn-edge);
@@ -954,11 +935,6 @@ html.theme-night .stream-btn.active {
   background: var(--night-btn-active-bg) !important;
   border-color: var(--accent);
   box-shadow: inset 0 0 0 5px var(--accent);
-  filter: none;
-}
-html.theme-night .stream-btn.paused {
-  background: var(--night-btn-bg) !important;
-  border: 2px dashed var(--accent);
   filter: none;
 }
 html.theme-night .stream-btn.failed { filter: none; }
@@ -1035,8 +1011,7 @@ html[data-size="ultra"] .btn-emoji { font-size: var(--btn-emoji-size, 62px); }
      carries the bar's colour through the strip below it. */
   height: 74px;
   width: 100%;
-  /* Room at the sides for a paused "Resume <station>" label; the notch
-     side's inset in landscape. */
+  /* Room at the sides: the notch side's inset in landscape. */
   padding-left: calc(16px + env(safe-area-inset-left, 0px));
   padding-right: calc(16px + env(safe-area-inset-right, 0px));
   border: none;
@@ -1047,8 +1022,6 @@ html[data-size="ultra"] .btn-emoji { font-size: var(--btn-emoji-size, 62px); }
 }
 html.is-desktop #simple-stop { height: 80px; }
 #simple-stop.active { background: var(--stop-active-bg); border-top-color: var(--stop-active-border); }
-#simple-stop.paused { background: var(--stop-paused-bg); border-top-color: var(--stop-paused-border); }
-#simple-stop.paused #simple-stop-label { color: var(--stop-paused-text); }
 #simple-stop:active { filter: brightness(1.2); }
 
 #simple-stop-inset {
@@ -1059,7 +1032,6 @@ html.is-desktop #simple-stop { height: 80px; }
 }
 html.is-desktop #simple-stop-inset { display: none; }
 #simple-stop.active + #simple-stop-inset { background: var(--stop-active-bg); }
-#simple-stop.paused + #simple-stop-inset { background: var(--stop-paused-bg); }
 #simple-stop:active + #simple-stop-inset { filter: brightness(1.2); }
 
 #simple-stop-square {
@@ -1090,6 +1062,11 @@ html[data-size="large"] #simple-stop-label { font-size: 24px; }
 html[data-size="xlarge"] #simple-stop-label { font-size: 28px; }
 html[data-size="ultra"] #simple-stop-label { font-size: 32px; }
 #simple-stop.active #simple-stop-label { color: var(--stop-active-text); }
+
+/* A second tap on the playing station points here: a still ring for a
+   moment (pointAtStop), the bar's own lit text colour, so it holds the
+   bar's contrast. No transition, so nothing moves with Reduce Motion. */
+#simple-stop.point { box-shadow: inset 0 0 0 4px var(--stop-active-text); transition: none; }
 
 
 /* --- ADVANCED TRANSPORT BAR --- */
@@ -1164,6 +1141,8 @@ html.is-ios #adv-transport, html.is-ios #simple-stop-square, html.is-ios #simple
   color: var(--stop-idle-text);
 }
 .adv-text { font-size: 17px; font-weight: 800; line-height: 1; }
+/* The Advanced Stop, pointed at by a second tap on the playing station. */
+.adv-stop.point { box-shadow: inset 0 0 0 3px currentColor; border-radius: 10px; transition: none; }
 /* A very narrow phone keeps the icons alone, so the row doesn't run under
    the sleep timer button; the names stay in the buttons' labels. */
 @media (max-width: 359px) { .adv-text, .adv-word { display: none; } }
@@ -1200,8 +1179,8 @@ html.is-ios #adv-transport, html.is-ios #simple-stop-square, html.is-ios #simple
 #adv-transport.has-playing .adv-btn,
 #adv-transport.has-playing .adv-pause { color: var(--stop-active-text); }
 
-/* Paused state — mirrors #simple-stop.paused (amber-ish), wins over has-playing
-   by source order since both are single-class specificity. */
+/* A paused recording (Advanced only; live radio has no pause) — amber-ish,
+   wins over has-playing by source order since both are single-class. */
 #adv-transport.paused { background: var(--stop-paused-bg); border-top-color: var(--stop-paused-border); }
 #adv-transport.paused .adv-stop-square { background: var(--stop-paused-text); }
 #adv-transport.paused .adv-stop,
@@ -3111,7 +3090,7 @@ html.theme-fading, html.theme-fading * {
         <div class="s-section s-switch-row">
           <div class="s-switch-text" aria-hidden="true">
             <div class="s-section-title" id="chime-label">Audio tones</div>
-            <div class="s-hint" id="chime-hint">A short rising tone when a station starts, and a falling one when it pauses.</div>
+            <div class="s-hint" id="chime-hint">A short rising tone when a station starts, and a falling one when it stops.</div>
           </div>
           <button type="button" class="s-switch" role="switch" data-switch="chime" aria-checked="false" aria-labelledby="chime-label" aria-describedby="chime-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
         </div>
@@ -3214,7 +3193,7 @@ html.theme-fading, html.theme-fading * {
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version">RadioGrid v7.25.0</div>
+      <div id="settings-version">RadioGrid v7.26.0</div>
       <!-- Who made it, from PROFILE.madeBy; never a link (promise-stays-radio).
            MarshWorks gets the brand kit's "made by" block; any other maker,
            and the MonoRadio and High Contrast themes, get the plain text line. -->
@@ -3487,6 +3466,13 @@ let streamFault = false;  // the active stream errored and hasn't played since;
 let pausedByFailure = null; // the error the browser paused the element for as the
                             // stream failed (Chromium does); its 'pause' isn't the
                             // listener's. Tied to that error, so a reload ends it
+let awaitingSound = false; // a start or resume hasn't heard audio yet: its tile reads "Starting…"
+const recordingPlaces = new Map(); // recording URL -> seconds in, kept when it stops
+                                   // (memory only), so its next tap carries on there
+let pendingSeek = null;   // the place the source now loading should carry on from
+let loadedUrl = null;     // the address the active station was loaded from
+let stopPointTimer = null; // ends the highlight a second tap puts on Stop (pointAtStop)
+const STOP_POINT_MS = 2000;
 let announceOnPlay = null; // station label to say "Now playing" for once its audio starts
 let liveSource = false;   // the active source loaded with no end (live radio): the
                           // server hanging up is a lost connection, not the end.
@@ -4163,6 +4149,13 @@ function textLines(text, px, width) {
   return lines;
 }
 
+/** The playing station's mark: a still speaker. Not ▮▮ or ■, which name an
+    action, and a tile's only action is to play. Inline SVG, so iOS can't
+    swap in an emoji; 1em, so it takes the glyph size renderButtons() sets. */
+const PLAYING_MARK_SVG = '<svg class="playing-mark" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">' +
+  '<path d="M3 9h4l5-4.5v15L7 15H3z" fill="currentColor"/>' +
+  '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
 function renderButtons() {
   // The old address's last build shows where the radio went instead (24-moved.js).
   if (movedTo()) { renderMoved(movedTo()); return; }
@@ -4345,9 +4338,12 @@ function renderButtons() {
   var statuses = streams.map(function(s) {
     if (failedStreams.has(s.id)) return compact ? 'Not available' : 'Not available. Tap to try again.';
     if (!compact && playing === s.id && !paused && streamFault) return 'Reconnecting…';
-    // Auto-resume at launch can be refused until someone taps: say so on
-    // screen, not only to a screen reader, or the radio looks broken.
-    if (playing === s.id && paused && autoplayBlocked) return 'Tap to resume';
+    // Paused from outside (a call, the lock screen) or a launch the browser
+    // wouldn't autoplay: the tile is off, and says the one thing to do.
+    if (playing === s.id && paused) return 'Tap to play';
+    // A tap's first seconds, before any sound: says the tap worked, so
+    // there's no reason to tap again.
+    if (!compact && playing === s.id && awaitingSound) return 'Starting…';
     return '';
   });
   // Button i's status is the description's size, but never under 12px: it
@@ -4454,27 +4450,28 @@ function renderButtons() {
     const isFailed = failedStreams.has(s.id);
 
     const btn = document.createElement('button');
-    const isPaused = isActive && paused;
-    btn.className = 'stream-btn' + (isActive && !isPaused ? ' active' : '') + (isPaused ? ' paused' : '') + (isPrimary ? ' primary' : '') + (isFailed ? ' failed' : '');
+    // On means sound: a station paused from outside is drawn off, with
+    // "Tap to play" in its status line.
+    const isOn = isActive && !paused;
+    btn.className = 'stream-btn' + (isOn ? ' active' : '') + (isPrimary ? ' primary' : '') + (isFailed ? ' failed' : '');
     btn.id = 'btn-' + s.id;
-    btn.style.background = (isActive && !isPaused) ? c.active : c.bg;
+    btn.style.background = isOn ? c.active : c.bg;
     btn.setAttribute('data-bg', c.bg);
     btn.setAttribute('data-active', c.active);
     btn.onclick = () => playStream(s.id);
 
     // The name is the station's own name, so saying it presses the button
-    // (Voice Control matches the whole name). Playing is aria-pressed, and
-    // the description is the button's description. The rare states keep
-    // their word after the station, so VoiceOver says them even with spoken
-    // hints off.
-    const isReconnecting = isActive && !isPaused && streamFault;
+    // (Voice Control matches the whole name), and the description is the
+    // button's description. The rare states keep their word after the
+    // station, so VoiceOver says them even with spoken hints off.
+    const isReconnecting = isOn && streamFault;
     var label = s.label;
     if (isFailed) label += ', not available';
-    else if (isPaused) label += ', paused';
     else if (isReconnecting) label += ', reconnecting';
     btn.setAttribute('aria-label', label);
-    // Pressed only while it plays: a paused station isn't on.
-    btn.setAttribute('aria-pressed', isActive && !isPaused ? 'true' : 'false');
+    // The station on is the current one, not a pressed toggle: a tile only
+    // plays, so a second press doesn't turn it off as aria-pressed promises.
+    if (isOn) btn.setAttribute('aria-current', 'true');
 
     // When there's trouble, the description line says so in words: the
     // greyed-out button and ⚠ were the only cues before.
@@ -4492,14 +4489,14 @@ function renderButtons() {
       var icon = s.emoji || s.label.charAt(0).toUpperCase();
       html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(icon) + '</div>';
       if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
-      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
+      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isOn && awaitingSound ? '' : PLAYING_MARK_SVG) + '</div>';
     } else {
       // Full mode: emoji + label + sublabel
       if (s.emoji) html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(s.emoji) + '</div>';
       html += '<div class="btn-label">' + escHtml(s.label) + '</div>';
       if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
       else if (s.sub) html += '<div class="btn-sublabel" id="btn-desc-' + escAttr(s.id) + '">' + escHtml(s.sub) + '</div>';
-      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
+      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isOn && awaitingSound ? '' : PLAYING_MARK_SVG) + '</div>';
     }
 
     btn.innerHTML = html;
@@ -4589,30 +4586,20 @@ function updateSkipButtons() {
   liveBadge.classList.toggle('visible', !!playing && !paused && !skippable);
 }
 
-/** Update simple stop bar appearance and accessibility state. */
+/** Update the Simple Stop bar. It always reads Stop and always stops; it is
+    lit only while a station is on. A station paused from outside reads as
+    off (its tile says "Tap to play"), so the bar looks idle then too, though
+    a press still clears it to off. */
 function updateSimpleStop() {
-  const isPlaying = !!playing;
-  const isPaused = isPlaying && paused;
+  const isOn = !!playing && !paused;
   const wasClass = simpleStop.className;
-  simpleStop.classList.toggle('active', isPlaying && !isPaused);
-  simpleStop.classList.toggle('paused', isPaused);
+  simpleStop.classList.toggle('active', isOn);
   // The bar is the page's bottom edge, and Safari doesn't see it change colour.
   if (simpleStop.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
-  simpleStop.setAttribute('aria-disabled', isPlaying ? 'false' : 'true');
-
-  const labelEl = document.getElementById('simple-stop-label');
-  const squareEl = document.getElementById('simple-stop-square');
-  if (isPaused) {
-    const s = cfg.streams.find(x => x.id === playing);
-    const name = s ? s.label : 'Stream';
-    labelEl.textContent = '▶  Resume ' + name;
-    squareEl.style.display = 'none';
-    simpleStop.setAttribute('aria-label', 'Resume ' + name);
-  } else {
-    labelEl.textContent = 'Stop';
-    squareEl.style.display = '';
-    simpleStop.setAttribute('aria-label', 'Stop playback');
-  }
+  // Enabled whenever a press does something: a station paused from outside
+  // looks idle, but Stop still clears it to off (and says "Stopped").
+  simpleStop.setAttribute('aria-disabled', playing ? 'false' : 'true');
+  if (!isOn) clearStopPoint();
   fitSimpleStopLabel();
 }
 
@@ -4635,20 +4622,25 @@ function fitSimpleStopLabel() {
 const ADV_PAUSE_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg>';
 const ADV_PLAY_SVG  = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
 
-/** Update advanced transport bar appearance based on playback state.
-    Pause button shows only while something is loaded, and flips pause<->play
-    with the paused state. Stop (the square) is wired to stopPlayback separately. */
+/** Update the Advanced bar. Pause shows only for a recording, where it holds
+    the place (live radio has no pause: Stop stops it), and flips to Resume
+    while that recording is paused. A live station paused from outside looks
+    idle, as on the Simple bar. Stop (the square) calls userStop(). */
 function updateAdvTransport() {
   const isPlaying = !!playing;
   const isPaused = isPlaying && paused;
+  // The same rule that keeps a recording's place: a live source (latched,
+  // even when a cut-off reports a length) never gets Pause.
+  const recording = isPlaying && !isLiveSource();
   const wasClass = advTransport.className;
   advTransport.classList.toggle('has-playing', isPlaying && !isPaused);
-  advTransport.classList.toggle('paused', isPaused);
+  advTransport.classList.toggle('paused', isPaused && recording);
   if (advTransport.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
+  if (!isPlaying || isPaused) clearStopPoint();
 
   const pauseBtn = document.getElementById('adv-pause');
   if (pauseBtn) {
-    pauseBtn.style.display = isPlaying ? '' : 'none';
+    pauseBtn.style.display = isPlaying && recording ? '' : 'none';
     pauseBtn.innerHTML = (isPaused ? ADV_PLAY_SVG : ADV_PAUSE_SVG) +
       '<span class="adv-text" aria-hidden="true">' + (isPaused ? 'Resume' : 'Pause') + '</span>';
     pauseBtn.setAttribute('aria-label', isPaused ? 'Resume' : 'Pause');
@@ -4767,52 +4759,55 @@ function reloadActive() {
   clearInterval(fadeTimer); fadeTimer = null;
   audio.volume = 0;
   pendingFade = true;
+  // A recording reloaded after a lost connection carries on where it was;
+  // a fresh load would start it over.
+  pendingSeek = !isLiveSource() && audio.currentTime > 0 ? audio.currentTime : null;
+  loadedUrl = s.url;
   audio.src = s.url;
   audio.load();
   playActive();
   watchForStall();
 }
 
-/** Start playing a stream by its ID. Switches if already playing another.
-    Tapping the active stream toggles pause/resume; while it is reconnecting
-    after an error, a tap retries it now instead of pausing silence. */
+/** Play a stream by its ID, switching from any other. A tile only plays;
+    Stop stops. A second tap on the station already on never silences it:
+    that is the tap made by mistake (a tremor, or trying again while a
+    station takes a few seconds to start), so it flashes and points at Stop.
+    A station paused from outside (a call, the lock screen, a blocked
+    autoplay) or reconnecting plays again now. */
 function playStream(id) {
   if (movedTo()) return; // the old address's last build is no longer a radio (24-moved.js)
-  cancelRetry();
-  autoplayBlocked = false;
-  retryCount = 0;
-  steadyFrom = null;
-  failedStreams.delete(id);
-  hideOverlay(nonetOverlay);
 
-  // Tapping the already-playing stream toggles pause/resume
   if (playing === id) {
-    if (paused || streamFault) {
-      resumeActive();
-    } else {
-      paused = true;
-      announceOnPlay = null;
-      audio.pause();
-      holdFade();
-      dropLiveConnection();
-      forgetLastStation();
-      setConnStatus('idle');
-      releaseWakeLock();
-      setMediaPlaybackState('paused');
-      feedback('down', 'Paused');
-    }
     doHaptic(id);
-    renderButtons();
-    updateSimpleStop();
-    updateAdvTransport();
+    if (paused || streamFault) {
+      hideOverlay(nonetOverlay);
+      resumeActive(); // a fresh attempt: it resets the retries itself
+      renderButtons();
+      updateSimpleStop();
+      updateAdvTransport();
+    } else {
+      pointAtStop();
+    }
     return;
   }
 
   const s = cfg.streams.find(x => x.id === id);
   if (!s) return;
 
+  cancelRetry();
+  autoplayBlocked = false;
+  retryCount = 0;
+  steadyFrom = null;
+  failedStreams.delete(id);
+  hideOverlay(nonetOverlay);
+  rememberRecordingPlace(); // the station being switched away from
+
   playing = id;
   paused = false;
+  awaitingSound = true;
+  pendingSeek = recordingPlaces.has(s.url) ? recordingPlaces.get(s.url) : null;
+  loadedUrl = s.url;
 
   rememberLastStation(id);
 
@@ -4842,6 +4837,10 @@ function playStream(id) {
 function stopPlayback() {
   if (!playing) return;
 
+  rememberRecordingPlace();
+  awaitingSound = false;
+  pendingSeek = null;
+  clearStopPoint();
   clearInterval(fadeTimer); fadeTimer = null;
   pendingFade = false;
   cancelRetry();
@@ -4884,19 +4883,63 @@ function userStop() {
   feedback('down', 'Stopped');
 }
 
-/** The Simple-mode bar. It says Stop, so it stops: the station goes back
-    to idle and the next launch won't resume it. It used to pause, leaving
-    the station "Paused, tap to resume" and its button still pressed; on live
-    radio a resume and a fresh start sound the same. When something else
-    paused the station (a tap on it, the lock screen, autoplay blocked at
-    launch), the bar reads "Resume …" and resumes it. */
+/** The Simple-mode bar. It says Stop, so it stops, always: the station goes
+    back to idle and the next launch won't resume it. It used to read
+    "Resume …" after a station was paused, which gave the bar two jobs; a
+    station paused from outside now waits on its own tile ("Tap to play"). */
 function simpleStopPress() {
   if (!playing) return;
-  if (paused) softStop(); else userStop();
+  userStop();
 }
 
-/** Soft stop — pauses the stream and shows a resume prompt on the stop bar.
-    Tapping again resumes. Tapping a different stream clears the paused state. */
+/** Where a recording stopped, so its next tap carries on there. Kept by URL
+    (an edited station is a new source) and only while the app is open: no
+    saved key changes. Live radio has no place to keep; a recording at or
+    near its end starts over next time. */
+function rememberRecordingPlace() {
+  // Keyed by the address that was loaded, not the station's address now:
+  // settings may have changed it since.
+  if (!playing || !loadedUrl || isLiveSource()) return;
+  const at = audio.currentTime;
+  if (audio.ended || !(at > 0) || audio.duration - at < 5) recordingPlaces.delete(loadedUrl);
+  else recordingPlaces.set(loadedUrl, at);
+}
+
+/** Seek a recording that just loaded to where it was stopped. Live radio (or
+    a place past the end) drops the place instead. */
+function carryOnRecording() {
+  if (pendingSeek === null) return;
+  // Live radio has no place to go back to: drop it, so a later reload that
+  // reports a length can't jump there. A length not known yet keeps waiting.
+  if (audio.duration === Infinity) { pendingSeek = null; return; }
+  if (!isFinite(audio.duration)) return;
+  const at = pendingSeek;
+  pendingSeek = null;
+  if (at < audio.duration - 5) audio.currentTime = at;
+}
+
+/** A second tap on the playing station: hold a still highlight on Stop for
+    a moment, pointing at where "off" lives. No animation, so it is the
+    same with Reduce Motion on; no sound, so it never talks over the radio. */
+function pointAtStop() {
+  clearStopPoint();
+  const target = cfg.advanced === 'on' ? advTransport.querySelector('.adv-stop') : simpleStop;
+  if (!target) return;
+  target.classList.add('point');
+  stopPointTimer = setTimeout(clearStopPoint, STOP_POINT_MS);
+}
+
+function clearStopPoint() {
+  clearTimeout(stopPointTimer);
+  stopPointTimer = null;
+  simpleStop.classList.remove('point');
+  const advStop = advTransport.querySelector('.adv-stop');
+  if (advStop) advStop.classList.remove('point');
+}
+
+/** Pause, or resume if paused: Advanced mode's Pause button (recordings
+    only) and the lock screen's play and pause. A paused station waits on its
+    tile ("Tap to play"); a tap on it, or switching station, ends the pause. */
 function softStop() {
   if (!playing) return;
 
@@ -4936,6 +4979,7 @@ function resumeActive() {
   steadyFrom = null;
   paused = false;
   autoplayBlocked = false;
+  awaitingSound = true;
   rememberLastStation(playing);
   const s = cfg.streams.find(x => x.id === playing);
   if ((streamFault || audio.error) && s) {
@@ -4973,7 +5017,7 @@ function playActive() {
       // this station again.
       if (playing === id && !paused) {
         paused = true;
-        autoplayBlocked = true; // its button says "Tap to resume" on screen
+        autoplayBlocked = true; // its button says "Tap to play" on screen
         setConnStatus('idle');
         releaseWakeLock();
         setMediaPlaybackState('paused');
@@ -5138,7 +5182,8 @@ audio.addEventListener('playing', () => {
   // night. A server that cuts everyone off hourly still comes back each time.
   if (retryCount > 0 && steadyFrom === null) steadyFrom = audio.currentTime;
   if (playing && !paused) watchForStall();
-  if (streamFault) { streamFault = false; renderButtons(); } // clears "Reconnecting…"
+  // Sound arrived: clears "Reconnecting…" and "Starting…"
+  if (streamFault || awaitingSound) { streamFault = false; awaitingSound = false; renderButtons(); }
   if (playing) setConnStatus('good');
   if (playing && announceOnPlay) { say('Now playing ' + announceOnPlay, SPEAK_AFTER_CHIME_MS); announceOnPlay = null; }
   updateSkipButtons();
@@ -5157,8 +5202,8 @@ audio.addEventListener('waiting', () => {
 // softStop/playStream. Reconcile: reflect it as the app's paused state and
 // update the UI rather than fighting the OS by forcing playback back on. We
 // only act when the app THINKS it's playing (playing && !paused) — the app's
-// own deliberate pauses (stopPlayback sets playing=null first; toggle pauses
-// set paused=true first) are already consistent and are ignored here.
+// own deliberate pauses (stopPlayback sets playing=null first; softStop sets
+// paused=true first) are already consistent and are ignored here.
 audio.addEventListener('pause', () => {
   // Judge by the element's state when the event arrives, not by a flag set
   // when we paused: switching stations sets src right after pause(), and a new
@@ -5252,10 +5297,12 @@ function noteLiveness() {
 
 audio.addEventListener('loadedmetadata', () => {
   noteLiveness();
-  updateSkipButtons();
+  carryOnRecording();
+  updateAdvTransport(); // a recording's length is known now: it gets Pause and the skips
 });
 
-audio.addEventListener('durationchange', noteLiveness);
+// A recording whose length is known only now gets its Pause and skips.
+audio.addEventListener('durationchange', () => { noteLiveness(); updateAdvTransport(); });
 
 // An engine that ends a live stream without pausing first. The pause
 // listener has already handled one that did (streamFault is set by then).
