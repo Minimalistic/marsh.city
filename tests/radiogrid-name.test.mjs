@@ -33,6 +33,12 @@ test('the Now page, résumé and homepage showcase say RadioGrid', { skip }, () 
   assert.match(card[0], /class="showcase-title"[^>]*>RadioGrid</)
 })
 
+test('the old /radio.html forwarding page uses the new name', { skip }, () => {
+  const stub = readFileSync(join(DIST, 'radio.html'), 'utf-8')
+  assert.match(stub, /<title>RadioGrid moved<\/title>/)
+  assert.doesNotMatch(stub, /RadioGridXL/)
+})
+
 test('older writing keeps the name it had — unhappy path', { skip }, () => {
   assert.match(page('posts/building-radiogridxl'), /RadioGridXL/)
   const updates = page('projects/radiogridxl').split(/id="updates"/)[1]
