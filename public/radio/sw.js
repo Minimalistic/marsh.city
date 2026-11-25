@@ -5,7 +5,7 @@
    7.5.0 to 7.5.5). The smoke test holds it to the app version.
    The server sends sw.js no-cache, so each load refetches this file and the
    install→activate purge cycle kicks in. */
-const CACHE_VERSION = 'rgxl-shell-7.26.0-db611f8f';
+const CACHE_VERSION = 'rgxl-shell-7.27.0-f4c6e129';
 
 /* Shell assets, relative to the SW scope (the directory it's served from).
    start_url is "." so the HTML is reachable both as "./" and by filename.
@@ -71,10 +71,10 @@ self.addEventListener('fetch', (event) => {
   // must always hit the network, never be cached or served stale.
   if (url.origin !== self.location.origin) return;
 
-  // The feedback and licenses pages (beside this worker) are their own static
+  // The feedback, licenses and privacy pages (beside this worker) are their own static
   // pages, not part of the app: never cache them and never answer them with
   // the app shell. Offline, they fail like any web page.
-  for (const page of ['feedback', 'licenses']) {
+  for (const page of ['feedback', 'licenses', 'privacy']) {
     const path = new URL(page, self.location).pathname;
     if (url.pathname === path || url.pathname.startsWith(path + '/')) return;
   }

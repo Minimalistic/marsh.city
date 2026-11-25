@@ -83,6 +83,9 @@ flowchart TD
 
 ## Updates
 
+### 2026-11-25
+Released v7.27.0: RadioGrid has a privacy policy now, at radio.marshworks.dev/privacy. It spells out what stays on the device (everything you set up) and the little that leaves it: the station you play connects to that station's server, and a station search goes to the Radio Browser directory. Feedback has its own email address too: radio@marshworks.dev. The browser tab's icon also sits on the app icon's dark background in every theme.
+
 ### 2026-11-24
 Released v7.26.0: each control has one job now. Tapping a station plays it, and Stop stops it. A second tap on the playing station used to pause it, and that's the tap people make by accident, with a shaky hand or while a station takes a few seconds to start. Now the station keeps playing and Stop lights up for a moment to show where off is. A station cut off by a phone call says "Tap to play", and one tap brings it back. Recordings still pause in Advanced mode, and carry on from where they stopped.
 

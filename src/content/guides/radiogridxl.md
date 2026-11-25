@@ -1,12 +1,12 @@
 ---
 title: How to use RadioGrid
 description: Open settings, change and add stations, pick a theme, and set it up for someone who just wants to press a button and hear music.
-appVersion: 7.26.0
+appVersion: 7.27.0
 ---
 
 RadioGrid is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
 
-**RadioGrid saves your stations and settings inside the web browser you're using, on this device only.** RadioGrid doesn't track you or what you listen to, and there's no account. Like any website, the station you play and the host that serves RadioGrid see the requests your device makes. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for radio.marshworks.dev, the website RadioGrid runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
+**RadioGrid saves your stations and settings inside the web browser you're using, on this device only.** RadioGrid doesn't track you or what you listen to, and there's no account. Like any website, the station you play and the host that serves RadioGrid see the requests your device makes. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for radio.marshworks.dev, the website RadioGrid runs on. The [privacy policy](https://radio.marshworks.dev/privacy/) lists everything that leaves the device and where it goes. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
 
 ## Listening
 
@@ -221,4 +221,4 @@ On Android and on computers, the installed app keeps the same stations and setti
 
 ## Send us feedback
 
-At the bottom of settings, **Have feedback?** shows a code you can scan with your phone's camera. It opens a short page with an **Email us** button, so you can tell us what was confusing from your own phone, even when the radio's device can't send email. The page address and our email, radio@marsh.city, are written beside the code too. The radio itself never sends anything about you or your listening.
+At the bottom of settings, **Have feedback?** shows a code you can scan with your phone's camera. It opens a short page with an **Email us** button, so you can tell us what was confusing from your own phone, even when the radio's device can't send email. The page address and our email, radio@marshworks.dev, are written beside the code too. The radio itself never sends anything about you or your listening.

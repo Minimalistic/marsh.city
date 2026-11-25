@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- A static page: no scripts, no forms, nothing loaded from anywhere else. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<title>RadioGrid privacy policy</title>
+<style>
+  :root { --bg: #ffffff; --text: #1a1a1a; --muted: #4a4a4a; --link: #1a4178; --rule: #d0d0d0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121418; --text: #f2f2f2; --muted: #c4c4c4; --link: #8fb8ff; --rule: #3a3f48; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 40rem; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 12px; }
+  h2 { font-size: 1.3rem; margin: 32px 0 8px; padding-top: 16px; border-top: 1px solid var(--rule); }
+  p, ul { margin: 0 0 16px; }
+  li { margin-bottom: 8px; }
+  a { color: var(--link); }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>RadioGrid privacy policy</h1>
+  <p class="muted" id="effective">Effective November 25, 2026</p>
+
+  <p><strong>RadioGrid doesn't track you or what you listen to.</strong> There's no account, no ads and no analytics. Your stations and settings stay on your device.</p>
+  <p>This policy covers RadioGrid on the web at radio.marshworks.dev and the RadioGrid Android app. RadioGrid is made by MarshWorks LLC. RadioGrid is free software, so others can host their own copies; a copy served from another address follows its host's policy, not this one. Questions: <a href="mailto:radio@marshworks.dev">radio@marshworks.dev</a>.</p>
+
+  <h2>What stays on your device</h2>
+  <p>Your stations, settings, PIN (if one is set) and which station is playing (so Resume can start it again) are saved in your browser's storage on this device. We never see them. A backup is a file you save and keep yourself.</p>
+
+  <h2>What leaves your device, and where it goes</h2>
+  <ul>
+    <li><strong>Playing a station.</strong> Your device connects to that station's own server to get the audio. Like any website, the station sees your device's IP address and the request. Each station has its own privacy practices.</li>
+    <li><strong>Finding stations, only if someone searches.</strong> Whoever sets up the radio can search for stations in settings. A search sends the words you type, or the country and region you pick, to Radio Browser (radio-browser.info), a free community directory of radio stations. Nothing else about you or your stations is sent.</li>
+    <li><strong>The how-to guide, only if someone opens it.</strong> When settings shows "How to use this app" and someone opens it, the guide loads from our website, marsh.city. A radio set up without the guide never contacts marsh.city.</li>
+    <li><strong>Loading and updating the app.</strong> RadioGrid is served from radio.marshworks.dev, hosted by Netlify, and checks there for updates. The guide at marsh.city is hosted by GitHub Pages. Like any web host, they keep standard request logs (IP address, time, and the page asked for) to run and secure the sites. We don't use those logs to follow anyone.</li>
+  </ul>
+
+  <h2>Email</h2>
+  <p>If you email us, we read your message only to answer it and improve RadioGrid. We never post it publicly without your permission or share it with anyone. Ask and we'll delete it.</p>
+
+  <h2>What we don't do</h2>
+  <p>No accounts, no ads, no analytics, no tracking, no crash reports. We don't sell or share anyone's information, because we don't collect it.</p>
+
+  <h2>The Android app</h2>
+  <p>The Android app opens RadioGrid in Chrome, or in another browser on your device that supports it. The app adds nothing of its own. The browser's own settings and its maker's privacy policy cover the browser.</p>
+
+  <h2>Children</h2>
+  <p>RadioGrid isn't made for children, and it collects no personal information from anyone of any age.</p>
+
+  <h2>Removing your data</h2>
+  <p>Everything RadioGrid saves is on your device. To remove it, clear the site data for radio.marshworks.dev in your browser's settings, or uninstall the app.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, this page will change with it and show a new date.</p>
+</main>
+</body>
+</html>
