@@ -6,7 +6,7 @@ appVersion: 7.26.0
 
 RadioGrid is built for the person listening: big buttons, one per station, nothing else to figure out. Everything you can change is tucked away in a hidden settings panel, so the listener never lands there by accident.
 
-**RadioGrid saves your stations and settings inside the web browser you're using, on this device only.** Nothing is sent anywhere, and there's no account. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for radio.marshworks.dev, the website RadioGrid runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
+**RadioGrid saves your stations and settings inside the web browser you're using, on this device only.** RadioGrid doesn't track you or what you listen to, and there's no account. Like any website, the station you play and the host that serves RadioGrid see the requests your device makes. If you open RadioGrid on another phone or computer, or in a different browser, it starts fresh with its two starting stations. The same happens if you clear your browser's saved data for radio.marshworks.dev, the website RadioGrid runs on. To move a setup between devices, use [Backup and restore](#backup-and-restore). On iPhone and iPad, the Home Screen app counts as a different browser, so [add it to your Home Screen](#install-it-as-an-app) before you set it up.
 
 ## Listening
 

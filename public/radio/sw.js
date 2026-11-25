@@ -1,11 +1,11 @@
-/* RadioGridXL service worker — app-shell cache only.
+/* RadioGrid service worker — app-shell cache only.
    CACHE_VERSION is tied to the app version so it changes on every release:
    the fetch handler is cache-first with no revalidation, so a stale version
-   here means installed PWAs never see shell updates (this bit us pre-7.5.5 —
-   it sat at v1 from 7.5.0). Keep it in lockstep with the version-bump routine.
+   here means installed PWAs never see shell updates (it once sat at v1 from
+   7.5.0 to 7.5.5). The smoke test holds it to the app version.
    The server sends sw.js no-cache, so each load refetches this file and the
    install→activate purge cycle kicks in. */
-const CACHE_VERSION = 'rgxl-shell-7.26.0-bb55b211';
+const CACHE_VERSION = 'rgxl-shell-7.26.0-db611f8f';
 
 /* Shell assets, relative to the SW scope (the directory it's served from).
    start_url is "." so the HTML is reachable both as "./" and by filename.
@@ -71,11 +71,13 @@ self.addEventListener('fetch', (event) => {
   // must always hit the network, never be cached or served stale.
   if (url.origin !== self.location.origin) return;
 
-  // The feedback page (feedback/ beside this worker) is its own static page,
-  // not part of the app: never cache it and never answer it with the app
-  // shell. Offline, it fails like any web page.
-  const feedback = new URL('feedback', self.location).pathname;
-  if (url.pathname === feedback || url.pathname.startsWith(feedback + '/')) return;
+  // The feedback and licenses pages (beside this worker) are their own static
+  // pages, not part of the app: never cache them and never answer them with
+  // the app shell. Offline, they fail like any web page.
+  for (const page of ['feedback', 'licenses']) {
+    const path = new URL(page, self.location).pathname;
+    if (url.pathname === path || url.pathname.startsWith(path + '/')) return;
+  }
 
   // Cache-first for same-origin shell/static assets, falling back to network.
   // Successful same-origin GETs are cached so the app keeps booting offline.

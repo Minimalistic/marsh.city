@@ -1,7 +1,7 @@
 {
   "name": "RadioGrid",
   "short_name": "RadioGrid",
-  "description": "Single-screen radio streaming kiosk.",
+  "description": "A radio with big buttons: up to eight stations and Stop.",
   "display": "standalone",
   "orientation": "any",
   "start_url": ".",
